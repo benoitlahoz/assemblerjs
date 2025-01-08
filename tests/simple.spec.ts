@@ -1,13 +1,17 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from '../src';
-import { AbstractLogger } from './fixtures/abstractions/logger.abstract';
-import { BypassLogger } from './fixtures/implementations/logger-bypass.assemblage';
+
+import { AbstractLogger } from './fixtures/logger/logger.abstract';
+import { BypassLogger } from './fixtures/logger/logger-bypass.assemblage';
 
 describe('Simple', () => {
   it('should bootstrap an assemblage as entry point.', () => {
     const app: BypassLogger = Assembler.build(BypassLogger);
+
+    // `BypassLogger` returns the array of arguments passed to its methods.
     expect(app.log('foo')).toStrictEqual(['foo']);
+    expect(app.log('foo', 'bar')).toStrictEqual(['foo', 'bar']);
   });
 
   it('should inject a dependecy identified only by its concrete class.', () => {

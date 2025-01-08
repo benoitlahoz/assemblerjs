@@ -1,11 +1,13 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from '../src';
-import { AbstractLogger } from './fixtures/abstractions/logger.abstract';
-import { BypassLogger } from './fixtures/implementations/logger-bypass.assemblage';
-import { ErrorLog } from './fixtures/implementations/error-log-simple.assemblage';
-import { ErrorLogInjector } from './fixtures/implementations/error-log-injector.assemblage';
-import { AbstractErrorHandler } from './fixtures/abstractions/error-handler.abstract';
+
+import { AbstractLogger } from './fixtures/logger/logger.abstract';
+import { BypassLogger } from './fixtures/logger/logger-bypass.assemblage';
+
+import { AbstractErrorHandler } from './fixtures/error-handler/error-handler.abstract';
+import { ErrorLog } from './fixtures/error-handler/error-log-simple.assemblage';
+import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.assemblage';
 
 describe('ErrorHandler', () => {
   it('should bootstrap an assemblage as entry point.', () => {
@@ -22,7 +24,9 @@ describe('ErrorHandler', () => {
     }
 
     const app: App = Assembler.build(App);
-    expect(app.error.throw(new Error('foo'))).toStrictEqual(['foo']);
+
+    // `BypassLogger` returns the array of arguments passed to its methods.
+    expect(app.error.log(new Error('foo'))).toStrictEqual(['foo']);
   });
 
   it('should inject nested dependencies from injected assemblage.', () => {
@@ -34,13 +38,14 @@ describe('ErrorHandler', () => {
         public error: AbstractErrorHandler,
         public logger: AbstractLogger
       ) {
-        // Logger is injected by error handler.
+        // Logger is required: injected by `ErrorLogInjector`, will throw if not.
+
         expect(this.logger).toBeDefined();
         expect(this.logger).toBeInstanceOf(BypassLogger);
       }
     }
 
     const app: App = Assembler.build(App);
-    expect(app.error.throw(new Error('foo'))).toStrictEqual(['foo']);
+    expect(app.error.log(new Error('foo'))).toStrictEqual(['foo']);
   });
 });

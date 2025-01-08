@@ -1,5 +1,5 @@
 import { Assemblage } from '../../../src/assemblage/decorator';
-import { AbstractLogger } from '../abstractions/logger.abstract';
+import { AbstractLogger } from './logger.abstract';
 
 @Assemblage()
 export class BypassLogger implements AbstractLogger {
