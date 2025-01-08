@@ -5,6 +5,7 @@ import { BypassLogger } from '../logger/logger-bypass.assemblage';
 
 @Assemblage({
   inject: [[AbstractLogger, BypassLogger]],
+  tags: 'tags_test',
 })
 export class ErrorLogInjector implements AbstractErrorHandler {
   // Logger is injected by this assemblage.

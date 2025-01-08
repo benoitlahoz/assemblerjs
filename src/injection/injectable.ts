@@ -129,6 +129,16 @@ export class Injectable<T> {
     return Reflect.getMetadata(ReflectParamTypes, this.concrete) || [];
   }
 
+  /**
+   * Tags passed in assemblage's definition or in its parent definition.
+   */
+  public get tags(): string[] {
+    return getCustomMetadata('tags', this.concrete) || [];
+  }
+
+  /**
+   * Metadatas passed in assemblage's definition or in its parent definition.
+   */
   public get metadata(): Record<string, any> {
     return getCustomMetadata('metadata', this.concrete) || {};
   }

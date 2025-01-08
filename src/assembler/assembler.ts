@@ -73,4 +73,14 @@ export class Assembler implements AbstractAssembler {
     const injectable = this.injectables.get(identifier)! as Injectable<T>;
     return injectable.build();
   }
+
+  public tagged(...tags: string[]): any[] {
+    const res: any[] = [];
+    for (const tag of tags) {
+      for (const [_, injectable] of this.injectables) {
+        if (injectable.tags.includes(tag)) res.push(injectable.build() as any);
+      }
+    }
+    return res;
+  }
 }

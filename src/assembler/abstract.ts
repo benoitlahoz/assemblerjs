@@ -7,4 +7,5 @@ export abstract class AbstractAssembler {
   public abstract register<T>(injection: Injection<T>): void;
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(identifier: Identifier<T>): T;
+  public abstract tagged(...tags: string[]): any[];
 }

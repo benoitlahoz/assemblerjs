@@ -8,6 +8,7 @@ import { defineCustomMetadata } from '@/common/reflection';
 
 export interface AssemblageDefinition {
   singleton?: false;
+  events?: string[];
 
   inject?: Injection<unknown>[][];
 
@@ -22,7 +23,7 @@ export interface AssemblageDefinition {
 export const Assemblage = (
   definition?: AssemblageDefinition
 ): ClassDecorator => {
-  const definedDefinition: any = definition || {};
+  const safeDefinition: any = definition || {};
 
   return <TFunction extends Function>(target: TFunction): TFunction => {
     defineCustomMetadata(ReflectIsAssemblageFlag, true, target);
@@ -30,25 +31,44 @@ export const Assemblage = (
     // Assemblages are singletons by default.
     defineCustomMetadata(ReflectIsSingletonFlag, true, target);
 
-    for (const property in definedDefinition) {
-      if (definedDefinition.hasOwnProperty(property)) {
+    for (const property in safeDefinition) {
+      if (safeDefinition.hasOwnProperty(property)) {
         switch (property) {
           case 'singleton': {
-            if (definedDefinition.singleton === false) {
+            if (safeDefinition.singleton === false) {
+              // Mark assemblage as transient.
+
               defineCustomMetadata(ReflectIsSingletonFlag, false, target);
             }
             break;
           }
 
           case 'controller': {
-            if (definedDefinition.controller === true) {
-              if (typeof definedDefinition.path !== 'string') {
+            if (safeDefinition.controller === true) {
+              if (typeof safeDefinition.path !== 'string') {
                 throw new Error(
                   `Controller assemblage '${target.name}' must define a path.`
                 );
               }
 
+              // Mark assemblage as controller.
+
               defineCustomMetadata(ReflectIsControllerFlag, true, target);
+            }
+            break;
+          }
+
+          case 'tags': {
+            if (typeof safeDefinition.tags !== 'undefined') {
+              if (typeof safeDefinition.tags === 'string') {
+                defineCustomMetadata('tags', [safeDefinition.tags], target);
+              } else if (Array.isArray(safeDefinition.tags)) {
+                defineCustomMetadata('tags', safeDefinition.tags, target);
+              } else {
+                throw new Error(
+                  `Assemblage's 'tags' must be o type 'string' or 'Array'.`
+                );
+              }
             }
             break;
           }
@@ -56,21 +76,24 @@ export const Assemblage = (
           // Type guards.
 
           case 'inject': {
-            if (!Array.isArray(definedDefinition.inject)) {
+            // Check injections are valid.
+
+            if (!Array.isArray(safeDefinition.inject)) {
               throw new Error(
                 `Assemblage's definition 'inject' property must be an array of 'Injection' tuples.`
               );
             }
 
-            for (const injection of definedDefinition.inject) {
+            for (const injection of safeDefinition.inject) {
               if (!Array.isArray(injection)) {
                 throw new Error(`'Injection' must be an 'Array'.`);
               }
             }
           }
+
           default: {
-            // Other definition's properties can be accessed by their names.
-            defineCustomMetadata(property, definedDefinition[property], target);
+            // Not caught definition's properties can be accessed by their names.
+            defineCustomMetadata(property, safeDefinition[property], target);
           }
         }
       }

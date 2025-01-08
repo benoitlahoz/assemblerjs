@@ -9,11 +9,13 @@ export class AssemblerContext {
   public register: AbstractAssembler['register'];
   public has: AbstractAssembler['has'];
   public require: AbstractAssembler['require'];
+  public tagged: AbstractAssembler['tagged'];
 
   constructor(assembler: AbstractAssembler) {
     this.register = assembler.register.bind(assembler);
     this.has = assembler.has.bind(assembler);
     this.require = assembler.require.bind(assembler);
+    this.tagged = assembler.tagged.bind(assembler);
   }
 
   /**
