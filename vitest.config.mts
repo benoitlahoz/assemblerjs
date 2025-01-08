@@ -12,7 +12,7 @@ export default defineConfig({
         '**/node_modules/**',
         '**/dist/**',
         '**/*.spec.*',
-        '**/test/**',
+        '**/tests/**',
         '**/e2e/**',
       ],
     },
