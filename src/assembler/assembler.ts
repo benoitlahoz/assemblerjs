@@ -74,11 +74,18 @@ export class Assembler implements AbstractAssembler {
     return injectable.build();
   }
 
-  public tagged(...tags: string[]): any[] {
+  /**
+   * Require dependencies by tag passed in assemblage's definition.
+   *
+   * @param { string | string[] } tags The tag(s) to get dependencies.
+   * @returns { unknown[] } An array of instances for the given tags. If registered
+   * identifier is not marked as 'singleton', will resolve in a new instance.
+   */
+  public tagged(...tags: string[]): unknown[] {
     const res: any[] = [];
     for (const tag of tags) {
       for (const [_, injectable] of this.injectables) {
-        if (injectable.tags.includes(tag)) res.push(injectable.build() as any);
+        if (injectable.tags.includes(tag)) res.push(injectable.build());
       }
     }
     return res;
