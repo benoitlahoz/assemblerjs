@@ -53,6 +53,21 @@ export const Assemblage = (
             break;
           }
 
+          // Type guards.
+
+          case 'inject': {
+            if (!Array.isArray(definedDefinition.inject)) {
+              throw new Error(
+                `Assemblage's definition 'inject' property must be an array of 'Injection' tuples.`
+              );
+            }
+
+            for (const injection of definedDefinition.inject) {
+              if (!Array.isArray(injection)) {
+                throw new Error(`'Injection' must be an 'Array'.`);
+              }
+            }
+          }
           default: {
             // Other definition's properties can be accessed by their names.
             defineCustomMetadata(property, definedDefinition[property], target);
