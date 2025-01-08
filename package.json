@@ -1,0 +1,49 @@
+{
+  "name": "assemblerjs",
+  "description": "A simple and zero-dependency DI package written in typescript.",
+  "version": "0.0.9",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "devDependencies": {
+    "@swc/core": "^1.9.3",
+    "@types/node": "^22.5.5",
+    "@vitest/coverage-istanbul": "^2.1.1",
+    "assert": "^2.1.0",
+    "istanbul": "^0.4.5",
+    "istanbul-badges-readme": "^1.9.0",
+    "reflect-metadata": ">=0.2.2",
+    "rollup-plugin-swc": "^0.2.1",
+    "terser": "^5.34.1",
+    "vite": "6.0.2",
+    "vite-plugin-dts": "^4.4.0",
+    "vitest": "^2.1.1"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist/**/*",
+    "README.md"
+  ],
+  "keywords": [
+    "composition",
+    "decorators",
+    "dependency",
+    "di",
+    "injection",
+    "reflection",
+    "swc",
+    "typescript"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme",
+    "test": "vitest --coverage --passWithNoTests"
+  },
+  "types": "dist/index.d.ts"
+}
