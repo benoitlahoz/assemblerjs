@@ -1,7 +1,6 @@
 /**
  * An abstract class.
  */
-// export type Abstract<T> = abstract new (...args: any[]) => T;
 export interface Abstract<T> extends Function {
   prototype: T;
 }
