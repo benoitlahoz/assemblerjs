@@ -3,6 +3,14 @@
   "description": "A simple and zero-dependency DI package written in typescript.",
   "version": "0.0.9",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs"
+  },
+  "bugs": {
+    "url": "https://github.com/benoitlahoz/assemblerjs/issues"
+  },
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
   "devDependencies": {
     "@swc/core": "^1.9.3",
     "@types/node": "^22.5.5",
