@@ -3,14 +3,7 @@
   "description": "A simple and zero-dependency DI package written in typescript.",
   "version": "0.0.9",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/benoitlahoz/assemblerjs"
-  },
-  "bugs": {
-    "url": "https://github.com/benoitlahoz/assemblerjs/issues"
-  },
-  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "devDependencies": {
     "@swc/core": "^1.9.3",
     "@types/node": "^22.5.5",
@@ -36,6 +29,7 @@
     "dist/**/*",
     "README.md"
   ],
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
   "keywords": [
     "composition",
     "decorators",
@@ -48,6 +42,10 @@
   ],
   "license": "MIT",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
   "scripts": {
     "build": "vite build",
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme",
