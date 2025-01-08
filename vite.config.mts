@@ -15,6 +15,7 @@ export default defineConfig({
       formats: ['es', 'cjs'],
       fileName: `index`,
     },
+    minify: 'terser',
   },
   plugins: [
     // @ts-expect-error https://stackoverflow.com/a/74304876
