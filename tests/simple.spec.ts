@@ -34,6 +34,7 @@ describe('Simple', () => {
       constructor(public logger: AbstractLogger) {}
     }
 
+    // Bootstrap application from entry assemblage.
     const app: App = Assembler.build(App);
     expect(app.logger.log('foo')).toStrictEqual(['foo']);
   });
