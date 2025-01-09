@@ -34,6 +34,16 @@ export const isObject = (value: unknown): value is Record<any, any> =>
   typeof value === 'object' && !Array.isArray(value) && !isClass(value);
 
 /**
+ * Checks if a function has been declared as asynchronous by testing its constructor name.
+ *
+ * @param { unknown } value The value to test.
+ * @returns { boolean } true if the value is a function and  has been declared as asynchronous.
+ */
+export const isAsync = (value: unknown): boolean =>
+  typeof value === 'function' &&
+  (value as Function).constructor.name === 'AsyncFunction';
+
+/**
  * Returns a functional `switch`... `case`.
  *
  * @param { Record<string | number, T> } statements An `Object` of properties to be tested

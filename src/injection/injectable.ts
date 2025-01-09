@@ -7,7 +7,8 @@ import {
   ReflectParamTypes,
 } from '@/common/constants';
 import { getCustomMetadata, getOwnCustomMetadata } from '@/common/reflection';
-import { AssemblerContext } from '@/assembler/context';
+import type { AssemblerContext } from '@/assembler/types';
+import { callHook } from '@/assemblage/hooks';
 import { Injection } from './types';
 import { resolveInjectionTuple } from './resolvers';
 
@@ -35,9 +36,18 @@ export class Injectable<T> {
     this.configuration = buildable.configuration;
 
     // Register injectable assemblage's own injections (i.e. passed in the assemblage's definition).
+
     for (const injection of this.injections) {
       this.context.register(injection);
     }
+  }
+
+  /**
+   * Dispose the injectable by deleting its singleton if exists.
+   */
+  public dispose(): void {
+    const self = this as any;
+    delete self.singleton;
   }
 
   /**
@@ -51,6 +61,8 @@ export class Injectable<T> {
 
     const params = this.resolveDependencies();
     const instance = new this.concrete(...params) as T;
+
+    callHook(instance, 'onInit', this.context);
 
     if (this.isSingleton) {
       this.singleton = instance;

@@ -3,8 +3,9 @@ import type { Injection } from '@/injection/types';
 import { defineCustomMetadata } from '@/common/reflection';
 import { ReflectIsSingletonFlag } from '@/common/constants';
 import { Injectable } from '@/injection/injectable';
-import { AbstractAssembler } from './abstract';
-import { AssemblerContext } from './context';
+import type { AssemblerContext } from './types';
+import { AbstractAssembler } from './types';
+import { callHook } from '@/assemblage/hooks';
 
 export class Assembler implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
@@ -17,7 +18,12 @@ export class Assembler implements AbstractAssembler {
   }
 
   private constructor(entry: Concrete<any>) {
-    this.context = new AssemblerContext(this);
+    this.context = {
+      register: this.register.bind(this),
+      has: this.has.bind(this),
+      require: this.require.bind(this),
+      tagged: this.tagged.bind(this),
+    };
 
     // Entry assemblage is always a singleton.
     defineCustomMetadata(ReflectIsSingletonFlag, true, entry);
@@ -25,6 +31,17 @@ export class Assembler implements AbstractAssembler {
     // Recursively register dependencies beginning from the entry concrete class.
     const injectable = this.register([entry]);
     return injectable.build();
+  }
+
+  public dispose(): void {
+    for (const [_, injectable] of this.injectables) {
+      if (injectable.singleton) {
+        // Call 'onDispose' hook.
+        callHook(injectable.singleton, 'onDispose', this.context);
+      }
+
+      injectable.dispose();
+    }
   }
 
   /**
@@ -44,6 +61,10 @@ export class Assembler implements AbstractAssembler {
     }
 
     this.injectables.set(injectable.identifier, injectable);
+
+    // Call 'onRegister' hook.
+    callHook(injectable.concrete, 'onRegister', this.context);
+
     return injectable;
   }
 
@@ -89,5 +110,12 @@ export class Assembler implements AbstractAssembler {
       }
     }
     return res;
+  }
+
+  /**
+   * Size of the assembler: number of registered dependencies.
+   */
+  public get size(): number {
+    return this.injectables.size;
   }
 }
