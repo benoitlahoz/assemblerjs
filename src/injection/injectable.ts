@@ -2,6 +2,7 @@ import type { Concrete, Identifier } from '@/types';
 import { clearInstance } from '@/common/utils';
 import {
   AssemblageDefinition,
+  getDefinition,
   getDefinitionValue,
 } from '@/assemblage/definition';
 import { callHook } from '@/assemblage/hooks';
@@ -9,6 +10,7 @@ import type { AssemblerContext } from '@/assembler/types';
 import type { Injection } from './types';
 import { resolveInjectionTuple } from './resolvers';
 import { resolveDependencies, resolveParameters } from './dependencies';
+import { EventManager } from '@/events/event-manager';
 
 export class Injectable<T> {
   public readonly identifier: Identifier<T>;
@@ -44,6 +46,10 @@ export class Injectable<T> {
     this.dependenciesIds = resolveDependencies(this.concrete);
 
     // TODO: Here check circular.
+
+    if (this.isSingleton) {
+      this.build();
+    }
   }
 
   /**
@@ -73,6 +79,12 @@ export class Injectable<T> {
     );
     const instance = new this.concrete(...params) as T;
 
+    // Add event channels to subclass of `EventManager`.
+    const isEventManager = this.concrete.prototype instanceof EventManager;
+    if (isEventManager) {
+      (instance as EventManager).addChannels(...this.events);
+    }
+
     callHook(instance, 'onInit', this.context);
 
     if (this.isSingleton) {
@@ -92,14 +104,14 @@ export class Injectable<T> {
    * Metadatas passed in assemblage's definition or in its parent definition.
    */
   public get definition(): AssemblageDefinition {
-    return getDefinitionValue('metadata', this.concrete) || {};
+    return getDefinition(this.concrete) || {};
   }
 
   /**
    * `true` if assemblage is a singleton.
    */
   public get isSingleton(): boolean {
-    return getDefinitionValue('singleton', this.concrete);
+    return getDefinitionValue('singleton', this.concrete) || true;
   }
 
   /**
@@ -110,9 +122,16 @@ export class Injectable<T> {
   }
 
   /**
-   * Tags passed in assemblage's definition or in its parent definition.
+   * Tags passed in assemblage's definition.
    */
   public get tags(): string[] {
     return getDefinitionValue('tags', this.concrete) || [];
+  }
+
+  /**
+   * Event channels passed in assemblage's definition.
+   */
+  public get events(): string[] {
+    return getDefinitionValue('events', this.concrete) || [];
   }
 }
