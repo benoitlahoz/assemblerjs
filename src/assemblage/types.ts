@@ -11,7 +11,7 @@ export abstract class AbstractAssemblage {
    *
    * @param { AssemblerContext } context The assembler's context.
    */
-  // @ts-expect-error 'context' is unused.
+  // @ts-ignore 'context' is unused.
   static onRegister(context: AssemblerContext): void {}
 
   /**
