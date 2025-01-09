@@ -1,22 +1,21 @@
 import type { Concrete, Identifier } from '@/types';
 import {
-  ReflectConfigurationParamIndex,
-  ReflectContextParamIndex,
-  ReflectIsSingletonFlag,
-  ReflectMetadataParamIndex,
-  ReflectParamTypes,
-} from '@/common/constants';
-import { getCustomMetadata, getOwnCustomMetadata } from '@/common/reflection';
-import type { AssemblerContext } from '@/assembler/types';
+  AssemblageDefinition,
+  getDefinitionValue,
+} from '@/assemblage/definition';
 import { callHook } from '@/assemblage/hooks';
-import { Injection } from './types';
+import type { AssemblerContext } from '@/assembler/types';
+import type { Injection } from './types';
 import { resolveInjectionTuple } from './resolvers';
+import { resolveDependencies, resolveParameters } from './dependencies';
 
 export class Injectable<T> {
   public readonly identifier: Identifier<T>;
   public readonly concrete: Concrete<T>;
   public readonly configuration: Record<string, any>;
   public singleton: T | undefined;
+
+  private dependenciesIds: Identifier<unknown>[] = [];
 
   public static of<TNew>(
     injection: Injection<TNew>,
@@ -29,17 +28,21 @@ export class Injectable<T> {
     injection: Injection<T>,
     private context: AssemblerContext
   ) {
-    const buildable = resolveInjectionTuple<T>(injection);
+    const buildable = resolveInjectionTuple(injection);
 
     this.identifier = buildable.identifier;
     this.concrete = buildable.concrete;
     this.configuration = buildable.configuration;
 
     // Register injectable assemblage's own injections (i.e. passed in the assemblage's definition).
-
     for (const injection of this.injections) {
       this.context.register(injection);
     }
+
+    // Cache dependencies.
+    this.dependenciesIds = resolveDependencies(this.concrete);
+
+    // TODO: Here check circular.
   }
 
   /**
@@ -53,13 +56,17 @@ export class Injectable<T> {
   /**
    * Instantiate the assemblage or get its singleton instance.
    *
-   * @param { ...any[] } args The arguments to be passed to asssemblage's constructor.
    * @returns { T } The assemblage instance.
    */
   public build(): T {
     if (this.singleton) return this.singleton;
 
-    const params = this.resolveDependencies();
+    const params = resolveParameters(
+      this.concrete,
+      this.context,
+      this.definition,
+      this.configuration
+    );
     const instance = new this.concrete(...params) as T;
 
     callHook(instance, 'onInit', this.context);
@@ -71,87 +78,37 @@ export class Injectable<T> {
   }
 
   /**
-   * Resolve dependencies passed as parameters in constructor.
-   *
-   * @returns { (Identifier<unknown> | any)[] } An array of parameters.
+   * Injectable assemblage's dependencies passed as 'constructor' parameters.
    */
-  private resolveDependencies(): (Identifier<unknown> | any)[] {
-    const parameters: any[] = [];
+  public get dependencies(): (Identifier<unknown> | any)[] {
+    return this.dependenciesIds;
+  }
 
-    // Get parameters decorated with `@Context`, `@Configuration`.
-    const contextParamIndex: number[] =
-      getOwnCustomMetadata(ReflectContextParamIndex, this.concrete) || [];
-    const configParamIndex: number[] =
-      getOwnCustomMetadata(ReflectConfigurationParamIndex, this.concrete) || [];
-
-    // Get metadata, including from parent class.
-    const metadataParamIndex: number[] =
-      getCustomMetadata(ReflectMetadataParamIndex, this.concrete) || [];
-
-    // Build parameters to pass to constructor.
-    let i = 0;
-    for (const dependency of this.dependencies) {
-      if (contextParamIndex.includes(i)) {
-        parameters.push(this.context);
-        i++;
-        continue;
-      }
-
-      if (configParamIndex.includes(i)) {
-        parameters.push(this.configuration);
-        i++;
-        continue;
-      }
-
-      if (metadataParamIndex.includes(i)) {
-        parameters.push(this.metadata);
-        i++;
-        continue;
-      }
-
-      // Recursively require dependency to pass an instance to constructor.
-      parameters.push(this.context.require(dependency));
-
-      i++;
-    }
-
-    return parameters;
+  /**
+   * Metadatas passed in assemblage's definition or in its parent definition.
+   */
+  public get definition(): AssemblageDefinition {
+    return getDefinitionValue('metadata', this.concrete) || {};
   }
 
   /**
    * `true` if assemblage is a singleton.
-   *
-   * @todo Change assembler to avoid checking instance.
    */
   public get isSingleton(): boolean {
-    return getOwnCustomMetadata(ReflectIsSingletonFlag, this.concrete) || false;
+    return getDefinitionValue('singleton', this.concrete);
   }
 
   /**
    * Injectable assemblage's own injections defined in its decorator's definition.
    */
   public get injections(): Injection<unknown>[] {
-    return getOwnCustomMetadata('inject', this.concrete) || [];
-  }
-
-  /**
-   * Injectable assemblage's dependencies passed as 'constructor' parameters.
-   */
-  public get dependencies(): (Identifier<unknown> | any)[] {
-    return Reflect.getMetadata(ReflectParamTypes, this.concrete) || [];
+    return getDefinitionValue('inject', this.concrete) || [];
   }
 
   /**
    * Tags passed in assemblage's definition or in its parent definition.
    */
   public get tags(): string[] {
-    return getCustomMetadata('tags', this.concrete) || [];
-  }
-
-  /**
-   * Metadatas passed in assemblage's definition or in its parent definition.
-   */
-  public get metadata(): Record<string, any> {
-    return getCustomMetadata('metadata', this.concrete) || {};
+    return getDefinitionValue('tags', this.concrete) || [];
   }
 }
