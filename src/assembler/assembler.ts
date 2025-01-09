@@ -31,7 +31,8 @@ export class Assembler implements AbstractAssembler {
     // Recursively register dependencies beginning from the entry concrete class.
     const injectable = this.register([entry]);
 
-    return injectable.build();
+    // Return instance of entry assemblage.
+    return this.require(injectable.identifier);
   }
 
   public dispose(): void {
