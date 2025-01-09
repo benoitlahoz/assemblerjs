@@ -1,4 +1,15 @@
-import { ReflectCustomPrefix, ReflectCustomSuffix } from './constants';
+export const ReflectParamTypes = 'design:paramtypes';
+
+export const ReflectPrefix = '__';
+export const ReflectSuffix = '__';
+
+export const ReflectIsAssemblageFlag = `is_assemblage`;
+
+export const ReflectDefinition = 'assemblage_definition';
+
+export const ReflectContextParamIndex = `context_param_index`;
+export const ReflectConfigurationParamIndex = `config_param_index`;
+export const ReflectDefinitionParamIndex = `definition_param_index`;
 
 /**
  * Assemblage surrounds its own metadata keys by a prefix and a suffix:
@@ -14,7 +25,7 @@ export const defineCustomMetadata = (
   target: Object
 ) => {
   Reflect.defineMetadata(
-    `${ReflectCustomPrefix}${name}${ReflectCustomSuffix}`,
+    `${ReflectPrefix}${name}${ReflectSuffix}`,
     value,
     target
   );
@@ -29,10 +40,7 @@ export const defineCustomMetadata = (
  * @returns { any } vThe value of the metadata for the property.
  */
 export const getCustomMetadata = (name: string, target: Object) => {
-  return Reflect.getMetadata(
-    `${ReflectCustomPrefix}${name}${ReflectCustomSuffix}`,
-    target
-  );
+  return Reflect.getMetadata(`${ReflectPrefix}${name}${ReflectSuffix}`, target);
 };
 
 /**
@@ -45,7 +53,11 @@ export const getCustomMetadata = (name: string, target: Object) => {
  */
 export const getOwnCustomMetadata = (name: string, target: Object) => {
   return Reflect.getOwnMetadata(
-    `${ReflectCustomPrefix}${name}${ReflectCustomSuffix}`,
+    `${ReflectPrefix}${name}${ReflectSuffix}`,
     target
   );
+};
+
+export const getParamTypes = (target: Object) => {
+  return Reflect.getMetadata(ReflectParamTypes, target) || [];
 };
