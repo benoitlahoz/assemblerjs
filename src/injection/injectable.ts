@@ -1,4 +1,5 @@
 import type { Concrete, Identifier } from '@/types';
+import { clearInstance } from '@/common/utils';
 import {
   AssemblageDefinition,
   getDefinitionValue,
@@ -49,8 +50,11 @@ export class Injectable<T> {
    * Dispose the injectable by deleting its singleton if exists.
    */
   public dispose(): void {
-    const self = this as any;
-    delete self.singleton;
+    if (this.singleton) {
+      // Call 'onDispose' hook.
+      callHook(this.singleton, 'onDispose', this.context);
+    }
+    clearInstance(this, Injectable);
   }
 
   /**

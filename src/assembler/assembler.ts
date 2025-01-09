@@ -1,4 +1,5 @@
 import type { Concrete, Identifier } from '@/types';
+import { clearInstance } from '@/common/utils';
 import type { Injection } from '@/injection/types';
 import { Injectable } from '@/injection/injectable';
 import type { AssemblerContext } from './types';
@@ -35,13 +36,9 @@ export class Assembler implements AbstractAssembler {
 
   public dispose(): void {
     for (const [_, injectable] of this.injectables) {
-      if (injectable.singleton) {
-        // Call 'onDispose' hook.
-        callHook(injectable.singleton, 'onDispose', this.context);
-      }
-
       injectable.dispose();
     }
+    clearInstance(this, Assembler);
   }
 
   /**
