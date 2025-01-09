@@ -14,7 +14,7 @@ describe('Simple', () => {
     expect(app.log('foo', 'bar')).toStrictEqual(['foo', 'bar']);
   });
 
-  it('should inject a dependecy identified only by its concrete class.', () => {
+  it('should inject a dependency identified only by its concrete class.', () => {
     @Assemblage({
       inject: [[BypassLogger]],
     })
@@ -26,7 +26,7 @@ describe('Simple', () => {
     expect(app.logger.log('foo')).toStrictEqual(['foo']);
   });
 
-  it('should inject a dependecy that bounds a concrete class to an abstract class.', () => {
+  it('should inject a dependency that bounds a concrete class to an abstract class.', () => {
     @Assemblage({
       inject: [[AbstractLogger, BypassLogger]],
     })

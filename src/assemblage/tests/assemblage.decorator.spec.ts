@@ -1,9 +1,9 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 import { Assemblage } from '../decorator';
-import { AbstractAssemblage } from '../abstract';
+import { AbstractAssemblage } from '../types';
+import type { AssemblerContext } from '../../assembler/types';
 import { Assembler } from '../../assembler/assembler';
-import { AssemblerContext } from '../../assembler/context';
 import { Context, Configuration, Metadata } from '../../assembler/decorators';
 import { getOwnCustomMetadata } from '../../common/reflection';
 import {
@@ -14,8 +14,15 @@ import {
 describe('Assemblage Decorator', () => {
   @Assemblage()
   class MyDependencyClass implements AbstractAssemblage {
+    public static onRegister(context: AssemblerContext): void {
+      expect(context).toBeDefined();
+      expect(context.has(MyDependencyClass)).toBeTruthy();
+      expect(context.has(MyDependentClass)).toBeFalsy();
+    }
+
     public foo: string;
     public ack: string;
+
     constructor(
       // private dep: MyDependentClass, // TODO: handle circular dependencies.
       @Context() private context: AssemblerContext,
@@ -23,8 +30,10 @@ describe('Assemblage Decorator', () => {
     ) {
       this.foo = this.configuration.foo;
       this.ack = this.configuration.ack;
-      // TODO: réimplémenter onInit pour require. Maximum call stack.
-      // const dep = this.context.require(AbstractMyDependentClass);
+    }
+
+    public onInit(context: AssemblerContext): void | Promise<void> {
+      expect(context).toBeDefined();
     }
   }
 
@@ -65,25 +74,21 @@ describe('Assemblage Decorator', () => {
       expect(this.metadata.name).toBe(metadata.name);
       expect(this.metadata.version).toBe(metadata.version);
     }
+
+    public onInit(context: AssemblerContext): void | Promise<void> {
+      const dep = context.require(AbstractMyDependentClass);
+      console.log(dep);
+    }
   }
 
   it('should decorate a class with passed options.', () => {
-    expect(getOwnCustomMetadata('inject', MyAssemblageClass)).toBeTypeOf(
-      'object'
-    );
-    expect(getOwnCustomMetadata('metadata', MyAssemblageClass)).toStrictEqual(
-      metadata
-    );
-
     // Assemble from the entry point.
     const app = Assembler.build(MyAssemblageClass);
 
-    // Get typed assemblage by passing a generic.
-    const dependency =
-      app.context.require<MyDependencyClass>(MyDependencyClass);
+    const dependency: MyDependencyClass =
+      app.context.require(MyDependencyClass);
     expect(dependency.foo).toBe('bar');
 
-    // Get typed assemblage by setting variable type.
     const dependent: AbstractMyDependentClass = app.context.require(
       AbstractMyDependentClass
     );

@@ -1,4 +1,4 @@
-import { Assemblage } from '../../../src/assemblage/decorator';
+import { Assemblage } from '../../../src';
 import { AbstractErrorHandler } from './error-handler.abstract';
 import { AbstractLogger } from '../logger/logger.abstract';
 import { BypassLogger } from '../logger/logger-bypass.assemblage';

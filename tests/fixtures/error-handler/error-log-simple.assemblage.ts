@@ -1,5 +1,4 @@
-import { AbstractAssemblage } from '../../../src/assemblage/abstract';
-import { Assemblage } from '../../../src/assemblage/decorator';
+import { AbstractAssemblage, Assemblage } from '../../../src';
 import { AbstractLogger } from '../logger/logger.abstract';
 
 @Assemblage()

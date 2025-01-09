@@ -1,4 +1,4 @@
-import { AbstractAssemblage } from '../../../src/assemblage/abstract';
+import { AbstractAssemblage } from '../../../src';
 
 export abstract class AbstractLogger extends AbstractAssemblage {
   public abstract log(...args: any[]);
