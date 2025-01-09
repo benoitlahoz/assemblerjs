@@ -70,6 +70,10 @@ describe('Assemblage Decorator', () => {
       if (this.definition.metadata) {
         expect(this.definition.metadata.name).toBe(metadata.name);
         expect(this.definition.metadata.version).toBe(metadata.version);
+      } else {
+        throw new Error(
+          `'MyAssemblageClass' should be able to get its own metadata.`
+        );
       }
     }
 

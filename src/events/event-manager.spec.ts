@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { EventManager } from './event-manager.module';
+import { EventManager } from './event-manager';
 
 describe('EventManager', () => {
   it('should instantiate a `Mediator`, register listeners and emit.', () => {
