@@ -1,8 +1,8 @@
-export { AbstractAssemblage } from '@/assemblage/abstract';
+export { AbstractAssemblage } from '@/assemblage/types';
 export { Assemblage } from '@/assemblage/decorator';
 
-export { AbstractAssembler } from '@/assembler/abstract';
+export type { AssemblerContext } from '@/assembler/types';
+export { AbstractAssembler } from '@/assembler/types';
 export { Assembler } from '@/assembler/assembler';
-export { AssemblerContext } from './assembler/context';
 
 export { Context, Configuration, Metadata } from '@/assembler/decorators';
