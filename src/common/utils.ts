@@ -8,6 +8,7 @@ export type AnyFunction<T = any, U = any> = (...args: T[]) => U;
 /**
  * Basic noop function.
  */
+/* #__PURE__ */
 export const NoOp = (..._: any[]) => {};
 
 /**
@@ -17,6 +18,7 @@ export const NoOp = (..._: any[]) => {};
  * @returns { (value: unknown) => string | undefined } A function to check a value for types
  * (returns the type if it matches or undefined if not).
  */
+/* #__PURE__ */
 export const isOfType =
   (...types: string[]) =>
   (value: unknown) => {
@@ -30,6 +32,7 @@ export const isOfType =
  * @param { unknown } value The value to check.
  * @returns { boolean } `true` if the value is undefined.
  */
+/* #__PURE__ */
 export const isUndefined = (value: unknown): value is undefined =>
   typeof value === 'undefined';
 
@@ -39,6 +42,7 @@ export const isUndefined = (value: unknown): value is undefined =>
  * @param { unknown } value The value to check.
  * @returns { boolean } `true` if the value is null.
  */
+/* #__PURE__ */
 export const isNull = (value: unknown): value is null => value === null;
 
 /**
@@ -47,6 +51,7 @@ export const isNull = (value: unknown): value is null => value === null;
  * @param { unknown } value The value to check.
  * @returns { boolean } `true` if the value is defined.
  */
+/* #__PURE__ */
 export const isDefined = (value: unknown): boolean =>
   !isUndefined(value) && !isNull(value);
 
@@ -56,6 +61,7 @@ export const isDefined = (value: unknown): boolean =>
  * @param { any } target The object to check.
  * @returns { boolean } `true` if the object is a class.
  */
+/* #__PURE__ */
 export const isClass = (
   target: any
 ): target is { new (...args: any[]): any } => {
@@ -72,6 +78,7 @@ export const isClass = (
  * @param { unknown } value The value to check.
  * @returns { boolean } `true` if the value is an object, not a class and not an array.
  */
+/* #__PURE__ */
 export const isObject = (value: unknown): value is Record<any, any> =>
   typeof value === 'object' && !Array.isArray(value) && !isClass(value);
 
@@ -81,6 +88,7 @@ export const isObject = (value: unknown): value is Record<any, any> =>
  * @param { unknown } value The value to test.
  * @returns { boolean } true if the value is a function and  has been declared as asynchronous.
  */
+/* #__PURE__ */
 export const isAsync = (value: unknown): boolean =>
   typeof value === 'function' &&
   (value as Function).constructor.name === 'AsyncFunction';
@@ -93,6 +101,7 @@ export const isAsync = (value: unknown): boolean =>
  * @param { number } to The destination index.
  * @returns { unknown[] } The array with element moved.
  */
+/* #__PURE__ */
 export const moveArrayItem = (arr: unknown[], from: number, to: number) => {
   const item = arr[from];
   arr.splice(from, 1);
@@ -107,6 +116,7 @@ export const moveArrayItem = (arr: unknown[], from: number, to: number) => {
  * @param { any[] } arr The array to remove duplicates from.
  * @returns { any[] } A new array without duplicates.
  */
+/* #__PURE__ */
 export const dedupeArray = (arr: any[]) => Array.from(new Set(arr));
 
 /**
@@ -123,6 +133,7 @@ export const dedupeArray = (arr: any[]) => Array.from(new Set(arr));
  * const originalStr = '   3.14 / 2.0   ';
  * const str = onlyAlphanumeric(originalStr, '.', '/'); // '3.14/2.0'
  */
+/* #__PURE__ */
 export const onlyAlphanumeric = (str: string, ...args: string[]): string => {
   // Place whitespace at the end of the arguments array.
   args
@@ -157,6 +168,7 @@ export const onlyAlphanumeric = (str: string, ...args: string[]): string => {
  *
  * @see https://medium.com/chrisburgin/rewriting-javascript-replacing-the-switch-statement-cfff707cf045
  */
+/* #__PURE__ */
 export const switchCase =
   <T>(
     statements: Record<string | number, AnyFunction<T>>,
@@ -178,6 +190,7 @@ export const switchCase =
  *
  * @see https://medium.com/@abbas.ashraf19/javascript-one-liner-utility-functions-enhance-your-code-with-concise-solutions-55800f55bb39
  */
+/* #__PURE__ */
 export const pipe =
   <T = any>(...fns: AnyFunction<T>[]) =>
   (value?: T): any =>
@@ -197,6 +210,7 @@ export interface ConditionalOptions<T> {
  *
  * @see https://itnext.io/if-else-and-try-catch-as-functional-constructs-da5c6a749f8c
  */
+/* #__PURE__ */
 export const conditionally =
   <T>(options: ConditionalOptions<T>): any =>
   (value: T) => {
@@ -215,6 +229,7 @@ export const conditionally =
  * @returns { (fn: (value: any, index: number | string | any) => void) } A function to call
  * for each entry.
  */
+/* #__PURE__ */
 export const forOf =
   (iterable: Array<any> | Record<any, any>) =>
   (fn: (value: any, index: number | string | any) => void) => {
@@ -233,6 +248,7 @@ export const forOf =
  * @returns { (fn: (value: U, index: number | string | any) => void) } fn The function to call
  * for each index or key.
  */
+/* #__PURE__ */
 export const forIn =
   (iterable: Array<any> | Record<any, any>) =>
   (fn: (index: number | string | any) => void) => {
@@ -252,6 +268,7 @@ export const forIn =
  * @param { Identifier<T> } ctor The class.
  * @returns { string[] } An array of reserved property keys.
  */
+/* #__PURE__ */
 const reservedKeys = <T extends object>(instance: T, ctor: Identifier<T>) => {
   return [
     // Public methods.
@@ -269,6 +286,7 @@ const reservedKeys = <T extends object>(instance: T, ctor: Identifier<T>) => {
  * @param { Identifier<T> } ctor The class.
  * @returns { Proxy } A proxy of the instance.
  */
+/* #__PURE__ */
 export const proxifyIterable = <T extends object, U = any>(
   instance: T &
     (
@@ -313,6 +331,7 @@ export const proxifyIterable = <T extends object, U = any>(
  * @param { T extends object } instance The instance to be cleared.
  * @param { Identifier<T> } ctor The base class of the instance.
  */
+/* #__PURE__ */
 export const clearInstance = <T extends object>(
   instance: T,
   ctor: Identifier<T>
