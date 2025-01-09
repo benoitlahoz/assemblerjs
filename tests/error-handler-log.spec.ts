@@ -26,7 +26,7 @@ describe('ErrorHandler', () => {
     const app: App = Assembler.build(App);
 
     // `BypassLogger` returns the array of arguments passed to its methods.
-    expect(app.error.log(new Error('foo'))).toStrictEqual(['foo']);
+    expect(app.error.handle(new Error('foo'))).toStrictEqual(['foo']);
   });
 
   it('should inject nested dependencies from injected assemblage.', () => {
@@ -46,6 +46,6 @@ describe('ErrorHandler', () => {
     }
 
     const app: App = Assembler.build(App);
-    expect(app.error.log(new Error('foo'))).toStrictEqual(['foo']);
+    expect(app.error.handle(new Error('foo'))).toStrictEqual(['foo']);
   });
 });

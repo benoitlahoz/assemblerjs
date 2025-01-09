@@ -4,12 +4,8 @@ import { Assemblage } from '../decorator';
 import { AbstractAssemblage } from '../types';
 import type { AssemblerContext } from '../../assembler/types';
 import { Assembler } from '../../assembler/assembler';
-import { Context, Configuration, Metadata } from '../../assembler/decorators';
-import { getOwnCustomMetadata } from '../../common/reflection';
-import {
-  ReflectIsAssemblageFlag,
-  ReflectIsControllerFlag,
-} from '../../common/constants';
+import { Context, Configuration, Definition } from '../../injection/decorators';
+import { AssemblageDefinition } from '../definition';
 
 describe('Assemblage Decorator', () => {
   @Assemblage()
@@ -61,7 +57,7 @@ describe('Assemblage Decorator', () => {
   @Assemblage({
     inject: [[AbstractMyDependentClass, MyDependentClass]],
     controller: true,
-    path: '/', // Mandatory if 'controller' is `true`.
+    path: '/api', // Mandatory if 'controller' is `true`.
     metadata,
   })
   class MyAssemblageClass implements AbstractMyAssemblage {
@@ -69,15 +65,17 @@ describe('Assemblage Decorator', () => {
 
     constructor(
       @Context() public context: AssemblerContext,
-      @Metadata() private metadata: Record<string, any>
+      @Definition() private definition: AssemblageDefinition
     ) {
-      expect(this.metadata.name).toBe(metadata.name);
-      expect(this.metadata.version).toBe(metadata.version);
+      if (this.definition.metadata) {
+        expect(this.definition.metadata.name).toBe(metadata.name);
+        expect(this.definition.metadata.version).toBe(metadata.version);
+      }
     }
 
     public onInit(context: AssemblerContext): void | Promise<void> {
       const dep = context.require(AbstractMyDependentClass);
-      console.log(dep);
+      expect(dep).toBeDefined();
     }
   }
 

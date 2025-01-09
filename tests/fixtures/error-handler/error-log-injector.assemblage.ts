@@ -11,7 +11,7 @@ export class ErrorLogInjector implements AbstractErrorHandler {
   // Logger is injected by this assemblage.
   constructor(private logger: AbstractLogger) {}
 
-  public log(err: Error): void {
+  public handle(err: Error): void {
     return this.logger.error(err.message);
   }
 }
