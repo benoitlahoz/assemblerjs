@@ -1,11 +1,10 @@
 import type { Concrete, Identifier } from '@/types';
 import type { Injection } from '@/injection/types';
-import { defineCustomMetadata } from '@/common/reflection';
-import { ReflectIsSingletonFlag } from '@/common/constants';
 import { Injectable } from '@/injection/injectable';
 import type { AssemblerContext } from './types';
 import { AbstractAssembler } from './types';
 import { callHook } from '@/assemblage/hooks';
+import { setDefinitionValue } from '@/assemblage/definition';
 
 export class Assembler implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
@@ -26,10 +25,11 @@ export class Assembler implements AbstractAssembler {
     };
 
     // Entry assemblage is always a singleton.
-    defineCustomMetadata(ReflectIsSingletonFlag, true, entry);
+    setDefinitionValue('singleton', true, entry);
 
     // Recursively register dependencies beginning from the entry concrete class.
     const injectable = this.register([entry]);
+
     return injectable.build();
   }
 
