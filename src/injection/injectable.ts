@@ -1,5 +1,5 @@
 import type { Concrete, Identifier } from '@/types';
-import { clearInstance } from '@/common/utils';
+import { clearInstance, forOf } from '@/common/utils';
 import {
   AssemblageDefinition,
   getDefinition,
@@ -7,18 +7,18 @@ import {
 } from '@/assemblage/definition';
 import { callHook } from '@/assemblage/hooks';
 import type { AssemblerContext } from '@/assembler/types';
-import type { Injection } from './types';
-import { resolveInjectionTuple } from './resolvers';
-import { resolveDependencies, resolveParameters } from './dependencies';
 import { EventManager } from '@/events/event-manager';
+import type { Injection } from './types';
+import { resolveInjectionTuple } from './injections';
+import { resolveDependencies, resolveParameters } from './dependencies';
 
 export class Injectable<T> {
   public readonly identifier: Identifier<T>;
   public readonly concrete: Concrete<T>;
   public readonly configuration: Record<string, any>;
-  public singleton: T | undefined;
 
   private dependenciesIds: Identifier<unknown>[] = [];
+  private singletonInstance: T | undefined;
 
   public static of<TNew>(
     injection: Injection<TNew>,
@@ -29,7 +29,7 @@ export class Injectable<T> {
 
   private constructor(
     injection: Injection<T>,
-    private context: AssemblerContext
+    public readonly context: AssemblerContext
   ) {
     const buildable = resolveInjectionTuple(injection);
 
@@ -38,16 +38,16 @@ export class Injectable<T> {
     this.configuration = buildable.configuration;
 
     // Register injectable assemblage's own injections (i.e. passed in the assemblage's definition).
-    for (const injection of this.injections) {
-      this.context.register(injection);
-    }
+    const iterateOwnInjections = forOf(this.injections);
+    iterateOwnInjections(<U>(injection: Injection<U>) =>
+      this.context.register(injection)
+    );
 
     // Cache dependencies.
     this.dependenciesIds = resolveDependencies(this.concrete);
 
-    // TODO: Here check circular.
-
     if (this.isSingleton) {
+      // Build now if singleton.
       this.build();
     }
   }
@@ -56,9 +56,9 @@ export class Injectable<T> {
    * Dispose the injectable by deleting its singleton if exists.
    */
   public dispose(): void {
-    if (this.singleton) {
+    if (this.singletonInstance) {
       // Call 'onDispose' hook.
-      callHook(this.singleton, 'onDispose', this.context);
+      callHook(this.singletonInstance, 'onDispose', this.context);
     }
     clearInstance(this, Injectable);
   }
@@ -69,14 +69,9 @@ export class Injectable<T> {
    * @returns { T } The assemblage instance.
    */
   public build(): T {
-    if (this.singleton) return this.singleton;
+    if (this.singletonInstance) return this.singletonInstance;
 
-    const params = resolveParameters(
-      this.concrete,
-      this.context,
-      this.definition,
-      this.configuration
-    );
+    const params = resolveParameters(this);
     const instance = new this.concrete(...params) as T;
 
     // Add event channels to subclass of `EventManager`.
@@ -88,7 +83,7 @@ export class Injectable<T> {
     callHook(instance, 'onInit', this.context);
 
     if (this.isSingleton) {
-      this.singleton = instance;
+      this.singletonInstance = instance;
     }
     return instance;
   }
@@ -112,6 +107,13 @@ export class Injectable<T> {
    */
   public get isSingleton(): boolean {
     return getDefinitionValue('singleton', this.concrete) || true;
+  }
+
+  /**
+   * The singleton instance if this `Injectable` wraps a singleton assemblage.
+   */
+  public get singleton(): T | undefined {
+    return this.singletonInstance;
   }
 
   /**

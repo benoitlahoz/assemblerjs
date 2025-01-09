@@ -1,44 +1,44 @@
 import { Concrete } from '@/types';
 import { getDecoratedParametersIndexes } from './decorators';
 import { getParamTypes } from '@/assemblage/reflection';
-import { AssemblerContext } from '@/assembler/types';
-import { AssemblageDefinition } from '@/assemblage/definition';
+import { Injectable } from './injectable';
 
-export const resolveParameters = <T>(
-  target: Concrete<T>,
-  context: AssemblerContext,
-  definition: AssemblageDefinition,
-  configuration: Record<string, any>
-) => {
+/**
+ * Get an array of parameters from an `Injectable` constructor, including decorated ones.
+ *
+ * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
+ * @returns { any[] } An array of passed parameters.
+ */
+export const resolveParameters = <T>(injectable: Injectable<T>) => {
   const parameters: any[] = [];
 
   // Parameters passed in constructor.
-  const paramTypes = getParamTypes(target);
-  const indexes = getDecoratedParametersIndexes(target);
+  const paramTypes = getParamTypes(injectable.concrete);
+  const indexes = getDecoratedParametersIndexes(injectable.concrete);
 
   // Build parameters to pass to instance.
   let i = 0;
   for (const dependency of paramTypes) {
     if (indexes.context.includes(i)) {
-      parameters.push(context);
+      parameters.push(injectable.context);
       i++;
       continue;
     }
 
     if (indexes.configuration.includes(i)) {
-      parameters.push(configuration);
+      parameters.push(injectable.configuration);
       i++;
       continue;
     }
 
     if (indexes.definition.includes(i)) {
-      parameters.push(definition);
+      parameters.push(injectable.definition);
       i++;
       continue;
     }
 
     // Recursively require dependency to pass an instance to constructor.
-    parameters.push(context.require(dependency));
+    parameters.push(injectable.context.require(dependency));
 
     i++;
   }
@@ -46,6 +46,12 @@ export const resolveParameters = <T>(
   return parameters;
 };
 
+/**
+ * Get an array of parameters from an `Injectable` constructor, excluding non-dependency ones.
+ *
+ * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
+ * @returns { any[] } An array of passed parameters.
+ */
 export const resolveDependencies = <T>(target: Concrete<T>) => {
   const parameters: any[] = [];
 
