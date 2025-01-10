@@ -5,7 +5,7 @@ import { ReflectDefinition, getOwnCustomMetadata } from './reflection';
 export interface AssemblageDefinition {
   singleton?: false;
   events?: string[];
-  inject?: Injection<unknown>[][];
+  inject?: Injection<unknown>[];
   tags?: string | string[];
 
   controller?: true;
