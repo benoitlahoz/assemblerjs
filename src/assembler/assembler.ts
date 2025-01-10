@@ -27,9 +27,10 @@ export class Assembler implements AbstractAssembler {
 
     // Entry assemblage is always a singleton.
     setDefinitionValue('singleton', true, entry);
-
     // Recursively register dependencies beginning from the entry concrete class.
     const injectable = this.register([entry]);
+
+    // TODO: Make entry an event manager for event '*'.
 
     // Return instance of entry assemblage.
     return this.require(injectable.identifier);

@@ -23,6 +23,5 @@
     },
     "types": ["reflect-metadata"]
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "vite.config.mts"],
-  "exclude": ["**/e2e/**/*", "**/*test*/**", "**/*.spec.*"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "vite.config.mts"]
 }
