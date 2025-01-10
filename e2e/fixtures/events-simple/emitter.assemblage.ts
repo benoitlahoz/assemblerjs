@@ -1,5 +1,4 @@
-import { Assemblage } from '../../../src';
-import { EventManager } from '../../../src/events/event-manager';
+import { Assemblage, EventManager } from '../../../src';
 import { AbstractEmitterAssemblage } from './emitter.abstract';
 
 @Assemblage({
@@ -12,7 +11,7 @@ export class EmitterAssemblage
   constructor() {
     // Discouraged: User can add channels' names in 'super' call.
     // They will be added before 'events' definition's property.
-    super();
+    super(/* 'init' */);
   }
 
   public async onInit(): Promise<void> {

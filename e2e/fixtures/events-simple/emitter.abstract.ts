@@ -1,8 +1,4 @@
-import { AbstractAssemblage } from '../../../src';
-import { AbstractEventManager } from '../../../src/events/event-manager.abstract';
+import { AbstractAssemblage, AbstractEventManager } from '../../../src';
 
 export type AbstractEmitter = AbstractEventManager & AbstractAssemblage;
-
-export abstract class AbstractEmitterAssemblage
-  extends AbstractEventManager
-  implements AbstractEmitter {}
+export abstract class AbstractEmitterAssemblage {}

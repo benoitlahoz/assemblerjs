@@ -1,4 +1,3 @@
-// import path from 'node:path';
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vitest/config';
 import swc from 'rollup-plugin-swc';
@@ -17,6 +16,8 @@ export default defineConfig({
       ],
     },
     exclude: ['**/node_modules/**'],
+  },
+  resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
