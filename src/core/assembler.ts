@@ -74,6 +74,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * Recursively register an `Injection` tuple and its inner injected dependencies.
    *
    * @param { Injection<T> } injection The injection tuple to register.
+   * @returns { Injectable<T> } An injectable of type `T`.
    */
   public register<T>(injection: Injection<T>): Injectable<T> {
     const buildable = resolveInjectionTuple(injection);
