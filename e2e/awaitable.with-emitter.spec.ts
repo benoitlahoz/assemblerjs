@@ -12,20 +12,11 @@ import {
 import {
   AwaitableAssemblage,
   AwaitableChannels,
-} from './fixtures/awaitable/awaitable.assemblage';
+} from './fixtures/awaitable-simple/awaitable.assemblage';
 import {
   AwaiterAssemblage,
   AwaiterChannels,
-} from './fixtures/awaitable/awaiter.assemblage';
-
-const ExpectedOrderedMessages = [
-  AwaitableChannels.Init,
-  AwaitableChannels.Inited,
-  AwaiterChannels.Init,
-  AwaitableChannels.Ready,
-  AwaitableChannels.Resolved,
-  AwaiterChannels.Resolved,
-];
+} from './fixtures/awaitable-simple/awaiter.assemblage';
 
 describe('Awaitable', () => {
   it('should wait for dependency to be ready.', async () => {
@@ -50,14 +41,16 @@ describe('Awaitable', () => {
         public awaiter: AwaiterAssemblage
       ) {
         // 'AwaitableAssemblage' and 'AwaiterAssemblage' events are forwarded to 'Assembler'.
+
         this.context.on('*', (channel: string) => {
           ReceivedMessages.push(channel);
         });
       }
 
       public async onInit(): Promise<void> {
-        // TODO: As of version 0.1.0 'onInit' hook is called just after an instance has been
+        // TODO: As of version 0.2.0 'onInit' hook is called just after an instance has been
         // built, making this entry point dependencies to be 'inited' before it.
+
         await this.awaitable.execute();
         await this.awaiter.execute();
       }
