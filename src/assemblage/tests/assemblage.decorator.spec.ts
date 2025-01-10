@@ -5,7 +5,7 @@ import { AbstractAssemblage } from '../types';
 import type { AssemblerContext } from '../../assembler/types';
 import { Assembler } from '../../assembler/assembler';
 import { Context, Configuration, Definition } from '../../injection/decorators';
-import { AssemblageDefinition } from '../definition';
+import type { AssemblageDefinition } from '../definition';
 
 describe('Assemblage Decorator', () => {
   @Assemblage()
@@ -26,10 +26,12 @@ describe('Assemblage Decorator', () => {
     ) {
       this.foo = this.configuration.foo;
       this.ack = this.configuration.ack;
+      expect(context.require).toBeTypeOf('function');
     }
 
     public onInit(context: AssemblerContext): void | Promise<void> {
       expect(context).toBeDefined();
+      expect(this.context).toStrictEqual(context);
     }
   }
 
@@ -42,7 +44,9 @@ describe('Assemblage Decorator', () => {
   })
   class MyDependentClass implements AbstractMyDependentClass {
     public foo = 'sum';
-    constructor(private dependency: MyDependencyClass) {}
+    constructor(private dependency: MyDependencyClass) {
+      expect(this.dependency).toBeDefined();
+    }
   }
 
   abstract class AbstractMyAssemblage extends AbstractAssemblage {
