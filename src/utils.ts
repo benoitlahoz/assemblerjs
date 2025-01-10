@@ -12,7 +12,7 @@ export type AnyFunction<T = any, U = any> = (...args: T[]) => U;
 export const NoOp = (..._: any[]) => {};
 
 /**
- * Returns a function that checks if a value is of one of the passed types.
+ * Return a function that checks if a value is of one of the passed types.
  *
  * @param { (...args: string[]) } types The types names to checks.
  * @returns { (value: unknown) => string | undefined } A function to check a value for types
@@ -158,7 +158,7 @@ export const onlyAlphanumeric = (str: string, ...args: string[]): string => {
 };
 
 /**
- * Returns a functional `switch`... `case`.
+ * Return a functional `switch`... `case`.
  *
  * @param { Record<string | number, T> } statements An `Object` of properties to be tested
  * and their resulting function.
@@ -203,7 +203,7 @@ export interface ConditionalOptions<T> {
 }
 
 /**
- * Returns a functional `if`... `else`.
+ * Return a functional `if`... `else`.
  *
  * @param { ConditionalOptions } options `if` / `then` / optional `else` options.
  * @returns { T: any } A conditional function.
@@ -222,7 +222,7 @@ export const conditionally =
   };
 
 /**
- * Returns a function bound to an array or object to execute a function `fn` for each of its entries.
+ * Return a function bound to an array or object to execute a function `fn` for each of its entries.
  *
  * @param { Array<any> | Record<any, any> } iterable The `Iterable` for
  * each entry the given function will be executed.
@@ -241,7 +241,7 @@ export const forOf =
   };
 
 /**
- * Returns a function bound to an array or object to execute a function `fn` for
+ * Return a function bound to an array or object to execute a function `fn` for
  * each index of an `Array` or property key of an `Object`.
  *
  * @param { Array<any> | Record<any, any> } iterable An `Array` or `Object`.
@@ -262,7 +262,7 @@ export const forIn =
   };
 
 /**
- * Get reservd key for given instance of a class.
+ * Get reserved key for given instance of a class.
  *
  * @param { T } instance The instance of the class.
  * @param { Identifier<T> } ctor The class.
