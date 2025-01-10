@@ -37,7 +37,7 @@
     "agencement",
     "multi",
     "machine",
-    "decorators",
+    "decorator",
     "dependency",
     "di",
     "injection",
