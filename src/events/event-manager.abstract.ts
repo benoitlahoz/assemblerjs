@@ -1,6 +1,7 @@
-import { Listener } from './listener-collection';
+import { Listener } from './listener-collection.abstract';
 
 export abstract class AbstractEventManager {
+  public abstract channels: Set<string>;
   public abstract dispose(): void;
   public abstract addChannels(...channels: string[]): AbstractEventManager;
   public abstract removeChannels(...channels: string[]): AbstractEventManager;

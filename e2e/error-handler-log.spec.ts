@@ -39,7 +39,6 @@ describe('ErrorHandler', () => {
         public logger: AbstractLogger
       ) {
         // Logger is required: injected by `ErrorLogInjector`, will throw if not.
-
         expect(this.logger).toBeDefined();
         expect(this.logger).toBeInstanceOf(BypassLogger);
       }

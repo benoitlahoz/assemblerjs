@@ -1,7 +1,7 @@
 import type { Concrete } from '@/types';
-import { isAsync } from '@/common/utils';
-import type { AssemblerContext } from '@/assembler/types';
-import { AbstractAssemblage } from './types';
+import { isAsync } from '@/utils';
+import type { AssemblerContext } from '@/core/assembler.types';
+import { AbstractAssemblage } from './assemblage.abstract';
 
 /**
  * Call a hook of an assemblage asynchronously.

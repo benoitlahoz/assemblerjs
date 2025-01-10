@@ -1,4 +1,4 @@
-import type { AssemblerContext } from '@/assembler/types';
+import type { AssemblerContext } from '@/core/assembler.types';
 
 /**
  * Base abstract class to implement an assemblage.
@@ -32,4 +32,9 @@ export abstract class AbstractAssemblage {
    * Dispose the assemblage instance.
    */
   public abstract dispose?(): void;
+
+  /**
+   * When decorated with '@Waitable', waits for a specific property to be truthy before resolving.
+   */
+  public abstract whenReady?(): Promise<void>;
 }

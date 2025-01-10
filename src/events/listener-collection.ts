@@ -8,7 +8,7 @@ import {
   forOf,
   proxifyIterable,
   clearInstance,
-} from '@/common/utils';
+} from '@/utils';
 import type { Listener, EventChannel } from './listener-collection.abstract';
 import { AbstractListenerCollection } from './listener-collection.abstract';
 

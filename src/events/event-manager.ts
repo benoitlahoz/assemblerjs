@@ -1,10 +1,5 @@
-import {
-  clearInstance,
-  forOf,
-  isAsync,
-  onlyAlphanumeric,
-} from '@/common/utils';
-import type { Listener } from './listener-collection';
+import { clearInstance, forOf, isAsync, onlyAlphanumeric } from '@/utils';
+import type { Listener } from './listener-collection.abstract';
 import { ListenerCollection } from './listener-collection';
 import { AbstractEventManager } from './event-manager.abstract';
 
@@ -12,7 +7,7 @@ export class EventManager implements AbstractEventManager {
   private readonly listeners: ListenerCollection = new ListenerCollection();
   private readonly onceListeners: ListenerCollection = new ListenerCollection();
 
-  private readonly channels: Set<string> = new Set(['*']);
+  public readonly channels: Set<string> = new Set(['*']);
 
   constructor(...allowedChannels: string[]) {
     this.addChannels(...allowedChannels);

@@ -1,39 +1,66 @@
 import type { Concrete, Identifier } from '@/types';
-import { clearInstance } from '@/common/utils';
-import type { Injection } from '@/injection/types';
-import { Injectable } from '@/injection/injectable';
-import type { AssemblerContext } from './types';
-import { AbstractAssembler } from './types';
-import { callHook } from '@/assemblage/hooks';
-import { setDefinitionValue } from '@/assemblage/definition';
+import { clearInstance } from '@/utils';
+import { EventManager } from '@/events/event-manager';
+import type { Injection } from '@/core/injection.types';
+import { Injectable } from '@/core/injectable';
+import type {
+  AssemblerContext,
+  AssemblerPrivateContext,
+} from './assembler.types';
+import { AbstractAssembler } from './assembler.types';
+import { callHook } from '@/core/assemblage.hooks';
+import { setDefinitionValue } from '@/core/assemblage.definition';
+import { resolveInjectionTuple } from './injection.helpers';
 
-export class Assembler implements AbstractAssembler {
+export class Assembler extends EventManager implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
     new Map();
 
-  public readonly context: AssemblerContext;
+  /**
+   * Context passed to internal classes.
+   */
+  public readonly privateContext: AssemblerPrivateContext;
 
-  public static build(entry: Concrete<any>) {
-    return new Assembler(entry);
+  /**
+   * Context passed to assemblages.
+   */
+  public readonly publicContext: AssemblerContext;
+
+  public static build<T>(entry: Concrete<T>): T {
+    const assembler = new Assembler();
+
+    // Entry assemblage is always a singleton.
+    setDefinitionValue('singleton', true, entry);
+
+    // Recursively register dependencies beginning from the entry concrete class.
+    const injectable = assembler.register([entry]);
+
+    // Return instance of entry assemblage.
+    return assembler.require(injectable.identifier);
   }
 
-  private constructor(entry: Concrete<any>) {
-    this.context = {
+  private constructor() {
+    // EventManager listens to all events ('*') by default.
+    super();
+
+    this.publicContext = {
       register: this.register.bind(this),
       has: this.has.bind(this),
       require: this.require.bind(this),
       tagged: this.tagged.bind(this),
+      on: this.on.bind(this),
+      once: this.once.bind(this),
+      off: this.off.bind(this),
+      events: this.channels,
     };
 
-    // Entry assemblage is always a singleton.
-    setDefinitionValue('singleton', true, entry);
-    // Recursively register dependencies beginning from the entry concrete class.
-    const injectable = this.register([entry]);
-
-    // TODO: Make entry an event manager for event '*'.
-
-    // Return instance of entry assemblage.
-    return this.require(injectable.identifier);
+    this.privateContext = {
+      ...this.publicContext,
+      emit: this.emit.bind(this),
+      addChannels: this.addChannels.bind(this),
+      removeChannels: this.removeChannels.bind(this),
+      dispose: this.dispose.bind(this),
+    };
   }
 
   public dispose(): void {
@@ -48,21 +75,26 @@ export class Assembler implements AbstractAssembler {
    *
    * @param { Injection<T> } injection The injection tuple to register.
    */
-  public register<T>(injection: Injection<T>) {
-    // This will register injectable's own dependencies.
+  public register<T>(injection: Injection<T>): Injectable<T> {
+    const buildable = resolveInjectionTuple(injection);
 
-    const injectable = Injectable.of<T>(injection, this.context);
-
-    if (this.has(injectable.identifier)) {
+    if (this.has(buildable.identifier)) {
       throw new Error(
-        `An assemblage is already registered with identifier '${injectable.identifier.name}'.`
+        `An assemblage is already registered with identifier '${buildable.identifier.name}'.`
       );
     }
+
+    // This will register injectable's own dependencies.
+    const injectable = Injectable.of<T>(
+      buildable,
+      this.privateContext,
+      this.publicContext
+    );
 
     this.injectables.set(injectable.identifier, injectable);
 
     // Call 'onRegister' hook.
-    callHook(injectable.concrete, 'onRegister', this.context);
+    callHook(injectable.concrete, 'onRegister', this.publicContext);
 
     return injectable;
   }

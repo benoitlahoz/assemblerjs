@@ -1,13 +1,13 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
-import { Assemblage } from '../decorator';
-import { AbstractAssemblage } from '../types';
-import type { AssemblerContext } from '../../assembler/types';
-import { Assembler } from '../../assembler/assembler';
-import { Context, Configuration, Definition } from '../../injection/decorators';
-import type { AssemblageDefinition } from '../definition';
+import { Assemblage } from './assemblage.decorator';
+import { AbstractAssemblage } from './assemblage.abstract';
+import type { AssemblerContext } from './assembler.types';
+import { Assembler } from './assembler';
+import { Context, Configuration, Definition } from './parameters.decorators';
+import type { AssemblageDefinition } from './assemblage.definition';
 
-describe('Assemblage Decorator', () => {
+describe('Assemblage', () => {
   @Assemblage()
   class MyDependencyClass implements AbstractAssemblage {
     public static onRegister(context: AssemblerContext): void {

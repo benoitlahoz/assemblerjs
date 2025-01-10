@@ -1,6 +1,6 @@
 import { Concrete } from '@/types';
-import { getDecoratedParametersIndexes } from './decorators';
-import { getParamTypes } from '@/assemblage/reflection';
+import { getDecoratedParametersIndexes } from './parameters.helpers';
+import { getParamTypes } from '@/core/reflection.helpers';
 import { Injectable } from './injectable';
 
 /**
@@ -20,7 +20,7 @@ export const resolveParameters = <T>(injectable: Injectable<T>) => {
   let i = 0;
   for (const dependency of paramTypes) {
     if (indexes.context.includes(i)) {
-      parameters.push(injectable.context);
+      parameters.push(injectable.publicContext);
       i++;
       continue;
     }
@@ -37,8 +37,14 @@ export const resolveParameters = <T>(injectable: Injectable<T>) => {
       continue;
     }
 
+    if (indexes.dispose.includes(i)) {
+      parameters.push(injectable.privateContext.dispose);
+      i++;
+      continue;
+    }
+
     // Recursively require dependency to pass an instance to constructor.
-    parameters.push(injectable.context.require(dependency));
+    parameters.push(injectable.privateContext.require(dependency));
 
     i++;
   }
@@ -64,7 +70,8 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
     if (
       indexes.context.includes(i) ||
       indexes.configuration.includes(i) ||
-      indexes.definition.includes(i)
+      indexes.definition.includes(i) ||
+      indexes.dispose.includes(i)
     ) {
       i++;
       continue;

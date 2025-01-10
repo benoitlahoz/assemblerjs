@@ -1,11 +1,5 @@
 import type { Abstract, Concrete } from '@/types';
-import {
-  isClass,
-  isObject,
-  conditionally,
-  pipe,
-  switchCase,
-} from '@/common/utils';
+import { isClass, isObject, conditionally, pipe, switchCase } from '@/utils';
 import {
   BaseInjection,
   ConfiguredInjection,
@@ -13,7 +7,7 @@ import {
   ConcreteInjection,
   Injection,
   Buildable,
-} from './types';
+} from './injection.types';
 
 /**
  * Resolve a `ConcreteInjection`.

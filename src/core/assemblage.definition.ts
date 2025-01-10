@@ -1,6 +1,7 @@
 import type { Concrete } from '@/types';
-import { Injection } from '@/injection/types';
-import { ReflectDefinition, getOwnCustomMetadata } from './reflection';
+import { Injection } from '@/core/injection.types';
+import { getOwnCustomMetadata } from './reflection.helpers';
+import { ReflectDefinition } from './reflection.constants';
 
 export interface AssemblageDefinition {
   singleton?: false;

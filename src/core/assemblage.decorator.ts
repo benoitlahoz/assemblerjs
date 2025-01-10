@@ -1,12 +1,14 @@
 import {
-  ReflectDefinition,
-  ReflectIsAssemblageFlag,
   defineCustomMetadata,
   getOwnCustomMetadata,
-} from './reflection';
-import type { AssemblageDefinition } from './definition';
-import { validateDefinition } from './definition';
+} from './reflection.helpers';
+import type { AssemblageDefinition } from './assemblage.definition';
+import { validateDefinition } from './assemblage.definition';
 import { Concrete } from '@/types';
+import {
+  ReflectDefinition,
+  ReflectIsAssemblageFlag,
+} from './reflection.constants';
 
 export const Assemblage = (
   definition?: AssemblageDefinition

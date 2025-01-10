@@ -1,15 +1,8 @@
-export const ReflectParamTypes = 'design:paramtypes';
-
-export const ReflectPrefix = '__';
-export const ReflectSuffix = '__';
-
-export const ReflectIsAssemblageFlag = `is_assemblage`;
-
-export const ReflectDefinition = 'assemblage_definition';
-
-export const ReflectContextParamIndex = `context_param_index`;
-export const ReflectConfigurationParamIndex = `config_param_index`;
-export const ReflectDefinitionParamIndex = `definition_param_index`;
+import {
+  ReflectParamTypes,
+  ReflectPrefix,
+  ReflectSuffix,
+} from './reflection.constants';
 
 /**
  * Assemblage surrounds its own metadata keys by a prefix and a suffix:
