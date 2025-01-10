@@ -4,8 +4,8 @@ import {
   isAsync,
   onlyAlphanumeric,
 } from '@/common/utils';
-import type { Listener } from './collection';
-import { ListenerCollection } from './collection';
+import type { Listener } from './listener-collection';
+import { ListenerCollection } from './listener-collection';
 import { AbstractEventManager } from './event-manager.abstract';
 
 export class EventManager implements AbstractEventManager {

@@ -1,4 +1,4 @@
-import { Listener } from './collection';
+import { Listener } from './listener-collection';
 
 export abstract class AbstractEventManager {
   public abstract dispose(): void;
