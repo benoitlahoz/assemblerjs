@@ -51,7 +51,7 @@ export class Injectable<T> {
 
     if (this.isSingleton) {
       // Build now if singleton.
-      this.build();
+      // this.build();
     }
   }
 
