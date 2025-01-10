@@ -60,7 +60,7 @@ describe('Assemblage', () => {
 
   @Assemblage({
     inject: [[AbstractMyDependentClass, MyDependentClass]],
-    controller: true,
+    controller: true, // Mandatory if 'path' is defined.
     path: '/api', // Mandatory if 'controller' is `true`.
     metadata,
   })

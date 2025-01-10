@@ -37,7 +37,6 @@ describe('Awaitable', () => {
       AwaitableChannels.Resolved,
       AwaiterChannels.Resolved,
     ];
-
     const ReceivedMessages: string[] = [];
 
     @Assemblage({
@@ -70,12 +69,14 @@ describe('Awaitable', () => {
 
     await new Promise<void>((resolve) => {
       setTimeout(() => {
-        // Messages should have benn received.
+        // Messages should have been received in a strict order.
         expect(ReceivedMessages).toStrictEqual(ExpectedOrderedMessages);
 
         app.dispose();
 
         // 'App' should be empty.
+        expect(app.awaitable).toBeUndefined();
+        expect(app.awaiter).toBeUndefined();
         expect(app.dispose).toBeUndefined();
 
         resolve();
