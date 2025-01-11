@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A simple and zero-dependency DI package written in typescript.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "devDependencies": {
