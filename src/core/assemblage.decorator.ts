@@ -29,3 +29,6 @@ export const Assemblage = (
 export const isAssemblage = <T>(target: Concrete<T>): boolean => {
   return getOwnCustomMetadata(ReflectIsAssemblageFlag, target) || false;
 };
+
+@Assemblage()
+export class NoOpAssemblage {}
