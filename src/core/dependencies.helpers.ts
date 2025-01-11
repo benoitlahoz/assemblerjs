@@ -1,7 +1,8 @@
 import { Concrete } from '@/types';
 import { getDecoratedParametersIndexes } from './parameters.helpers';
-import { getParamTypes } from '@/core/reflection.helpers';
+import { getOwnCustomMetadata, getParamTypes } from '@/core/reflection.helpers';
 import { Injectable } from './injectable';
+import { ReflectUseToken } from './reflection.constants';
 
 /**
  * Get an array of parameters from an `Injectable` constructor, including decorated ones.
@@ -43,6 +44,17 @@ export const resolveParameters = <T>(injectable: Injectable<T>) => {
       continue;
     }
 
+    if (indexes.use.includes(i)) {
+      const identifiers = getOwnCustomMetadata(
+        ReflectUseToken,
+        injectable.concrete
+      );
+      const identifier = identifiers[i];
+      parameters.push(injectable.privateContext.require(identifier));
+      i++;
+      continue;
+    }
+
     // Recursively require dependency to pass an instance to constructor.
     parameters.push(injectable.privateContext.require(dependency));
 
@@ -71,7 +83,8 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
       indexes.context.includes(i) ||
       indexes.configuration.includes(i) ||
       indexes.definition.includes(i) ||
-      indexes.dispose.includes(i)
+      indexes.dispose.includes(i) ||
+      indexes.use.includes(i)
     ) {
       i++;
       continue;

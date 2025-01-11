@@ -36,10 +36,16 @@ export type Injection<T> =
   | ConcreteConfiguredInjection<T>;
 
 /**
+ * Injectable binds an instance of a class to an identifier (abstract or concrete).
+ */
+export type InstanceInjection<T> = Tuple<[Identifier<T> | string | Symbol, T]>;
+
+/**
  * Describes a buildable object.
  */
 export interface Buildable<T> {
   identifier: Identifier<T>;
   concrete: Concrete<T>;
+  instance?: T;
   configuration: Record<string, any>;
 }

@@ -11,11 +11,11 @@ export default defineConfig({
         '**/node_modules/**',
         '**/dist/**',
         '**/*.spec.*',
-        '**/tests/**',
         '**/e2e/**',
+        '**/docs/**',
       ],
     },
-    exclude: ['**/node_modules/**'],
+    exclude: ['**/node_modules/**', '**/docs/**'],
   },
   resolve: {
     alias: {

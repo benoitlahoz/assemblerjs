@@ -9,8 +9,9 @@ export {
   Configuration,
   Definition,
   Dispose,
+  Use,
 } from './core/parameters.decorators';
-export { Awaitable } from './decorators/awaitable.decorator';
+export { Await } from './decorators/await.decorator';
 
 // Abstractions.
 

@@ -1,5 +1,5 @@
 import type { Concrete } from '@/types';
-import { Injection } from '@/core/injection.types';
+import { Injection, InstanceInjection } from '@/core/injection.types';
 import { getOwnCustomMetadata } from './reflection.helpers';
 import { ReflectDefinition } from './reflection.constants';
 
@@ -7,6 +7,7 @@ export interface AssemblageDefinition {
   singleton?: false;
   events?: string[];
   inject?: Injection<unknown>[];
+  use?: InstanceInjection<unknown>[];
   tags?: string | string[];
 
   controller?: true;
@@ -51,6 +52,18 @@ const schema: Record<string, any> = {
       throw new Error(
         `'inject' property must be an array of tuples of length 1, 2 or 3.`
       );
+    },
+    transform: (value?: Injection<unknown>[][]) => value,
+  },
+  use: {
+    test: (value: unknown) =>
+      typeof value === 'undefined' ||
+      (Array.isArray(value) &&
+        value.every(
+          (item: unknown) => Array.isArray(item) && item.length == 2
+        )),
+    throw: () => {
+      throw new Error(`'use' property must be an array of tuples of length 2.`);
     },
     transform: (value?: Injection<unknown>[][]) => value,
   },

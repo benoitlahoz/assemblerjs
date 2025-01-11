@@ -11,12 +11,16 @@ import type {
   AssemblerContext,
   AssemblerPrivateContext,
 } from '@/core/assembler.types';
-import type { Buildable, Injection } from './injection.types';
+import type {
+  Buildable,
+  Injection,
+  InstanceInjection,
+} from './injection.types';
 import { resolveDependencies, resolveParameters } from './dependencies.helpers';
 import { registerEvents, unregisterEvents } from './events.helpers';
 
 export class Injectable<T> {
-  public readonly identifier: Identifier<T>;
+  public readonly identifier: Identifier<T> | string | Symbol;
   public readonly concrete: Concrete<T>;
   public readonly configuration: Record<string, any>;
 
@@ -40,18 +44,34 @@ export class Injectable<T> {
     this.concrete = buildable.concrete;
     this.configuration = buildable.configuration;
 
-    // Register injectable assemblage's own injections (i.e. passed in the assemblage's definition).
+    if (!isAssemblage(this.concrete)) {
+      throw new Error(`Class '${this.concrete.name}' is not an Assemblage.`);
+    }
+
+    // Register injectable assemblage's own injections passed in 'inject' definition property.
     const iterateOwnInjections = forOf(this.injections);
     iterateOwnInjections(<U>(injection: Injection<U>) =>
       this.privateContext.register(injection)
     );
 
+    // Register assemblage's injected objects (e.g. instances) passed in 'use' definition property.
+    const iterateOwnUsedInjections = forOf(this.objects);
+    iterateOwnUsedInjections(<U>(injection: InstanceInjection<U>) => {
+      if (
+        typeof injection[0] === 'string' ||
+        typeof injection[0] === 'symbol'
+      ) {
+        this.privateContext.use(injection[0], injection[1]);
+      } else {
+        this.privateContext.register(injection as Injection<T>, true);
+      }
+    });
+
     // Cache dependencies.
     this.dependenciesIds = resolveDependencies(this.concrete);
 
-    if (this.isSingleton) {
-      // Build now if singleton.
-      // this.build();
+    if (buildable.instance) {
+      this.singletonInstance = buildable.instance;
     }
   }
 
@@ -81,20 +101,20 @@ export class Injectable<T> {
   public build(): T {
     if (this.singletonInstance) return this.singletonInstance;
 
-    if (!isAssemblage(this.concrete)) {
-      throw new Error(`Class '${this.concrete}' is not an Assemblage.`);
-    }
     const params = resolveParameters(this);
     const instance = new this.concrete(...params) as T;
 
     // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
     registerEvents(this, instance);
 
-    callHook(instance, 'onInit', this.publicContext);
-
     if (this.isSingleton) {
       this.singletonInstance = instance;
+      this.privateContext.prepareInit(instance);
+      return this.singletonInstance;
     }
+
+    // Call hook for transient instances.
+    callHook(instance, 'onInit', this.publicContext);
 
     return instance;
   }
@@ -132,6 +152,13 @@ export class Injectable<T> {
    */
   public get injections(): Injection<unknown>[] {
     return getDefinitionValue('inject', this.concrete) || [];
+  }
+
+  /**
+   * Injectable assemblage's own objects (e.g. instances) injections defined in its decorator's definition.
+   */
+  public get objects(): InstanceInjection<unknown>[] {
+    return getDefinitionValue('use', this.concrete) || [];
   }
 
   /**

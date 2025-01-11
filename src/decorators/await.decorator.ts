@@ -1,4 +1,4 @@
-export const Awaitable = (property: string, millis = 25) => {
+export const Await = (property: string, millis = 25) => {
   return (
     _target: any,
     _propertyKey: string,
