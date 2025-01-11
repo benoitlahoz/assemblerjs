@@ -47,14 +47,6 @@ describe('Awaitable', () => {
         });
       }
 
-      public async onInit(): Promise<void> {
-        // TODO: As of version 0.2.0 'onInit' hook is called just after an instance has been
-        // built, making this entry point dependencies to be 'inited' before it.
-
-        await this.awaitable.execute();
-        await this.awaiter.execute();
-      }
-
       public onDispose(context: AssemblerContext): void {}
     }
 

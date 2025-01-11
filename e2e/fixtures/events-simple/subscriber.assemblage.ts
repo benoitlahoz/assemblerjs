@@ -1,5 +1,4 @@
-import { Assemblage } from '../../../src';
-import { AbstractAssemblage } from '../../../src/assemblage/types';
+import { AbstractAssemblage, Assemblage } from '../../../src';
 import { AbstractEmitterAssemblage } from './emitter.abstract';
 
 @Assemblage()

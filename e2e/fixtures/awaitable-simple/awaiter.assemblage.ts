@@ -19,7 +19,7 @@ export class AwaiterAssemblage
     super();
   }
 
-  public async execute(): Promise<void> {
+  public async onInit(): Promise<void> {
     this.emit(AwaiterChannels.Init, AwaiterChannels.Init);
 
     await this.awaitable.whenReady();

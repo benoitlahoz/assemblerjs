@@ -1,4 +1,4 @@
-import { Assemblage, Awaitable, EventManager } from '../../../src';
+import { Assemblage, Await, EventManager } from '../../../src';
 import { AbstractEmitterAssemblage } from '../events-simple/emitter.abstract';
 
 export enum AwaitableChannels {
@@ -17,7 +17,7 @@ export class AwaitableAssemblage
 {
   public ready = false;
 
-  public async execute(): Promise<void> {
+  public async onInit(): Promise<void> {
     this.emit(AwaitableChannels.Init, AwaitableChannels.Init);
 
     setTimeout(() => {
@@ -28,7 +28,7 @@ export class AwaitableAssemblage
     this.emit(AwaitableChannels.Inited, AwaitableChannels.Inited);
   }
 
-  @Awaitable('ready')
+  @Await('ready')
   public async whenReady(): Promise<void> {
     this.emit(AwaitableChannels.Resolved, AwaitableChannels.Resolved);
     return;
