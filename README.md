@@ -21,3 +21,11 @@ npm install assemblerjs
 ```
 
 ## Usage
+
+### Order of execution
+
+- `onRegister` Static hook called when registering the assemblage.
+- `constructor` Build the instance.
+- `onInit` Called on every dependency when all dependencies have been built.
+
+- `onDispose` Called when disposing the assembler via `dispose` method injected by the `@Context` decorator.
