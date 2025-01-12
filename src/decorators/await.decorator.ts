@@ -5,8 +5,8 @@
  * @param { number | undefined } interval The interval in milliseconds at which the value is checked (defaults to 25 milliseconds).
  * @returns { Promise<void> } A promise that calls the original method when resolving.
  */
-export const Await = (property: string, interval = 25) => {
-  return (
+export const Await = (property: string, interval = 25): MethodDecorator => {
+  return ((
     _target: any,
     _propertyKey: string,
     descriptor: TypedPropertyDescriptor<(...params: any[]) => Promise<any>>
@@ -29,5 +29,5 @@ export const Await = (property: string, interval = 25) => {
         }
       });
     };
-  };
+  }) as MethodDecorator;
 };
