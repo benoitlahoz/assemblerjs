@@ -3,11 +3,11 @@ import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from '../src';
 
 import { AbstractLogger } from './fixtures/logger/logger.abstract';
-import { BypassLogger } from './fixtures/logger/logger-bypass.assemblage';
+import { BypassLogger } from './fixtures/logger/logger-bypass.service';
 
 import { AbstractErrorHandler } from './fixtures/error-handler/error-handler.abstract';
-import { ErrorLog } from './fixtures/error-handler/error-log-simple.assemblage';
-import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.assemblage';
+import { ErrorLog } from './fixtures/error-handler/error-log-simple.service';
+import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.service';
 
 describe('ErrorHandler', () => {
   it('should bootstrap an assemblage as entry point.', () => {

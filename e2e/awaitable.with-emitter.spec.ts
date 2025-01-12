@@ -16,7 +16,7 @@ import {
 import {
   AwaiterAssemblage,
   AwaiterChannels,
-} from './fixtures/awaitable-simple/awaiter.assemblage';
+} from './fixtures/awaitable-simple/awaiter.service';
 
 describe('Awaitable', () => {
   it('should wait for dependency to be ready.', async () => {

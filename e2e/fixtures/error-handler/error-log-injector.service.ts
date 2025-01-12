@@ -1,7 +1,7 @@
 import { Assemblage } from '../../../src';
 import { AbstractErrorHandler } from './error-handler.abstract';
 import { AbstractLogger } from '../logger/logger.abstract';
-import { BypassLogger } from '../logger/logger-bypass.assemblage';
+import { BypassLogger } from '../logger/logger-bypass.service';
 
 @Assemblage({
   inject: [[AbstractLogger, BypassLogger]],

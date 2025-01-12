@@ -8,10 +8,10 @@ import {
   Context,
 } from '../src';
 
-import { BypassLogger } from './fixtures/logger/logger-bypass.assemblage';
+import { BypassLogger } from './fixtures/logger/logger-bypass.service';
 
 import { AbstractErrorHandler } from './fixtures/error-handler/error-handler.abstract';
-import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.assemblage';
+import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.service';
 
 describe('Tagged', () => {
   it('should get dependencies by tag string.', () => {

@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from '../src';
 
 import { AbstractLogger } from './fixtures/logger/logger.abstract';
-import { BypassLogger } from './fixtures/logger/logger-bypass.assemblage';
+import { BypassLogger } from './fixtures/logger/logger-bypass.service';
 
 describe('Simple', () => {
   it('should bootstrap an assemblage as entry point.', () => {
