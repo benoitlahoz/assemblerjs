@@ -1,10 +1,17 @@
-export const Await = (property: string, millis = 25) => {
+/**
+ * Recursively check if a property is defined and truthy to call an async method.
+ *
+ * @param { string } property The name of the class proprty to wait for.
+ * @param { number | undefined } interval The interval in milliseconds at which the value is checked (defaults to 25 milliseconds).
+ * @returns { Promise<void> } A promise that calls the original method when resolving.
+ */
+export const Await = (property: string, interval = 25) => {
   return (
     _target: any,
     _propertyKey: string,
     descriptor: TypedPropertyDescriptor<(...params: any[]) => Promise<any>>
   ) => {
-    let originalFn = descriptor.value!;
+    const originalFn = descriptor.value!;
 
     descriptor.value = async function (): Promise<void> {
       return new Promise((resolve) => {
@@ -12,13 +19,13 @@ export const Await = (property: string, millis = 25) => {
           originalFn.apply(this);
           resolve();
         } else {
-          const interval = setInterval(() => {
+          const timeInterval = setInterval(() => {
             if (this[property]) {
-              clearInterval(interval);
+              clearInterval(timeInterval);
               originalFn.apply(this);
               resolve();
             }
-          }, millis);
+          }, interval);
         }
       });
     };
