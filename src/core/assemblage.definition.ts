@@ -9,10 +9,6 @@ export interface AssemblageDefinition {
   inject?: Injection<unknown>[];
   use?: InstanceInjection<unknown>[];
   tags?: string | string[];
-
-  controller?: true;
-  path?: string;
-
   metadata?: Record<string, any>;
 }
 
@@ -81,42 +77,6 @@ const schema: Record<string, any> = {
     transform: (value?: string | string[]) =>
       typeof value === 'string' ? [value] : value,
   },
-  controller: {
-    test: (value: unknown) =>
-      typeof value === 'boolean' || typeof value === 'undefined',
-    throw: () => {
-      throw new Error(
-        `'controller' property must be of type 'boolean' or 'undefined'.`
-      );
-    },
-    transform: (value?: true) => value,
-  },
-  path: {
-    test: (value: unknown) =>
-      typeof value === 'string' || typeof value === 'undefined',
-    throw: () => {
-      throw new Error(
-        `'path' property must be of type 'string' or 'undefined'.`
-      );
-    },
-    transform: (value?: string) => {
-      if (value) {
-        let clean = value.replace(/\/+/g, '/').replace(/\s/g, '');
-
-        if (!clean.startsWith('/')) {
-          clean = `/${clean}`;
-        }
-
-        if (clean.endsWith('/')) {
-          const length = clean.length - 1;
-          clean = clean.split('').splice(0, length).join('');
-        }
-        return clean;
-      }
-
-      return value;
-    },
-  },
   metadata: {
     test: (value: unknown) =>
       (typeof value === 'object' || typeof value === 'undefined') &&
@@ -145,18 +105,6 @@ export const validateDefinition = (obj: Record<string, any>) => {
 
     if (!test(res[property])) {
       error();
-    }
-
-    if (property === 'controller' && !Object.keys(res).includes('path')) {
-      throw new Error(
-        `Assemblage marked as 'controller' must define a 'path'.`
-      );
-    }
-
-    if (property === 'path' && !Object.keys(res).includes('controller')) {
-      throw new Error(
-        `Assemblage that defines a 'path' must be marked as 'controller'.`
-      );
     }
 
     res[property] = transform(res[property]);
