@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose and zero-dependency Dependency Injection framework for node and browser.",
-  "version": "0.3.21",
+  "version": "0.3.22",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "devDependencies": {
@@ -45,7 +45,8 @@
     "reflection",
     "swc",
     "typescript",
-    "metadata"
+    "metadata",
+    "ioc"
   ],
   "license": "MIT",
   "main": "dist/index.js",
