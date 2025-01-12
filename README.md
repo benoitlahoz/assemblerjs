@@ -2,9 +2,11 @@
 
 A general purpose and zero-dependency [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) framework for node and browser.
 
-![Statements](https://img.shields.io/badge/statements-88.59%25-yellow.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-77.32%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-85.86%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-88.67%25-yellow.svg?style=flat)
+![Statements](https://img.shields.io/badge/statements-89.74%25-yellow.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-78.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-86.51%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-89.87%25-yellow.svg?style=flat)
 
 ---
+
+`assembler.js` is inspired by both DIOD and Nestjs.
 
 `assembler.js` name is a tribute to Gilles Deleuze and Felix Guattari concept of [_Agencement_](<https://fr.wikipedia.org/wiki/Agencement_(philosophie)>) (in french) that can be translated into [Assemblage](<https://en.wikipedia.org/wiki/Assemblage_(philosophy)>).
 
@@ -20,7 +22,10 @@ npm install assemblerjs
 
 ## Usage
 
-### Order of execution
+The main block of `assembler.js` is the **Assemblage**. It is created by decorating classes with the `@Assemblage` decorator. To keep everything type-safe, classes may implement `AbstractAssemblage` abstract class or define their own abstract class that extends it.
+These abstract classes are used as identifiers to inject dependencies.
+
+## Order of execution
 
 Dependencies are registered and built recursively from the entry assemblage resolved by `Assembler.build`.
 
@@ -45,7 +50,7 @@ The entry point assemblage is called last.
 Called when disposing the assembler via the `dispose` method injected by the `@Dispose` decorator.
 This will be called like the `onInit` method, walking through the dependency tree, except for the entry point assemblage, called last.
 
-### Events
+## Events
 
 `assembler.js` provides an `EventManager` that can be subclassed by any assemblage.
 
