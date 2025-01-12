@@ -1,5 +1,5 @@
 import { AbstractAssemblage, Assemblage, EventManager } from '../../../src';
-import { EmitterAssemblage } from './emitter.assemblage';
+import { EmitterAssemblage } from './emitter.service';
 
 @Assemblage()
 export class SubscriberAssemblage implements AbstractAssemblage {

@@ -7,7 +7,7 @@ import {
   AssemblerContext,
   Context,
 } from '../src';
-import { EmitterAssemblage } from './fixtures/events-simple/emitter.assemblage';
+import { EmitterAssemblage } from './fixtures/events-simple/emitter.service';
 import { SubscriberAssemblage } from './fixtures/events-simple/subscriber.assemblage';
 
 describe('EventsSimple', () => {

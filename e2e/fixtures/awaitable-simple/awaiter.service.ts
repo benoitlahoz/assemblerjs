@@ -1,5 +1,5 @@
 import { AbstractAssemblage, Assemblage, EventManager } from '../../../src';
-import { AwaitableAssemblage } from './awaitable.assemblage';
+import { AwaitableAssemblage } from './awaitable.service';
 
 export enum AwaiterChannels {
   Init = 'awaiter:init',

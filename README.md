@@ -26,7 +26,7 @@ npm install assemblerjs
 
 Dependencies are registered and built recursively from the entry assemblage resolved by `Assembler.build`.
 
-`onRegister`
+##### `onRegister`
 
 Static hook called when registering the assemblage.
 Other dependencies may or may not have been registered at this point, and dependency tree is not built yet.
@@ -50,7 +50,6 @@ This will be called like the `onInit` method, walking through the dependency tre
 ### Events
 
 `assembler.js` provides an `EventManager` that can be subclassed by any assemblage.
-An `AbstractEventAssemblage` abstraction helper class can also be imported to keep assemblages typesafe.
 
 Because all events **are forwarded by `AssemblerContext`** the `EventManager` is quite strict on which events can be broadcasted and they must be registered explicitly using the `events` property of the `AssemblageDefinition`. To avoid collision between events channels, user is strongly encouraged to create _strong_ channels names, e.g.: `com.domain.app.assemblage-name:init`.
 

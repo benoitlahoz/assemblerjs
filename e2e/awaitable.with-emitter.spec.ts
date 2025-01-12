@@ -12,7 +12,7 @@ import {
 import {
   AwaitableAssemblage,
   AwaitableChannels,
-} from './fixtures/awaitable-simple/awaitable.assemblage';
+} from './fixtures/awaitable-simple/awaitable.service';
 import {
   AwaiterAssemblage,
   AwaiterChannels,
