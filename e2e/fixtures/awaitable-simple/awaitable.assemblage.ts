@@ -1,5 +1,9 @@
-import { Assemblage, Await, EventManager } from '../../../src';
-import { AbstractEmitterAssemblage } from '../events-simple/emitter.abstract';
+import {
+  AbstractAssemblage,
+  Assemblage,
+  Await,
+  EventManager,
+} from '../../../src';
 
 export enum AwaitableChannels {
   Init = 'awaitable:init',
@@ -13,7 +17,7 @@ export enum AwaitableChannels {
 })
 export class AwaitableAssemblage
   extends EventManager
-  implements AbstractEmitterAssemblage
+  implements AbstractAssemblage
 {
   public ready = false;
 

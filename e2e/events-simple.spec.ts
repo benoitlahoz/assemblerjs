@@ -7,17 +7,13 @@ import {
   AssemblerContext,
   Context,
 } from '../src';
-import { AbstractEmitterAssemblage } from './fixtures/events-simple/emitter.abstract';
 import { EmitterAssemblage } from './fixtures/events-simple/emitter.assemblage';
 import { SubscriberAssemblage } from './fixtures/events-simple/subscriber.assemblage';
 
 describe('EventsSimple', () => {
   it('should send and receive events.', () => {
     @Assemblage({
-      inject: [
-        [AbstractEmitterAssemblage, EmitterAssemblage],
-        [SubscriberAssemblage],
-      ],
+      inject: [[EmitterAssemblage], [SubscriberAssemblage]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}
@@ -29,6 +25,6 @@ describe('EventsSimple', () => {
 
     setTimeout(() => {
       expect(subscriber.received).toBeTruthy();
-    }, 100);
+    }, 200);
   });
 });

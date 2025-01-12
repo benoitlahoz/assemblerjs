@@ -1,6 +1,4 @@
-import type { AssemblerContext } from '../../../src';
-import { Assemblage, EventManager } from '../../../src';
-import { AbstractEmitterAssemblage } from '../events-simple/emitter.abstract';
+import { AbstractAssemblage, Assemblage, EventManager } from '../../../src';
 import { AwaitableAssemblage } from './awaitable.assemblage';
 
 export enum AwaiterChannels {
@@ -13,7 +11,7 @@ export enum AwaiterChannels {
 })
 export class AwaiterAssemblage
   extends EventManager
-  implements AbstractEmitterAssemblage
+  implements AbstractAssemblage
 {
   constructor(public awaitable: AwaitableAssemblage) {
     super();

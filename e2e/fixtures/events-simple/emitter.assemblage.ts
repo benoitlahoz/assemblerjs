@@ -1,12 +1,11 @@
-import { Assemblage, EventManager } from '../../../src';
-import { AbstractEmitterAssemblage } from './emitter.abstract';
+import { AbstractAssemblage, Assemblage, EventManager } from '../../../src';
 
 @Assemblage({
   events: ['init'],
 })
 export class EmitterAssemblage
   extends EventManager
-  implements AbstractEmitterAssemblage
+  implements AbstractAssemblage
 {
   constructor() {
     // Discouraged: User can add channels' names in 'super' call.
