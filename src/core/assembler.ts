@@ -140,7 +140,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
   public use<T>(identifier: string | Symbol, object: T): T {
     if (this.has(identifier)) {
       throw new Error(
-        `A valu is already registered for identifier '${String(identifier)}'.`
+        `A value is already registered with identifier '${String(identifier)}'.`
       );
     }
     this.objects.set(identifier, object);
