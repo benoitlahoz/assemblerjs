@@ -12,10 +12,10 @@ export abstract class AbstractAssemblage {
    * @param { AssemblerContext } context The assembler's context.
    */
   // @ts-ignore 'context' is unused.
-  static onRegister(context: AssemblerContext): void {}
+  public static onRegister(context: AssemblerContext): void {}
 
   /**
-   * Called when class is instantiated.
+   * Called on instantiated class after the dependency tree is fully resolved.
    *
    * @param { AssemblerContext } context The assembler's context.
    */
