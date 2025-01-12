@@ -46,6 +46,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     const instance = assembler.require(injectable.identifier);
 
     // Remove entry instance from cache.
+
     const index = assembler.initCache.indexOf(instance);
     assembler.initCache.splice(index, 1);
 
@@ -55,6 +56,9 @@ export class Assembler extends EventManager implements AbstractAssembler {
 
     // Call hook on entry assemblage.
     callHook(instance, 'onInit', assembler.publicContext);
+
+    // Clean up.
+    assembler.initCache.length = 0;
 
     return instance;
   }
