@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose and zero-dependency Dependency Injection library for node and browser.",
-  "version": "0.3.23",
+  "version": "0.3.24",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "devDependencies": {
@@ -19,6 +19,9 @@
     "vitepress": "^1.5.0",
     "vitest": "^2.1.1"
   },
+  "engines": {
+    "node": ">= 18.12.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -32,35 +35,32 @@
   ],
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
   "keywords": [
-    "composition",
+    "agencement",
     "assemblage",
     "assembler",
-    "agencement",
-    "multi",
-    "machine",
+    "composition",
     "decorator",
     "dependency",
     "di",
     "injection",
+    "ioc",
+    "machine",
+    "metadata",
+    "multi",
     "reflection",
     "swc",
-    "typescript",
-    "metadata",
-    "ioc"
+    "typescript"
   ],
   "license": "MIT",
   "main": "dist/index.js",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
-  },
+  "repository": "benoitlahoz/assemblerjs.git",
   "scripts": {
     "build": "vite build",
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme",
-    "test": "vitest --coverage --passWithNoTests",
-    "docs:dev": "vitepress dev docs --host",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:dev": "vitepress dev docs --host",
+    "docs:preview": "vitepress preview docs",
+    "test": "vitest --coverage --passWithNoTests"
   },
   "types": "dist/index.d.ts"
 }
