@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose and zero-dependency Dependency Injection library for node and browser.",
-  "version": "0.3.24",
+  "version": "0.3.25",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "devDependencies": {
@@ -53,7 +53,10 @@
   ],
   "license": "MIT",
   "main": "dist/index.js",
-  "repository": "benoitlahoz/assemblerjs.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
   "scripts": {
     "build": "vite build",
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme",
