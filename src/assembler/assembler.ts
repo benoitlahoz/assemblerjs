@@ -17,21 +17,6 @@ import { callHook } from './hooks';
  * `assembler.js` dependency injection container and handler.
  */
 export class Assembler extends EventManager implements AbstractAssembler {
-  protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
-    new Map();
-  protected objects: Map<string | Symbol, unknown> = new Map();
-  private initCache: unknown[] = [];
-
-  /**
-   * Context passed to internal classes.
-   */
-  public readonly privateContext: AssemblerPrivateContext;
-
-  /**
-   * Context passed to assemblages.
-   */
-  public readonly publicContext: AssemblerContext;
-
   /**
    * Build the dependencies tree from an assemblage as entry point.
    *
@@ -66,6 +51,21 @@ export class Assembler extends EventManager implements AbstractAssembler {
 
     return instance;
   }
+
+  protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
+    new Map();
+  protected objects: Map<string | Symbol, unknown> = new Map();
+  private initCache: unknown[] = [];
+
+  /**
+   * Context passed to internal classes.
+   */
+  public readonly privateContext: AssemblerPrivateContext;
+
+  /**
+   * Context passed to assemblages.
+   */
+  public readonly publicContext: AssemblerContext;
 
   private constructor() {
     // EventManager listens to all events ('*') by default.
@@ -193,8 +193,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
   /**
    * Check if `Assembler` has given identifier registered.
    *
-   * @param { Identifier<T> | string | symbol } identifier An abstract or concrete class
-   * identifier or a string or Symbol one.
+   * @param { Identifier<T> | string | symbol } identifier An abstract or concrete class,
+   * or a string or Symbol as identifier.
    * @returns { boolean } `true` if dependency has been registered.
    */
   public has<T>(identifier: Identifier<T> | string | Symbol): boolean {
@@ -227,9 +227,9 @@ export class Assembler extends EventManager implements AbstractAssembler {
       default: {
         if (!this.injectables.has(identifier as Identifier<T>)) {
           throw new Error(
-            `Assemblage with identifier '${
+            `Class with identifier '${
               (identifier as Identifier<T>).name
-            }' has not been registered.`
+            }' has not been registered or is a circular dependency.`
           );
         }
 
@@ -244,7 +244,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
   /**
    * Require dependencies by tag passed in assemblage's definition.
    *
-   * @param { string | string[] } tags The tag(s) to get dependencies.
+   * @param { string[] } tags The tags to get dependencies.
    * @returns { unknown[] } An array of instances for the given tags. If registered
    * identifier is not marked as 'singleton', will resolve in a new instance.
    */
