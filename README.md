@@ -1,6 +1,6 @@
 # assembler.js
 
-A general purpose and zero-dependency [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) framework for node and browser.
+A general purpose and zero-dependency [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) library for node and browser.
 
 ![Statements](https://img.shields.io/badge/statements-89.74%25-yellow.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-78.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-86.51%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-89.87%25-yellow.svg?style=flat)
 
