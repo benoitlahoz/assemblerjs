@@ -1,15 +1,8 @@
 import {
-  ReflectConfigurationParamIndex,
-  ReflectContextParamIndex,
-  ReflectDefinitionParamIndex,
-  ReflectDisposeParamIndex,
-  ReflectUseParamIndex,
-  ReflectUseToken,
+    ReflectConfigurationParamIndex, ReflectContextParamIndex, ReflectDefinitionParamIndex,
+    ReflectDisposeParamIndex, ReflectUseParamIndex, ReflectUseToken
 } from '@/core/reflection.constants';
-import {
-  defineCustomMetadata,
-  getOwnCustomMetadata,
-} from '@/core/reflection.helpers';
+import { defineCustomMetadata, getOwnCustomMetadata } from '@/core/reflection.helpers';
 
 /**
  * Prepare `Assembler` to inject specific object in a dependency's constructor parameters.

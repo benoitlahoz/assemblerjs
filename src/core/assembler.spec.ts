@@ -1,10 +1,13 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { Assemblage } from './assemblage.decorator';
+
+import { describe, expect, it } from 'vitest';
+
 import { AbstractAssemblage } from './assemblage.abstract';
-import type { AssemblerContext } from './assembler.types';
+import { Assemblage } from './assemblage.decorator';
 import { Assembler } from './assembler';
-import { Context, Configuration, Definition } from './parameters.decorators';
+import { Configuration, Context, Definition } from './parameters.decorators';
+
+import type { AssemblerContext } from './assembler.types';
 import type { AssemblageDefinition } from './assemblage.definition';
 
 describe('Assemblage', () => {

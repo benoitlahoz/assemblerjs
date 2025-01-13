@@ -1,17 +1,11 @@
 import type { Tuple } from '@/types';
 import {
-  isDefined,
-  isOfType,
-  conditionally,
-  pipe,
-  forIn,
-  forOf,
-  proxifyIterable,
-  clearInstance,
+    clearInstance, conditionally, forIn, forOf, isDefined, isOfType, pipe, proxifyIterable
 } from '@/utils';
-import type { Listener, EventChannel } from './listener-collection.abstract';
+
 import { AbstractListenerCollection } from './listener-collection.abstract';
 
+import type { Listener, EventChannel } from './listener-collection.abstract';
 export class ListenerCollection implements AbstractListenerCollection {
   /**
    * Class is indexable by `EventChannel`.

@@ -1,4 +1,5 @@
 import { EventManager } from '@/events/event-manager';
+
 import type { Injectable } from './injectable';
 
 /**

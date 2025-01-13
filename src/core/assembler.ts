@@ -1,22 +1,22 @@
 import type { Concrete, Identifier } from '@/types';
-import { clearInstance } from '@/utils';
-import { EventManager } from '@/events/event-manager';
-import { AbstractAssemblage } from './assemblage.abstract';
-import type { Injection, InstanceInjection } from '@/core/injection.types';
+import { setDefinitionValue } from '@/core/assemblage.definition';
+import { callHook } from '@/core/assemblage.hooks';
 import { Injectable } from '@/core/injectable';
+import { EventManager } from '@/events/event-manager';
+import { clearInstance } from '@/utils';
+
+import { AbstractAssemblage } from './assemblage.abstract';
+import { AbstractAssembler } from './assembler.types';
+import { resolveInjectionTuple, resolveInstanceInjectionTuple } from './injection.helpers';
+
+import type { Injection, InstanceInjection } from '@/core/injection.types';
 import type {
   AssemblerContext,
   AssemblerPrivateContext,
 } from './assembler.types';
-import { AbstractAssembler } from './assembler.types';
-import { callHook } from '@/core/assemblage.hooks';
-import { setDefinitionValue } from '@/core/assemblage.definition';
-
-import {
-  resolveInjectionTuple,
-  resolveInstanceInjectionTuple,
-} from './injection.helpers';
-
+/**
+ * `assembler.js` dependency injection container and handler.
+ */
 export class Assembler extends EventManager implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
     new Map();
@@ -33,6 +33,12 @@ export class Assembler extends EventManager implements AbstractAssembler {
    */
   public readonly publicContext: AssemblerContext;
 
+  /**
+   * Build the dependencies tree from an assemblage as entry point.
+   *
+   * @param { Concrete<T> } entry An assemblage concrete class.
+   * @returns { T } An instance of `entry` marked as singleton.
+   */
   public static build<T>(entry: Concrete<T>): T {
     const assembler = new Assembler();
 
@@ -46,7 +52,6 @@ export class Assembler extends EventManager implements AbstractAssembler {
     const instance = assembler.require(injectable.identifier);
 
     // Remove entry instance from cache.
-
     const index = assembler.initCache.indexOf(instance);
     assembler.initCache.splice(index, 1);
 
@@ -67,6 +72,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
     // EventManager listens to all events ('*') by default.
     super();
 
+    // Create contexts.
+
     this.publicContext = {
       has: this.has.bind(this),
       require: this.require.bind(this),
@@ -81,7 +88,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
       ...this.publicContext,
       register: this.register.bind(this),
       use: this.use.bind(this),
-      prepareInit: this.prepareInit.bind(this),
+      prepareInitHook: this.prepareInitHook.bind(this),
       emit: this.emit.bind(this),
       addChannels: this.addChannels.bind(this),
       removeChannels: this.removeChannels.bind(this),
@@ -89,6 +96,13 @@ export class Assembler extends EventManager implements AbstractAssembler {
     };
   }
 
+  /**
+   * Dispose assembler and all its injectables.
+   * Note that injectables' instances will be disposed only if
+   * the are singletons.
+   *
+   * Transient instances must be disposed by the user.
+   */
   public dispose(): void {
     for (const [_, injectable] of this.injectables) {
       injectable.dispose();
@@ -100,7 +114,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * Recursively register an `Injection` tuple and its inner injected dependencies.
    *
    * @param { Injection<T> } injection The injection tuple to register.
-   * @param { boolean | undefined } instance The injection binds an instance to an identifier.
+   * @param { boolean | undefined } instance Set to `true` if the injection binds an instance
+   * to an identifier (defaults to `false`).
    * @returns { Injectable<T> } An injectable of type `T`.
    */
   public register<T>(injection: Injection<T>, instance = false): Injectable<T> {
@@ -115,13 +130,14 @@ export class Assembler extends EventManager implements AbstractAssembler {
       );
     }
 
-    // This will register injectable's own dependencies.
+    // Recursively register injectable's own dependencies.
     const injectable = Injectable.of<T>(
       buildable,
       this.privateContext,
       this.publicContext
     );
 
+    // Cache injectable.
     this.injectables.set(injectable.identifier as Identifier<T>, injectable);
 
     // Call 'onRegister' hook.
@@ -136,6 +152,22 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * @param { string | symbol } identifier The identifier to register.
    * @param { T } object The object to use with the identifier.
    * @returns { T } The object.
+   *
+   * @example
+   * ```typescript
+   * import express from 'express';
+   *
+   * @Assemblage({
+   *   use: [
+   *     ['express', express]
+   *   ]
+   * });
+   * class MyAssemblage implements AbstractAssemblage {
+   *   constructor(@Use('express) private express) {
+   *     // Use express.
+   *   }
+   * }
+   * ```
    */
   public use<T>(identifier: string | Symbol, object: T): T {
     if (this.has(identifier)) {
@@ -147,7 +179,14 @@ export class Assembler extends EventManager implements AbstractAssembler {
     return object;
   }
 
-  public prepareInit<T = AbstractAssemblage>(instance: T): unknown[] {
+  /**
+   * Cache an instaance to be inited with `onInit` hook
+   * when the dependency tree will be fully resolved.
+   *
+   * @param { T = AbstractAssemblage } instance The built instance.
+   * @returns { unknown[] } The instances to be inited as this point.
+   */
+  public prepareInitHook<T = AbstractAssemblage>(instance: T): unknown[] {
     this.initCache.push(instance);
     return this.initCache;
   }

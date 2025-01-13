@@ -1,8 +1,4 @@
-import {
-  ReflectParamTypes,
-  ReflectPrefix,
-  ReflectSuffix,
-} from './reflection.constants';
+import { ReflectParamTypes, ReflectPrefix, ReflectSuffix } from './reflection.constants';
 
 /**
  * Assemblage surrounds its own metadata keys by a prefix and a suffix:

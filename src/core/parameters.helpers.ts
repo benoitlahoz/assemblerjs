@@ -1,10 +1,7 @@
 import type { Concrete } from '@/types';
 import {
-  ReflectConfigurationParamIndex,
-  ReflectContextParamIndex,
-  ReflectDefinitionParamIndex,
-  ReflectDisposeParamIndex,
-  ReflectUseParamIndex,
+    ReflectConfigurationParamIndex, ReflectContextParamIndex, ReflectDefinitionParamIndex,
+    ReflectDisposeParamIndex, ReflectUseParamIndex
 } from '@/core/reflection.constants';
 import { getOwnCustomMetadata } from '@/core/reflection.helpers';
 

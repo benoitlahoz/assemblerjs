@@ -1,11 +1,10 @@
 import type { Concrete } from '@/types';
 import { isAsync } from '@/utils';
-import type { AssemblerContext } from '@/core/assembler.types';
 import { AbstractAssemblage } from './assemblage.abstract';
-
+import type { AssemblerContext } from '@/core/assembler.types';
 /**
  * Call a hook of an assemblage asynchronously.
- * Resolve immediately if the hook is not asynchronous.
+ * Resolve immediately if the hook is synchronous.
  *
  * @param { Concrete<T> | T } assemblage An assemblage class or instance of a class of type T.
  * @param { string } name The name of the hook.

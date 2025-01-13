@@ -1,7 +1,9 @@
 import type { Concrete } from '@/types';
 import { Injection, InstanceInjection } from '@/core/injection.types';
-import { getOwnCustomMetadata } from './reflection.helpers';
+
+import { isAssemblage } from './assemblage.decorator';
 import { ReflectDefinition } from './reflection.constants';
+import { defineCustomMetadata, getOwnCustomMetadata } from './reflection.helpers';
 
 export interface AssemblageDefinition {
   singleton?: false;
@@ -12,6 +14,10 @@ export interface AssemblageDefinition {
   metadata?: Record<string, any>;
 }
 
+/**
+ * Provides functions to test that an `AssemblageDefinition` is conform
+ * and eventually transform its values.
+ */
 const schema: Record<string, any> = {
   singleton: {
     test: (value: unknown) =>
@@ -90,6 +96,12 @@ const schema: Record<string, any> = {
   },
 };
 
+/**
+ * Validate an object passed as `AssemblageDefinition`.
+ *
+ * @param { Record<string, any> } obj The object to validate against `AssemblageDefinition` schema.
+ * @returns { Record<string, any> } A valid `AssemblageDefinition` object.
+ */
 export const validateDefinition = (obj: Record<string, any>) => {
   const res = { ...obj };
   for (const property in res) {
@@ -113,12 +125,28 @@ export const validateDefinition = (obj: Record<string, any>) => {
   return res;
 };
 
+/**
+ * Get the raw definition of a given assemblage.
+ *
+ * @param { Concrete<T> } assemblage The assemblage.
+ * @returns { AssemblageDefinition } The definition.
+ */
 export const getDefinition = <T>(
   assemblage: Concrete<T>
 ): AssemblageDefinition => {
+  if (!isAssemblage(assemblage)) {
+    throw new Error(`Class '${assemblage.name}' is not an assemblage.`);
+  }
   return getOwnCustomMetadata(ReflectDefinition, assemblage);
 };
 
+/**
+ * Get a value from the raw definition of a given assemblage.
+ *
+ * @param { keyof AssemblageDefinition } property The property to get.
+ * @param { Concrete<T> } assemblage The assemblage.
+ * @returns { any } The value for given property.
+ */
 export const getDefinitionValue = <T>(
   property: string,
   assemblage: Concrete<T>
@@ -127,6 +155,14 @@ export const getDefinitionValue = <T>(
   return definition[property];
 };
 
+/**
+ * Set a value to the definition of a given assemblage and validate the result.
+ *
+ * @param { keyof AssemblageDefinition } property The property to set.
+ * @param { any } value The value to set.
+ * @param { Concrete<T> } assemblage The assemblage.
+ * @returns { AssemblageDefinition } The resulting `AssemblageDefinition`.
+ */
 export const setDefinitionValue = <T>(
   property: string,
   value: any,
@@ -135,5 +171,9 @@ export const setDefinitionValue = <T>(
   const definition: Record<string, any> = getDefinition(assemblage);
   definition[property] = value;
   const safeDefinition = validateDefinition(definition);
+
+  // Change metadata of the assemblage.
+  defineCustomMetadata(ReflectDefinition, safeDefinition, assemblage);
+
   return safeDefinition;
 };

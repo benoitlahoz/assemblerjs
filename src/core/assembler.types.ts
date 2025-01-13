@@ -2,8 +2,13 @@ import type { Identifier } from '@/types';
 import type { Injection } from '@/core/injection.types';
 import type { Injectable } from '@/core/injectable';
 import { AbstractEventManager } from '@/events/event-manager.abstract';
+
 import { AbstractAssemblage } from './assemblage.abstract';
 
+/**
+ * Assembler public context that provide
+ * access to some useful `Assembler` methods.
+ */
 export interface AssemblerContext {
   // Assembler bindings.
 
@@ -19,13 +24,18 @@ export interface AssemblerContext {
   events: AbstractAssembler['channels'];
 }
 
+/**
+ * Assembler private context that provide
+ * access to some `Assembler` methods
+ * used internally.
+ */
 export interface AssemblerPrivateContext extends AssemblerContext {
   // Assembler bindings.
 
   register: AbstractAssembler['register'];
   use: AbstractAssembler['use'];
-  prepareInit: AbstractAssembler['prepareInit'];
   dispose: AssemblerDispose;
+  prepareInitHook: AbstractAssembler['prepareInitHook'];
 
   // EventManager bindings.
 
@@ -46,7 +56,9 @@ export abstract class AbstractAssembler extends AbstractEventManager {
     instance?: boolean
   ): Injectable<T>;
   public abstract use<T>(identifier: string | Symbol, object: T): T;
-  public abstract prepareInit<T = AbstractAssemblage>(instance: T): unknown[];
+  public abstract prepareInitHook<T = AbstractAssemblage>(
+    instance: T
+  ): unknown[];
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(identifier: Identifier<T>): T;
   public abstract tagged(...tags: string[]): any[];

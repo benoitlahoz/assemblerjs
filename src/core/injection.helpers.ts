@@ -1,13 +1,9 @@
 import type { Abstract, Concrete } from '@/types';
-import { isClass, isObject, conditionally, pipe, switchCase } from '@/utils';
+import { conditionally, isClass, isObject, pipe, switchCase } from '@/utils';
+
 import {
-  BaseInjection,
-  ConfiguredInjection,
-  ConcreteConfiguredInjection,
-  ConcreteInjection,
-  Injection,
-  InstanceInjection,
-  Buildable,
+    BaseInjection, Buildable, ConcreteConfiguredInjection, ConcreteInjection, ConfiguredInjection,
+    Injection, InstanceInjection
 } from './injection.types';
 
 /**
@@ -50,6 +46,7 @@ const resolveLengthTwoInjection = <T>(
           };
         },
       }),
+
       // First object is a class, second an instance or configuration.
 
       conditionally({

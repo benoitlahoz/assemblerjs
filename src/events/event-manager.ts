@@ -1,8 +1,9 @@
 import { clearInstance, forOf, isAsync, onlyAlphanumeric } from '@/utils';
-import type { Listener } from './listener-collection.abstract';
-import { ListenerCollection } from './listener-collection';
-import { AbstractEventManager } from './event-manager.abstract';
 
+import { AbstractEventManager } from './event-manager.abstract';
+import { ListenerCollection } from './listener-collection';
+
+import type { Listener } from './listener-collection.abstract';
 export class EventManager implements AbstractEventManager {
   private readonly listeners: ListenerCollection = new ListenerCollection();
   private readonly onceListeners: ListenerCollection = new ListenerCollection();

@@ -1,7 +1,8 @@
-import { Concrete } from '@/types';
-import { getDecoratedParametersIndexes } from './parameters.helpers';
 import { getOwnCustomMetadata, getParamTypes } from '@/core/reflection.helpers';
+import { Concrete } from '@/types';
+
 import { Injectable } from './injectable';
+import { getDecoratedParametersIndexes } from './parameters.helpers';
 import { ReflectUseToken } from './reflection.constants';
 
 /**
