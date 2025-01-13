@@ -1,4 +1,4 @@
-import type { AssemblerContext } from '@/core/assembler.types';
+import type { AssemblerContext } from '@/assembler';
 
 /**
  * Base abstract class to implement an assemblage.

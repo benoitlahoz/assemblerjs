@@ -1,9 +1,8 @@
-import type { Identifier } from '@/types';
-import type { Injection } from '@/core/injection.types';
-import type { Injectable } from '@/core/injectable';
-import { AbstractEventManager } from '@/events/event-manager.abstract';
-
-import { AbstractAssemblage } from './assemblage.abstract';
+import type { Identifier } from '@/common';
+import type { Injection } from '@/assemblage';
+import { AbstractAssemblage } from '@/assemblage';
+import type { Injectable } from '@/injectable';
+import { AbstractEventManager } from '@/events';
 
 /**
  * Assembler public context that provide
@@ -44,8 +43,14 @@ export interface AssemblerPrivateContext extends AssemblerContext {
   removeChannels: AbstractAssembler['removeChannels'];
 }
 
+/**
+ * `Assembler` dispose method type.
+ */
 export type AssemblerDispose = AbstractAssembler['dispose'];
 
+/**
+ * `Assembler` abstraction.
+ */
 export abstract class AbstractAssembler extends AbstractEventManager {
   public abstract privateContext: AssemblerContext;
   public abstract publicContext: AssemblerContext;
@@ -62,6 +67,5 @@ export abstract class AbstractAssembler extends AbstractEventManager {
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(identifier: Identifier<T>): T;
   public abstract tagged(...tags: string[]): any[];
-
   public abstract dispose(): void;
 }

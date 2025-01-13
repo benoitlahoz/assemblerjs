@@ -1,4 +1,4 @@
-import { Identifier } from '@/types';
+import { Identifier } from './types';
 
 /**
  * A `Function` taking any arguments of type `T` and that returns `U`.

@@ -1,7 +1,14 @@
-import type { Tuple } from '@/types';
+import type { Tuple } from '@/common/types';
 import {
-    clearInstance, conditionally, forIn, forOf, isDefined, isOfType, pipe, proxifyIterable
-} from '@/utils';
+  clearInstance,
+  conditionally,
+  forIn,
+  forOf,
+  isDefined,
+  isOfType,
+  pipe,
+  proxifyIterable,
+} from '@/common/utils';
 
 import { AbstractListenerCollection } from './listener-collection.abstract';
 

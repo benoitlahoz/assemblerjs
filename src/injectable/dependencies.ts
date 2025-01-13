@@ -1,9 +1,7 @@
-import { getOwnCustomMetadata, getParamTypes } from '@/core/reflection.helpers';
-import { Concrete } from '@/types';
-
-import { Injectable } from './injectable';
-import { getDecoratedParametersIndexes } from './parameters.helpers';
-import { ReflectUseToken } from './reflection.constants';
+import type { Concrete } from '@/common';
+import { getOwnCustomMetadata, getParamTypes } from '@/common';
+import { ReflectParamValue, getDecoratedParametersIndexes } from '@/decorators';
+import { AbstractInjectable } from '@/injectable';
 
 /**
  * Get an array of parameters from an `Injectable` constructor, including decorated ones.
@@ -11,7 +9,7 @@ import { ReflectUseToken } from './reflection.constants';
  * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
  * @returns { any[] } An array of passed parameters.
  */
-export const resolveParameters = <T>(injectable: Injectable<T>) => {
+export const resolveParameters = <T>(injectable: AbstractInjectable<T>) => {
   const parameters: any[] = [];
 
   // Parameters passed in constructor.
@@ -47,7 +45,7 @@ export const resolveParameters = <T>(injectable: Injectable<T>) => {
 
     if (indexes.use.includes(i)) {
       const identifiers = getOwnCustomMetadata(
-        ReflectUseToken,
+        ReflectParamValue.UseIdentifier,
         injectable.concrete
       );
       const identifier = identifiers[i];
@@ -68,7 +66,7 @@ export const resolveParameters = <T>(injectable: Injectable<T>) => {
 /**
  * Get an array of parameters from an `Injectable` constructor, excluding non-dependency ones.
  *
- * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
+ * @param { AbstractInjectable<T> } injectable The `Injectable` to get constructor's parameters.
  * @returns { any[] } An array of passed parameters.
  */
 export const resolveDependencies = <T>(target: Concrete<T>) => {

@@ -1,18 +1,10 @@
-import type { Concrete } from '@/types';
-import { Injection, InstanceInjection } from '@/core/injection.types';
-
-import { isAssemblage } from './assemblage.decorator';
-import { ReflectDefinition } from './reflection.constants';
-import { defineCustomMetadata, getOwnCustomMetadata } from './reflection.helpers';
-
-export interface AssemblageDefinition {
-  singleton?: false;
-  events?: string[];
-  inject?: Injection<unknown>[];
-  use?: InstanceInjection<unknown>[];
-  tags?: string | string[];
-  metadata?: Record<string, any>;
-}
+import type { Concrete } from '@/common/types';
+import { ReflectValue } from '@/common/constants';
+import { defineCustomMetadata, getOwnCustomMetadata } from '@/common';
+import { isAssemblage } from '../helpers';
+import type { Injection } from './inject';
+import type { InstanceInjection } from './use';
+import { AssemblageDefinition } from './types';
 
 /**
  * Provides functions to test that an `AssemblageDefinition` is conform
@@ -67,7 +59,7 @@ const schema: Record<string, any> = {
     throw: () => {
       throw new Error(`'use' property must be an array of tuples of length 2.`);
     },
-    transform: (value?: Injection<unknown>[][]) => value,
+    transform: (value?: InstanceInjection<unknown>[][]) => value,
   },
   tags: {
     test: (value: unknown) =>
@@ -137,7 +129,7 @@ export const getDefinition = <T>(
   if (!isAssemblage(assemblage)) {
     throw new Error(`Class '${assemblage.name}' is not an assemblage.`);
   }
-  return getOwnCustomMetadata(ReflectDefinition, assemblage);
+  return getOwnCustomMetadata(ReflectValue.AssemblageDefinition, assemblage);
 };
 
 /**
@@ -173,7 +165,11 @@ export const setDefinitionValue = <T>(
   const safeDefinition = validateDefinition(definition);
 
   // Change metadata of the assemblage.
-  defineCustomMetadata(ReflectDefinition, safeDefinition, assemblage);
+  defineCustomMetadata(
+    ReflectValue.AssemblageDefinition,
+    safeDefinition,
+    assemblage
+  );
 
   return safeDefinition;
 };

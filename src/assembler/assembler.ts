@@ -1,19 +1,18 @@
-import type { Concrete, Identifier } from '@/types';
-import { setDefinitionValue } from '@/core/assemblage.definition';
-import { callHook } from '@/core/assemblage.hooks';
-import { Injectable } from '@/core/injectable';
-import { EventManager } from '@/events/event-manager';
-import { clearInstance } from '@/utils';
+import type { Concrete, Identifier } from '@/common';
+import { clearInstance } from '@/common';
+import type { Injection, InstanceInjection } from '@/assemblage';
+import {
+  AbstractAssemblage,
+  setDefinitionValue,
+  resolveInjectionTuple,
+  resolveInstanceInjectionTuple,
+} from '@/assemblage';
+import { Injectable } from '@/injectable';
+import { EventManager } from '@/events';
+import { AbstractAssembler } from './types';
 
-import { AbstractAssemblage } from './assemblage.abstract';
-import { AbstractAssembler } from './assembler.types';
-import { resolveInjectionTuple, resolveInstanceInjectionTuple } from './injection.helpers';
-
-import type { Injection, InstanceInjection } from '@/core/injection.types';
-import type {
-  AssemblerContext,
-  AssemblerPrivateContext,
-} from './assembler.types';
+import type { AssemblerContext, AssemblerPrivateContext } from './types';
+import { callHook } from './hooks';
 /**
  * `assembler.js` dependency injection container and handler.
  */
@@ -143,7 +142,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     // Call 'onRegister' hook.
     callHook(injectable.concrete, 'onRegister', this.publicContext);
 
-    return injectable;
+    return injectable as Injectable<T>;
   }
 
   /**

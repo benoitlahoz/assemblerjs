@@ -1,5 +1,5 @@
 /**
- * Recursively check if a property is defined and truthy to call an async method.
+ * Check at given interval if a property is defined and truthy to call an async method.
  *
  * @param { string } property The name of the class proprty to wait for.
  * @param { number | undefined } interval The interval in milliseconds at which the value is checked (defaults to 25 milliseconds).

@@ -1,15 +1,17 @@
-import { EventManager } from '@/events/event-manager';
-
-import type { Injectable } from './injectable';
+import { AbstractInjectable } from '@/injectable';
+import { EventManager } from './manager';
 
 /**
  * Register events channels if an Assemblage subclasses EventManager
  * and forward them to 'Assembler'.
  *
- * @param { Injectable<T> } injectable The injectable that built the 'instance'.
+ * @param { AbstractInjectable<T> } injectable The injectable that built the 'instance'.
  * @param { T } instance The instance of an `Assemblage` that subclasses `EventManager`.
  */
-export const registerEvents = <T>(injectable: Injectable<T>, instance: T) => {
+export const registerEvents = <T>(
+  injectable: AbstractInjectable<T>,
+  instance: T
+) => {
   const isEventManager = injectable.concrete.prototype instanceof EventManager;
   if (isEventManager) {
     const eventManager: EventManager = instance as EventManager;
@@ -32,10 +34,13 @@ export const registerEvents = <T>(injectable: Injectable<T>, instance: T) => {
  * Unregister events channels from an Assemblage that subclasses EventManager
  * and from the 'Assembler'.
  *
- * @param { Injectable<T> } injectable The injectable that built the 'instance'.
+ * @param { AbstractInjectable<T> } injectable The injectable that built the 'instance'.
  * @param { T } instance The instance of an `Assemblage` that subclasses `EventManager`.
  */
-export const unregisterEvents = <T>(injectable: Injectable<T>, instance: T) => {
+export const unregisterEvents = <T>(
+  injectable: AbstractInjectable<T>,
+  instance: T
+) => {
   const isEventManager = injectable.concrete.prototype instanceof EventManager;
   if (isEventManager) {
     const eventManager: EventManager = instance as EventManager;

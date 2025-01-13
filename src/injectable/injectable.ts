@@ -1,24 +1,19 @@
-import type { Concrete, Identifier } from '@/types';
-import { isAssemblage } from '@/core/assemblage.decorator';
-import {
-    AssemblageDefinition, getDefinition, getDefinitionValue
-} from '@/core/assemblage.definition';
-import { callHook } from '@/core/assemblage.hooks';
-import { clearInstance, forOf } from '@/utils';
-
-import { resolveDependencies, resolveParameters } from './dependencies.helpers';
-import { registerEvents, unregisterEvents } from './events.helpers';
-
+import type { Concrete, Identifier } from '@/common';
+import { clearInstance, forOf } from '@/common';
 import type {
-  AssemblerContext,
-  AssemblerPrivateContext,
-} from '@/core/assembler.types';
-import type {
+  AssemblageDefinition,
   Buildable,
   Injection,
   InstanceInjection,
-} from './injection.types';
-export class Injectable<T> {
+} from '@/assemblage';
+import { isAssemblage, getDefinition, getDefinitionValue } from '@/assemblage';
+import type { AssemblerContext, AssemblerPrivateContext } from '@/assembler';
+import { callHook } from '@/assembler';
+import { registerEvents, unregisterEvents } from '@/events';
+import { resolveDependencies, resolveParameters } from './dependencies';
+import { AbstractInjectable } from './abstract';
+
+export class Injectable<T> implements AbstractInjectable<T> {
   public readonly identifier: Identifier<T> | string | Symbol;
   public readonly concrete: Concrete<T>;
   public readonly configuration: Record<string, any>;

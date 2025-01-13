@@ -1,10 +1,50 @@
-import type { Abstract, Concrete } from '@/types';
-import { conditionally, isClass, isObject, pipe, switchCase } from '@/utils';
+import type { Abstract, Concrete, Identifier, Tuple } from '@/common';
+import { conditionally, isClass, isObject, pipe, switchCase } from '@/common';
 
-import {
-    BaseInjection, Buildable, ConcreteConfiguredInjection, ConcreteInjection, ConfiguredInjection,
-    Injection, InstanceInjection
-} from './injection.types';
+/**
+ * Injectable binds a concrete class to an abstract class as identifier without configuration.
+ */
+export type BaseInjection<T> = Tuple<[Abstract<T>, Concrete<T>]>;
+
+/**
+ * Injectable binds a concrete class to an abstract class as identifier
+ * and provides a configuration object that will be passed to context.
+ */
+export type ConfiguredInjection<T> = Tuple<
+  [Abstract<T>, Concrete<T>, Record<string, any>]
+>;
+
+/**
+ * Injectable binds a conrete class to itself as identifier.
+ */
+export type ConcreteInjection<T> = Tuple<[Concrete<T>]>;
+
+/**
+ * Injection binds a concrete class to itself as identifier
+ * and provides a configuration object that will be passed to context.
+ */
+export type ConcreteConfiguredInjection<T> = Tuple<
+  [Concrete<T>, Record<string, any>]
+>;
+
+/**
+ * A generic injection tuple.
+ */
+export type Injection<T> =
+  | BaseInjection<T>
+  | ConfiguredInjection<T>
+  | ConcreteInjection<T>
+  | ConcreteConfiguredInjection<T>;
+
+/**
+ * Describes a buildable object.
+ */
+export interface Buildable<T> {
+  identifier: Identifier<T>;
+  concrete: Concrete<T>;
+  instance?: T;
+  configuration: Record<string, any>;
+}
 
 /**
  * Resolve a `ConcreteInjection`.
@@ -99,20 +139,3 @@ export const resolveInjectionTuple = <T>(tuple: Injection<T>): Buildable<T> =>
       throw new Error(`Injection tuple must be of length 1, 2 or 3.`);
     }
   )(tuple.length);
-
-/**
- * Resolves injection of an already instantiated class or object.
- *
- * @param { InstanceInjection<T> } tuple A tuple of length 2.
- * @returns { Buildable } The result of the registration.
- */
-export const resolveInstanceInjectionTuple = <T>(
-  tuple: InstanceInjection<T>
-) => {
-  return {
-    identifier: tuple[0] as Abstract<T>,
-    concrete: tuple[0] as Concrete<T>,
-    instance: tuple[1] as T,
-    configuration: {},
-  };
-};

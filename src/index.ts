@@ -1,27 +1,13 @@
-export { Assembler } from './core/assembler';
-export { EventManager } from './events/event-manager';
+export { Assemblage } from './assemblage';
+export { Assembler } from './assembler';
+export { EventManager } from './events';
 
-// Decorators.
+export * from './decorators';
 
-export { Assemblage } from './core/assemblage.decorator';
-export {
-  Context,
-  Configuration,
-  Definition,
-  Dispose,
-  Use,
-} from './core/parameters.decorators';
-export { Await } from './decorators/await.decorator';
-
-// Abstractions.
-
-export { AbstractAssemblage } from './core/assemblage.abstract';
-export { AbstractAssembler } from './core/assembler.types';
-export { AbstractEventManager } from './events/event-manager.abstract';
+export { AbstractAssemblage } from './assemblage';
+export { AbstractAssembler } from './assembler';
+export { AbstractEventManager } from './events';
 
 // Types.
 
-export type {
-  AssemblerContext,
-  AssemblerDispose,
-} from './core/assembler.types';
+export type { AssemblerContext, AssemblerDispose } from './assembler';
