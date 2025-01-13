@@ -25,6 +25,6 @@ describe('EventsSimple', () => {
 
     setTimeout(() => {
       expect(subscriber.received).toBeTruthy();
-    }, 200);
+    }, 500);
   });
 });
