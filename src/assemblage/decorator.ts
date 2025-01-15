@@ -11,7 +11,9 @@ import { validateDefinition } from './definition';
 export const Assemblage = (
   definition?: AssemblageDefinition
 ): ClassDecorator => {
-  const safeDefinition: any = definition ? validateDefinition(definition) : {};
+  const safeDefinition: any = definition
+    ? validateDefinition(definition)
+    : validateDefinition({});
 
   return <TFunction extends Function>(target: TFunction): TFunction => {
     // Mark as assemblage.

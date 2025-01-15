@@ -131,7 +131,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
    * `true` if assemblage is a singleton.
    */
   public get isSingleton(): boolean {
-    return getDefinitionValue('singleton', this.concrete) || true;
+    return getDefinitionValue('singleton', this.concrete);
   }
 
   /**

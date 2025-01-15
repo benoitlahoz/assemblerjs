@@ -20,7 +20,9 @@ const schema: Record<string, any> = {
       );
     },
     // Assemblages are singletons by default.
-    transform: (value?: false) => (typeof value === 'undefined' ? true : false),
+    transform: (value?: false) => {
+      return typeof value === 'undefined' ? true : value ? true : false;
+    },
   },
   events: {
     test: (value: unknown) =>
@@ -96,13 +98,16 @@ const schema: Record<string, any> = {
  */
 export const validateDefinition = (obj: Record<string, any>) => {
   const res = { ...obj };
+
   for (const property in res) {
     if (!Object.keys(schema).includes(property)) {
       throw new Error(
         `Property '${property}' is not a valid assemblage definition property.`
       );
     }
+  }
 
+  for (const property in schema) {
     const test = schema[property].test;
     const error = schema[property].throw;
     const transform = schema[property].transform;
