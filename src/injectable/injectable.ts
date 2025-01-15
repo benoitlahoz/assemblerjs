@@ -10,7 +10,10 @@ import { isAssemblage, getDefinition, getDefinitionValue } from '@/assemblage';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/assembler';
 import { callHook } from '@/assembler';
 import { registerEvents, unregisterEvents } from '@/events';
-import { resolveDependencies, resolveParameters } from './dependencies';
+import {
+  resolveDependencies,
+  resolveConstructorParameters,
+} from './dependencies';
 import { AbstractInjectable } from './abstract';
 
 export class Injectable<T> implements AbstractInjectable<T> {
@@ -95,7 +98,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
   public build(): T {
     if (this.singletonInstance) return this.singletonInstance;
 
-    const params = resolveParameters(this);
+    const params = resolveConstructorParameters(this);
     const instance = new this.concrete(...params) as T;
 
     // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
