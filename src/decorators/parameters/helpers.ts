@@ -1,5 +1,5 @@
 import type { Concrete } from '@/common';
-import { getOwnCustomMetadata } from '@/assemblage';
+import { getOwnCustomMetadata } from '@/common';
 import { ReflectParamIndex } from './constants';
 
 const getContextIndex = <T>(concrete: Concrete<T>): number[] => {
