@@ -9,7 +9,7 @@ import { AbstractInjectable } from '@/injectable';
  * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
  * @returns { any[] } An array of passed parameters.
  */
-export const resolveConstructorParameters = <T>(
+export const resolveInjectableParameters = <T>(
   injectable: AbstractInjectable<T>
 ) => {
   const parameters: any[] = [];
@@ -66,9 +66,9 @@ export const resolveConstructorParameters = <T>(
 };
 
 /**
- * Get an array of parameters from an `Injectable` constructor, excluding non-dependency ones.
+ * Get an array of parameters from an `Concrete` constructor, excluding non-dependency ones.
  *
- * @param { AbstractInjectable<T> } injectable The `Injectable` to get constructor's parameters.
+ * @param { Concrete<T> } target The `Concrete` to get constructor's parameters.
  * @returns { any[] } An array of passed parameters.
  */
 export const resolveDependencies = <T>(target: Concrete<T>) => {

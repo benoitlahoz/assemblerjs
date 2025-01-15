@@ -65,7 +65,7 @@ export abstract class AbstractAssembler extends AbstractEventManager {
     instance: T
   ): unknown[];
   public abstract has<T>(identifier: Identifier<T>): boolean;
-  public abstract require<T>(identifier: Identifier<T>): T;
+  public abstract require<T>(identifier: Identifier<T> | string | Symbol): T;
   public abstract tagged(...tags: string[]): any[];
   public abstract dispose(): void;
 }

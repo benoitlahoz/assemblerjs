@@ -1,6 +1,5 @@
 export { Assemblage, isAssemblage } from './assemblage';
 export { Assembler } from './assembler';
-export { resolveConstructorParameters } from './injectable';
 export { EventManager } from './events';
 
 export * from './decorators';
