@@ -1,4 +1,4 @@
-export { Assemblage, isAssemblage } from './assemblage';
+export { Assemblage, decorateAssemblage, isAssemblage } from './assemblage';
 export { Assembler } from './assembler';
 export { EventManager } from './events';
 

@@ -1,4 +1,9 @@
-import { ReflectFlags, ReflectValue, defineCustomMetadata } from '@/common';
+import {
+  Concrete,
+  ReflectFlags,
+  ReflectValue,
+  defineCustomMetadata,
+} from '@/common';
 import type { AssemblageDefinition } from './definition';
 import { validateDefinition } from './definition';
 
@@ -28,4 +33,25 @@ export const Assemblage = (
 
     return target;
   };
+};
+
+export const decorateAssemblage = <T>(
+  target: Concrete<T>,
+  definition?: AssemblageDefinition
+) => {
+  const safeDefinition: any = definition
+    ? validateDefinition(definition)
+    : validateDefinition({});
+
+  // Mark as assemblage.
+  defineCustomMetadata(ReflectFlags.IsAssemblage, true, target);
+
+  // Keep definition passed in decorator.
+  defineCustomMetadata(
+    ReflectValue.AssemblageDefinition,
+    safeDefinition,
+    target
+  );
+
+  return target;
 };
