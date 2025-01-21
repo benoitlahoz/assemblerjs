@@ -74,6 +74,10 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // Cache instance of the buildable if the dependency was registered with an object
       // through the `use` property of `AssemblerDefinition`.
       this.singletonInstance = buildable.instance;
+    } else if (this.isSingleton) {
+      // TODO: Find a way to follow the '@Use' dependencies when bilding now.
+      // Build singleton instance at bootstrap.
+      // this.singletonInstance = this.build();
     }
   }
 

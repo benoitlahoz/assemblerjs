@@ -14,6 +14,7 @@ export interface AssemblerContext {
   has: AbstractAssembler['has'];
   require: AbstractAssembler['require'];
   tagged: AbstractAssembler['tagged'];
+  dispose: AssemblerDispose;
 
   // EventManager bindings.
 
@@ -33,7 +34,6 @@ export interface AssemblerPrivateContext extends AssemblerContext {
 
   register: AbstractAssembler['register'];
   use: AbstractAssembler['use'];
-  dispose: AssemblerDispose;
   prepareInitHook: AbstractAssembler['prepareInitHook'];
 
   // EventManager bindings.

@@ -77,6 +77,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
       has: this.has.bind(this),
       require: this.require.bind(this),
       tagged: this.tagged.bind(this),
+      dispose: this.dispose.bind(this),
       on: this.on.bind(this),
       once: this.once.bind(this),
       off: this.off.bind(this),
@@ -91,7 +92,6 @@ export class Assembler extends EventManager implements AbstractAssembler {
       emit: this.emit.bind(this),
       addChannels: this.addChannels.bind(this),
       removeChannels: this.removeChannels.bind(this),
-      dispose: this.dispose.bind(this),
     };
   }
 
