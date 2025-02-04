@@ -1,4 +1,4 @@
-import type { Identifier } from '@/common';
+import type { Concrete, Identifier } from '@/common';
 import type { Injection } from '@/assemblage';
 import { AbstractAssemblage } from '@/assemblage';
 import type { Injectable } from '@/injectable';
@@ -13,6 +13,7 @@ export interface AssemblerContext {
 
   has: AbstractAssembler['has'];
   require: AbstractAssembler['require'];
+  concrete: AbstractAssembler['concrete'];
   tagged: AbstractAssembler['tagged'];
   dispose: AssemblerDispose;
 
@@ -66,6 +67,9 @@ export abstract class AbstractAssembler extends AbstractEventManager {
   ): unknown[];
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(identifier: Identifier<T> | string | Symbol): T;
+  public abstract concrete<T>(
+    identifier: Identifier<T>
+  ): Concrete<T> | undefined;
   public abstract tagged(...tags: string[]): any[];
   public abstract dispose(): void;
 }

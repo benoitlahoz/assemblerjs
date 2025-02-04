@@ -76,6 +76,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     this.publicContext = {
       has: this.has.bind(this),
       require: this.require.bind(this),
+      concrete: this.concrete.bind(this),
       tagged: this.tagged.bind(this),
       dispose: this.dispose.bind(this),
       on: this.on.bind(this),
@@ -239,6 +240,20 @@ export class Assembler extends EventManager implements AbstractAssembler {
         return injectable.build();
       }
     }
+  }
+
+  /**
+   * Return a `Concrete` class for given identifier.
+   *
+   * @param { Identifier<T> } identifier The dentifier to get concrete class from.
+   * @returns { Concrete<T> | undefined } A concrete class or `undefinedù if injectable is not set.
+   */
+  public concrete<T>(identifier: Identifier<T>): Concrete<T> | undefined {
+    const injectable = this.injectables.get(identifier as Identifier<T>);
+
+    if (injectable) return injectable.concrete as Concrete<T>;
+
+    return;
   }
 
   /**
