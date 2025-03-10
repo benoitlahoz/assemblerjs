@@ -36,15 +36,33 @@ export class Assembler extends EventManager implements AbstractAssembler {
     const instance = assembler.require(injectable.identifier);
 
     // Remove entry instance from cache.
-    const index = assembler.initCache.indexOf(instance);
+    const root = assembler.initCache.find(
+      (value: { instance: any; configuration?: Record<string, any> }) =>
+        value.instance === instance
+    );
+    if (!root) {
+      throw new Error('Root instance not found in assemblages cache.');
+    }
+
+    const index = assembler.initCache.indexOf(root);
     assembler.initCache.splice(index, 1);
 
     for (const assemblage of assembler.initCache) {
-      callHook(assemblage, 'onInit', assembler.publicContext);
+      callHook(
+        assemblage.instance,
+        'onInit',
+        assembler.publicContext,
+        assemblage.configuration
+      );
     }
 
     // Call hook on entry assemblage.
-    callHook(instance, 'onInit', assembler.publicContext);
+    callHook(
+      instance,
+      'onInit',
+      assembler.publicContext,
+      injectable.configuration
+    );
 
     // Clean up.
     assembler.initCache.length = 0;
@@ -55,7 +73,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
     new Map();
   protected objects: Map<string | Symbol, unknown> = new Map();
-  private initCache: unknown[] = [];
+  private initCache: { instance: any; configuration?: Record<string, any> }[] =
+    [];
 
   /**
    * Context passed to internal classes.
@@ -141,7 +160,12 @@ export class Assembler extends EventManager implements AbstractAssembler {
     this.injectables.set(injectable.identifier as Identifier<T>, injectable);
 
     // Call 'onRegister' hook.
-    callHook(injectable.concrete, 'onRegister', this.publicContext);
+    callHook(
+      injectable.concrete,
+      'onRegister',
+      this.publicContext,
+      injectable.configuration
+    );
 
     return injectable as Injectable<T>;
   }
@@ -184,10 +208,17 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * when the dependency tree will be fully resolved.
    *
    * @param { T = AbstractAssemblage } instance The built instance.
+   * @param { Record<string, any> | undefined } configuration The configuration object.
    * @returns { unknown[] } The instances to be inited as this point.
    */
-  public prepareInitHook<T = AbstractAssemblage>(instance: T): unknown[] {
-    this.initCache.push(instance);
+  public prepareInitHook<T = AbstractAssemblage>(
+    instance: T,
+    configuration?: Record<string, any>
+  ): unknown[] {
+    this.initCache.push({
+      instance,
+      configuration,
+    });
     return this.initCache;
   }
 

@@ -10,16 +10,25 @@ export abstract class AbstractAssemblage {
    * Called on concrete class registration by assembler.
    *
    * @param { AssemblerContext } context The assembler's context.
+   * @param { Reord<string, any> } configuration The configuration object.
    */
-  // @ts-ignore 'context' is unused.
-  public static onRegister(context: AssemblerContext): void {}
+  public static onRegister(
+    // @ts-ignore 'context' is unused.
+    context: AssemblerContext,
+    // @ts-ignore 'configuration' is unused.
+    configuration?: Record<string, any>
+  ): void {}
 
   /**
    * Called on instantiated class after the dependency tree is fully resolved.
    *
    * @param { AssemblerContext } context The assembler's context.
+   * @param { Reord<string, any> } configuration The configuration object.
    */
-  public abstract onInit?(context: AssemblerContext): void | Promise<void>;
+  public abstract onInit?(
+    context: AssemblerContext,
+    configuration?: Record<string, any>
+  ): void | Promise<void>;
 
   /**
    * Called when instance of class is disposed.

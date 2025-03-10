@@ -12,7 +12,6 @@ import { BypassLogger } from './fixtures/logger/logger-bypass.service';
 
 import { AbstractErrorHandler } from './fixtures/error-handler/error-handler.abstract';
 import { ErrorLogInjector } from './fixtures/error-handler/error-log-injector.service';
-import { NoOpAssemblage } from '../src/core/assemblage.decorator';
 
 describe('Tagged', () => {
   it('should get dependencies by tag string.', () => {

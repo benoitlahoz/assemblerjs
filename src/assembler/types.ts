@@ -63,7 +63,8 @@ export abstract class AbstractAssembler extends AbstractEventManager {
   ): Injectable<T>;
   public abstract use<T>(identifier: string | Symbol, object: T): T;
   public abstract prepareInitHook<T = AbstractAssemblage>(
-    instance: T
+    instance: T,
+    configuration?: Record<string, any>
   ): unknown[];
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(identifier: Identifier<T> | string | Symbol): T;

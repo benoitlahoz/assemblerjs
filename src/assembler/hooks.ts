@@ -14,7 +14,8 @@ import type { AssemblerContext } from './types';
 export const callHook = <T>(
   assemblage: Concrete<T> | T,
   name: string,
-  context?: AssemblerContext
+  context?: AssemblerContext,
+  configuration?: Record<string, any>
 ): Promise<void> => {
   return new Promise((resolve) => {
     const hook: Function | undefined = (assemblage as AbstractAssemblage)[name];
@@ -22,13 +23,13 @@ export const callHook = <T>(
     if (hook) {
       if (isAsync(hook)) {
         hook
-          .bind(assemblage)(context)
+          .bind(assemblage)(context, configuration)
           .then(() => {
             resolve();
           });
         return;
       }
-      resolve(hook.bind(assemblage)(context));
+      resolve(hook.bind(assemblage)(context, configuration));
     }
   });
 };

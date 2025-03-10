@@ -55,7 +55,6 @@ export class Injectable<T> implements AbstractInjectable<T> {
     );
 
     // Register assemblage's injected objects (e.g. instances) passed in 'use' definition property.
-
     iterateOwnUsedInjections(<U>(injection: InstanceInjection<U>) => {
       if (
         typeof injection[0] === 'string' ||
@@ -88,7 +87,12 @@ export class Injectable<T> implements AbstractInjectable<T> {
   public dispose(): void {
     if (this.singletonInstance) {
       unregisterEvents(this, this.singletonInstance);
-      callHook(this.singletonInstance, 'onDispose', this.publicContext);
+      callHook(
+        this.singletonInstance,
+        'onDispose',
+        this.publicContext,
+        this.configuration
+      );
       clearInstance(this.singletonInstance, this.concrete);
     }
     clearInstance(this, Injectable);
@@ -110,7 +114,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
 
     if (this.isSingleton) {
       this.singletonInstance = instance;
-      this.privateContext.prepareInitHook(instance);
+      this.privateContext.prepareInitHook(instance, this.configuration);
       return this.singletonInstance;
     }
 

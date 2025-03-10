@@ -2,7 +2,7 @@
 
 A general purpose and zero-dependency [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) library for node and browser.
 
-![Statements](https://img.shields.io/badge/statements-90.39%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-81.53%25-yellow.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-86.09%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90%25-brightgreen.svg?style=flat)
+![Statements](https://img.shields.io/badge/statements-90.65%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-81.25%25-yellow.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.23%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.25%25-brightgreen.svg?style=flat)
 
 ---
 

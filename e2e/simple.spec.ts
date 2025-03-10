@@ -27,8 +27,12 @@ describe('Simple', () => {
   });
 
   it('should inject a dependency that bounds a concrete class to an abstract class.', () => {
+    const LoggerConfiguration = {
+      foo: 'bar',
+    };
+
     @Assemblage({
-      inject: [[AbstractLogger, BypassLogger]],
+      inject: [[AbstractLogger, BypassLogger, LoggerConfiguration]],
     })
     class App implements AbstractAssemblage {
       constructor(public logger: AbstractLogger) {}
