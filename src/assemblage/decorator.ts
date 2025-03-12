@@ -13,10 +13,12 @@ import { validateDefinition } from './definition';
  * @param { AssemblageDefinition } definition Definition of the assemblage that provides injections, etc.
  * @returns { ClassDecorator } The decorated class.
  */
-export const Assemblage = <T>(definition?: AssemblageDefinition) => {
-  return (target: Concrete<T>): Concrete<T> => {
+export const Assemblage = <T>(
+  definition?: AssemblageDefinition
+): ClassDecorator => {
+  return ((target: Concrete<T>): Concrete<T> => {
     return decorateAssemblage(target as any, definition);
-  };
+  }) as ClassDecorator;
 };
 
 export const decorateAssemblage = <T>(
