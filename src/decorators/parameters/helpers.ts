@@ -1,5 +1,6 @@
 import type { Concrete } from '@/common';
 import { getOwnCustomMetadata } from '@/common';
+import type { ParametersDecoratorsIndexes } from '../types';
 import { ReflectParamIndex } from './constants';
 
 const getContextIndex = <T>(concrete: Concrete<T>): number[] => {
@@ -22,19 +23,21 @@ const getUseIndex = <T>(concrete: Concrete<T>): number[] => {
   return getOwnCustomMetadata(ReflectParamIndex.Use, concrete) || [];
 };
 
-export const getDecoratedParametersIndexes = <T>(target: Concrete<T>) => {
+export const getDecoratedParametersIndexes = <T>(
+  target: Concrete<T>
+): ParametersDecoratorsIndexes => {
   // Get indexes of decorated constructor parameters, etc.
-  const context: number[] = getContextIndex(target) || [];
-  const definition: number[] = getDefinitionIndex(target) || [];
-  const configuration: number[] = getConfigurationIndex(target) || [];
-  const dispose: number[] = getDisposeIndex(target) || [];
-  const use: number[] = getUseIndex(target) || [];
+  const Context: number[] = getContextIndex(target) || [];
+  const Definition: number[] = getDefinitionIndex(target) || [];
+  const Configuration: number[] = getConfigurationIndex(target) || [];
+  const Dispose: number[] = getDisposeIndex(target) || [];
+  const Use: number[] = getUseIndex(target) || [];
 
   return {
-    context,
-    definition,
-    configuration,
-    dispose,
-    use,
+    Context,
+    Definition,
+    Configuration,
+    Dispose,
+    Use,
   };
 };

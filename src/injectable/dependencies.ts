@@ -21,31 +21,31 @@ export const resolveInjectableParameters = <T>(
   // Build parameters to pass to instance.
   let i = 0;
   for (const dependency of paramTypes) {
-    if (indexes.context.includes(i)) {
+    if (indexes.Context.includes(i)) {
       parameters.push(injectable.publicContext);
       i++;
       continue;
     }
 
-    if (indexes.configuration.includes(i)) {
+    if (indexes.Configuration.includes(i)) {
       parameters.push(injectable.configuration);
       i++;
       continue;
     }
 
-    if (indexes.definition.includes(i)) {
+    if (indexes.Definition.includes(i)) {
       parameters.push(injectable.definition);
       i++;
       continue;
     }
 
-    if (indexes.dispose.includes(i)) {
+    if (indexes.Dispose.includes(i)) {
       parameters.push(injectable.privateContext.dispose);
       i++;
       continue;
     }
 
-    if (indexes.use.includes(i)) {
+    if (indexes.Use.includes(i)) {
       const identifiers = getOwnCustomMetadata(
         ReflectParamValue.UseIdentifier,
         injectable.concrete
@@ -81,11 +81,11 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
   let i = 0;
   for (const dependency of paramTypes) {
     if (
-      indexes.context.includes(i) ||
-      indexes.configuration.includes(i) ||
-      indexes.definition.includes(i) ||
-      indexes.dispose.includes(i) ||
-      indexes.use.includes(i)
+      indexes.Context.includes(i) ||
+      indexes.Configuration.includes(i) ||
+      indexes.Definition.includes(i) ||
+      indexes.Dispose.includes(i) ||
+      indexes.Use.includes(i)
     ) {
       i++;
       continue;

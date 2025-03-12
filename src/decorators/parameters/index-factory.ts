@@ -4,7 +4,7 @@ import { ReflectParamIndex } from './constants';
 /**
  * Prepare `Assembler` to inject specific object in a dependency's constructor parameters.
  */
-const decoratorFactory = (key: string) => (): ParameterDecorator => {
+const paramIndexDecoratorFactory = (key: string) => (): ParameterDecorator => {
   return (target: any, _: string | symbol | undefined, index: number) => {
     const paramIndexes: number[] = getOwnCustomMetadata(key, target) || [];
     paramIndexes.push(index);
@@ -18,21 +18,23 @@ const decoratorFactory = (key: string) => (): ParameterDecorator => {
 /**
  * Injects the Assembler's context.
  */
-const Context = decoratorFactory(ReflectParamIndex.Context);
+const Context = paramIndexDecoratorFactory(ReflectParamIndex.Context);
 
 /**
  * Injects the assemblage's configuration object.
  */
-const Configuration = decoratorFactory(ReflectParamIndex.Configuration);
+const Configuration = paramIndexDecoratorFactory(
+  ReflectParamIndex.Configuration
+);
 
 /**
  * Injects the assemblage's definition object.
  */
-const Definition = decoratorFactory(ReflectParamIndex.Definition);
+const Definition = paramIndexDecoratorFactory(ReflectParamIndex.Definition);
 
 /**
  * Injects the Assembler's 'dispose' method.
  */
-const Dispose = decoratorFactory(ReflectParamIndex.Dispose);
+const Dispose = paramIndexDecoratorFactory(ReflectParamIndex.Dispose);
 
 export { Context, Configuration, Definition, Dispose };
