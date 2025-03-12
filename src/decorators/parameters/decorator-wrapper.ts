@@ -17,13 +17,13 @@ import { decorateUse } from './use';
  * Do not use arrow function here if access to `this` is required.
  * @returns A new decorator.
  */
-export const createWrappedDecorator = (fn?: () => void) => {
+export const createWrappedDecorator = (fn?: () => void): any => {
   return () => AssemblageWrappedDecorator(fn);
 };
 
 export const AssemblageWrappedDecorator =
-  (fn?: () => void) =>
-  <T extends { new (...args: any[]): {} }>(Base: T) => {
+  (fn?: () => void): any =>
+  <T extends { new (...args: any[]): {} }>(Base: T): any => {
     const klass = class extends Base {
       constructor(...args: any[]) {
         super(...args);
@@ -85,7 +85,7 @@ export const AssemblageWrappedDecorator =
     }
 
     // Change name to original class.
-    Object.defineProperty(klass, 'name', { value: Base.name });
+    Object.defineProperty(klass, 'name', { value: `Decorated${Base.name}` });
 
     // Return assemblage.
     return decorateAssemblage(
