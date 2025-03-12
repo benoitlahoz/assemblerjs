@@ -31,7 +31,8 @@ export const AssemblageWrappedDecorator =
       }
     };
 
-    const paramTypes: any[] = Reflect.getOwnMetadata(ReflectParamTypes, Base);
+    const paramTypes: any[] =
+      Reflect.getOwnMetadata(ReflectParamTypes, Base) || [];
     const existingParamsIndexes = getDecoratedParametersIndexes(Base);
     const params: any[] = [];
 
