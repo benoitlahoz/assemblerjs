@@ -86,7 +86,7 @@ export const AssemblageWrappedDecorator =
     }
 
     // Change name to original class.
-    Object.defineProperty(klass, 'name', { value: `Decorated${Base.name}` });
+    Object.defineProperty(klass, 'name', { value: Base.name });
 
     // Return assemblage.
     return decorateAssemblage(
