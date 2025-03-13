@@ -11,12 +11,12 @@ import {
   Dispose,
   Use,
 } from '../src';
-import { createWrappedDecorator } from '../src';
+import { createConstructorDecorator } from '../src';
 
 describe('EventsSimple', () => {
   it('should create a custom decorator to stack on `Assemblage` one.', () => {
     // Warning: pass a 'function', NOT AN ARROW FUNCTION to access 'this'.
-    const CustomDecorator = createWrappedDecorator(function () {
+    const CustomDecorator = createConstructorDecorator(function () {
       expect(this).toBeInstanceOf(App);
       expect(this.context).toBeDefined();
       expect(this.definition).toBeDefined();

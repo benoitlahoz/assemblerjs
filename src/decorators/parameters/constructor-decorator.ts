@@ -1,25 +1,40 @@
-import 'reflect-metadata';
-import {
-  decorateAssemblage,
-  decorateUse,
-  ReflectParamIndex,
-  ReflectParamValue,
-} from '../../../src';
 import {
   defineCustomMetadata,
   getOwnCustomMetadata,
   ReflectParamTypes,
   ReflectValue,
-} from '../../../src/common';
-import { getDecoratedParametersIndexes } from '../../../src';
+} from '@/common';
+import { decorateAssemblage } from '@/assemblage';
+import { getDecoratedParametersIndexes } from './helpers';
+import { ReflectParamIndex, ReflectParamValue } from './constants';
+import { decorateUse } from './use';
 
-export const createStackedDecorator = (fn?: () => void) => {
-  return () => AssemblageStackedDecorator(fn);
+/**
+ * Create a custom decorator that adds a function called after the original constructor
+ * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
+ * Note that it must be placed before the `Assemnblage` decorator.
+ *
+ * @param { function(): void | undefined } fn A function to execute after `super`.
+ * Do not use arrow function here if access to `this` is required.
+ * @returns A new decorator.
+ */
+export const createConstructorDecorator = (fn?: () => void): any => {
+  return (asAssemblage = true) => ConstructorDecorator(fn, asAssemblage);
 };
 
-export const AssemblageStackedDecorator =
-  (fn?: () => void) =>
-  <T extends { new (...args: any[]): {} }>(Base: T) => {
+/**
+ * A custom decorator that adds a function called after the original constructor
+ * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
+ * Note that it must be placed before the `Assemnblage` decorator.
+ *
+ * @param { function(): void | undefined } fn A function to execute after `super`.
+ * Do not use arrow function here if access to `this` is required.
+ * @param { boolean | undefined } asAssemblage If `true` decorate the class as an assemblage (defaults to `true`).
+ * @returns A new decorator.
+ */
+export const ConstructorDecorator =
+  (fn?: () => void, asAssemblage = true): any =>
+  <T extends { new (...args: any[]): {} }>(Base: T): any => {
     const klass = class extends Base {
       constructor(...args: any[]) {
         super(...args);
@@ -27,7 +42,15 @@ export const AssemblageStackedDecorator =
       }
     };
 
-    const paramTypes: any[] = Reflect.getOwnMetadata(ReflectParamTypes, Base);
+    // Change name to original class.
+    Object.defineProperty(klass, 'name', { value: Base.name });
+
+    if (!asAssemblage) {
+      return klass;
+    }
+
+    const paramTypes: any[] =
+      Reflect.getOwnMetadata(ReflectParamTypes, Base) || [];
     const existingParamsIndexes = getDecoratedParametersIndexes(Base);
     const params: any[] = [];
 
@@ -80,8 +103,7 @@ export const AssemblageStackedDecorator =
       }
     }
 
-    // Change name to original class.
-    Object.defineProperty(klass, 'name', { value: Base.name });
+    if (!asAssemblage) return klass;
 
     // Return assemblage.
     return decorateAssemblage(
