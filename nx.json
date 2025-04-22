@@ -33,6 +33,7 @@
       "options": {
         "buildTargetName": "build",
         "testTargetName": "test",
+        "coverageTargetName": "coverage",
         "serveTargetName": "serve",
         "devTargetName": "dev",
         "previewTargetName": "preview",
