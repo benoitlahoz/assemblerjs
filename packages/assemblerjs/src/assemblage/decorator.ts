@@ -17,13 +17,18 @@ export const Assemblage = <T>(
   }) as ClassDecorator;
 };
 
+/**
+ * Manually decorate a class to be an `Assemblage`.
+ *
+ * @param { Concrete<T> } target The class to decorate.
+ * @param { AssemblageDefinition } definition Definition of the assemblage that provides injections, etc.
+ * @returns
+ */
 export const decorateAssemblage = <T>(
   target: Concrete<T>,
   definition?: AssemblageDefinition
 ) => {
-  const safeDefinition: any = definition
-    ? validateDefinition(definition)
-    : validateDefinition({});
+  const safeDefinition: any = validateDefinition(definition || {});
 
   // Mark as assemblage.
   defineCustomMetadata(ReflectFlags.IsAssemblage, true, target);

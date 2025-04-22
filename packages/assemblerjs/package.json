@@ -51,6 +51,6 @@
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
   },
   "dependencies": {
-    "@assemblerjs/core": "^0.8.4"
+    "@assemblerjs/core": "^0.8.5"
   }
 }
