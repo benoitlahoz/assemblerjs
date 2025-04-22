@@ -1,4 +1,4 @@
-import type { Concrete } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
 import { getOwnCustomMetadata, getParamTypes } from '@/common';
 import { ReflectParamValue, getDecoratedParametersIndexes } from '@/decorators';
 import { AbstractInjectable } from '@/injectable';

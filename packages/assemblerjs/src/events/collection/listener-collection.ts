@@ -8,7 +8,7 @@ import {
   isOfType,
   pipe,
   proxifyIterable,
-} from '@/common/utils_old';
+} from '@assemblerjs/core';
 
 import { AbstractListenerCollection } from './listener-collection.abstract';
 

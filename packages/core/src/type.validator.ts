@@ -1,4 +1,21 @@
 /**
+ * Check if a value is a class.
+ *
+ * @param { any } target The object to check.
+ * @returns { boolean } `true` if the object is a class.
+ */
+/* #__PURE__ */
+export const isClass = (
+  target: any
+): target is { new (...args: any[]): any } => {
+  return (
+    target &&
+    typeof target === 'function' &&
+    typeof target.constructor !== 'undefined'
+  );
+};
+
+/**
  * Checks if a value is a string.
  *
  * @param { unknown } value The value to check.

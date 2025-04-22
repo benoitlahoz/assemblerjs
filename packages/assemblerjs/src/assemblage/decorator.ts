@@ -1,9 +1,5 @@
-import {
-  Concrete,
-  ReflectFlags,
-  ReflectValue,
-  defineCustomMetadata,
-} from '@/common';
+import type { Concrete } from '@assemblerjs/core';
+import { ReflectFlags, ReflectValue, defineCustomMetadata } from '@/common';
 import type { AssemblageDefinition } from './definition';
 import { validateDefinition } from './definition';
 

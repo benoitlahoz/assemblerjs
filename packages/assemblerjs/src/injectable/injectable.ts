@@ -1,5 +1,6 @@
-import type { Concrete, Identifier } from '@/common';
-import { clearInstance, forOf } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
+import { clearInstance, forOf } from '@assemblerjs/core';
+import type { Identifier } from '@/common';
 import type {
   AssemblageDefinition,
   Buildable,
@@ -62,7 +63,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
       ) {
         this.privateContext.use(injection[0], injection[1]);
       } else {
-        this.privateContext.register(injection as Injection<T>, true);
+        this.privateContext.register(injection as any, true);
       }
     });
 
@@ -93,9 +94,9 @@ export class Injectable<T> implements AbstractInjectable<T> {
         this.publicContext,
         this.configuration
       );
-      clearInstance(this.singletonInstance, this.concrete);
+      clearInstance(this.singletonInstance, this.concrete as any);
     }
-    clearInstance(this, Injectable);
+    clearInstance(this, Injectable as any);
   }
 
   /**

@@ -152,7 +152,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
 
     // Recursively register injectable's own dependencies.
     const injectable = Injectable.of<T>(
-      buildable,
+      buildable as any,
       this.privateContext,
       this.publicContext
     );

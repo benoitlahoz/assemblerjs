@@ -1,5 +1,12 @@
-import type { Abstract, Concrete, Identifier, Tuple } from '@/common';
-import { conditionally, isClass, isObject, pipe, switchCase } from '@/common';
+import type { Abstract, Concrete, Tuple } from '@assemblerjs/core';
+import {
+  conditionally,
+  isClass,
+  isObject,
+  pipe,
+  switchCase,
+} from '@assemblerjs/core';
+import type { Identifier } from '@/common';
 
 /**
  * Injectable binds a concrete class to an abstract class as identifier without configuration.

@@ -1,4 +1,5 @@
-import { Abstract, Concrete, Identifier, Tuple } from '@/common';
+import type { Abstract, Concrete, Tuple } from '@assemblerjs/core';
+import type { Identifier } from '@/common';
 
 /**
  * Injectable binds an instance of a class to an identifier (abstract or concrete).

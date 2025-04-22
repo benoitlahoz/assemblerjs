@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose and zero-dependency Dependency Injection library for node and browser.",
-  "version": "0.8.3",
+  "version": "0.8.5",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
@@ -51,6 +51,6 @@
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
   },
   "dependencies": {
-    "@assemblerjs/core": "^0.8.3"
+    "@assemblerjs/core": "^0.8.4"
   }
 }

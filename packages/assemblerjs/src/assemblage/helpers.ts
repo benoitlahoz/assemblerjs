@@ -1,4 +1,4 @@
-import type { Concrete } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
 import { ReflectFlags, getOwnCustomMetadata } from '@/common';
 
 /**

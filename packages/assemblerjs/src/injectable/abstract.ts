@@ -1,4 +1,5 @@
-import type { Concrete, Identifier } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
+import type { Identifier } from '@/common';
 import type { AssemblageDefinition } from '@/assemblage';
 
 import type {
