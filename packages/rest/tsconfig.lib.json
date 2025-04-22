@@ -12,7 +12,11 @@
     "types": ["node", "vite/client", "reflect-metadata"]
   },
   "include": ["src/**/*.ts"],
-  "references": [],
+  "references": [
+    {
+      "path": "../assemblerjs/tsconfig.lib.json"
+    }
+  ],
   "exclude": [
     "vite.config.ts",
     "vite.config.mts",

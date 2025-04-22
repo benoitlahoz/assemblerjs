@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose and zero-dependency Dependency Injection library for node and browser.",
-  "version": "0.8.0",
+  "version": "0.8.3",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
@@ -28,30 +28,29 @@
     "reflect-metadata"
   ],
   "license": "MIT",
-  "type": "module",
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
-    "./package.json": "./package.json",
     ".": {
-      "development": "./src/index.ts",
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "default": "./dist/index.js"
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
     }
   },
   "engines": {
     "node": ">= 18.12.0"
   },
   "files": [
-    "dist",
+    "dist/**/*",
+    "README.md",
     "!**/*.tsbuildinfo"
   ],
   "scripts": {
     "test": "vitest --coverage --passWithNoTests",
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@assemblerjs/core": "^0.8.3"
+  }
 }

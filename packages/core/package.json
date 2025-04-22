@@ -1,7 +1,6 @@
 {
-  "name": "@assemblerjs/rest",
+  "name": "@assemblerjs/core",
   "version": "0.8.3",
-  "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -17,9 +16,6 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "assemblerjs": "^0.8.3"
-  },
-  "devDependencies": {
-    "reflect-metadata": "0.2.2"
+    "error-polyfill": "^0.1.3"
   }
 }

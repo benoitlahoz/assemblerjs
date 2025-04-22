@@ -4,6 +4,9 @@
   "include": [],
   "references": [
     {
+      "path": "../assemblerjs"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

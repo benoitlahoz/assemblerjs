@@ -1,4 +1,4 @@
-import type { Concrete } from '@/common/types';
+import type { Concrete } from '@assemblerjs/core';
 import { ReflectValue } from '@/common/constants';
 import { defineCustomMetadata, getOwnCustomMetadata } from '@/common';
 import { isAssemblage } from '../helpers';

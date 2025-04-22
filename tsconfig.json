@@ -7,7 +7,7 @@
       "path": "./packages/assemblerjs"
     },
     {
-      "path": "./packages/fp"
+      "path": "./packages/core"
     },
     {
       "path": "./packages/rest"
