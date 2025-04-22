@@ -1,0 +1,57 @@
+{
+  "name": "assemblerjs",
+  "description": "A general purpose and zero-dependency Dependency Injection library for node and browser.",
+  "version": "0.8.0",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "keywords": [
+    "agencement",
+    "assemblage",
+    "assembler",
+    "composition",
+    "decorator",
+    "dependency",
+    "di",
+    "injection",
+    "ioc",
+    "machine",
+    "metadata",
+    "multi",
+    "reflection",
+    "swc",
+    "typescript",
+    "reflect-metadata"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">= 18.12.0"
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "test": "vitest --coverage --passWithNoTests",
+    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
+  },
+  "dependencies": {}
+}

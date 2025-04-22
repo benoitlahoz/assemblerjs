@@ -1,0 +1,9 @@
+{
+  "name": "assemblerjs",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/assemblerjs/src",
+  "projectType": "library",
+  "tags": ["type:feature", "universal"],
+  "// targets": "to see all targets run: nx show project assemblerjs --web",
+  "targets": {}
+}
