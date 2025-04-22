@@ -1,7 +1,7 @@
 /// <reference types='vitest' />
 import { join } from 'node:path';
-import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
 import swc from '@rollup/plugin-swc';
 
@@ -9,8 +9,8 @@ export default defineConfig(() => ({
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/assemblerjs',
   plugins: [
+    tsconfigPaths(),
     swc({
-      exclude: ['**/*.html', '**/*.css', '**/*.sass'],
       swc: {
         jsc: {
           parser: {
@@ -38,11 +38,6 @@ export default defineConfig(() => ({
     }),
   ],
   esbuild: false as const,
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
-    },
-  },
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],

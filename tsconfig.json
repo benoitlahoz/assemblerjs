@@ -5,6 +5,12 @@
   "references": [
     {
       "path": "./packages/assemblerjs"
+    },
+    {
+      "path": "./packages/fp"
+    },
+    {
+      "path": "./packages/rest"
     }
   ]
 }

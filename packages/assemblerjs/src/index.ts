@@ -9,4 +9,5 @@ export { AbstractAssembler } from './assembler';
 export { AbstractListenerCollection, AbstractEventManager } from './events';
 
 export type { AssemblerContext, AssemblerDispose } from './assembler';
+export type { AssemblageDefinition } from './assemblage';
 export type { Listener, EventChannel, EventChannelList } from './events';

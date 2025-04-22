@@ -12,7 +12,7 @@ import { decorateUse } from './use';
 /**
  * Create a custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
- * Note that it must be placed before the `Assemnblage` decorator.
+ * Note that it must be placed before the `Assemblage` decorator.
  *
  * @param { function(): void | undefined } fn A function to execute after `super`.
  * Do not use arrow function here if access to `this` is required.
