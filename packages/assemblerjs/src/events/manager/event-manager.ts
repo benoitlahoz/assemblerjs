@@ -3,7 +3,7 @@ import {
   forOf,
   isAsync,
   onlyAlphanumeric,
-} from '@/common/utils';
+} from '@assemblerjs/core';
 
 import { AbstractEventManager } from './event-manager.abstract';
 import { ListenerCollection } from '../collection/listener-collection';

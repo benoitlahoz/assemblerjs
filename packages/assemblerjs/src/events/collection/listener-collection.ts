@@ -1,4 +1,4 @@
-import type { Tuple } from '@/common/types';
+import type { Tuple } from '@assemblerjs/core';
 import {
   clearInstance,
   conditionally,
@@ -8,7 +8,7 @@ import {
   isOfType,
   pipe,
   proxifyIterable,
-} from '@/common/utils';
+} from '@/common/utils_old';
 
 import { AbstractListenerCollection } from './listener-collection.abstract';
 

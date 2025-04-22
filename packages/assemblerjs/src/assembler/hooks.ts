@@ -1,5 +1,5 @@
-import type { Concrete } from '@/common';
-import { isAsync } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
+import { isAsync } from '@assemblerjs/core';
 import { AbstractAssemblage } from '@/assemblage';
 import type { AssemblerContext } from './types';
 

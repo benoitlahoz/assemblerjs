@@ -1,5 +1,6 @@
-import type { Concrete, Identifier } from '@/common';
-import { clearInstance } from '@/common';
+import type { Concrete } from '@assemblerjs/core';
+import { clearInstance } from '@assemblerjs/core';
+import type { Identifier } from '@/common';
 import type { Injection, InstanceInjection } from '@/assemblage';
 import {
   AbstractAssemblage,
@@ -67,7 +68,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     // Clean up.
     assembler.initCache.length = 0;
 
-    return instance;
+    return instance as T;
   }
 
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
@@ -126,7 +127,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     for (const [_, injectable] of this.injectables) {
       injectable.dispose();
     }
-    clearInstance(this, Assembler);
+    clearInstance(this, Assembler as any);
   }
 
   /**
