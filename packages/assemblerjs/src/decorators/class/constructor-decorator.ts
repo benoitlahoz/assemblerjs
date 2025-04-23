@@ -13,42 +13,46 @@ import { decorateUse } from '../parameters/use';
  * Create a custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
  * Note that it must be placed before the `Assemblage` decorator.
+ * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(): void | undefined } fn A function to execute after `super`.
+ * @param { function(definition?: Record<string, any>): void | undefined } fn A function to execute after `super`.
  * Do not use arrow function here if access to `this` is required.
  * @returns A new decorator.
  */
-export const createConstructorDecorator = (fn?: () => void): any => {
-  return (asAssemblage = true) => ConstructorDecorator(fn, asAssemblage);
+export const createConstructorDecorator = (
+  fn?: (definition?: Record<string, any>) => void
+): any => {
+  return (definition?: Record<string, any>) =>
+    ConstructorDecorator(fn, definition);
 };
 
 /**
  * A custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
  * Note that it must be placed before the `Assemnblage` decorator.
+ * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(): void | undefined } fn A function to execute after `super`.
+ * @param { function(definition?: Record<string, any>): void | undefined } fn A function to execute after `super`.
  * Do not use arrow function here if access to `this` is required.
  * @param { boolean | undefined } asAssemblage If `true` decorate the class as an assemblage (defaults to `true`).
  * @returns A new decorator.
  */
 export const ConstructorDecorator =
-  (fn?: () => void, asAssemblage = true): any =>
+  (
+    fn?: (definition?: Record<string, any>) => void,
+    definition?: Record<string, any>
+  ): any =>
   // eslint-disable-next-line
   <T extends { new (...args: any[]): {} }>(Base: T): any => {
     const klass = class extends Base {
       constructor(...args: any[]) {
         super(...args);
-        if (fn) fn.call(this);
+        if (fn) fn.call(this, definition);
       }
     };
 
     // Change name to original class.
     Object.defineProperty(klass, 'name', { value: Base.name });
-
-    if (!asAssemblage) {
-      return klass;
-    }
 
     const paramTypes: any[] =
       Reflect.getOwnMetadata(ReflectParamTypes, Base) || [];

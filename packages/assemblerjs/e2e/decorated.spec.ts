@@ -16,7 +16,12 @@ import { createConstructorDecorator } from '../src';
 describe('EventsSimple', () => {
   it('should create a custom decorator to stack on `Assemblage` one.', () => {
     // Warning: pass a 'function', NOT AN ARROW FUNCTION to access 'this'.
-    const CustomDecorator = createConstructorDecorator(function () {
+    const CustomDecorator = createConstructorDecorator(function (
+      definition?: Record<string, any>
+    ) {
+      // Create a new property to get definition.
+      this.customDefinition = definition;
+
       expect(this).toBeInstanceOf(App);
       expect(this.context).toBeDefined();
       expect(this.definition).toBeDefined();
@@ -26,7 +31,9 @@ describe('EventsSimple', () => {
       expect(this.bar).toBeDefined();
     });
 
-    @CustomDecorator()
+    @CustomDecorator({
+      prop: 'value',
+    })
     @Assemblage({
       use: [
         ['foo', { foo: 'bar' }],
@@ -55,6 +62,18 @@ describe('EventsSimple', () => {
         expect(this.dispose).toBeTypeOf('function');
         expect(this.foo.foo).toBe('bar');
         expect(this.bar.bar).toBe('ack');
+
+        // Not defined yet: `CustomDecorator` creates a subclass of `App`, i.e. it is not yet instantiated.
+        expect(this['customDefinition']).toBeUndefined();
+      }
+
+      public onInit(): void {
+        // Definition is now defined.
+        // Note that we would have to subclass AbstractAssemblage for it to be type-safe,
+        // or to add this `customDefinition` property to our `App`.
+        expect(this['customDefinition']).toStrictEqual({
+          prop: 'value',
+        });
       }
     }
 
