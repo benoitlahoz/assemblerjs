@@ -48,6 +48,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
     const index = assembler.initCache.indexOf(root);
     assembler.initCache.splice(index, 1);
 
+    // Call onInit on every dependency of our entry point, from the less dependent to the more dependent.
     for (const assemblage of assembler.initCache) {
       callHook(
         assemblage.instance,
@@ -61,6 +62,23 @@ export class Assembler extends EventManager implements AbstractAssembler {
     callHook(
       instance,
       'onInit',
+      assembler.publicContext,
+      injectable.configuration
+    );
+
+    // Call onInited on every dependency of our entry point, in reverse order.
+    for (const assemblage of assembler.initCache.reverse()) {
+      callHook(
+        assemblage.instance,
+        'onInited',
+        assembler.publicContext,
+        assemblage.configuration
+      );
+    }
+
+    callHook(
+      instance,
+      'onInited',
       assembler.publicContext,
       injectable.configuration
     );
@@ -205,7 +223,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
   }
 
   /**
-   * Cache an instaance to be inited with `onInit` hook
+   * Cache an instance to be inited with `onInit` hook
    * when the dependency tree will be fully resolved.
    *
    * @param { T = AbstractAssemblage } instance The built instance.

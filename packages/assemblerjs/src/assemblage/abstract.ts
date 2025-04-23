@@ -21,12 +21,24 @@ export abstract class AbstractAssemblage {
   ): void {}
 
   /**
-   * Called on instantiated class after the dependency tree is fully resolved.
+   * Called on instantiated class in less dependent to more dependent order after the dependency tree is fully resolved.
    *
    * @param { AssemblerContext } context The assembler's context.
    * @param { Reord<string, any> } configuration The configuration object.
    */
   public abstract onInit?(
+    context: AssemblerContext,
+    configuration?: Record<string, any>
+  ): void | Promise<void>;
+
+  /**
+   * Called by the `Assembler` when all classes have been inited with `onInit`, including the entry point,
+   * in more dependent to less dependent order.
+   *
+   * @param { AssemblerContext } context The assembler's context.
+   * @param { Reord<string, any> } configuration The configuration object.
+   */
+  public abstract onInited?(
     context: AssemblerContext,
     configuration?: Record<string, any>
   ): void | Promise<void>;

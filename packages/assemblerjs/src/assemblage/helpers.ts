@@ -1,5 +1,6 @@
 import type { Concrete } from '@assemblerjs/core';
-import { ReflectFlags, getOwnCustomMetadata } from '@/common';
+import type { AssemblageDefinition } from '@/assemblage';
+import { ReflectFlags, ReflectValue, getOwnCustomMetadata } from '@/common';
 
 /**
  * Check if a given class is an `Assemblage`.
@@ -9,4 +10,10 @@ import { ReflectFlags, getOwnCustomMetadata } from '@/common';
  */
 export const isAssemblage = <T>(target: Concrete<T>): boolean => {
   return getOwnCustomMetadata(ReflectFlags.IsAssemblage, target) || false;
+};
+
+export const getAssemblageDefinition = <T>(
+  target: Concrete<T>
+): AssemblageDefinition => {
+  return getOwnCustomMetadata(ReflectValue.AssemblageDefinition, target);
 };

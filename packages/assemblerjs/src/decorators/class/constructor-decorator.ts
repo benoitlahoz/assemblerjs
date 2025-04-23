@@ -5,6 +5,7 @@ import {
   ReflectValue,
 } from '@/common';
 import { decorateAssemblage } from '@/assemblage';
+import type { ObjectLiteral } from '../types';
 import { getDecoratedParametersIndexes } from '../parameters/helpers';
 import { ReflectParamIndex, ReflectParamValue } from '../parameters/constants';
 import { decorateUse } from '../parameters/use';
@@ -15,15 +16,14 @@ import { decorateUse } from '../parameters/use';
  * Note that it must be placed before the `Assemblage` decorator.
  * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(definition?: Record<string, any>): void | undefined } fn A function to execute after `super`.
+ * @param { function(definition?: ObjectLiteral): void | undefined } fn A function to execute after `super`.
  * Do not use arrow function here if access to `this` is required.
  * @returns A new decorator.
  */
-export const createConstructorDecorator = (
-  fn?: (definition?: Record<string, any>) => void
+export const createConstructorDecorator = <T extends ObjectLiteral>(
+  fn?: (definition?: T) => void
 ): any => {
-  return (definition?: Record<string, any>) =>
-    ConstructorDecorator(fn, definition);
+  return (definition?: T) => ConstructorDecorator(fn, definition);
 };
 
 /**
@@ -32,15 +32,15 @@ export const createConstructorDecorator = (
  * Note that it must be placed before the `Assemnblage` decorator.
  * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(definition?: Record<string, any>): void | undefined } fn A function to execute after `super`.
+ * @param { function(definition?: ObjectLiteral): void | undefined } fn A function to execute after `super`.
  * Do not use arrow function here if access to `this` is required.
  * @param { boolean | undefined } asAssemblage If `true` decorate the class as an assemblage (defaults to `true`).
  * @returns A new decorator.
  */
 export const ConstructorDecorator =
-  (
-    fn?: (definition?: Record<string, any>) => void,
-    definition?: Record<string, any>
+  <T extends ObjectLiteral>(
+    fn?: (definition?: T) => void,
+    definition?: T
   ): any =>
   // eslint-disable-next-line
   <T extends { new (...args: any[]): {} }>(Base: T): any => {
