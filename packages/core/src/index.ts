@@ -17,6 +17,7 @@ export * from './decorators/class/singleton.decorator';
 export * from './decorators/class/static-implements.decorator';
 export * from './decorators/method/catch.decorator';
 export * from './decorators/method/memo.decorator';
+export * from './decorators/method/await.decorator';
 
 export * from './observable/observable.module';
 

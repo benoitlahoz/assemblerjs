@@ -1,14 +1,27 @@
 import type { Concrete } from '@assemblerjs/core';
 import type { Identifier } from '@/common';
-import type { AssemblageDefinition } from '@/assemblage';
-
+import type {
+  AssemblageDefinition,
+  Buildable,
+  Injection,
+  InstanceInjection,
+} from '@/assemblage';
 import type {
   AssemblerContext,
   AssemblerPrivateContext,
 } from '@/assembler/types';
-import type { Buildable, Injection, InstanceInjection } from '@/assemblage';
 
 export abstract class AbstractInjectable<T> {
+  public static of<TNew>(
+    // eslint-disable-next-line
+    buildable: Buildable<TNew>,
+    // eslint-disable-next-line
+    privateContext: AssemblerPrivateContext,
+    // eslint-disable-next-line
+    publicContext: AssemblerContext
+    // eslint-disable-next-line
+  ) {}
+
   public abstract readonly privateContext: AssemblerPrivateContext;
   public abstract readonly publicContext: AssemblerContext;
   public abstract readonly identifier: Identifier<T> | string | symbol;
@@ -22,16 +35,6 @@ export abstract class AbstractInjectable<T> {
   public abstract objects: InstanceInjection<unknown>[];
   public abstract tags: string[];
   public abstract events: string[];
-
-  public static of<TNew>(
-    // eslint-disable-next-line
-    buildable: Buildable<TNew>,
-    // eslint-disable-next-line
-    privateContext: AssemblerPrivateContext,
-    // eslint-disable-next-line
-    publicContext: AssemblerContext
-    // eslint-disable-next-line
-  ) {}
 
   public abstract dispose(): void;
   public abstract build(): T;

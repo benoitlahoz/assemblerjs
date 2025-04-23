@@ -5,9 +5,9 @@ import {
   ReflectValue,
 } from '@/common';
 import { decorateAssemblage } from '@/assemblage';
-import { getDecoratedParametersIndexes } from './helpers';
-import { ReflectParamIndex, ReflectParamValue } from './constants';
-import { decorateUse } from './use';
+import { getDecoratedParametersIndexes } from '../parameters/helpers';
+import { ReflectParamIndex, ReflectParamValue } from '../parameters/constants';
+import { decorateUse } from '../parameters/use';
 
 /**
  * Create a custom decorator that adds a function called after the original constructor
@@ -103,8 +103,6 @@ export const ConstructorDecorator =
         continue;
       }
     }
-
-    if (!asAssemblage) return klass;
 
     // Return assemblage.
     return decorateAssemblage(

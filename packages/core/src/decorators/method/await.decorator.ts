@@ -4,8 +4,6 @@
  * @param { string } property The name of the class proprty to wait for.
  * @param { number | undefined } interval The interval in milliseconds at which the value is checked (defaults to 25 milliseconds).
  * @returns { Promise<void> } A promise that calls the original method when resolving.
- *
- * @deprecated This method is deprecated in `assemblerjs` package. Use the same method from `@assemblerjs/core` package.
  */
 export const Await = (property: string, interval = 25): MethodDecorator => {
   return ((

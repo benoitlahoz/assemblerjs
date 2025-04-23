@@ -1,9 +1,5 @@
-import {
-  AbstractAssemblage,
-  Assemblage,
-  Await,
-  EventManager,
-} from '../../../src';
+import { Await } from '@assemblerjs/core';
+import { AbstractAssemblage, Assemblage, EventManager } from '../../../src';
 
 export enum AwaitableChannels {
   Init = 'awaitable:init',
