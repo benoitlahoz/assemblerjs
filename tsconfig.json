@@ -1,27 +1,16 @@
 {
-  "compilerOptions": {
-    "target": "ES2018",
-    "useDefineForClassFields": true,
-    "module": "ESNext",
-    "lib": ["ESNext", "DOM"],
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "noEmit": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": false,
-    "skipLibCheck": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
+  "extends": "./tsconfig.base.json",
+  "compileOnSave": false,
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/assemblerjs"
     },
-    "types": ["reflect-metadata"]
-  },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "vite.config.mts"]
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/rest"
+    }
+  ]
 }
