@@ -33,4 +33,32 @@ export class UserRepository implements AbstractAssemblage {
     Users.push(newUser);
     return newUser;
   }
+
+  public modify(id: string, user: { name?: string; gender?: string }) {
+    const existing = Users.find((u: any) => u.id === Number(id));
+    if (existing) {
+      const index = Users.indexOf(existing);
+      const newUser = {
+        ...existing,
+        ...user,
+      };
+      Users.splice(index, 1, newUser);
+      return newUser;
+    }
+    return undefined;
+  }
+
+  public replace(id: string, user: { name: string; gender: string }) {
+    const existing = Users.find((u: any) => u.id === Number(id));
+    if (existing) {
+      const index = Users.indexOf(existing);
+      const newUser = {
+        id: existing.id,
+        ...user,
+      };
+      Users.splice(index, 1, newUser);
+      return newUser;
+    }
+    return undefined;
+  }
 }

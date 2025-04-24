@@ -21,3 +21,18 @@ export const Users = [
     gender: 'non-binary',
   },
 ];
+
+export const Posts = [
+  {
+    id: 1,
+    sender: 1,
+    receiver: 3,
+    content: 'Lorem ipsum dolor',
+  },
+  {
+    id: 2,
+    sender: 3,
+    receiver: 1,
+    content: 'Tu quoque fili',
+  },
+];

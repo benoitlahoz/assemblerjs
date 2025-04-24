@@ -3,7 +3,7 @@ import {
   createConstructorDecorator,
   getAssemblageDefinition,
 } from 'assemblerjs';
-import { WebFrameworkAdapter } from '@/common/framework.abstract';
+import { WebFrameworkAdapter } from '@/adapters/adapter.abstract';
 import { cleanPath } from '@/common/helpers';
 import { RouteDefinition } from '../methods/types';
 import { ControllerPrivateKeys } from '../methods/controller.keys';

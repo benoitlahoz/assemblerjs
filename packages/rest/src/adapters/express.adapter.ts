@@ -2,15 +2,20 @@ import { Server } from 'node:http';
 import type { Application } from 'express';
 import express from 'express';
 import { Assemblage } from 'assemblerjs';
-import { WebFrameworkAdapter } from '../src';
+import { WebFrameworkAdapter } from '..';
 
 @Assemblage()
 export class ExpressAdapter implements WebFrameworkAdapter {
   public readonly app: Application;
   private server?: Server;
 
+  public use: Application['use'];
+
   constructor() {
     this.app = express();
+
+    this.use = this.app.use.bind(this.app);
+
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
   }
