@@ -1,12 +1,17 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
+import express from 'express';
 import {
   AbstractAssemblage,
   Assemblage,
   Assembler,
   Dispose,
 } from 'assemblerjs';
-import { WebFrameworkAdapter, ExpressAdapter } from '../src';
+import {
+  FrameworkAdapter,
+  ExpressAdapter,
+  FrameworkConfiguration,
+} from '../src';
 import { ApiController } from './api/api.controller';
 import { Posts, Users } from './db';
 
@@ -15,19 +20,28 @@ describe('API Server Application', () => {
     @Assemblage({
       inject: [
         // Framework adapter MUST be identified by `WebFrameworkAdapter` abstract class to be used by controllers.
-        [WebFrameworkAdapter, ExpressAdapter],
+        [
+          FrameworkAdapter,
+          ExpressAdapter,
+          <FrameworkConfiguration>{
+            secure: false,
+          },
+        ],
         [ApiController],
       ],
     })
     class App implements AbstractAssemblage {
       constructor(
-        public server: WebFrameworkAdapter,
+        public server: FrameworkAdapter,
         public api: ApiController,
         @Dispose() public dispose: () => void
-      ) {}
+      ) {
+        this.server.use(express.urlencoded({ extended: true }));
+        this.server.use(express.json());
+      }
 
       public async onInited(): Promise<void> {
-        this.server.listen(9999);
+        this.server.listen(9999, '0.0.0.0');
       }
 
       public async fetchUsers(): Promise<void> {

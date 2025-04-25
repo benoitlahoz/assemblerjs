@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/rest",
-  "version": "0.8.9",
+  "version": "0.8.93",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "@assemblerjs/core": "^0.8.6",
-    "assemblerjs": "^0.8.6",
+    "assemblerjs": "^0.8.7",
     "express": "5.1.0",
     "reflect-metadata": "0.2.2"
   }
