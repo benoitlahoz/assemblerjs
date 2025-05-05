@@ -1,4 +1,6 @@
-import { FetchPrivateKeys } from './decorators.keys.private';
+export enum ReflectParse {
+  ExpectedType = 'parse.decorator:type.expected',
+}
 
 export type ResponseMethod = string &
   ('text' | 'json' | 'blob' | 'arrayBuffer' | 'bytes' | 'formData');
@@ -12,7 +14,7 @@ export const Parse = (type: ResponseMethod): MethodDecorator => {
     const prop = String(propertyKey);
 
     Reflect.defineMetadata(
-      FetchPrivateKeys.ExpectedType,
+      ReflectParse.ExpectedType,
       type,
       (target as any)[prop]
     );

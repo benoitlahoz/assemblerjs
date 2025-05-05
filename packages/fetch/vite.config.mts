@@ -67,7 +67,7 @@ export default defineConfig(() => ({
     minify: 'terser' as const,
   },
   test: {
-    watch: false,
+    watch: true,
     globals: true,
     environment: 'node',
     include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
