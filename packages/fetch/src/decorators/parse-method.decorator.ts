@@ -1,0 +1,20 @@
+import { FetchPrivateKeys } from './decorators.keys.private';
+
+export type ResponseMethod = string &
+  ('text' | 'json' | 'blob' | 'arrayBuffer' | 'bytes' | 'formData');
+
+export const ParseMethod = (type: ResponseMethod): MethodDecorator => {
+  return (
+    target: object,
+    propertyKey: string | symbol,
+    _descriptor: TypedPropertyDescriptor<any>
+  ) => {
+    const prop = String(propertyKey);
+
+    Reflect.defineMetadata(
+      FetchPrivateKeys.ExpectedType,
+      type,
+      (target as any)[prop]
+    );
+  };
+};

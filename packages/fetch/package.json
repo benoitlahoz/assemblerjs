@@ -1,0 +1,25 @@
+{
+  "name": "@assemblerjs/fetch",
+  "version": "0.8.5",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {
+    "@assemblerjs/core": "^0.8.6"
+  },
+  "devDependencies": {
+    "reflect-metadata": "0.2.2"
+  }
+}
