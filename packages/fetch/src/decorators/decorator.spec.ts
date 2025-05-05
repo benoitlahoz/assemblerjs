@@ -17,6 +17,7 @@ class MyDummyUsersService {
     // Queries will be added.
     `${apiHost}/users`
   )
+
   // We know we will receive JSON data: avoid mime type checks.
   @Parse('json')
   public async getUsers(
