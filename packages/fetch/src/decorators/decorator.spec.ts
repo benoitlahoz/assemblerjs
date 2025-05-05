@@ -3,19 +3,25 @@ import { describe, it, expect } from 'vitest';
 import { Fetch } from './fetch.decorator';
 import { Query } from './query.decorator';
 import { Param } from './param.decorator';
+import { Parse } from './parse.decorator';
+
+const apiHost = 'https://dummyjson.com';
 
 class MyDummyUsersService {
   @Fetch(
     'get',
 
     // Queries passed as params will be replaced
-    // 'https://dummyjson.com/users?limit=5&skip=10&select=firstName,age'
+    // `${apiHost}/users?limit=5&skip=10&select=firstName,age`
 
     // Queries will be added.
-    'https://dummyjson.com/users'
+    `${apiHost}/users`
   )
+  // We know we will receive JSON data: avoid mime type checks.
+  @Parse('json')
   public async getUsers(
     // This will replace the 'limit' query or add it.
+
     @Query('limit') limit: number,
     @Query('skip') skip: number,
     @Query('select') select: string[],
@@ -28,10 +34,12 @@ class MyDummyUsersService {
     expect(select).toStrictEqual(['firstName', 'age']);
 
     if (data && !err) return data;
+
+    // User could return the error instead of throwing.
     throw err;
   }
 
-  @Fetch('get', 'https://dummyjson.com/users/:id/carts')
+  @Fetch('get', `${apiHost}/users/:id/carts`)
   public async getUserCart(
     @Param(':id') id: number,
     data?: any,
