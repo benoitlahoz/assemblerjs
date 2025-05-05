@@ -15,9 +15,6 @@
   "references": [
     {
       "path": "../core/tsconfig.lib.json"
-    },
-    {
-      "path": "../assemblerjs/tsconfig.lib.json"
     }
   ],
   "exclude": [

@@ -7,9 +7,6 @@
       "path": "../core"
     },
     {
-      "path": "../assemblerjs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {

@@ -1,6 +1,6 @@
 import { Either, Maybe, Task } from '@assemblerjs/core';
 import { FetchPrivateKeys } from './decorators.keys.private';
-import { ResponseMethod } from './parse-method.decorator';
+import { ResponseMethod } from './parse.decorator';
 import { methodNameForType } from '@/utils';
 
 export const Fetch = (

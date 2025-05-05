@@ -1,6 +1,6 @@
 // See: https://medium.com/@anatoliiyatsenko/understanding-fetch-api-response-methods-and-the-content-type-header-6dcbe7b24ded
 
-import { ResponseMethod } from '@/decorators/parse-method.decorator';
+import { ResponseMethod } from '@/decorators/parse.decorator';
 
 interface MimeParts {
   type: string;
