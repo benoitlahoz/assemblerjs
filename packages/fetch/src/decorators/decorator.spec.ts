@@ -73,7 +73,9 @@ class MyDummyUsersService {
 
     @Placeholder('%kind') kind?: string,
     data?: any,
-    err?: Error
+    err?: Error,
+    statusCode?: number,
+    path?: string
   ): Promise<any> {
     expect(id).toBe(6);
     if (data && !err) return data;

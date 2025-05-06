@@ -46,8 +46,9 @@ const replaceQueryValues = (
     }
   }
 
+  const questionMark = Array.from(urlParameters).length > 0 ? '?' : '';
   const newURL = new URL(
-    `${url.origin}${url.pathname}?${urlParameters.toString()}`
+    `${url.origin}${url.pathname}${questionMark}${urlParameters.toString()}`
   );
 
   return newURL;
@@ -112,6 +113,8 @@ export const Fetch = (
         ? args[paramsLength + queryLength]
         : undefined;
 
+      // TODO -> in the task.
+      let finalPath = path;
       // Main task.
 
       const fetchAPI = Task.of(() => {
@@ -137,15 +140,15 @@ export const Fetch = (
           }
           return newPath;
         })
-        .map(
-          async (newPath: string) =>
-            (await fetch(newPath, {
-              ...(options || {}),
-              method,
-              body,
-              headers: options?.headers,
-            })) as any
-        )
+        .map(async (newPath: string) => {
+          finalPath = newPath;
+          return (await fetch(newPath, {
+            ...(options || {}),
+            method,
+            body,
+            headers: options?.headers,
+          })) as any;
+        })
         .map((res: any) => {
           if (res.ok === false) {
             statusCode = res.status;
@@ -193,7 +196,13 @@ export const Fetch = (
 
       // NB: `this` refers to the class instance.
 
-      return original.apply(this, [...args, response, error, statusCode]);
+      return original.apply(this, [
+        ...args,
+        response,
+        error,
+        statusCode,
+        finalPath,
+      ]);
     };
   };
 };
