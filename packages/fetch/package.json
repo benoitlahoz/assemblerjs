@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/fetch",
-  "version": "0.8.63",
+  "version": "0.8.7",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
