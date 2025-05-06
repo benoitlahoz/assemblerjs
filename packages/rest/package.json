@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/rest",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
