@@ -157,7 +157,7 @@ describe('Fetch decorator', () => {
       lastName: 'Thesaints',
       age: 250,
     };
-    const data = await usersService.addUser(user);
+    let data = await usersService.addUser(user);
     expect(data).toBeDefined();
     // NB: unfortunately 'dummyjson' returns an user with empty values.
     expect(data.firstName).toBeDefined();

@@ -110,16 +110,25 @@ export const Fetch = (
 
       // Body must be the first parameter (after eventual `Placeholder` decorator) if method should pass a body.
       const body: any = isBodyMethod
-        ? args[paramsLength + queryLength]
+        ? args[decoratedParametersLength]
         : undefined;
 
       // TODO -> in the task.
       let finalPath = path;
+
       // Main task.
 
       const fetchAPI = Task.of(() => {
-        const newURL = replaceQueryValues(path, QueryDecoratorValues, ...args);
-        return newURL.toString();
+        let newPath = path;
+        for (const [key, value] of Object.entries(PlaceholderDecoratorValues)) {
+          const index = Number(key);
+          if (typeof args[index] === 'undefined') {
+            newPath = newPath.replaceAll(value as string, '');
+          } else {
+            newPath = newPath.replaceAll(value as string, args[index]);
+          }
+        }
+        return newPath;
       })
         .map((newPath: string) => {
           for (const [key, value] of Object.entries(ParamDecoratorValues)) {
@@ -128,17 +137,12 @@ export const Fetch = (
           return newPath;
         })
         .map((newPath: string) => {
-          for (const [key, value] of Object.entries(
-            PlaceholderDecoratorValues
-          )) {
-            const index = Number(key);
-            if (typeof args[index] === 'undefined') {
-              newPath = newPath.replaceAll(value as string, '');
-            } else {
-              newPath = newPath.replaceAll(value as string, args[Number(key)]);
-            }
-          }
-          return newPath;
+          const newURL = replaceQueryValues(
+            newPath,
+            QueryDecoratorValues,
+            ...args
+          );
+          return newURL.toString();
         })
         .map(async (newPath: string) => {
           finalPath = newPath;
