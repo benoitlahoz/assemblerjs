@@ -3,6 +3,11 @@ import { ReflectParse, ResponseMethod } from './parse.decorator';
 import { methodNameForType } from '@/utils';
 import { ReflectParam } from './param.decorator';
 import { ReflectQuery } from './query.decorator';
+import { ReflectPlaceholder } from './placeholder.decorator';
+
+export enum ReflectFetch {
+  DecoratedMethods = 'fetch.decorator:decorated.methods',
+}
 
 // Call e.g. res['json']() => res.json() on response.
 const parseResponseWithType = async (res: any, type: ResponseMethod) => {
@@ -14,6 +19,7 @@ const parseResponseWithType = async (res: any, type: ResponseMethod) => {
 const parseUnknownResponse = async (res: any) => {
   const contentType = res.headers.get('content-type');
   const parseMethod = methodNameForType(contentType);
+
   return await res[parseMethod]();
 };
 
@@ -50,9 +56,7 @@ const replaceQueryValues = (
 export const Fetch = (
   method: string,
   path: string,
-  options?: {
-    headers?: Record<string, string>;
-  }
+  options?: RequestInit
 ): MethodDecorator => {
   return (
     target: object,
@@ -76,17 +80,23 @@ export const Fetch = (
       Reflect.getOwnMetadata(ReflectParse.ExpectedType, (target as any)[prop])
     );
 
-    // Get eventual `Param` decorators strings to search and indexes in the method signature.
+    // Get eventual `Param`, `Query` or `Placeholder` decorators strings to search and indexes in the method signature.
 
     const ParamDecoratorValues =
-      Reflect.getOwnMetadata(ReflectParam.Value, target) || {};
-    const paramsLength = ParamDecoratorValues.length;
-
-    // Get eventual `Query` decorators strings to search and indexes in the method signature.
+      Reflect.getOwnMetadata(ReflectParam.Value, (target as any)[prop]) || {};
+    const paramsLength = Object.keys(ParamDecoratorValues).length;
 
     const QueryDecoratorValues =
-      Reflect.getOwnMetadata(ReflectQuery.Value, target) || {};
-    const queryLength = QueryDecoratorValues.length;
+      Reflect.getOwnMetadata(ReflectQuery.Value, (target as any)[prop]) || {};
+    const queryLength = Object.keys(QueryDecoratorValues).length;
+
+    const PlaceholderDecoratorValues =
+      Reflect.getOwnMetadata(ReflectPlaceholder.Value, (target as any)[prop]) ||
+      {};
+    const placeholderLength = Object.keys(PlaceholderDecoratorValues).length;
+
+    const decoratedParametersLength =
+      paramsLength + queryLength + placeholderLength;
 
     // New function.
 
@@ -97,7 +107,7 @@ export const Fetch = (
       let error: Error | null = null;
       let statusCode = 500;
 
-      // Body must be the first parameter (after eventual `Query` or `Param` decorators) if method should pass a body.
+      // Body must be the first parameter (after eventual `Placeholder` decorator) if method should pass a body.
       const body: any = isBodyMethod
         ? args[paramsLength + queryLength]
         : undefined;
@@ -110,13 +120,27 @@ export const Fetch = (
       })
         .map((newPath: string) => {
           for (const [key, value] of Object.entries(ParamDecoratorValues)) {
-            newPath = newPath.replace(value as string, args[Number(key)]);
+            newPath = newPath.replaceAll(value as string, args[Number(key)]);
+          }
+          return newPath;
+        })
+        .map((newPath: string) => {
+          for (const [key, value] of Object.entries(
+            PlaceholderDecoratorValues
+          )) {
+            const index = Number(key);
+            if (typeof args[index] === 'undefined') {
+              newPath = newPath.replaceAll(value as string, '');
+            } else {
+              newPath = newPath.replaceAll(value as string, args[Number(key)]);
+            }
           }
           return newPath;
         })
         .map(
           async (newPath: string) =>
             (await fetch(newPath, {
+              ...(options || {}),
               method,
               body,
               headers: options?.headers,
@@ -161,10 +185,15 @@ export const Fetch = (
         }
       );
 
-      // `this` refers to the class instance.
-      return isBodyMethod
-        ? original.apply(this, [...args, body, response, error, statusCode])
-        : original.apply(this, [...args, response, error, statusCode]);
+      // Handle optional parameters by inserting 'undefined' in case the parameter wasn't provided.
+
+      const argsDiff = decoratedParametersLength - args.length;
+      const optional = Array.from({ length: argsDiff }, () => undefined);
+      args.push(...optional);
+
+      // NB: `this` refers to the class instance.
+
+      return original.apply(this, [...args, response, error, statusCode]);
     };
   };
 };

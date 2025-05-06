@@ -6,8 +6,12 @@ export enum ReflectQuery {
  * Injects an object passed with `string` or `symbol` identifier.
  */
 export const Query = (identifier: string | symbol): ParameterDecorator => {
-  return (target: any, _: string | symbol | undefined, index: number) => {
-    decorateQuery(identifier, target, index);
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    index: number
+  ) => {
+    decorateQuery(identifier, target, String(propertyKey), index);
   };
 };
 
@@ -17,12 +21,14 @@ export const Query = (identifier: string | symbol): ParameterDecorator => {
 export const decorateQuery = (
   identifier: string | symbol,
   target: any,
+  propertyKey: string,
   index: number
 ) => {
   // Get existing identifiers for this decorator.
-  const identifiers = Reflect.getOwnMetadata(ReflectQuery.Value, target) || {};
+  const identifiers =
+    Reflect.getOwnMetadata(ReflectQuery.Value, target[propertyKey]) || {};
   identifiers[index] = identifier;
 
   // Keep the token passed as identifier.
-  Reflect.defineMetadata(ReflectQuery.Value, identifiers, target);
+  Reflect.defineMetadata(ReflectQuery.Value, identifiers, target[propertyKey]);
 };
