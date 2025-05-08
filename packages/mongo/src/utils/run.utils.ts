@@ -113,9 +113,9 @@ export const startMongo = async (
  * @returns  { boolean | Error } `true` or `false` according to Mongo running or not, or an `Error`.
  * @todo For Windows (replace pgrep)
  */
-export const isMongoRunning = async (): boolean | Error => {
+export const isMongoRunning = async (): Promise<boolean | Error> => {
   const taskResult = await findMongoPid.fork();
-  return taskResult.fold(errorOrFalse, () => true);
+  return taskResult.fold<boolean | Error>(errorOrFalse, () => true);
 };
 
 /**
@@ -123,12 +123,12 @@ export const isMongoRunning = async (): boolean | Error => {
  *
  * @todo For Windows (replace pgrep)
  */
-export const stopMongo = async (): boolean | Error => {
+export const stopMongo = async (): Promise<boolean | Error> => {
   const task = findMongoPid.map((pid: string) =>
     execSync(`kill ${pid}`, { encoding: 'utf-8' })
   );
   const taskResult = await task.fork();
-  return taskResult.fold(
+  return taskResult.fold<boolean | Error>(
     (err: unknown) => errorOrFalse(err),
     () => true
   );

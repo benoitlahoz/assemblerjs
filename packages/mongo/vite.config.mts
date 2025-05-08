@@ -1,5 +1,6 @@
 /// <reference types='vitest' />
 import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
@@ -62,7 +63,13 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['assemblerjs', '@assemblerjs/core', 'which', 'mongoose'],
+      external: [
+        'assemblerjs',
+        '@assemblerjs/core',
+        'which',
+        'mongoose',
+        ...builtinModules.flatMap((p) => [p, `node:${p}`]),
+      ],
     },
     minify: 'terser' as const,
   },
