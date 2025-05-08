@@ -1,9 +1,8 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
+import type { FetchStatus } from './fetch.decorator';
 import { Fetch } from './fetch.decorator';
-import { Query } from './query.decorator';
-import { Param } from './param.decorator';
-import { Placeholder } from './placeholder.decorator';
+import { Query, Param, Placeholder } from './parameter.decorators';
 import { Parse } from './parse.decorator';
 import {
   methodNameForType,
@@ -57,7 +56,9 @@ class MyDummyUsersService {
   public async getUserCart(
     @Param(':id') id: number,
     data?: any,
-    err?: Error
+    err?: Error,
+    status?: FetchStatus,
+    path?: string
   ): Promise<any> {
     expect(id).toBe(6);
 
@@ -74,7 +75,7 @@ class MyDummyUsersService {
     @Placeholder('%kind') kind?: string,
     data?: any,
     err?: Error,
-    statusCode?: number,
+    status?: FetchStatus,
     path?: string
   ): Promise<any> {
     expect(id).toBe(6);
@@ -83,8 +84,35 @@ class MyDummyUsersService {
   }
 
   @Fetch('post', `${apiHost}/users/add`)
-  public addUser(body: Record<string, any>, data?: any, err?: Error) {
+  public addUser(
+    body: Record<string, any>,
+    data?: any,
+    err?: Error,
+    status?: FetchStatus,
+    path?: string
+  ) {
     if (data && !err) return data;
+    throw err;
+  }
+
+  @Fetch(
+    'get',
+    `https://api.benoitlahoz.art/api/projects/?status=*&%populate`,
+    {},
+    true
+  )
+  @Parse('json')
+  public async getAllWithParams(
+    @Query('status') statusQuery: string,
+    @Placeholder('%populate') populate?: string,
+    res?: any,
+    err?: Error,
+    status?: FetchStatus,
+    path?: string
+  ) {
+    console.log('STAT', path);
+    // console.log(res);
+    if (res && res.data && !err) return res.data;
     throw err;
   }
 }
@@ -161,5 +189,11 @@ describe('Fetch decorator', () => {
     expect(data).toBeDefined();
     // NB: unfortunately 'dummyjson' returns an user with empty values.
     expect(data.firstName).toBeDefined();
+
+    const t = await usersService.getAllWithParams(
+      'published',
+      'populate[medias][populate]=*&populate[persons][populate]=*&populate[categories][populate]=*&populate[producers][populate]=*&populate[tourers][populate]=*&populate[links][populate]=*&populate[press_links][populate]=*'
+    );
+    // console.log(t);
   });
 });

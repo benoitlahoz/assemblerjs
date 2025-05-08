@@ -116,6 +116,20 @@ export const methodNameForType = (mime: string): ResponseMethod => {
   );
 };
 
+// Call e.g. res['json']() => res.json() on response.
+export const parseResponseWithType = async (res: any, type: ResponseMethod) => {
+  return await res[type]();
+};
+
+// Try to get the format of the response.
+
+export const parseResponseWithUnknownType = async (res: any) => {
+  const contentType = res.headers.get('content-type');
+  const parseMethod = methodNameForType(contentType);
+
+  return await res[parseMethod]();
+};
+
 // Defaults.
 // See: https://medium.com/@anatoliiyatsenko/understanding-fetch-api-response-methods-and-the-content-type-header-6dcbe7b24ded
 

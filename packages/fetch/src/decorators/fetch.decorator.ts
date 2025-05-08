@@ -1,63 +1,123 @@
-import { Either, Maybe, Task } from '@assemblerjs/core';
+import { Maybe, NoOp, Task } from '@assemblerjs/core';
 import { ReflectParse, ResponseMethod } from './parse.decorator';
-import { methodNameForType } from '@/utils';
-import { ReflectParam } from './param.decorator';
-import { ReflectQuery } from './query.decorator';
-import { ReflectPlaceholder } from './placeholder.decorator';
+import { parseResponseWithType, parseResponseWithUnknownType } from '@/utils';
+import {
+  ReflectParameters,
+  ReflectParametersValues,
+  getParameterDecoratorValues,
+  transformParam,
+  transformPlaceholder,
+  transformQuery,
+} from './parameter.decorators';
 
-export enum ReflectFetch {
-  DecoratedMethods = 'fetch.decorator:decorated.methods',
+export interface FetchStatus {
+  code: number;
+  text: string;
 }
 
-// Call e.g. res['json']() => res.json() on response.
-const parseResponseWithType = async (res: any, type: ResponseMethod) => {
-  return await res[type]();
-};
+interface TaskInit {
+  decoratedParametersValues: {
+    param: ReflectParametersValues;
+    placeholder: ReflectParametersValues;
+    query: ReflectParametersValues;
+  };
+  decoratedParametersLength: number;
+  responseType: Maybe<ResponseMethod>;
+  method:
+    | (
+        | 'GET'
+        | 'HEAD'
+        | 'POST'
+        | 'PUT'
+        | 'DELETE'
+        | 'CONNECT'
+        | 'OPTIONS'
+        | 'TRACE'
+        | 'PATCH'
+      )
+    | string;
+  path: string;
+  options?: RequestInit;
+  target: any;
+  propertyKey: string | symbol;
+  args: any[];
+}
 
-// Try to get the format of the response.
+export interface FetchResult extends TaskInit {
+  body?:
+    | string
+    | ArrayBuffer
+    | Blob
+    | DataView
+    | File
+    | FormData
+    // | TypedArray
+    | URLSearchParams
+    | ReadableStream;
+  response?: Response;
+  status?: FetchStatus;
+  data?: any;
+  error?: Error | undefined;
+}
 
-const parseUnknownResponse = async (res: any) => {
-  const contentType = res.headers.get('content-type');
-  const parseMethod = methodNameForType(contentType);
-
-  return await res[parseMethod]();
-};
-
-// Create a new URL with queries passed as parameters through the use of the `Query` decorator.
-
-const replaceQueryValues = (
-  path: string,
-  decoratedParameters: Record<string, string>,
-  ...args: any
-) => {
-  const url = new URL(path);
-  const urlParameters = url.searchParams;
-
-  for (let index = 0; index < args.length; index++) {
-    const key = decoratedParameters[String(index)];
-    if (key) {
-      let value: any = args[index];
-      if (Array.isArray(value)) {
-        value = value.join(',');
-      } else {
-        value = String(value);
-      }
-      urlParameters.set(key, value);
-    }
-  }
-
-  const questionMark = Array.from(urlParameters).length > 0 ? '?' : '';
-  const newURL = new URL(
-    `${url.origin}${url.pathname}${questionMark}${urlParameters.toString()}`
+const buildParametersObject = (target: any, propertyKey: string | symbol) => {
+  const param = getParameterDecoratorValues(
+    ReflectParameters.Param,
+    target,
+    propertyKey
+  );
+  const query = getParameterDecoratorValues(
+    ReflectParameters.Query,
+    target,
+    propertyKey
+  );
+  const placeholder = getParameterDecoratorValues(
+    ReflectParameters.Placeholder,
+    target,
+    propertyKey
   );
 
-  return newURL;
+  return {
+    decoratedParametersValues: {
+      param,
+      placeholder,
+      query,
+    },
+    decoratedParametersLength: param.length + placeholder.length + query.length,
+  };
+};
+
+const getParseDecoratorResponseType = (
+  target: any,
+  propertyKey: string | symbol
+) => {
+  return Maybe.of(
+    Reflect.getOwnMetadata(
+      ReflectParse.ExpectedType,
+      (target as any)[String(propertyKey)]
+    )
+  );
+};
+
+const getBodyInArgs = (
+  method: string,
+  decoratedLength: number,
+  args: any[]
+) => {
+  const isBodyMethod =
+    method === 'POST' ||
+    method === 'UPDATE' ||
+    method === 'PATCH' ||
+    method === 'PUT';
+
+  return isBodyMethod ? args[decoratedLength] : undefined;
 };
 
 export const Fetch = (
   method: string,
   path: string,
-  options?: RequestInit
+  options?: RequestInit,
+  debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
 ): MethodDecorator => {
   return (
     target: object,
@@ -65,148 +125,207 @@ export const Fetch = (
     descriptor: TypedPropertyDescriptor<any>
   ) => {
     const original = descriptor.value;
-    const prop = String(propertyKey);
-    method = method.toUpperCase();
 
-    // TODO: HEAD, OPTIONS
-    const isBodyMethod =
-      method === 'POST' ||
-      method === 'UPDATE' ||
-      method === 'PATCH' ||
-      method === 'PUT';
+    let debugFn = NoOp;
+    if (debug) {
+      debugFn = (reason: string, ...values: any[]) => {
+        console.log(
+          `%c[@assemblerjs/fetch]`,
+          'color: blue;',
+          reason,
+          ...values
+        );
+      };
+    }
 
-    // Get expected type (if a `Parse` decorator was applied).
-
-    const expectedResponseType: Maybe<ResponseMethod> = Maybe.of(
-      Reflect.getOwnMetadata(ReflectParse.ExpectedType, (target as any)[prop])
-    );
-
-    // Get eventual `Param`, `Query` or `Placeholder` decorators strings to search and indexes in the method signature.
-
-    const ParamDecoratorValues =
-      Reflect.getOwnMetadata(ReflectParam.Value, (target as any)[prop]) || {};
-    const paramsLength = Object.keys(ParamDecoratorValues).length;
-
-    const QueryDecoratorValues =
-      Reflect.getOwnMetadata(ReflectQuery.Value, (target as any)[prop]) || {};
-    const queryLength = Object.keys(QueryDecoratorValues).length;
-
-    const PlaceholderDecoratorValues =
-      Reflect.getOwnMetadata(ReflectPlaceholder.Value, (target as any)[prop]) ||
-      {};
-    const placeholderLength = Object.keys(PlaceholderDecoratorValues).length;
-
-    const decoratedParametersLength =
-      paramsLength + queryLength + placeholderLength;
+    const parametersObject = buildParametersObject(target, propertyKey);
+    const expectedResponseType: Maybe<ResponseMethod> =
+      getParseDecoratorResponseType(target, propertyKey);
 
     // New function.
 
     descriptor.value = async function (...args: any[]) {
-      // Get eventual parameters passed to the method.
-
-      let response: any = null;
-      let error: Error | null = null;
-      let statusCode = 500;
-
-      // Body must be the first parameter (after eventual `Placeholder` decorator) if method should pass a body.
-      const body: any = isBodyMethod
-        ? args[decoratedParametersLength]
-        : undefined;
-
-      // TODO -> in the task.
-      let finalPath = path;
-
-      // Main task.
-
-      const fetchAPI = Task.of(() => {
-        let newPath = path;
-        for (const [key, value] of Object.entries(PlaceholderDecoratorValues)) {
-          const index = Number(key);
-          if (typeof args[index] === 'undefined') {
-            newPath = newPath.replaceAll(value as string, '');
-          } else {
-            newPath = newPath.replaceAll(value as string, args[index]);
-          }
-        }
-        return newPath;
-      })
-        .map((newPath: string) => {
-          for (const [key, value] of Object.entries(ParamDecoratorValues)) {
-            newPath = newPath.replaceAll(value as string, args[Number(key)]);
-          }
-          return newPath;
-        })
-        .map((newPath: string) => {
-          const newURL = replaceQueryValues(
-            newPath,
-            QueryDecoratorValues,
-            ...args
+      const fetchAPI = (init: TaskInit) =>
+        Task.of(() => {
+          debugFn(
+            `Begin '@Fetch' task:`,
+            `${target.constructor.name}.${String(init.propertyKey)}`,
+            '-------'
           );
-          return newURL.toString();
-        })
-        .map(async (newPath: string) => {
-          finalPath = newPath;
-          return (await fetch(newPath, {
-            ...(options || {}),
-            method,
-            body,
-            headers: options?.headers,
-          })) as any;
-        })
-        .map((res: any) => {
-          if (res.ok === false) {
-            statusCode = res.status;
-            throw new Error(res.statusText);
-          }
-          statusCode = res.status;
+          debugFn(`\nArguments (${args.length}):\n${init.args.join('\n')}`);
+
+          const res: FetchResult = { ...init } as FetchResult;
+
+          res.body = getBodyInArgs(
+            init.method,
+            init.decoratedParametersLength,
+            init.args
+          );
+
+          debugFn('Body is:', res.body); // TODO: To be continued.
+
           return res;
         })
-        .map(async (res: any) => {
-          const type: Either<Error, ResponseMethod> =
-            expectedResponseType.toEither();
+          .map((result: FetchResult) => {
+            const previousPath = result.path;
 
-          return type.fold(
-            () => {
-              return parseUnknownResponse(res);
-            },
-            (type: ResponseMethod) => {
-              return parseResponseWithType(res, type);
+            const res = { ...result };
+            res.path = transformPlaceholder(
+              result.path,
+              result.decoratedParametersValues.placeholder,
+              ...result.args
+            );
+
+            debugFn(
+              `\nTransform @Placeholder\n`,
+              `From: ${previousPath}\n`,
+              `To: ${res.path}`
+            );
+
+            return res;
+          })
+          .map((result: FetchResult) => {
+            const previousPath = result.path;
+
+            const res = { ...result };
+            res.path = transformParam(
+              result.path,
+              result.decoratedParametersValues.param,
+              ...result.args
+            );
+
+            debugFn(
+              `\nTransform @Param\n`,
+              `From: ${previousPath}\n`,
+              `To: ${res.path}`
+            );
+
+            return res;
+          })
+          .map((result: FetchResult) => {
+            const previousPath = result.path;
+
+            const res = { ...result };
+            res.path = transformQuery(
+              result.path,
+              result.decoratedParametersValues.query,
+              ...result.args
+            );
+
+            debugFn(
+              `\nTransform @Query\n`,
+              `From: ${previousPath}\n`,
+              `To: ${res.path}`
+            );
+
+            return res;
+          })
+          .map(async (result: FetchResult) => {
+            const res = { ...result };
+
+            const fetchRes = await fetch(res.path, {
+              ...(res.options || {}),
+              method: res.method,
+              body: res.body,
+            });
+
+            if (!fetchRes.ok) {
+              res.status = {
+                code: fetchRes.status,
+                text: fetchRes.statusText,
+              };
+              res.error = new Error(
+                `${fetchRes.status}: ${fetchRes.statusText}`
+              );
             }
-          );
-        });
 
-      // Execute the task.
+            res.response = fetchRes;
+            res.status = {
+              code: fetchRes.status,
+              text: fetchRes.statusText,
+            };
 
-      const taskRes = await fetchAPI.fork();
+            return res;
+          })
+          .map(async (result: FetchResult) => {
+            const res = { ...result };
 
-      // Fold the result.
+            const getData = async () =>
+              res.responseType.toEither().fold(
+                async () => {
+                  return await parseResponseWithUnknownType(result.response);
+                },
+                async (type: ResponseMethod) => {
+                  return await parseResponseWithType(result.response, type);
+                }
+              );
 
-      taskRes.fold(
+            res.data = await getData();
+
+            debugFn(`Final path is: ${res.path}`);
+
+            debugFn(
+              `End '@Fetch' task:`,
+              `${target.constructor.name}.${String(init.propertyKey)}`,
+              '-------'
+            );
+
+            return res;
+          });
+
+      // Init object for task.
+
+      const initialObject: TaskInit = {
+        ...parametersObject,
+        responseType: expectedResponseType,
+        method: method.toUpperCase(),
+        path,
+        options,
+        target,
+        propertyKey,
+        args,
+      };
+
+      const runTask = fetchAPI(initialObject);
+      const taskResult = await runTask.fork();
+
+      let data: any;
+      let error: Error | undefined;
+      let finalPath = path;
+      let status = {
+        code: 500,
+        text: 'Internal Server Error',
+      };
+      let decoratedParametersLength = 0;
+      let newArgs = args;
+
+      taskResult.fold(
         (err: unknown) => {
-          response = null;
+          // Internal error.
           error = err as Error;
         },
-        (res: any) => {
-          response = res;
-          error = null;
+        (success: FetchResult) => {
+          data = success.data;
+
+          // Fetch error.
+          error = success.error;
+          status = success.status || status;
+
+          finalPath = success.path;
+          decoratedParametersLength = success.decoratedParametersLength;
+          newArgs = success.args || [];
         }
       );
 
       // Handle optional parameters by inserting 'undefined' in case the parameter wasn't provided.
 
-      const argsDiff = decoratedParametersLength - args.length;
+      const argsDiff = decoratedParametersLength - newArgs.length;
       const optional = Array.from({ length: argsDiff }, () => undefined);
-      args.push(...optional);
+      newArgs.push(...optional);
 
       // NB: `this` refers to the class instance.
 
-      return original.apply(this, [
-        ...args,
-        response,
-        error,
-        statusCode,
-        finalPath,
-      ]);
+      return original.apply(this, [...newArgs, data, error, status, finalPath]);
     };
   };
 };
