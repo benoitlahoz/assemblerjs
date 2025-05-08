@@ -94,27 +94,6 @@ class MyDummyUsersService {
     if (data && !err) return data;
     throw err;
   }
-
-  @Fetch(
-    'get',
-    `https://api.benoitlahoz.art/api/projects/?status=*&%populate`,
-    {},
-    true
-  )
-  @Parse('json')
-  public async getAllWithParams(
-    @Query('status') statusQuery: string,
-    @Placeholder('%populate') populate?: string,
-    res?: any,
-    err?: Error,
-    status?: FetchStatus,
-    path?: string
-  ) {
-    console.log('STAT', path);
-    // console.log(res);
-    if (res && res.data && !err) return res.data;
-    throw err;
-  }
 }
 
 const usersService = new MyDummyUsersService();
@@ -189,11 +168,5 @@ describe('Fetch decorator', () => {
     expect(data).toBeDefined();
     // NB: unfortunately 'dummyjson' returns an user with empty values.
     expect(data.firstName).toBeDefined();
-
-    const t = await usersService.getAllWithParams(
-      'published',
-      'populate[medias][populate]=*&populate[persons][populate]=*&populate[categories][populate]=*&populate[producers][populate]=*&populate[tourers][populate]=*&populate[links][populate]=*&populate[press_links][populate]=*'
-    );
-    // console.log(t);
   });
 });
