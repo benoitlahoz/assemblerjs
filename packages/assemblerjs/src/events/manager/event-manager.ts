@@ -58,11 +58,6 @@ export class EventManager implements AbstractEventManager {
 
   public on(channel: string, callback: Listener): EventManager {
     const clean = this.cleanChannel(channel);
-
-    if (!this.channels.has(clean)) {
-      throw new Error(`Channel '${clean}' was not registered.`);
-    }
-
     this.listeners.add(clean, callback);
 
     return this;
@@ -70,11 +65,6 @@ export class EventManager implements AbstractEventManager {
 
   public once(channel: string, callback: Listener): EventManager {
     const clean = this.cleanChannel(channel);
-
-    if (!this.channels.has(clean)) {
-      throw new Error(`Channel '${clean}' was not registered.`);
-    }
-
     this.onceListeners.add(clean, callback);
 
     return this;
