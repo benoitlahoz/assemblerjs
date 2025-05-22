@@ -134,6 +134,6 @@ export class EventManager implements AbstractEventManager {
   }
 
   private cleanChannel(channel: string): string {
-    return onlyAlphanumeric(channel, '*');
+    return onlyAlphanumeric(channel, '*', ':', '.', '-', '_');
   }
 }

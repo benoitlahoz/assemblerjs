@@ -18,12 +18,14 @@ describe('EventManager', () => {
       expect(result).toBe('ack');
     };
 
-    const manager = new EventManager('foo', 'bar');
+    const manager = new EventManager('foo', 'bar', 'foo:bar');
 
     manager.on('foo', receivedFoo);
     manager.on('foo', receivedAsyncFoo);
+    manager.on('foo:bar', receivedAsyncFoo);
 
     manager.emit('foo', 'bar');
+    manager.emit('foo:bar', 'bar');
 
     manager.once('bar', receivedBar);
     manager.emit('bar', 'ack');

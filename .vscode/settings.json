@@ -4,5 +4,6 @@
       "path": "zsh",
       "args": ["-i"]
     }
-  }
+  },
+  "nxConsole.generateAiAgentRules": true
 }
