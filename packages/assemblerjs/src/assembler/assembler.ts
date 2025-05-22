@@ -106,7 +106,6 @@ export class Assembler extends EventManager implements AbstractAssembler {
   public readonly publicContext: AssemblerContext;
 
   private constructor() {
-    // EventManager listens to all events ('*') by default.
     super();
 
     // Create contexts.

@@ -3,7 +3,8 @@ import { EventManager } from './manager';
 
 /**
  * Register events channels if an Assemblage subclasses EventManager
- * and forward them to 'Assembler'.
+ * and forward them to 'Assembler', or register events in Assembler directly
+ * if the assemblage is not an evebt manager.
  *
  * @param { AbstractInjectable<T> } injectable The injectable that built the 'instance'.
  * @param { T } instance The instance of an `Assemblage` that subclasses `EventManager`.
@@ -27,12 +28,19 @@ export const registerEvents = <T>(
         injectable.privateContext.emit(channel, ...args);
       });
     }
+  } else {
+    // Instance is not an EventManager: register events in context.
+    for (const channel of injectable.events) {
+      if (!injectable.privateContext.events.has(channel))
+        injectable.privateContext.addChannels(channel);
+    }
   }
 };
 
 /**
  * Unregister events channels from an Assemblage that subclasses EventManager
- * and from the 'Assembler'.
+ * and from the 'Assembler', or unregister events in Assembler directly
+ * if the assemblage is not an evebt manager.
  *
  * @param { AbstractInjectable<T> } injectable The injectable that built the 'instance'.
  * @param { T } instance The instance of an `Assemblage` that subclasses `EventManager`.
@@ -50,5 +58,11 @@ export const unregisterEvents = <T>(
     }
     eventManager.removeChannels(...injectable.events);
     injectable.privateContext.removeChannels(...injectable.events);
+  } else {
+    for (const channel of injectable.events) {
+      if (injectable.privateContext.events.has(channel)) {
+        injectable.privateContext.removeChannels(channel);
+      }
+    }
   }
 };
