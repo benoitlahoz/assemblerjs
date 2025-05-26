@@ -339,6 +339,8 @@ export const groupedBy =
  *
  * @param { Record<PropertyKey, unknown>[] } arr The array of objects to sort by key value.
  * @returns { (key: PropertyKey) => Record<string, Record<PropertyKey, unknown>[]> } The function to sort the array with.
+ *
+ * @todo Generic type instead of Record.
  */
 export const sortedBy =
   (arr: Record<PropertyKey, unknown>[]) => (key: PropertyKey) => {
