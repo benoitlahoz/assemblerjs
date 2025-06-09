@@ -69,7 +69,7 @@ export class State<T> implements Monad<T> {
   }
 
   /**
-   * Goes 'backward' in the `State` by positionning the cursor one step back and returns a new
+   * Goes 'backward' in the `State` by positioning the cursor one step back and returns a new
    * state with previous value, unmodified stack and cursor augmented by 1. Think of `undo`.
    *
    * @param { number } steps The number of steps to go backward in the stack.
@@ -87,7 +87,7 @@ export class State<T> implements Monad<T> {
   }
 
   /**
-   * Goes 'forward' in the `State` by positionning the cursor one step forward and returns a new
+   * Goes 'forward' in the `State` by positioning the cursor one step forward and returns a new
    * state with previous value, unmodified stack and cursor diminished by 1. Think of `redo`.
    *
    * @param { number } steps The number of steps to go forward in the stack.

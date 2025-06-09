@@ -14,12 +14,13 @@ export class Observable<T> {
   private _removeListener = removeIfDefined(this._observers);
 
   constructor(private _value: T) {
+    // FIXME/ Test of deepClone is OK here.
     const value = buildObservableValue(_value, this);
     this._value = value;
   }
 
   public set value(newValue: T) {
-    const previous = this._value; // TODO: Object deep clone?
+    const previous = this._value; // TODO: Object deep clone? or deep trigger subobservables.
     this._value = newValue;
     for (const observer of this._observers) {
       observer(this.value, previous);
@@ -34,7 +35,13 @@ export class Observable<T> {
     this._observers.length = 0;
   }
 
-  public patch(...properties: string[]) {
+  /**
+   * Wrap given methods of the observable's value to trigger change.
+   *
+   * @param { string[] } methodsNames The methods' names that will trigger a change for watchers.
+   * @returns { Observable<T> } `this` observable.
+   */
+  public patch(...methodsNames: string[]) {
     const ownDescriptors = Object.getOwnPropertyDescriptors(this.value);
     const prototypeDescriptors = Object.getOwnPropertyDescriptors(
       Object.getPrototypeOf(this.value)
@@ -61,44 +68,65 @@ export class Observable<T> {
       });
     };
 
-    for (const property of properties) {
-      if (property === 'constructor') {
+    for (const method of methodsNames) {
+      if (method === 'constructor') {
         throw new Error(`Patching constructor is forbidden.`);
       }
 
       if (
-        Object.keys(ownDescriptors).includes(property) &&
-        typeof ownDescriptors[property].value === 'function'
+        Object.keys(ownDescriptors).includes(method) &&
+        typeof ownDescriptors[method].value === 'function'
       ) {
-        patch(ownDescriptors, property);
+        patch(ownDescriptors, method);
         continue;
       }
 
       if (
-        Object.keys(prototypeDescriptors).includes(property) &&
-        typeof prototypeDescriptors[property].value === 'function'
+        Object.keys(prototypeDescriptors).includes(method) &&
+        typeof prototypeDescriptors[method].value === 'function'
       ) {
-        patch(prototypeDescriptors, property);
+        patch(prototypeDescriptors, method);
         continue;
       }
 
       throw new Error(
-        `Descriptors of '${this.value}' do not include property '${property}'.`
+        `Descriptors of '${this.value}' do not include property '${method}'.`
       );
     }
 
     return this;
   }
 
+  /**
+   * Add a listener to the observable changes.
+   *
+   * @param { (value: T, previous?: T) => void } fn The listener to add.
+   * @returns { Observable<T> } `this` observable.
+   */
   public watch(fn: (value: T, previous?: T) => void) {
     this._observers.push(fn);
     return this;
   }
 
+  /**
+   * Triggers immediately the listeners set by `watch`.
+   *
+   * @returns { Observable<T> } `this` observable.
+   */
   public immediate() {
     for (const observer of this._observers) {
       observer(this.value, this.value);
     }
+    return this;
+  }
+
+  /**
+   * An alias of `immediate`.
+   *
+   * @returns { Observable<T> } `this` observable.
+   */
+  public trigger() {
+    return this.immediate();
   }
 
   public unwatch(fn: (value: T, previous?: T) => void) {
@@ -111,7 +139,7 @@ export const observable = <T>(value: T) => {
   return new Observable(value);
 };
 
-// Kept as reference and for future usages.
+// TODO: deep.
 export const buildObservableValue = <T>(value: T, _target: Observable<T>) => {
   /*
   console.log('VAL', value);
