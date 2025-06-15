@@ -123,13 +123,16 @@ export class Injectable<T> implements AbstractInjectable<T> {
       return this.singletonInstance;
     }
 
+    let config = {};
+    if (this.configuration) {
+      config = this.configuration;
+    }
+    if (configuration) {
+      config = { ...config, ...configuration };
+    }
+
     // Call hook for transient instances.
-    callHook(
-      instance,
-      'onInit',
-      this.publicContext,
-      configuration || this.configuration
-    );
+    callHook(instance, 'onInit', this.publicContext, config);
 
     return instance;
   }
