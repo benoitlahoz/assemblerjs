@@ -108,6 +108,9 @@ export class Observable<T> {
     return this;
   }
 
+  // TODO: chain transformers to be used instead of unique `watch`.
+  // public map(fn: (value: T) => T): this
+
   /**
    * Triggers immediately the listeners set by `watch`.
    *
@@ -115,7 +118,7 @@ export class Observable<T> {
    */
   public immediate() {
     for (const observer of this._observers) {
-      observer(this.value, this.value);
+      observer(this.value);
     }
     return this;
   }

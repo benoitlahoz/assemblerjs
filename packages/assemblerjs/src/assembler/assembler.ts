@@ -258,9 +258,14 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * Get or instantiate an assemblage for given identifier.
    *
    * @param { Identifier<T> | string | symbol } identifier The identifier to get instance from.
+   * @param { Record<string, any> | undefined } configuration Optional configuration
+   * object to pass to a transient assemblage's constructor.
    * @returns { T } An instance of Concrete<T>.
    */
-  public require<T>(identifier: Identifier<T> | string | symbol): T {
+  public require<T>(
+    identifier: Identifier<T> | string | symbol,
+    configuration?: Record<string, any>
+  ): T {
     switch (typeof identifier) {
       case 'string':
       case 'symbol': {
@@ -286,7 +291,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
         const injectable = this.injectables.get(
           identifier as Identifier<T>
         )! as Injectable<T>;
-        return injectable.build();
+        return injectable.build(configuration);
       }
     }
   }

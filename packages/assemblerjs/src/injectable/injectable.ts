@@ -102,9 +102,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
   /**
    * Instantiate the assemblage or get its singleton instance.
    *
+   * @param { Record<string, any> } [configuration] Optional configuration to pass to
+   * a transient assemblage.
+   * If not provided, the global assemblage's configuration will be used.
+   * If the assemblage is a singleton, this parameter will be ignored.
    * @returns { T } The assemblage instance.
    */
-  public build(): T {
+  public build(configuration?: Record<string, any>): T {
     if (this.singletonInstance) return this.singletonInstance;
 
     const params = resolveInjectableParameters(this);
@@ -120,7 +124,12 @@ export class Injectable<T> implements AbstractInjectable<T> {
     }
 
     // Call hook for transient instances.
-    callHook(instance, 'onInit', this.publicContext);
+    callHook(
+      instance,
+      'onInit',
+      this.publicContext,
+      configuration || this.configuration
+    );
 
     return instance;
   }
