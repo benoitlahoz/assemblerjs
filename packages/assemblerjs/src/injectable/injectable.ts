@@ -112,6 +112,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
     if (this.singletonInstance) return this.singletonInstance;
 
     const params = resolveInjectableParameters(this);
+
     const instance = new this.concrete(...params) as T;
 
     // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
@@ -120,6 +121,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
     if (this.isSingleton) {
       this.singletonInstance = instance;
       this.privateContext.prepareInitHook(instance, this.configuration);
+
       return this.singletonInstance;
     }
 

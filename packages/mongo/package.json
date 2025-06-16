@@ -17,7 +17,7 @@
   ],
   "dependencies": {
     "@assemblerjs/core": "^0.8.6",
-    "assemblerjs": "^0.8.7",
+    "assemblerjs": "^0.9.1",
     "mongoose": "^8.14.1",
     "reflect-metadata": "0.2.2",
     "which": "^5.0.0"

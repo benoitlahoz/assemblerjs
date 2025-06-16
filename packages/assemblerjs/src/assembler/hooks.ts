@@ -29,6 +29,7 @@ export const callHook = <T>(
           });
         return;
       }
+
       resolve(hook.bind(assemblage)(context, configuration));
     }
   });
