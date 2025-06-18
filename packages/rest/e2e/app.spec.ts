@@ -13,13 +13,13 @@ import { Posts, Users } from './db';
 describe('API Server Application', () => {
   it('should run server.', async () => {
     @Assemblage({
-      inject: [
-        // Framework adapter MUST be identified by `WebFrameworkAdapter` abstract class to be used by controllers.
-        [WebFrameworkAdapter, ExpressAdapter],
-        [ApiController],
-      ],
-      rest: {
-        adapter: WebFrameworkAdapter,
+      inject: [[WebFrameworkAdapter, ExpressAdapter], [ApiController]],
+      global: {
+        '@assemblerjs/rest': {
+          // This is the default adapter, so it can be omitted.
+          // If you want to use a different adapter, you can specify it here.
+          adapter: WebFrameworkAdapter,
+        },
       },
     })
     class App implements AbstractAssemblage {

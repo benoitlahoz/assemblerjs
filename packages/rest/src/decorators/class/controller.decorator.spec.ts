@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
 import { Controller } from './controller.decorator';
 import { Get } from '../methods/controller-methods.decorator';
+import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
 
 @Controller({
   path: '/user',
@@ -96,7 +97,14 @@ class MainController implements AbstractAssemblage {
 describe('ControllerDecorator', () => {
   it('should create controllers on top of assemblages. ', () => {
     @Assemblage({
-      inject: [[MainController]],
+      inject: [[MainController], [WebFrameworkAdapter, ExpressAdapter]],
+      global: {
+        '@assemblerjs/rest': {
+          // This is the default adapter, so it can be omitted.
+          // If you want to use a different adapter, you can specify it here.
+          adapter: WebFrameworkAdapter,
+        },
+      },
     })
     class App implements AbstractAssemblage {
       constructor(public mainController: MainController) {}

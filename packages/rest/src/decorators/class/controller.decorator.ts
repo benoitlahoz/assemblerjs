@@ -58,14 +58,13 @@ const forceSingleton = (target: any) => {
 const wrapOnInited = (target: any) => {
   const oldInited = target.onInited?.bind(target);
   const wrappedInited = function (context: AssemblerContext) {
-    console.log('Controller definition:', target.adapter);
-    console.log(
-      'Asssemblage definition:',
-      getAssemblageDefinition(target.constructor)
-    );
+    const globalAdapterIdentifier =
+      context.global('@assemblerjs/rest')?.adapter || WebFrameworkAdapter;
 
-    if (context.has(WebFrameworkAdapter)) {
-      const adapter: WebFrameworkAdapter = context.require(WebFrameworkAdapter);
+    if (context.has(globalAdapterIdentifier)) {
+      const adapter: WebFrameworkAdapter = context.require(
+        globalAdapterIdentifier
+      );
       //
       const routes: RouteDefinition[] =
         Reflect.getMetadata(ControllerPrivateKeys.Routes, target.constructor) ||
@@ -79,8 +78,8 @@ const wrapOnInited = (target: any) => {
         );
       }
     } else {
-      console.warn(
-        `No injection was found for the adapter provided in assemblage's configuration. '${target.constructor.name}' must be configured manually.`
+      throw new Error(
+        `No injection was found for the adapter ('${globalAdapterIdentifier.name}') provided in assemblage's configuration. '${target.constructor.name}' must be configured manually.`
       );
     }
 
