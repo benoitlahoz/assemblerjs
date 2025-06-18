@@ -10,6 +10,7 @@ import { ControllerPrivateKeys } from '../methods/controller.keys';
 
 export interface ControllerDefinition extends ObjectLiteral {
   path: string | RegExp;
+  adapter: WebFrameworkAdapter;
 }
 
 export const Controller = createConstructorDecorator(function (
@@ -35,6 +36,8 @@ const buildOwnPath = (target: any, definition?: ControllerDefinition) => {
       ? cleanPath(definition.path)
       : definition.path
     : '';
+
+  target.adapter = definition?.adapter || null;
 };
 
 /**
@@ -55,6 +58,12 @@ const forceSingleton = (target: any) => {
 const wrapOnInited = (target: any) => {
   const oldInited = target.onInited?.bind(target);
   const wrappedInited = function (context: AssemblerContext) {
+    console.log('Controller definition:', target.adapter);
+    console.log(
+      'Asssemblage definition:',
+      getAssemblageDefinition(target.constructor)
+    );
+
     if (context.has(WebFrameworkAdapter)) {
       const adapter: WebFrameworkAdapter = context.require(WebFrameworkAdapter);
       //
@@ -71,7 +80,7 @@ const wrapOnInited = (target: any) => {
       }
     } else {
       console.warn(
-        `No injection was found for key 'WebFrameworkAdapter'. '${target.constructor.name}' must be configured manually.`
+        `No injection was found for the adapter provided in assemblage's configuration. '${target.constructor.name}' must be configured manually.`
       );
     }
 

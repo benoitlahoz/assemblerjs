@@ -2,7 +2,7 @@ import { Server } from 'node:http';
 import type { Application } from 'express';
 import express from 'express';
 import { Assemblage } from 'assemblerjs';
-import { WebFrameworkAdapter } from '..';
+import { WebFrameworkAdapter } from './adapter.abstract';
 
 @Assemblage()
 export class ExpressAdapter implements WebFrameworkAdapter {

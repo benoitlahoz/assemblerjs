@@ -291,7 +291,10 @@ export class Assembler extends EventManager implements AbstractAssembler {
         const injectable = this.injectables.get(
           identifier as Identifier<T>
         )! as Injectable<T>;
-        return injectable.build(configuration);
+
+        const built = injectable.build(configuration);
+
+        return built;
       }
     }
   }

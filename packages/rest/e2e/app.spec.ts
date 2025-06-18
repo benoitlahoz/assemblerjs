@@ -18,6 +18,7 @@ describe('API Server Application', () => {
         [WebFrameworkAdapter, ExpressAdapter],
         [ApiController],
       ],
+      adapter: WebFrameworkAdapter,
     })
     class App implements AbstractAssemblage {
       constructor(

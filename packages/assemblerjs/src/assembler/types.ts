@@ -68,7 +68,10 @@ export abstract class AbstractAssembler extends AbstractEventManager {
     configuration?: Record<string, any>
   ): unknown[];
   public abstract has<T>(identifier: Identifier<T>): boolean;
-  public abstract require<T>(identifier: Identifier<T> | string | symbol): T;
+  public abstract require<T>(
+    identifier: Identifier<T> | string | symbol,
+    configuration?: Record<string, any>
+  ): T;
   public abstract concrete<T>(
     identifier: Identifier<T>
   ): Concrete<T> | undefined;
