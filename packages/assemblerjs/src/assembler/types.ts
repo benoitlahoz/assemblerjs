@@ -16,6 +16,7 @@ export interface AssemblerContext {
   require: AbstractAssembler['require'];
   concrete: AbstractAssembler['concrete'];
   tagged: AbstractAssembler['tagged'];
+  global: AbstractAssembler['global'];
   dispose: AssemblerDispose;
 
   // EventManager bindings.
@@ -37,6 +38,7 @@ export interface AssemblerPrivateContext extends AssemblerContext {
   register: AbstractAssembler['register'];
   use: AbstractAssembler['use'];
   prepareInitHook: AbstractAssembler['prepareInitHook'];
+  addGlobal: AbstractAssembler['addGlobal'];
 
   // EventManager bindings.
 
@@ -67,6 +69,7 @@ export abstract class AbstractAssembler extends AbstractEventManager {
     instance: T,
     configuration?: Record<string, any>
   ): unknown[];
+  public abstract addGlobal(key: string, value: any): void;
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(
     identifier: Identifier<T> | string | symbol,
@@ -76,5 +79,6 @@ export abstract class AbstractAssembler extends AbstractEventManager {
     identifier: Identifier<T>
   ): Concrete<T> | undefined;
   public abstract tagged(...tags: string[]): any[];
+  public abstract global(key: string): any | undefined;
   public abstract override dispose(): void;
 }

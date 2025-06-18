@@ -8,6 +8,6 @@ export interface AssemblageDefinition {
   use?: InstanceInjection<unknown>[];
   tags?: string | string[];
   metadata?: Record<string, any>;
-  // Other packages can add their own properties to the definition.
-  [key: string]: any;
+  // Other packages can add global properties to the definition.
+  global?: Record<string, any>;
 }

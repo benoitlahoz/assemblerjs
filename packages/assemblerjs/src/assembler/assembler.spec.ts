@@ -7,7 +7,11 @@ import type { AssemblerContext } from './types';
 import { Assembler } from './assembler';
 
 describe('Assemblage', () => {
-  @Assemblage()
+  @Assemblage({
+    global: {
+      foo: 'bar',
+    },
+  })
   class MyDependencyClass implements AbstractAssemblage {
     public static onRegister(context: AssemblerContext): void {
       expect(context).toBeDefined();
@@ -26,6 +30,9 @@ describe('Assemblage', () => {
       this.foo = this.configuration.foo;
       this.ack = this.configuration.ack;
       expect(context.require).toBeTypeOf('function');
+      expect(context.global).toBeTypeOf('function');
+
+      expect(context.global('foo')).toBe('bar');
     }
 
     public onInit(context: AssemblerContext): void | Promise<void> {

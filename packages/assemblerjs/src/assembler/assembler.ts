@@ -92,6 +92,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
   protected injectables: Map<Identifier<unknown>, Injectable<unknown>> =
     new Map();
   protected objects: Map<string | symbol, unknown> = new Map();
+  protected globals: Map<string, any> = new Map();
   private initCache: { instance: any; configuration?: Record<string, any> }[] =
     [];
 
@@ -116,6 +117,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
       concrete: this.concrete.bind(this),
       tagged: this.tagged.bind(this),
       dispose: this.dispose.bind(this),
+      global: this.global.bind(this),
       on: this.on.bind(this),
       once: this.once.bind(this),
       off: this.off.bind(this),
@@ -126,6 +128,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
       ...this.publicContext,
       register: this.register.bind(this),
       use: this.use.bind(this),
+      addGlobal: this.addGlobal.bind(this),
       prepareInitHook: this.prepareInitHook.bind(this),
       emit: this.emit.bind(this),
       addChannels: this.addChannels.bind(this),
@@ -328,6 +331,25 @@ export class Assembler extends EventManager implements AbstractAssembler {
       }
     }
     return res;
+  }
+
+  public addGlobal(key: string, value: any): void {
+    if (this.globals.has(key)) {
+      throw new Error(
+        `Global value with key '${key}' has already been registered.`
+      );
+    }
+    this.globals.set(key, value);
+  }
+
+  /**
+   * Get a global value by key.
+   *
+   * @param { string } key The key to get global value.
+   * @returns { any | undefined } The global value or `undefined` if not set.
+   */
+  public global(key: string): any | undefined {
+    return this.globals.get(key);
   }
 
   /**

@@ -70,6 +70,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
     // Cache dependencies.
     this.dependenciesIds = resolveDependencies(this.concrete);
 
+    // Cache globals.
+    if (this.globals) {
+      for (const key in this.globals) {
+        this.privateContext.addGlobal(key, this.globals[key]);
+      }
+    }
+
     if (buildable.instance) {
       // Cache instance of the buildable if the dependency was registered with an object
       // through the `use` property of `AssemblerDefinition`.
@@ -185,6 +192,15 @@ export class Injectable<T> implements AbstractInjectable<T> {
    */
   public get tags(): string[] {
     return getDefinitionValue('tags', this.concrete) || [];
+  }
+
+  /**
+   * Global injections passed in assemblage's definition.
+   * These injections are available in all assemblages and can be used
+   * to provide global services or utilities.
+   */
+  public get globals(): Record<string, any> | undefined {
+    return getDefinitionValue('global', this.concrete);
   }
 
   /**

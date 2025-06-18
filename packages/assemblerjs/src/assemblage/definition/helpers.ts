@@ -88,6 +88,17 @@ const schema: Record<string, any> = {
     },
     transform: (value?: Record<string, any>) => value,
   },
+  global: {
+    test: (value: unknown) =>
+      (typeof value === 'object' || typeof value === 'undefined') &&
+      !Array.isArray(value),
+    throw: () => {
+      throw new Error(
+        `'global' property must be of type 'object' or 'undefined'.`
+      );
+    },
+    transform: (value?: Record<string, any>) => value,
+  },
 };
 
 /**
