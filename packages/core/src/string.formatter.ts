@@ -191,7 +191,7 @@ export const toPascalCase = (str: string) => {
   const changeCase = (_: any, $2: string, $3: string) =>
     `${$2.toUpperCase() + $3.toLowerCase()}`;
 
-  return (
+  return capitalize(
     sanitize(`${str}`)
       // Replace hyphens by space.
       .replace(new RegExp(/[-_]+/, 'g'), ' ')

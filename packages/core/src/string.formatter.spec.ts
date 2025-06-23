@@ -116,7 +116,7 @@ describe('StringUtils', () => {
   });
 
   it('should change case of a string (camel, pascal, kebab, snake, path, dot, constant, capitalize...)', () => {
-    const str = "Là-bas si j'y suis";
+    const str = "là-bas si j'y suis";
 
     expect(toCamelCase(str)).toBe('laBasSiJySuis');
     expect(toPascalCase(str)).toBe('LaBasSiJySuis');
