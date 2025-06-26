@@ -164,6 +164,12 @@ export const Fetch = (
 
           debugFn('Body is:', res.body); // TODO: To be continued.
 
+          if (options) {
+            debugFn(`Options are:`, options);
+          } else {
+            debugFn(`No options provided.`);
+          }
+
           return res;
         })
           .map((result: FetchResult) => {
