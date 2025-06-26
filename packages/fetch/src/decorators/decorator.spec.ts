@@ -54,7 +54,8 @@ class MyDummyUsersService {
 
   @Fetch('get', `${apiHost}/users/:id/carts`)
   public async getUserCart(
-    @Param(':id') id: number,
+    // Colon was ommitted in the parameter name, decorator will add it.
+    @Param('id') id: number,
     data?: any,
     err?: Error,
     status?: FetchStatus,

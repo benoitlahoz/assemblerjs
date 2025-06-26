@@ -87,7 +87,9 @@ export const transformParam = transformPath(
   (path: string, decoratorValues: ReflectParametersValues, ...args: any[]) => {
     let newPath = path;
     for (const [key, value] of Object.entries(decoratorValues.metadata)) {
-      newPath = newPath.replaceAll(String(value), args[Number(key)]);
+      let paramValue = String(value);
+      if (!paramValue.startsWith(':')) paramValue = `:${paramValue}`; // Ensure the key starts with ':'
+      newPath = newPath.replaceAll(paramValue, args[Number(key)]);
     }
     return newPath;
   }
