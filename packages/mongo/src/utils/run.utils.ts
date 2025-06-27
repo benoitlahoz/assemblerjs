@@ -64,9 +64,7 @@ const buildMongoCmd = (res: StartMongoTaskObject) => {
   const exe =
     platform === 'win32'
       ? // TODO: Test this.
-        whichMongoSync() || 'mongod'
-      : platform === 'linux'
-      ? 'systemctl start mongod'
+        whichMongoSync() || 'mongod.exe'
       : 'mongod';
   const port = res.options.port || 27017;
   const bindIp = res.options.bindIp?.join(',') || 'localhost';
