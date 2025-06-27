@@ -84,9 +84,11 @@ class MyDummyUsersService {
     throw err;
   }
 
-  @Fetch('post', `${apiHost}/users/add`)
+  @Fetch('post', `${apiHost}/users/add`, {
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+  })
   public addUser(
-    body: Record<string, any>,
+    body: string,
     data?: any,
     err?: Error,
     status?: FetchStatus,
@@ -165,9 +167,13 @@ describe('Fetch decorator', () => {
       lastName: 'Thesaints',
       age: 250,
     };
-    let data = await usersService.addUser(user);
+    let data = await usersService.addUser(JSON.stringify(user));
+
     expect(data).toBeDefined();
     // NB: unfortunately 'dummyjson' returns an user with empty values.
     expect(data.firstName).toBeDefined();
+    expect(data.firstName).toBe(user.firstName);
+    expect(data.lastName).toBeDefined();
+    expect(data.lastName).toBe(user.lastName);
   });
 });
