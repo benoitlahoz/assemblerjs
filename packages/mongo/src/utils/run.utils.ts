@@ -1,7 +1,11 @@
-import { Task } from '@assemblerjs/core';
 import { execSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { parse } from 'node:path';
+import os from 'node:os';
+import { Task } from '@assemblerjs/core';
+import { whichMongoSync } from './which.utils';
+
+const platform = os.platform();
 
 export interface StartMongoOptions {
   port?: number;
@@ -21,9 +25,12 @@ export interface StartMongoTaskObject {
 
 // Tasks.
 
-const findMongoPid = Task.of(() =>
-  execSync(`pgrep mongod`, { encoding: 'utf-8' })
-);
+const findMongoPid = Task.of(() => {
+  return platform === 'win32'
+    ? // TODO: Test this!
+      execSync(`tasklist | FIND "mongod.exe"`, { encoding: 'utf-8' })
+    : execSync(`pgrep mongod`, { encoding: 'utf-8' });
+});
 
 const errorOrFalse = (err: any) => {
   const error = err as Error;
@@ -54,12 +61,19 @@ const purge = (res: StartMongoTaskObject) => {
 const buildMongoCmd = (res: StartMongoTaskObject) => {
   const result = { ...res };
 
+  const exe =
+    platform === 'win32'
+      ? // TODO: Test this.
+        whichMongoSync() || 'mongod'
+      : platform === 'linux'
+      ? 'systemctl start mongod'
+      : 'mongod';
   const port = res.options.port || 27017;
   const bindIp = res.options.bindIp?.join(',') || 'localhost';
   const dbPath = `--dbpath=${res.options.dbPath} `;
   const logPath = `--logpath=${res.options.logPath} `;
 
-  result.cmd = `mongod ${dbPath}${logPath}--port=${String(
+  result.cmd = `${exe} ${dbPath}${logPath}--port=${String(
     port
   )} --bind_ip=${bindIp} --fork`;
 
