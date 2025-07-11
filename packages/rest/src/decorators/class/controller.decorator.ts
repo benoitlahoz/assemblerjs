@@ -10,7 +10,7 @@ import { ControllerPrivateKeys } from '../methods/controller.keys';
 
 export interface ControllerDefinition extends ObjectLiteral {
   path: string | RegExp;
-  adapter: WebFrameworkAdapter;
+  // adapter?: WebFrameworkAdapter;
 }
 
 export const Controller = createConstructorDecorator(function (
@@ -37,7 +37,7 @@ const buildOwnPath = (target: any, definition?: ControllerDefinition) => {
       : definition.path
     : '';
 
-  target.adapter = definition?.adapter || null;
+  // target.adapter = definition?.adapter || null;
 };
 
 /**
@@ -69,8 +69,35 @@ const wrapOnInited = (target: any) => {
       const routes: RouteDefinition[] =
         Reflect.getMetadata(ControllerPrivateKeys.Routes, target.constructor) ||
         [];
-      // console.log(routes, target.path);
+
+      const middlewares: any[] =
+        Reflect.getMetadata(
+          ControllerPrivateKeys.Middlewares,
+          target.constructor
+        ) || [];
+
       for (const route of routes) {
+        /*
+        console.log(
+          route.path,
+          Reflect.getMetadata(
+            ControllerPrivateKeys.Middlewares,
+            target.constructor
+          )
+        );
+        */
+        const middlewareForMethod = middlewares.find(
+          (middleware) => middleware.handlerName === route.handlerName
+        );
+
+        if (middlewareForMethod) {
+          // If a middleware is defined for this route, add it.
+          adapter.app[route.method](
+            `${target.path}/${route.path}`,
+            middlewareForMethod.middleware.bind(target)
+          );
+        }
+
         // TODO: Works with Express, what with other frameworks.
         adapter.app[route.method](
           `${target.path}/${route.path}`,

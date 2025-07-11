@@ -71,13 +71,14 @@ describe('API Server Application', () => {
         const john = await res.json();
         expect(john).toStrictEqual(Users[0]);
 
-        // Fetch all users for given gender.
+        // Fetch all users for given gender (@Middleware decorator is used and adds a 'test' property to the result).
         res = await fetch('http://localhost:9999/api/user/gender/non-binary');
         expect(res.ok).toBeTruthy();
         const usersForGender = await res.json();
-        expect(usersForGender).toStrictEqual(
-          Users.filter((u: any) => u.gender === 'non-binary')
-        );
+        expect(usersForGender).toStrictEqual({
+          ...Users.filter((u: any) => u.gender === 'non-binary'),
+          test: true,
+        });
       }
 
       public async createUsers(): Promise<void> {
