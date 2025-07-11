@@ -78,7 +78,7 @@ export class Result<S, F = Error> implements Monad<S> {
       return (value: any) => {
         const ret = Result.of(f)(value);
         return ret.fold(
-          (err: unknown) => err,
+          (err: Error) => err,
           (v: any) => v
         );
       };
@@ -146,10 +146,9 @@ export class Result<S, F = Error> implements Monad<S> {
    * @returns { Result<T, F> } A new instance of `Either`.
    */
   public flatMap<T>(fn: (right: S) => Result<T, F>): Result<T, F> {
-    return this.fold(
-      (failureValue: F) => Result.Failure(failureValue),
-      (successValue: S) => fn(successValue)
-    );
+    return this.isFailure()
+      ? Result.Failure<T, F>((this.value as Failure<F>).failureValue)
+      : fn((this.value as Success<S>).successValue);
   }
 
   /**
@@ -157,8 +156,8 @@ export class Result<S, F = Error> implements Monad<S> {
    * in case of `Failure` and another one in case of `Success`.
    *
    * @param { (failure: F) => T } failureFn The function to run in case of a `Failure` value.
-   * @param { ((success: S) => T)  | undefined } successFn Optional : the function to run in case of a `Success` value.
-   * @returns { T | undefined } The result of the function.
+   * @param { (success: S) => T } successFn The function to run in case of a `Success` value.
+   * @returns { T } The result of the function.
    */
   public fold<T>(
     failureFn: (failure: F) => T,
@@ -207,13 +206,12 @@ export class Result<S, F = Error> implements Monad<S> {
    * Converts `Result` to a `Maybe`. If result is a failure, Maybe is just `None`
    * without preserving the error's value. Otherwise, it's `Some` with the `Success` value.
    *
-   * @returns { Maybe<T> } A new `Maybe` from the `Result`.
+   * @returns { Maybe<S> } A new `Maybe` from the `Result`.
    */
-  public toMaybe<S>(): Maybe<S> {
-    return this.fold(
-      (_) => Maybe.None(),
-      (value: any) => Maybe.Some(value)
-    );
+  public toMaybe(): Maybe<S> {
+    return this.isSuccess()
+      ? Maybe.Some((this.value as Success<S>).successValue)
+      : Maybe.None();
   }
 
   /**

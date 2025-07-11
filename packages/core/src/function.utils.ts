@@ -36,6 +36,32 @@ export const debounce = <T>(fn: AnyFunction<T, void>, timeout = 300) => {
 };
 
 /**
+ * Returns a function to call another function only after a given time.
+ *
+ * @param { AnyFunction<void> } fn The function to call.
+ * @param { number } timeout The number in milliseconds to wait before calling the function.
+ * @returns { { call: (...args: T[]) => void; cancel: () => void; } } An object containing the function to `call`
+ * and a function to `cancel`.
+ */
+export const cancelableDebounce = <T>(
+  fn: AnyFunction<T, void>,
+  timeout = 300
+) => {
+  let timer: any;
+  return {
+    call: (...args: T[]) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn(...args);
+      }, timeout);
+    },
+    cancel: () => {
+      clearTimeout(timer);
+    },
+  };
+};
+
+/**
  * Returns a function to call asynchronously another function only after a given time.
  *
  * @param { AnyFunction<T> } fn The function to call.
@@ -291,6 +317,7 @@ export default {
   NoOp,
   Identity,
   debounce,
+  cancelableDebounce,
   debounceAsync,
   pipe,
   pipeAsync,
