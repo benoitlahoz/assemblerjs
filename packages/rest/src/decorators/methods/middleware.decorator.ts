@@ -5,7 +5,7 @@ export const Middleware = (
   middleware: (
     req: Request,
     res: Response,
-    next?: NextFunction
+    next: NextFunction
   ) => void | Promise<void>
 ): MethodDecorator => {
   return (target, propertyKey) => {

@@ -44,10 +44,10 @@ export class UserController implements AbstractAssemblage {
     res.status(200).send(JSON.stringify(user));
   }
 
-  @Middleware((req: Request, res: Response, next?: NextFunction) => {
+  @Middleware((req: Request, res: Response, next: NextFunction) => {
     // Add a test property to the request to check if the middleware was executed.
     (req as any).__test__ = true;
-    if (next) next();
+    next();
   })
   @Get('/gender/:gender')
   public findByGender(req: Request, res: Response) {
