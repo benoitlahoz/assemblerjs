@@ -5,6 +5,7 @@ import { Prop } from './prop.decorator';
 import { Schema } from './schema.decorator';
 import { ModelFactory } from './factories/model.factory';
 import { isMongoRunning, startMongo, stopMongo, whichMongo } from '@/utils';
+import { create } from 'domain';
 
 @Schema({
   timestamps: true,
@@ -14,6 +15,10 @@ import { isMongoRunning, startMongo, stopMongo, whichMongo } from '@/utils';
       options: { deletedBy: true },
     },
   ],
+  index: {
+    fields: { name: 1, email: 1 },
+    options: { unique: true, partialFilterExpression: { name: true } },
+  },
 })
 export class Pattern {
   @Prop()
@@ -24,16 +29,19 @@ export class Pattern {
 
   @Prop({ type: String, required: true })
   public description: string;
+
+  @Prop({ unique: true, default: false })
+  public default: boolean;
 }
 
 const PatternModel = ModelFactory.createForClass(Pattern);
 
 const STOP_AT_END = true;
-const CLEAR_AT_END = false;
+const CLEAR_AT_END = true;
 
-const HOST = 'localhost';
+const HOST = '127.0.0.1';
 const PORT = 33333;
-const DB_NAME = 'decorators';
+const DB_NAME = 'assemblerjs-mongo-test';
 const DB = `${process.cwd()}/test-db/${DB_NAME}/data`;
 const LOGS = `${process.cwd()}/test-db/${DB_NAME}/logs/mongo/mongo.log`;
 
@@ -43,8 +51,20 @@ describe('Schema', () => {
     if ((await whichMongo()) === null)
       throw new Error(`Mongo is not installed.`);
 
-    const runningOrError = await isMongoRunning();
+    let runningOrError = await isMongoRunning();
     if (runningOrError instanceof Error) throw runningOrError;
+
+    if (runningOrError) {
+      // If Mongo is running, we stop it.
+      const stoppedOrError: boolean | Error = await stopMongo();
+      if (stoppedOrError instanceof Error) {
+        throw stoppedOrError;
+      }
+      expect(stoppedOrError).toBeTruthy();
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      expect(await isMongoRunning()).toBeFalsy();
+      runningOrError = false;
+    }
 
     if (!runningOrError) {
       const runOrError: string | Error = await startMongo({
@@ -59,15 +79,13 @@ describe('Schema', () => {
         throw runOrError;
       }
     }
-
-    await mongoose.connect(`mongodb://${HOST}:${PORT}`, {
-      dbName: DB_NAME,
-    });
+    await mongoose.connect(`mongodb://${HOST}:${PORT}/${DB_NAME}`);
 
     const created = await PatternModel.create({
       description: 'An user.',
       name: 'John Doe',
       email: 'john@doe.com',
+      default: true,
     });
     expect(created).toBeDefined();
 

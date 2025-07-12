@@ -17,9 +17,13 @@ export class ModelFactory {
     target: Function
   ): mongoose.Model<TClass> {
     const schemaDefinition = DefinitionsFactory.createForClass(target);
+
     const schemaMetadata =
       TypeMetadataStorage.getSchemaMetadataByTarget(target);
     const schemaOpts = schemaMetadata?.options;
+
+    const index = schemaOpts?.index;
+    delete schemaOpts?.index;
 
     const schema = new mongoose.Schema<TClass>(
       schemaDefinition as mongoose.SchemaDefinition<
@@ -33,6 +37,11 @@ export class ModelFactory {
       forOf(schemaOpts.plugins)((definition: any) => {
         schema.plugin(definition.package, definition.options);
       });
+    }
+
+    if (index) {
+      // Add index to the schema.
+      schema.index(index.fields, index.options);
     }
 
     return mongoose.model<TClass>(schemaOpts?.name || target.name, schema);

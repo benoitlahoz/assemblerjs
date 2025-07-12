@@ -4,6 +4,7 @@ import { forOf } from '@assemblerjs/core';
 import { TypeMetadataStorage } from '../storages/type-metadata.storage';
 import { DefinitionsFactory } from './definitions.factory';
 
+// FIXME/ This is never used???
 export class SchemaFactory {
   /**
    * Create a mongoose `Schema`.
