@@ -131,7 +131,7 @@ export class Task<S> implements Monad<S> {
    * @param { number } after The number of milliseconds to wait before retries.
    * @returns { Promise<Result<S, Error>> } The result of the `Task` as `Result`.
    */
-  public async fork(retries = 0, after = 0): Promise<Result<S, Error>> {
+  public async fork<T, U>(retries = 0, after = 0): Promise<Result<T, U>> {
     try {
       const res = await this.value();
       return Result.Success(res);
@@ -144,7 +144,7 @@ export class Task<S> implements Monad<S> {
         return await this.fork(this.retries);
       }
 
-      return Result.Failure(err as Error);
+      return Result.Failure(err as U);
     }
   }
 

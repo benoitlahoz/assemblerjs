@@ -155,15 +155,15 @@ export class Result<S, F = Error> implements Monad<S> {
    * Folds the `Result` instance with a function
    * in case of `Failure` and another one in case of `Success`.
    *
-   * @param { (failure: F) => T } failureFn The function to run in case of a `Failure` value.
+   * @param { (failure: F) => U } failureFn The function to run in case of a `Failure` value.
    * @param { (success: S) => T } successFn The function to run in case of a `Success` value.
-   * @returns { T } The result of the function.
+   * @returns { U | T } The result of the function.
    */
-  public fold<T>(
-    failureFn: (failure: F) => T,
+  public fold<U, T>(
+    failureFn: (failure: F) => U,
     successFn: (success: S) => T
-  ): T {
-    const typeCase = switchCase({
+  ): U | T {
+    const typeCase = switchCase<U | T>({
       [FailureSuccessKeys.Failure]: () =>
         failureFn((this.value as Failure<F>).failureValue),
       [FailureSuccessKeys.Success]: () =>
