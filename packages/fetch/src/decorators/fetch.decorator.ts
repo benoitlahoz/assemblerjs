@@ -1,3 +1,10 @@
+/**
+ * @assemblerjs/fetch
+ * Fetch decorator for AssemblerJS.
+ *
+ * @benoitlahoz We could add a parameter decorator to handle redirections.
+ */
+
 import { Maybe, NoOp, Task } from '@assemblerjs/core';
 import { ReflectParse, ResponseMethod } from './parse.decorator';
 import { parseResponseWithType, parseResponseWithUnknownType } from '@/utils';
@@ -173,11 +180,16 @@ export const Fetch = (
           return res;
         })
           .map((result: FetchResult) => {
-            const previousPath = result.path;
+            let previousPath = result.path;
+
+            if (typeof window !== 'undefined') {
+              // In browser environment, we can use the URL constructor.
+              previousPath = new URL(result.path, window.location.href).href;
+            }
 
             const res = { ...result };
             res.path = transformPlaceholder(
-              result.path,
+              previousPath, // Was `result.path`
               result.decoratedParametersValues.placeholder,
               ...result.args
             );
