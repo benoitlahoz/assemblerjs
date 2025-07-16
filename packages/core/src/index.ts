@@ -12,6 +12,7 @@ export * from './proxy.utils';
 export * from './string.formatter';
 
 export * from './monad-like';
+export * from './applicative-like';
 
 export * from './decorators/class/singleton.decorator';
 export * from './decorators/class/static-implements.decorator';
