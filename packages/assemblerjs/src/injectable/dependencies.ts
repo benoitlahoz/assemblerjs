@@ -56,6 +56,17 @@ export const resolveInjectableParameters = <T>(
       continue;
     }
 
+    if (indexes.Global.includes(i)) {
+      const identifiers = getOwnCustomMetadata(
+        ReflectParamValue.GlobalIdentifier,
+        injectable.concrete
+      );
+      const identifier = identifiers[i];
+      parameters.push(injectable.privateContext.global(identifier));
+      i++;
+      continue;
+    }
+
     // Recursively require dependency to pass an instance to constructor.
     parameters.push(injectable.privateContext.require(dependency));
 
@@ -85,7 +96,8 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
       indexes.Configuration.includes(i) ||
       indexes.Definition.includes(i) ||
       indexes.Dispose.includes(i) ||
-      indexes.Use.includes(i)
+      indexes.Use.includes(i) ||
+      indexes.Global.includes(i)
     ) {
       i++;
       continue;

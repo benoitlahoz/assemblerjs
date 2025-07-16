@@ -3,15 +3,15 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for assemblage/decorator.ts</title>
+    <title>Code coverage report for decorators/parameters/global.ts</title>
     <meta charset="utf-8" />
-    <link rel="stylesheet" href="../prettify.css" />
-    <link rel="stylesheet" href="../base.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="../favicon.png" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style type='text/css'>
         .coverage-summary .sorter {
-            background-image: url(../sort-arrow-sprite.png);
+            background-image: url(../../sort-arrow-sprite.png);
         }
     </style>
 </head>
@@ -19,20 +19,20 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../index.html">All files</a> / <a href="index.html">assemblage</a> decorator.ts</h1>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">decorators/parameters</a> global.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/2</span>
+                <span class='fraction'>4/4</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -98,35 +98,15 @@
 <a name='L33'></a><a href='#L33'>33</a>
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a>
-<a name='L38'></a><a href='#L38'>38</a>
-<a name='L39'></a><a href='#L39'>39</a>
-<a name='L40'></a><a href='#L40'>40</a>
-<a name='L41'></a><a href='#L41'>41</a>
-<a name='L42'></a><a href='#L42'>42</a>
-<a name='L43'></a><a href='#L43'>43</a>
-<a name='L44'></a><a href='#L44'>44</a>
-<a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -137,63 +117,56 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { Concrete } from '@assemblerjs/core';
-import { ReflectFlags, ReflectValue, defineCustomMetadata } from '@/common';
-import type { AssemblageDefinition } from './definition';
-import { validateDefinition } from './definition';
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { getOwnCustomMetadata, defineCustomMetadata } from '@/common';
+import { ReflectParamIndex, ReflectParamValue } from './constants';
 &nbsp;
 /**
- * Mark a class as `Assemblage` and cache its definition.
- *
- * @param { AssemblageDefinition } definition Definition of the assemblage that provides injections, etc.
- * @returns { ClassDecorator } The decorated class.
+ * Injects an object passed with `string` or `symbol` identifier.
  */
-export const Assemblage = &lt;T&gt;(
-  definition?: AssemblageDefinition
-): ClassDecorator =&gt; {
-  return ((target: Concrete&lt;T&gt;): Concrete&lt;T&gt; =&gt; {
-    return decorateAssemblage(target as any, definition);
-  }) as ClassDecorator;
+export const Global = (identifier: string | symbol): ParameterDecorator =&gt; {
+  return (target: any, _: string | symbol | undefined, index: number) =&gt; {
+    decorateGlobal(identifier, target, index);
+  };
 };
 &nbsp;
 /**
- * Manually decorate a class to be an `Assemblage`.
- *
- * @param { Concrete&lt;T&gt; } target The class to decorate.
- * @param { AssemblageDefinition } definition Definition of the assemblage that provides injections, etc.
- * @returns
+ * Decorator as a wrapper function.
  */
-export const decorateAssemblage = &lt;T&gt;(
-  target: Concrete&lt;T&gt;,
-  definition?: AssemblageDefinition
+export const decorateGlobal = (
+  identifier: string | symbol,
+  target: any,
+  index: number
 ) =&gt; {
-  const safeDefinition: any = validateDefinition(definition || <span class="branch-1 cbranch-no" title="branch not covered" >{});</span>
+  // Get existing indexes for this decorator.
+  const paramIndexes: number[] =
+    getOwnCustomMetadata(ReflectParamIndex.Global, target) || [];
+  paramIndexes.push(index);
 &nbsp;
-  // Mark as assemblage.
-  defineCustomMetadata(ReflectFlags.IsAssemblage, true, target);
+  defineCustomMetadata(ReflectParamIndex.Global, paramIndexes, target);
 &nbsp;
-  // Keep definition passed in decorator.
-  defineCustomMetadata(
-    ReflectValue.AssemblageDefinition,
-    safeDefinition,
-    target
-  );
+  // Get existing identifiers for this decorator.
+  const identifiers =
+    getOwnCustomMetadata(ReflectParamValue.GlobalIdentifier, target) || {};
+  identifiers[index] = identifier;
 &nbsp;
-  return target;
+  // Keep the token passed as identifier.
+  defineCustomMetadata(ReflectParamValue.GlobalIdentifier, identifiers, target);
 };
 &nbsp;</pre></td></tr></table></pre>
 
@@ -204,14 +177,14 @@ export const decorateAssemblage = &lt;T&gt;(
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
                 at 2025-07-16T10:03:46.110Z
             </div>
-        <script src="../prettify.js"></script>
+        <script src="../../prettify.js"></script>
         <script>
             window.onload = function () {
                 prettyPrint();
             };
         </script>
-        <script src="../sorter.js"></script>
-        <script src="../block-navigation.js"></script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
     </body>
 </html>
     

@@ -8,4 +8,5 @@ export interface ParametersDecoratorsIndexes {
   Configuration: number[];
   Dispose: number[];
   Use: number[];
+  Global: number[];
 }

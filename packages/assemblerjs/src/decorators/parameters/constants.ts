@@ -3,6 +3,7 @@
  */
 export enum ReflectParamValue {
   UseIdentifier = 'assemblage:use.param.value',
+  GlobalIdentifier = 'assemblage:global.param.value',
 }
 /**
  * Internal `Reflect` parameters decorators' indexes in constructor.
@@ -13,4 +14,5 @@ export enum ReflectParamIndex {
   Definition = 'assemblage:definition.param.index',
   Configuration = 'assemblage:configuration.param.index',
   Use = 'assemblage:use.param.index',
+  Global = 'assemblage:global.param.index',
 }

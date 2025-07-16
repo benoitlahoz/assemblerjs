@@ -23,6 +23,10 @@ const getUseIndex = <T>(concrete: Concrete<T>): number[] => {
   return getOwnCustomMetadata(ReflectParamIndex.Use, concrete) || [];
 };
 
+const getGlobalIndex = <T>(concrete: Concrete<T>): number[] => {
+  return getOwnCustomMetadata(ReflectParamIndex.Global, concrete) || [];
+};
+
 export const getDecoratedParametersIndexes = <T>(
   target: Concrete<T>
 ): ParametersDecoratorsIndexes => {
@@ -32,6 +36,7 @@ export const getDecoratedParametersIndexes = <T>(
   const Configuration: number[] = getConfigurationIndex(target) || [];
   const Dispose: number[] = getDisposeIndex(target) || [];
   const Use: number[] = getUseIndex(target) || [];
+  const Global: number[] = getGlobalIndex(target) || [];
 
   return {
     Context,
@@ -39,5 +44,6 @@ export const getDecoratedParametersIndexes = <T>(
     Configuration,
     Dispose,
     Use,
+    Global,
   };
 };

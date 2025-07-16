@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { describe, expect, it } from 'vitest';
 import type { AssemblageDefinition } from '@/assemblage';
 import { AbstractAssemblage, Assemblage } from '@/assemblage';
-import { Configuration, Context, Definition } from '@/decorators';
+import { Configuration, Context, Definition, Global } from '@/decorators';
 import type { AssemblerContext } from './types';
 import { Assembler } from './assembler';
 
@@ -25,7 +25,8 @@ describe('Assemblage', () => {
     constructor(
       // private dep: MyDependentClass, // TODO: handle circular dependencies.
       @Context() private context: AssemblerContext,
-      @Configuration() private configuration: any
+      @Configuration() private configuration: any,
+      @Global('foo') public globalFoo: string
     ) {
       this.foo = this.configuration.foo;
       this.ack = this.configuration.ack;
@@ -33,6 +34,7 @@ describe('Assemblage', () => {
       expect(context.global).toBeTypeOf('function');
 
       expect(context.global('foo')).toBe('bar');
+      expect(this.globalFoo).toBe('bar');
     }
 
     public onInit(context: AssemblerContext): void | Promise<void> {

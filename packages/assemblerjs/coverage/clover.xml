@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1750235417238" clover="3.2.0">
-  <project timestamp="1750235417238" name="All files">
-    <metrics statements="499" coveredstatements="244" conditionals="230" coveredconditionals="100" methods="168" coveredmethods="79" elements="897" coveredelements="423" complexity="0" loc="499" ncloc="499" packages="11" files="22" classes="22"/>
+<coverage generated="1752660226120" clover="3.2.0">
+  <project timestamp="1752660226120" name="All files">
+    <metrics statements="518" coveredstatements="263" conditionals="241" coveredconditionals="110" methods="172" coveredmethods="83" elements="931" coveredelements="456" complexity="0" loc="518" ncloc="518" packages="11" files="23" classes="23"/>
     <package name="assemblage">
       <metrics statements="12" coveredstatements="11" conditionals="4" coveredconditionals="2" methods="6" coveredmethods="4"/>
       <file name="abstract.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/assemblage/abstract.ts">
@@ -181,7 +181,7 @@
         <line num="337" count="1" type="cond" truecount="1" falsecount="1"/>
         <line num="338" count="0" type="stmt"/>
         <line num="342" count="1" type="stmt"/>
-        <line num="352" count="1" type="stmt"/>
+        <line num="352" count="2" type="stmt"/>
         <line num="359" count="0" type="stmt"/>
       </file>
       <file name="hooks.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/assembler/hooks.ts">
@@ -210,11 +210,11 @@
       <file name="reflection.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/common/reflection.ts">
         <metrics statements="8" coveredstatements="7" conditionals="2" coveredconditionals="1" methods="4" coveredmethods="3"/>
         <line num="11" count="1" type="stmt"/>
-        <line num="16" count="11" type="stmt"/>
+        <line num="16" count="13" type="stmt"/>
         <line num="31" count="1" type="stmt"/>
         <line num="32" count="0" type="stmt"/>
         <line num="43" count="1" type="stmt"/>
-        <line num="44" count="81" type="stmt"/>
+        <line num="44" count="90" type="stmt"/>
         <line num="50" count="1" type="stmt"/>
         <line num="51" count="6" type="cond" truecount="1" falsecount="1"/>
       </file>
@@ -283,14 +283,27 @@
       </file>
     </package>
     <package name="decorators.parameters">
-      <metrics statements="38" coveredstatements="30" conditionals="30" coveredconditionals="21" methods="14" coveredmethods="11"/>
+      <metrics statements="51" coveredstatements="43" conditionals="38" coveredconditionals="28" methods="18" coveredmethods="15"/>
       <file name="constants.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/decorators/parameters/constants.ts">
         <metrics statements="2" coveredstatements="2" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
         <line num="4" count="1" type="cond" truecount="2" falsecount="0"/>
-        <line num="10" count="1" type="cond" truecount="2" falsecount="0"/>
+        <line num="11" count="1" type="cond" truecount="2" falsecount="0"/>
+      </file>
+      <file name="global.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/decorators/parameters/global.ts">
+        <metrics statements="10" coveredstatements="10" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="3"/>
+        <line num="7" count="1" type="stmt"/>
+        <line num="8" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
+        <line num="16" count="1" type="stmt"/>
+        <line num="23" count="1" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="1" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="30" count="1" type="cond" truecount="2" falsecount="0"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="34" count="1" type="stmt"/>
       </file>
       <file name="helpers.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/decorators/parameters/helpers.ts">
-        <metrics statements="17" coveredstatements="17" conditionals="20" coveredconditionals="15" methods="6" coveredmethods="6"/>
+        <metrics statements="20" coveredstatements="20" conditionals="24" coveredconditionals="18" methods="7" coveredmethods="7"/>
         <line num="6" count="1" type="stmt"/>
         <line num="7" count="6" type="cond" truecount="2" falsecount="0"/>
         <line num="10" count="1" type="stmt"/>
@@ -302,12 +315,15 @@
         <line num="22" count="1" type="stmt"/>
         <line num="23" count="6" type="cond" truecount="2" falsecount="0"/>
         <line num="26" count="1" type="stmt"/>
-        <line num="30" count="6" type="cond" truecount="1" falsecount="1"/>
-        <line num="31" count="6" type="cond" truecount="1" falsecount="1"/>
-        <line num="32" count="6" type="cond" truecount="1" falsecount="1"/>
-        <line num="33" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="27" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="1" type="stmt"/>
         <line num="34" count="6" type="cond" truecount="1" falsecount="1"/>
-        <line num="36" count="6" type="stmt"/>
+        <line num="35" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="36" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="37" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="38" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="39" count="6" type="cond" truecount="1" falsecount="1"/>
+        <line num="41" count="6" type="stmt"/>
       </file>
       <file name="index-factory.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/decorators/parameters/index-factory.ts">
         <metrics statements="9" coveredstatements="9" conditionals="2" coveredconditionals="2" methods="3" coveredmethods="3"/>
@@ -493,55 +509,61 @@
       </file>
     </package>
     <package name="injectable">
-      <metrics statements="96" coveredstatements="68" conditionals="49" coveredconditionals="30" methods="18" coveredmethods="12"/>
+      <metrics statements="102" coveredstatements="74" conditionals="52" coveredconditionals="33" methods="18" coveredmethods="12"/>
       <file name="abstract.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/injectable/abstract.ts">
         <metrics statements="0" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="0"/>
       </file>
       <file name="dependencies.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/injectable/dependencies.ts">
-        <metrics statements="43" coveredstatements="35" conditionals="17" coveredconditionals="15" methods="2" coveredmethods="2"/>
+        <metrics statements="49" coveredstatements="41" conditionals="20" coveredconditionals="18" methods="2" coveredmethods="2"/>
         <line num="12" count="1" type="stmt"/>
         <line num="15" count="3" type="stmt"/>
         <line num="18" count="3" type="stmt"/>
         <line num="19" count="3" type="stmt"/>
         <line num="22" count="3" type="stmt"/>
         <line num="23" count="3" type="stmt"/>
-        <line num="24" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="24" count="6" type="cond" truecount="2" falsecount="0"/>
         <line num="25" count="2" type="stmt"/>
         <line num="26" count="2" type="stmt"/>
         <line num="27" count="2" type="stmt"/>
-        <line num="30" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="30" count="4" type="cond" truecount="2" falsecount="0"/>
         <line num="31" count="1" type="stmt"/>
         <line num="32" count="1" type="stmt"/>
         <line num="33" count="1" type="stmt"/>
-        <line num="36" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="36" count="3" type="cond" truecount="2" falsecount="0"/>
         <line num="37" count="1" type="stmt"/>
         <line num="38" count="1" type="stmt"/>
         <line num="39" count="1" type="stmt"/>
-        <line num="42" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="42" count="2" type="cond" truecount="1" falsecount="1"/>
         <line num="43" count="0" type="stmt"/>
         <line num="44" count="0" type="stmt"/>
         <line num="45" count="0" type="stmt"/>
-        <line num="48" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="48" count="2" type="cond" truecount="1" falsecount="1"/>
         <line num="49" count="0" type="stmt"/>
         <line num="53" count="0" type="stmt"/>
         <line num="54" count="0" type="stmt"/>
         <line num="55" count="0" type="stmt"/>
         <line num="56" count="0" type="stmt"/>
+        <line num="59" count="2" type="cond" truecount="2" falsecount="0"/>
         <line num="60" count="1" type="stmt"/>
-        <line num="62" count="1" type="stmt"/>
-        <line num="65" count="3" type="stmt"/>
-        <line num="74" count="1" type="stmt"/>
-        <line num="75" count="3" type="stmt"/>
-        <line num="78" count="3" type="stmt"/>
-        <line num="79" count="3" type="stmt"/>
-        <line num="81" count="3" type="stmt"/>
-        <line num="82" count="3" type="stmt"/>
-        <line num="83" count="5" type="cond" truecount="2" falsecount="0"/>
-        <line num="90" count="4" type="stmt"/>
-        <line num="91" count="4" type="stmt"/>
-        <line num="94" count="1" type="stmt"/>
-        <line num="95" count="1" type="stmt"/>
-        <line num="98" count="3" type="stmt"/>
+        <line num="64" count="1" type="stmt"/>
+        <line num="65" count="1" type="stmt"/>
+        <line num="66" count="1" type="stmt"/>
+        <line num="67" count="1" type="stmt"/>
+        <line num="71" count="1" type="stmt"/>
+        <line num="73" count="1" type="stmt"/>
+        <line num="76" count="3" type="stmt"/>
+        <line num="85" count="1" type="stmt"/>
+        <line num="86" count="3" type="stmt"/>
+        <line num="89" count="3" type="stmt"/>
+        <line num="90" count="3" type="stmt"/>
+        <line num="92" count="3" type="stmt"/>
+        <line num="93" count="3" type="stmt"/>
+        <line num="94" count="6" type="cond" truecount="2" falsecount="0"/>
+        <line num="102" count="5" type="stmt"/>
+        <line num="103" count="5" type="stmt"/>
+        <line num="106" count="1" type="stmt"/>
+        <line num="107" count="1" type="stmt"/>
+        <line num="110" count="3" type="stmt"/>
       </file>
       <file name="injectable.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/injectable/injectable.ts">
         <metrics statements="53" coveredstatements="33" conditionals="32" coveredconditionals="15" methods="15" coveredmethods="10"/>
