@@ -77,7 +77,6 @@ describe('API Server Application', () => {
         const usersForGender = await res.json();
         expect(usersForGender).toStrictEqual({
           ...Users.filter((u: any) => u.gender === 'non-binary'),
-          test: true,
         });
       }
 

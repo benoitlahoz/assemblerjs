@@ -10,11 +10,3 @@ export enum RouteMethods {
   Trace = 'trace',
   Connect = 'connect',
 }
-
-export interface RouteDefinition {
-  method: RouteMethods;
-  path: string;
-  handlerName: string | symbol;
-  info: string;
-  type: string;
-}

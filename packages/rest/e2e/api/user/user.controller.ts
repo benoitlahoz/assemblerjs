@@ -1,17 +1,9 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import type { NextFunction, Request, Response } from 'express';
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Patch,
-  Head,
-  Middleware,
-} from '../../../src';
+import type { Request, Response } from 'express';
+import { BasicController, Get, Post, Put, Patch, Head } from '../../../src';
 import { UserRepository } from './user.repository';
 
-@Controller({
+@BasicController({
   path: '/user',
 })
 @Assemblage({
@@ -44,11 +36,6 @@ export class UserController implements AbstractAssemblage {
     res.status(200).send(JSON.stringify(user));
   }
 
-  @Middleware((req: Request, res: Response, next: NextFunction) => {
-    // Add a test property to the request to check if the middleware was executed.
-    (req as any).__test__ = true;
-    next();
-  })
   @Get('/gender/:gender')
   public findByGender(req: Request, res: Response) {
     const user = this.repository.findByGender(req.params.gender);
@@ -58,7 +45,6 @@ export class UserController implements AbstractAssemblage {
     res.status(200).send(
       JSON.stringify({
         ...user,
-        test: (req as any).__test__, // This should be true if the middleware was executed.
       })
     );
   }

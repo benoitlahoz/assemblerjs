@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
-import { Controller } from './controller.decorator';
-import { Get } from '../methods/controller-methods.decorator';
+import { BasicController } from './basic-controller.decorator';
+import { Get } from '../../methods/http-methods.decorators';
 import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
 
-@Controller({
+@BasicController({
   path: '/user',
 })
 @Assemblage({
@@ -35,7 +35,7 @@ class LeafController implements AbstractAssemblage {
   }
 }
 
-@Controller({
+@BasicController({
   path: '///info',
 })
 @Assemblage({
@@ -66,7 +66,7 @@ class SubController implements AbstractAssemblage {
   }
 }
 
-@Controller({
+@BasicController({
   path: 'api   ',
 })
 @Assemblage({

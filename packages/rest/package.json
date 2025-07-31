@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/rest",
-  "version": "0.9.3",
+  "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -17,8 +17,8 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@assemblerjs/core": "^0.8.6",
-    "assemblerjs": "0.9.3",
+    "@assemblerjs/core": "0.9.1",
+    "assemblerjs": "0.9.7",
     "express": "5.1.0"
   },
   "devDependencies": {

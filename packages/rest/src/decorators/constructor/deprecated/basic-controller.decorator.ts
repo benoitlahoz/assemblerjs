@@ -1,19 +1,22 @@
-import type { ObjectLiteral, AssemblerContext } from 'assemblerjs';
+import type { AssemblerContext } from 'assemblerjs';
 import {
   createConstructorDecorator,
   getAssemblageDefinition,
 } from 'assemblerjs';
 import { WebFrameworkAdapter } from '@/adapters/adapter.abstract';
-import { cleanPath } from '@/common/helpers';
-import { RouteDefinition } from '../methods/types';
-import { ControllerPrivateKeys } from '../methods/controller.keys';
+import { cleanPath } from '@/controller/clean-path';
+import { ControllerPrivateKeys } from '../controller.keys';
+import type { ControllerDefinition } from '../controller.decorator';
+import { RouteMetadata } from '@/metadata/metadata.types';
 
-export interface ControllerDefinition extends ObjectLiteral {
-  path: string | RegExp;
-  // adapter?: WebFrameworkAdapter;
-}
-
-export const Controller = createConstructorDecorator(function (
+/*
+ * The `Controller` decorator is used to define a controller class in the REST framework.
+ * It sets up the controller's path and ensures it is a singleton.
+ * It also wraps the `onInited` method to register routes with the global adapter.
+ *
+ * @deprecated Use `Controller` instead.
+ */
+export const BasicController = createConstructorDecorator(function (
   this: any,
   definition?: ControllerDefinition
 ) {
@@ -35,9 +38,7 @@ const buildOwnPath = (target: any, definition?: ControllerDefinition) => {
     ? typeof definition.path === 'string'
       ? cleanPath(definition.path)
       : definition.path
-    : '';
-
-  // target.adapter = definition?.adapter || null;
+    : '/';
 };
 
 /**
@@ -66,26 +67,18 @@ const wrapOnInited = (target: any) => {
         globalAdapterIdentifier
       );
       //
-      const routes: RouteDefinition[] =
+      const routes: RouteMetadata[] =
         Reflect.getMetadata(ControllerPrivateKeys.Routes, target.constructor) ||
         [];
 
       const middlewares: any[] =
         Reflect.getMetadata(
-          ControllerPrivateKeys.Middlewares,
+          ControllerPrivateKeys.BeforeMiddlewares,
           target.constructor
         ) || [];
 
       for (const route of routes) {
-        /*
-        console.log(
-          route.path,
-          Reflect.getMetadata(
-            ControllerPrivateKeys.Middlewares,
-            target.constructor
-          )
-        );
-        */
+        // Check if the route has a middleware defined for it.
         const middlewareForMethod = middlewares.find(
           (middleware) => middleware.handlerName === route.handlerName
         );

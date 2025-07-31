@@ -67,10 +67,12 @@ export const cleanPath = (
     return p;
   };
 
-  return pipe(
+  const clean = pipe(
     replaceAdjacents,
     replaceWhiteSpaces,
     addOrRemoveLeadingSlash,
     removeTrailingSlash
-  )(path);
+  );
+
+  return clean(path);
 };

@@ -1,0 +1,16 @@
+export enum DecoratedParameterPrivateKeys {
+  Body = 'body',
+  Param = 'param',
+  Params = 'params',
+  Query = 'query',
+  Queries = 'queries',
+  Path = 'path',
+  Header = 'header',
+  Headers = 'headers',
+  Cookie = 'cookie',
+  Cookies = 'cookies',
+  Request = 'request',
+  Response = 'response',
+  Next = 'next',
+  Custom = 'custom',
+}

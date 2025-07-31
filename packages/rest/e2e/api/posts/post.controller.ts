@@ -1,9 +1,9 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 import type { Request, Response } from 'express';
-import { Controller, Delete, Get, Post } from '../../../src';
+import { BasicController, Delete, Get, Post } from '../../../src';
 import { PostRepository } from './post.repository';
 
-@Controller({
+@BasicController({
   path: '/post',
 })
 @Assemblage({

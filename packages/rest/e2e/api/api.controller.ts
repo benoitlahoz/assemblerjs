@@ -1,9 +1,9 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import { Controller } from '../../src';
+import { BasicController } from '../../src';
 import { UserController } from './user/user.controller';
 import { PostController } from './posts/post.controller';
 
-@Controller({
+@BasicController({
   path: 'api',
 })
 @Assemblage({
