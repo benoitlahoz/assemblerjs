@@ -241,6 +241,7 @@ export const Fetch = (
           .map(async (result: FetchResult) => {
             const res = { ...result };
 
+            // https://stackoverflow.com/a/38236296/1060921
             const fetchRes = await fetch(res.path, {
               ...(res.options || {}),
               method: res.method,
@@ -248,13 +249,10 @@ export const Fetch = (
             });
 
             if (!fetchRes.ok) {
-              res.status = {
-                code: fetchRes.status,
-                text: fetchRes.statusText,
-              };
               res.error = new Error(
                 `${fetchRes.status}: ${fetchRes.statusText}`
               );
+              debugFn(`Fetch error occurred:`, res.error);
             }
 
             res.response = fetchRes;
@@ -317,12 +315,12 @@ export const Fetch = (
       let decoratedParametersLength = 0;
       let newArgs = args;
 
-      taskResult.fold(
-        (err: unknown) => {
+      taskResult.fold<any, any>(
+        (err: any) => {
           // Internal error.
           error = err as Error;
         },
-        (success: FetchResult) => {
+        (success: any) => {
           data = success.data;
 
           // Fetch error.
