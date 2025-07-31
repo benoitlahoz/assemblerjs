@@ -1,6 +1,6 @@
 import type { Concrete } from '@assemblerjs/core';
 import { clearInstance, forOf } from '@assemblerjs/core';
-import type { Identifier } from '@/common';
+import { defineCustomMetadata, ReflectValue, type Identifier } from '@/common';
 import type {
   AssemblageDefinition,
   Buildable,
@@ -47,6 +47,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
       throw new Error(`Class '${this.concrete.name}' is not an Assemblage.`);
     }
 
+    // Set context metadata for concrete assemblage.
+    defineCustomMetadata(
+      ReflectValue.AssemblageContext,
+      this.publicContext,
+      this.concrete
+    );
+
     const iterateOwnInjections = forOf(this.injections);
     const iterateOwnUsedInjections = forOf(this.objects);
 
@@ -82,7 +89,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // through the `use` property of `AssemblerDefinition`.
       this.singletonInstance = buildable.instance;
     } else if (this.isSingleton) {
-      // TODO: Find a way to follow the '@Use' dependencies when bilding now.
+      // TODO: Find a way to follow the '@Use' dependencies when building now.
       // Build singleton instance at bootstrap.
       // this.singletonInstance = this.build();
     }

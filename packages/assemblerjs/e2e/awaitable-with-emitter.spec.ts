@@ -17,6 +17,7 @@ import {
   AwaiterAssemblage,
   AwaiterChannels,
 } from './fixtures/awaitable-simple/awaiter.service';
+import { getAssemblageContext } from '../src/assemblage';
 
 describe('Awaitable', () => {
   it('should wait for dependency to be ready.', async () => {
@@ -40,6 +41,8 @@ describe('Awaitable', () => {
         public awaitable: AwaitableAssemblage,
         public awaiter: AwaiterAssemblage
       ) {
+        expect(getAssemblageContext(this.constructor)).toEqual(this.context);
+
         // 'AwaitableAssemblage' and 'AwaiterAssemblage' events are forwarded to 'Assembler'.
 
         this.context.on('*', (channel: string) => {

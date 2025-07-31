@@ -3,6 +3,7 @@ export {
   decorateAssemblage,
   isAssemblage,
   getAssemblageDefinition,
+  getAssemblageContext,
 } from './assemblage';
 export { Assembler } from './assembler';
 export { ListenerCollection, EventManager } from './events';

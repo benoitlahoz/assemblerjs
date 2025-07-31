@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose Dependency Injection library for node and browser.",
-  "version": "0.9.4",
+  "version": "0.9.7",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
@@ -51,5 +51,9 @@
   },
   "dependencies": {
     "@assemblerjs/core": "0.9.1"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.9",
+    "cookie-parser": "^1.4.7"
   }
 }

@@ -1,5 +1,6 @@
 import type { Concrete } from '@assemblerjs/core';
 import type { AssemblageDefinition } from '@/assemblage';
+import type { AssemblerContext } from '@/assembler';
 import { ReflectFlags, ReflectValue, getOwnCustomMetadata } from '@/common';
 
 /**
@@ -16,4 +17,10 @@ export const getAssemblageDefinition = <T>(
   target: Concrete<T>
 ): AssemblageDefinition => {
   return getOwnCustomMetadata(ReflectValue.AssemblageDefinition, target);
+};
+
+export const getAssemblageContext = <T>(
+  target: Concrete<T> | Function
+): AssemblerContext => {
+  return getOwnCustomMetadata(ReflectValue.AssemblageContext, target);
 };

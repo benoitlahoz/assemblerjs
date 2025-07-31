@@ -8,7 +8,7 @@ import { decorateAssemblage } from '@/assemblage';
 import type { ObjectLiteral } from '../types';
 import { getDecoratedParametersIndexes } from '../parameters/helpers';
 import { ReflectParamIndex, ReflectParamValue } from '../parameters/constants';
-import { decorateUse } from '../parameters/use';
+import { decorateUse, decorateGlobal } from '../parameters';
 
 /**
  * Create a custom decorator that adds a function called after the original constructor
@@ -104,6 +104,16 @@ export const ConstructorDecorator =
           Base
         );
         decorateUse(identifiers[i], klass, i);
+        continue;
+      }
+
+      if (existingParamsIndexes.Global.includes(i)) {
+        // Get identifiers for Base class.
+        const identifiers = getOwnCustomMetadata(
+          ReflectParamValue.GlobalIdentifier,
+          Base
+        );
+        decorateGlobal(identifiers[i], klass, i);
         continue;
       }
     }
