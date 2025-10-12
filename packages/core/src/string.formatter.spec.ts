@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { curry } from '@/function.utils';
-import StringUtils from './string.formatter';
+import StringFormatters from './string.formatter';
 
 const {
   onlyAlpha,
@@ -19,10 +19,9 @@ const {
   toDotCase,
   toConstantCase,
   capitalize,
-  matchWildcard,
-} = StringUtils;
+} = StringFormatters;
 
-describe('StringUtils', () => {
+describe('StringFormatters', () => {
   it('should preserve only letters in a string', () => {
     const str = '   À bientôt !';
 
@@ -128,37 +127,5 @@ describe('StringUtils', () => {
 
     const lowercase = 'firstname';
     expect(capitalize(lowercase)).toBe('Firstname');
-  });
-
-  it('should match wildcard rules', () => {
-    const rule1 = '*Paris';
-    const rule2 = '*Paris*';
-    const rule3 = '*Papa*Paris*';
-
-    const strs1 = ['À nous Paris', 'Ici Paris', 'Sous le ciel de Paris'];
-
-    for (const str of strs1) {
-      expect(matchWildcard(str, rule1)).toBeTruthy();
-    }
-
-    const strs2 = [
-      'À nous Paris !!!',
-      'Ici Paris...',
-      'Sous le ciel de Paris, il fait bon vivre.',
-    ];
-
-    for (const str of strs2) {
-      expect(matchWildcard(str, rule2)).toBeTruthy();
-    }
-
-    const strs3 = [
-      'Papa ! À nous Paris !!!',
-      'Mon Papa est à Paris...',
-      'Avec mon Papa, sous le ciel de Paris, il fait bon vivre.',
-    ];
-
-    for (const str of strs3) {
-      expect(matchWildcard(str, rule3)).toBeTruthy();
-    }
   });
 });

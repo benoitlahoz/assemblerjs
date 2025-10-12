@@ -7,15 +7,17 @@ import {
   AssemblerContext,
 } from 'assemblerjs';
 import { wait } from '@assemblerjs/core';
-import { Controller } from './controller.decorator';
-import { Get, Post } from '../methods/http-methods.decorators';
-import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
+import { Dto } from '@assemblerjs/dto';
+import { IsString, IsInt } from 'class-validator';
 import express, {
   type Request,
   type NextFunction,
   type Response,
 } from 'express';
 import cookieParser from 'cookie-parser';
+import { Controller } from './controller.decorator';
+import { Get, Post } from '../methods/http-methods.decorators';
+import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
 import { HttpStatus, Middleware, Redirect } from '../methods';
 import {
   Body,
@@ -31,7 +33,7 @@ import {
   Req,
   Next,
 } from '../parameters/parameters.decorators';
-import { NotFoundError } from '@/errors/not-found.error';
+import { NotFoundError } from '@/errors';
 import { HttpHeaders } from '../methods/http-headers.decorator';
 import { createCustomParameterDecorator } from '../parameters/create-custom-parameter-decorator';
 
@@ -70,6 +72,7 @@ const CustomParam = createCustomParameterDecorator(
     return req.params[identifier!];
   }
 );
+
 const UserById = createCustomParameterDecorator(
   async (
     req: Request,
@@ -90,6 +93,15 @@ const UserById = createCustomParameterDecorator(
     };
   }
 );
+
+@Dto()
+class UserDto {
+  @IsString()
+  name: string;
+
+  @IsInt()
+  age: number;
+}
 
 @Controller({
   path: '/user',
@@ -184,6 +196,20 @@ class MyController implements AbstractAssemblage {
     expect(Object.keys(headers)).toContain('access-control-allow-credentials');
     return {
       message: 'User created successfully with cookie',
+    };
+  }
+
+  @Post('/create-user-with-dto')
+  public async createUserWithDto(
+    @Body() body: UserDto,
+    @Path() path: string
+  ): Promise<{ message: string }> {
+    expect(path).toBe('/user/create-user-with-dto');
+    expect(body).toBeInstanceOf(UserDto);
+    expect(body.name).toBe('Jane Doe');
+    expect(body.age).toBe(30);
+    return {
+      message: 'User created successfully with DTO',
     };
   }
 
@@ -356,12 +382,55 @@ describe('Controller', () => {
     });
   });
 
+  it('should create and validate a user with DTO as expected type', async () => {
+    const response = await fetch(
+      'http://localhost:9998/user/create-user-with-dto',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Jane Doe',
+          age: 30,
+        }),
+      }
+    );
+
+    expect(response.ok).toBeTruthy();
+    const data = await response.json();
+    expect(data).toStrictEqual({
+      message: 'User created successfully with DTO',
+    });
+  });
+
+  it('should fail with user-friendly error when a DTO is requested', async () => {
+    const response = await fetch(
+      'http://localhost:9998/user/create-user-with-dto',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'Jane Doe',
+          age: 'thirty',
+        }),
+      }
+    );
+
+    expect(response.ok).toBeFalsy();
+    expect(response.status).toBe(400);
+    const errorData = await response.json();
+    expect(errorData.message).toContain('age must be an integer number');
+  });
+
   it('should handle errors gracefully', async () => {
     const response = await fetch('http://localhost:9998/user/non-existent');
     expect(response.ok).toBeFalsy();
     expect(response.status).toBe(404);
     const errorData = await response.json();
-    expect(errorData.error).toBe('User was not found');
+    expect(errorData.message).toBe('User was not found');
   });
 
   it('should return 304 for not modified', async () => {

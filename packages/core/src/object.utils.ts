@@ -85,7 +85,22 @@ export const hasMethod =
  * @returns { Record<PropertyKey, any> } Objects merged in a single object.
  */
 export const merge = (...objs: Record<PropertyKey, any>[]) =>
-  Object.assign({}, ...objs);
+  objs.reduce((prev, obj) => {
+    Object.keys(obj).forEach((key) => {
+      const pVal = prev[key];
+      const oVal = obj[key];
+
+      if (isArray(pVal) && isArray(oVal)) {
+        prev[key] = pVal.concat(...oVal);
+      } else if (isObject(pVal) && isObject(oVal)) {
+        prev[key] = merge(pVal, oVal);
+      } else {
+        prev[key] = oVal;
+      }
+    });
+
+    return prev;
+  });
 
 /**
  * Swap `keys` and `values` of an object.

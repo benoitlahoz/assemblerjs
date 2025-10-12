@@ -78,16 +78,48 @@ export const pluck = (arr: Record<PropertyKey, unknown>[]) => (path: string) =>
   arr.map((el: Record<PropertyKey, unknown>) => valueAtPath(path)(el));
 
 /**
+ * Returns a function to get an `Array` of values according to a specific path (i.e. a string of keys
+ * separated by dot) of array's objects.
+ *
+ * @param { string } path The path to the property to get values from.
+ * @returns { (arr: Record<PropertyKey, unknown>[]) => unknown[] } A function that returns a new `Array`.
+ *
+ * @example
+ * const arr = [
+ *   {
+ *     name: 'Alice',
+ *     age: 32
+ *   },
+ *   {
+ *     name: 'Bob',
+ *     age: 56
+ *   },
+ * ];
+ *
+ * const getNames = pluckProp('name');
+ * const getAges = pluckProp('age');
+ *
+ * const names = getNames(arr); // ['Alice', 'Bob']
+ * const ages = getAges(arr); // [32, 56]
+ *
+ * @see https://medium.com/@jacobchodubski/10-useful-js-utility-functions-that-save-time-ac0198587d4f
+ */
+export const pluckProp =
+  (path: string) => (arr: Record<PropertyKey, unknown>[]) =>
+    arr.map((el: Record<PropertyKey, unknown>) => valueAtPath(path)(el));
+
+/**
  * Removes an item from an array in place if exists.
  *
  * @param { any[] } arr The array.
- * @returns { (item: any) => void } A function to remove an item from the array.
+ * @returns { (item: any) => any[] } A function to remove an item from the array.
  */
 export const removeIfDefined = (arr: any[]) => (item: any) => {
   const index = arr.indexOf(item);
   if (index > -1) {
     arr.splice(index, 1);
   }
+  return arr;
 };
 
 /**
@@ -424,6 +456,7 @@ export default {
   head,
   tail,
   pluck,
+  pluckProp,
   removeIfDefined,
   move,
   moved,
@@ -441,4 +474,7 @@ export default {
   sortedBy,
   chunks,
   toObject,
+  fisherYates,
+  durstenfeld,
+  schwartzian,
 };

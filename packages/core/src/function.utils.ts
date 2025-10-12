@@ -66,12 +66,15 @@ export const cancelableDebounce = <T>(
  *
  * @param { AnyFunction<T> } fn The function to call.
  * @param { number } timeout The number in milliseconds to wait before calling the function.
- * @returns { (...args: T[]) => Promise<T> } The debounced function to call.
+ * @returns { (...args: T[]) => Promise<U> } The debounced function to call.
  */
-export const debounceAsync = <T>(fn: AnyFunction<T>, timeout = 300) => {
+export const debounceAsync = <T, U>(
+  fn: AnyFunction<T, Promise<U>>,
+  timeout = 300
+) => {
   let timer: any;
   return (...args: T[]) => {
-    return new Promise<T>((resolve, reject) => {
+    return new Promise<U>((resolve, reject) => {
       clearTimeout(timer);
       timer = setTimeout(() => {
         const ret = tryCatch(() => {
@@ -80,7 +83,7 @@ export const debounceAsync = <T>(fn: AnyFunction<T>, timeout = 300) => {
 
         return ret.fold(
           (err: unknown) => reject(err),
-          (res: T) => resolve(res)
+          (res: Promise<U>) => resolve(res)
         );
       }, timeout);
     });

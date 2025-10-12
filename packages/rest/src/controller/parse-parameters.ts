@@ -3,6 +3,7 @@ import { DecoratedParameterPrivateKeys } from '@/decorators/parameters/parameter
 import { MetadataStorage } from '@/metadata/metadata-storage';
 import { switchCase } from '@assemblerjs/core';
 import { AssemblerContext, getAssemblageContext } from 'assemblerjs';
+import { DtoFactory, DtoMetadataKeys } from '@assemblerjs/dto';
 
 const parseRequestDecorator = (
   args: any[],
@@ -66,8 +67,34 @@ const parseQueriesDecorator = (
   args[Number(index)] = queries; // Default to empty object if no queries
 };
 
-const parseBodyDecorator = (args: any[], req: any, index: string | number) => {
-  args[Number(index)] = req.body; // Default to undefined if no body
+const parseBodyDecorator = async (
+  target: any,
+  propertyKey: string | symbol,
+  args: any[],
+  req: any,
+  index: string | number
+) => {
+  const obj = req.body;
+  if (!obj) {
+    args[Number(index)] = obj; // Default to undefined if no body
+  }
+
+  // Get parameters types for this handler.
+  const paramTypes = Reflect.getMetadata(
+    'design:paramtypes',
+    target,
+    String(propertyKey)
+  );
+  const expectedType = paramTypes[index];
+
+  // Check if the expected type is marked as a DTO.
+  if (Reflect.getMetadata(DtoMetadataKeys.IsDto, expectedType)) {
+    args[Number(index)] = await DtoFactory.create(expectedType, obj);
+    return;
+  }
+
+  // Validate object by creating a DTO.
+  args[Number(index)] = obj;
 };
 
 const parsePathDecorator = (args: any[], req: any, index: string | number) => {
@@ -150,9 +177,10 @@ const parseCustomDecorator = async (
   args[Number(index)] = result;
 };
 
-const switchDecorator = (
+const switchDecorator = async (
   args: any[],
   target: any,
+  handlerName: string | symbol,
   identifier: string | symbol,
   index: string | number,
   fn:
@@ -182,8 +210,8 @@ const switchDecorator = (
       parseQueryDecorator(args, req, identifier, index),
     [DecoratedParameterPrivateKeys.Queries]: () =>
       parseQueriesDecorator(args, req, index),
-    [DecoratedParameterPrivateKeys.Body]: () =>
-      parseBodyDecorator(args, req, index),
+    [DecoratedParameterPrivateKeys.Body]: async () =>
+      await parseBodyDecorator(target, handlerName, args, req, index),
     [DecoratedParameterPrivateKeys.Path]: () =>
       parsePathDecorator(args, req, index),
     [DecoratedParameterPrivateKeys.Header]: () =>
@@ -209,7 +237,7 @@ const switchDecorator = (
 export const parseParametersDecorators = async (
   args: any[],
   target: any,
-  handlerName: string | symbol | undefined,
+  handlerName: string | symbol,
   req: Request,
   res: Response,
   next: any
@@ -229,9 +257,10 @@ export const parseParametersDecorators = async (
       continue;
     }
     for (const [index, identifier] of Object.entries(metadata)) {
-      const convertToArgs = switchDecorator(
+      const convertToArgs = await switchDecorator(
         args,
         target,
+        handlerName,
         identifier,
         index,
         undefined,
@@ -252,9 +281,10 @@ export const parseParametersDecorators = async (
     return args;
   }
   for (const [index, obj] of Object.entries(customMetadata)) {
-    const convertToArgs = switchDecorator(
+    const convertToArgs = await switchDecorator(
       args,
       target,
+      handlerName,
       obj.identifier,
       index,
       obj.fn,

@@ -1,5 +1,6 @@
 /// <reference types='vitest' />
 import { join } from 'node:path';
+import { builtinModules } from 'node:module';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
@@ -7,7 +8,7 @@ import swc from '@rollup/plugin-swc';
 
 export default defineConfig(() => ({
   root: __dirname,
-  cacheDir: '../../node_modules/.vite/packages/rest',
+  cacheDir: '../../node_modules/.vite/packages/dto',
   plugins: [
     tsconfigPaths(),
     swc({
@@ -54,7 +55,7 @@ export default defineConfig(() => ({
     lib: {
       // Could also be a dictionary or array of multiple entry points.
       entry: 'src/index.ts',
-      name: 'assemnblerjs-rest',
+      name: 'assemblerjs-dto',
       fileName: 'index',
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
@@ -63,19 +64,16 @@ export default defineConfig(() => ({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: [
-        'express',
-        'cookie-parser',
-        'body-parser',
-        'assemblerjs',
-        '@assemblerjs/core',
-        '@assemblerjs/dto',
+        'class-transformer',
         'class-validator',
+        'reflect-metadata',
+        ...builtinModules.flatMap((p) => [p, `node:${p}`]),
       ],
     },
     minify: 'terser' as const,
   },
   test: {
-    watch: false,
+    watch: true,
     globals: true,
     environment: 'node',
     include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

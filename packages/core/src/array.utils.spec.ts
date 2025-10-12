@@ -7,11 +7,13 @@ const {
   head,
   tail,
   pluck,
+  pluckProp,
   move,
   moved,
   shuffled,
   toDefined,
   pushDefined,
+  removeIfDefined,
   dedupe,
   dedupeForPath,
   zip,
@@ -107,6 +109,18 @@ describe('Array utilities.', () => {
 
   it('should return an array of ages.', () => {
     expect(pluck(arr2)('age')).toStrictEqual([30, 35, 25]);
+  });
+
+  it('should return an array of nested values using pluckProp.', () => {
+    expect(pluckProp('credentials.email')(arr2)).toStrictEqual([
+      'alice@example.com',
+      'charlie@example.com',
+      'bob@example.com',
+    ]);
+  });
+
+  it('should return an array of ages using pluckProp.', () => {
+    expect(pluckProp('age')(arr2)).toStrictEqual([30, 35, 25]);
   });
 
   it('should return the intersection betwween arrays.', () => {
@@ -288,5 +302,16 @@ describe('Array utilities.', () => {
       '3': { '0': 4, '1': 5, '2': 6 },
       '4': { foo: 'bar', baz: { '0': 'foo', '1': 'bar' } },
     });
+  });
+
+  it('should remove defined values from array.', () => {
+    const removedArr = removeIfDefined(arr4)(3.14);
+    expect(removedArr.length).toBe(2);
+
+    // Check that 3.14 is not present
+    expect(removedArr.includes(3.14)).toBeFalsy();
+
+    // Check that removedArr contains only undefined and null
+    expect(removedArr).toStrictEqual([undefined, null]);
   });
 });

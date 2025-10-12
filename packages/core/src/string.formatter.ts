@@ -294,15 +294,6 @@ export const toConstantCase = (str: string) => toSnakeCase(str).toUpperCase();
 export const capitalize = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1);
 
-// Thanks to: https://stackoverflow.com/a/32402438/1060921
-export const matchWildcard = (str: string, rule: string) => {
-  const escapeRegex = (str: string) =>
-    str.replace(/([.*+?^=!:${}()|[\]/\\])/g, '\\$1');
-  return new RegExp(
-    '^' + rule.split('*').map(escapeRegex).join('.*') + '$'
-  ).test(str);
-};
-
 export default {
   onlyAlphanumeric,
   onlyAlpha,
@@ -320,5 +311,4 @@ export default {
   toDotCase,
   toConstantCase,
   capitalize,
-  matchWildcard,
 };

@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/rest",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -18,10 +18,12 @@
   ],
   "dependencies": {
     "@assemblerjs/core": "0.9.1",
+    "@assemblerjs/dto": "0.8.8",
     "assemblerjs": "0.9.7",
     "express": "5.1.0"
   },
   "devDependencies": {
-    "reflect-metadata": "0.2.2"
+    "reflect-metadata": "0.2.2",
+    "class-validator": "0.14.2"
   }
 }

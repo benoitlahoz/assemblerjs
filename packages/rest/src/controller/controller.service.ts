@@ -1,4 +1,5 @@
 import { getAssemblageContext } from 'assemblerjs';
+import { DtoValidationError } from '@assemblerjs/dto';
 import type { NextFunction, Request, Response } from 'express';
 import { WebFrameworkAdapter } from '@/adapters';
 import type {
@@ -174,9 +175,10 @@ class _ControllerService {
 
   private getContext(target: Function) {
     const context = getAssemblageContext(target.constructor);
+
     if (!context) {
       throw new Error(
-        `ControllerService: No AssemblerContext found for target ${target.name}`
+        `ControllerService: No AssemblerContext found for target ${target.constructor}`
       );
     }
     return context;
@@ -313,8 +315,10 @@ class _ControllerService {
     next: NextFunction
   ): void {
     // Handle error response.
-    if (error instanceof GenericError) {
-      res.status(error.status).json({ error: error.message });
+    if (error instanceof GenericError || error instanceof DtoValidationError) {
+      res
+        .status(error.status)
+        .json({ status: error.status, message: error.message });
     } else {
       next(error);
     }

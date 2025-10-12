@@ -9,6 +9,7 @@ export * from './number.formatter';
 export * from './object.utils';
 export * from './promise.utils';
 export * from './proxy.utils';
+export * from './string.utils';
 export * from './string.formatter';
 
 export * from './monad-like';

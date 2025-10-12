@@ -4,15 +4,6 @@
   "include": [],
   "references": [
     {
-      "path": "../dto"
-    },
-    {
-      "path": "../core"
-    },
-    {
-      "path": "../assemblerjs"
-    },
-    {
       "path": "./tsconfig.lib.json"
     },
     {
