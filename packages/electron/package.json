@@ -1,0 +1,36 @@
+{
+  "name": "@assemblerjs/electron",
+  "version": "0.9.3",
+  "main": "./dist/main-process.cjs",
+  "module": "./dist/main-process.mjs",
+  "types": "./dist/main-process.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/main-process.d.ts",
+      "import": "./dist/main-process.mjs",
+      "require": "./dist/main-process.cjs"
+    },
+    "./renderer": {
+      "types": "./dist/renderer-process.d.ts",
+      "import": "./dist/renderer-process.mjs",
+      "require": "./dist/renderer-process.cjs"
+    },
+    "./preload": {
+      "types": "./dist/preload.d.ts",
+      "import": "./dist/preload.mjs",
+      "require": "./dist/preload.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "dependencies": {
+    "@assemblerjs/core": "0.9.6",
+    "assemblerjs": "0.9.7",
+    "electron": "38.4.0"
+  },
+  "devDependencies": {
+    "reflect-metadata": "0.2.2"
+  }
+}

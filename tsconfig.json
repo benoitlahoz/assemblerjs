@@ -20,6 +20,9 @@
     },
     {
       "path": "./packages/dto"
+    },
+    {
+      "path": "./packages/electron"
     }
   ]
 }

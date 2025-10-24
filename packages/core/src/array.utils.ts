@@ -275,6 +275,10 @@ export const dedupeForPath =
  *
  * @param { unknown[][] } arrays Arrays to zip.
  * @returns { unknown[][] } An array of arrays.
+ *
+ * @example
+ * zip([['a', 'b'], [1, 2], [true, false]]);
+ * // => [['a', 1, true], ['b', 2, false]]
  */
 export const zip = (...arrays: unknown[][]): unknown[][] => {
   const maxLength = Math.max(...arrays.map((x) => x.length));
@@ -284,6 +288,15 @@ export const zip = (...arrays: unknown[][]): unknown[][] => {
   );
 };
 
+/** Unzip an array of arrays in multiple arrays.
+ *
+ * @param { unknown[][] } arr The array to unzip.
+ * @returns { unknown[][] } An array of arrays.
+ *
+ * @example
+ * unzip([['a', 1, true], ['b', 2, false]]);
+ * // => [['a', 'b'], [1, 2], [true, false]]
+ */
 export const unzip = (arr: unknown[][]) =>
   arr.reduce(
     (acc: any[], val: unknown[]) => (
