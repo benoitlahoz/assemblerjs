@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/electron",
-  "version": "0.9.3",
+  "version": "0.9.6",
   "main": "./dist/main-process.cjs",
   "module": "./dist/main-process.mjs",
   "types": "./dist/main-process.d.ts",

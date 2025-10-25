@@ -5,3 +5,5 @@ export * from './ipc-to-ipc-result.decorator';
 export * from './ipc-wait.decorator';
 export * from './window-listener.decorator';
 export * from './window-on.decorator';
+export * from './app-listener.decorator';
+export * from './app-on.decorator';
