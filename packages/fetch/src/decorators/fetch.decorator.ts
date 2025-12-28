@@ -22,6 +22,8 @@ export interface FetchStatus {
   text: string;
 }
 
+type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
+
 interface TaskInit {
   decoratedParametersValues: {
     param: ReflectParametersValues;
@@ -44,7 +46,7 @@ interface TaskInit {
       )
     | string;
   path: string;
-  options?: RequestInit;
+  options?: Omit<RequestInit, 'headers'> & { headers?: HeadersOrFunction };
   target: any;
   propertyKey: string | symbol;
   args: any[];
@@ -66,6 +68,8 @@ export interface FetchResult extends TaskInit {
   data?: any;
   error?: Error | undefined;
 }
+
+
 
 const buildParametersObject = (target: any, propertyKey: string | symbol) => {
   const param = getParameterDecoratorValues(
@@ -123,7 +127,7 @@ const getBodyInArgs = (
 export const Fetch = (
   method: string,
   path: string,
-  options?: RequestInit,
+ options?: Omit<RequestInit, 'headers'> & { headers?: HeadersOrFunction },
   debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
 ): MethodDecorator => {
   return (
@@ -241,11 +245,24 @@ export const Fetch = (
           .map(async (result: FetchResult) => {
             const res = { ...result };
 
+            if (options?.headers && typeof options.headers === 'function') {
+              const resolvedHeaders = await options.headers(result.target);
+              res.options = { ...options, headers: resolvedHeaders };
+            } else {
+              res.options = options;
+            }
+
+            return res;
+          })
+          .map(async (result: FetchResult) => {
+            const res = { ...result };
+
             // https://stackoverflow.com/a/38236296/1060921
             const fetchRes = await fetch(res.path, {
-              ...(res.options || {}),
+              ...(res.options as RequestInit) || {},
               method: res.method,
-              body: res.body,
+              // TODO: Type body properly.
+              body: res.body as any,
             });
 
             if (!fetchRes.ok) {

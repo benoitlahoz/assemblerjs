@@ -97,6 +97,29 @@ class MyDummyUsersService {
     if (data && !err) return data;
     throw err;
   }
+
+  public getRandomNumber(): number {
+    return Math.floor(Math.random() * 100);
+  }
+
+  @Fetch('post', `${apiHost}/users/add`, { headers: (target) => {
+    const randomNumber = target.getRandomNumber();
+    return {
+      Accept: 'application/json',
+      'Content-Type': 'application/json',
+      'X-Random-Number': randomNumber.toString(),
+    };
+  }})
+  public async addUserWithDynamicHeaders(
+    body: string,
+    data?: any,
+    err?: Error,
+    status?: FetchStatus,
+    path?: string
+  ) {
+    if (data && !err) return data;
+    throw err;
+  }
 }
 
 const usersService = new MyDummyUsersService();
@@ -174,6 +197,19 @@ describe('Fetch decorator', () => {
     expect(data.firstName).toBeDefined();
     expect(data.firstName).toBe(user.firstName);
     expect(data.lastName).toBeDefined();
+    expect(data.lastName).toBe(user.lastName);
+  });
+
+  it('should add an user with dynamic headers', async () => {
+    const user = {
+      firstName: 'Dynamic',
+      lastName: 'Header',
+      age: 42,
+    };
+    const data = await usersService.addUserWithDynamicHeaders(JSON.stringify(user));
+
+    expect(data).toBeDefined();
+    expect(data.firstName).toBe(user.firstName);
     expect(data.lastName).toBe(user.lastName);
   });
 });
