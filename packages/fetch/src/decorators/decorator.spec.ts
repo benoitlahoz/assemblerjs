@@ -12,6 +12,12 @@ import {
 
 const apiHost = 'https://dummyjson.com';
 
+const dynamicUser = {
+  firstName: 'Dynamic',
+  lastName: 'Header',
+  age: 42,
+};
+
 class MyDummyUsersService {
   @Fetch(
     'get',
@@ -109,9 +115,12 @@ class MyDummyUsersService {
       'Content-Type': 'application/json',
       'X-Random-Number': randomNumber.toString(),
     };
-  }})
-  public async addUserWithDynamicHeaders(
-    body: string,
+  }, body: (target) => {
+      // We could also build the body dynamically.
+      return '{"firstName":"Dynamic","lastName":"Header","age":42}';
+    }
+  })
+  public async addDynamicUser(
     data?: any,
     err?: Error,
     status?: FetchStatus,
@@ -201,15 +210,11 @@ describe('Fetch decorator', () => {
   });
 
   it('should add an user with dynamic headers', async () => {
-    const user = {
-      firstName: 'Dynamic',
-      lastName: 'Header',
-      age: 42,
-    };
-    const data = await usersService.addUserWithDynamicHeaders(JSON.stringify(user));
+    
+    const data = await usersService.addDynamicUser();
 
     expect(data).toBeDefined();
-    expect(data.firstName).toBe(user.firstName);
-    expect(data.lastName).toBe(user.lastName);
+    expect(data.firstName).toBe(dynamicUser.firstName);
+    expect(data.lastName).toBe(dynamicUser.lastName);
   });
 });

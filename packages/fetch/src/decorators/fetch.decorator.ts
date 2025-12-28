@@ -5,7 +5,7 @@
  * @benoitlahoz We could add a parameter decorator to handle redirections.
  */
 
-import { Maybe, NoOp, Task } from '@assemblerjs/core';
+import { isAsync, isPromise, Maybe, NoOp, Task } from '@assemblerjs/core';
 import { ReflectParse, ResponseMethod } from './parse.decorator';
 import { parseResponseWithType, parseResponseWithUnknownType } from '@/utils';
 import {
@@ -23,6 +23,7 @@ export interface FetchStatus {
 }
 
 type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
+type BodyOrFunction<T = any> = FetchResult['body'] | ((target: T) => FetchResult['body'] | Promise<FetchResult['body']>);
 
 interface TaskInit {
   decoratedParametersValues: {
@@ -46,7 +47,10 @@ interface TaskInit {
       )
     | string;
   path: string;
-  options?: Omit<RequestInit, 'headers'> & { headers?: HeadersOrFunction };
+  options?: Omit<RequestInit, 'headers' | 'body'> & { 
+    headers?: HeadersOrFunction; 
+    body?: BodyOrFunction; 
+  },
   target: any;
   propertyKey: string | symbol;
   args: any[];
@@ -62,7 +66,8 @@ export interface FetchResult extends TaskInit {
     | FormData
     // | TypedArray
     | URLSearchParams
-    | ReadableStream;
+    | ReadableStream
+    | Promise<string | ArrayBuffer | Blob | DataView | File | FormData | URLSearchParams | ReadableStream>;
   response?: Response;
   status?: FetchStatus;
   data?: any;
@@ -127,7 +132,10 @@ const getBodyInArgs = (
 export const Fetch = (
   method: string,
   path: string,
- options?: Omit<RequestInit, 'headers'> & { headers?: HeadersOrFunction },
+  options?: Omit<RequestInit, 'headers' | 'body'> & { 
+    headers?: HeadersOrFunction; 
+    body?: BodyOrFunction; 
+  },
   debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
 ): MethodDecorator => {
   return (
@@ -167,11 +175,20 @@ export const Fetch = (
 
           const res: FetchResult = { ...init } as FetchResult;
 
-          res.body = getBodyInArgs(
-            init.method,
-            init.decoratedParametersLength,
-            init.args
-          );
+          if (options?.body) {
+            if (typeof options.body === 'function') {
+              res.body = (options.body as (target: any) => FetchResult['body'] | Promise<FetchResult['body']>)(init.target) as any;
+            } else {
+              res.body = options.body;
+            }
+          } else {
+            // Comportement actuel : chercher dans les args
+            res.body = getBodyInArgs(
+              init.method,
+              init.decoratedParametersLength,
+              init.args
+            );
+          }
 
           debugFn('Body is:', res.body); // TODO: To be continued.
 
@@ -256,6 +273,10 @@ export const Fetch = (
           })
           .map(async (result: FetchResult) => {
             const res = { ...result };
+
+            if (res.body && isAsync(res.body) || isPromise(res.body)) {
+              res.body = await res.body;
+            }
 
             // https://stackoverflow.com/a/38236296/1060921
             const fetchRes = await fetch(res.path, {
