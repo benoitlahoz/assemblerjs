@@ -58,7 +58,10 @@ class MyDummyUsersService {
     throw err;
   }
 
-  @Fetch('get', `${apiHost}/users/:id/carts`)
+  // Use a runtime path builder.
+  private idToken = ':id'
+
+  @Fetch('get', (target: MyDummyUsersService) => `${apiHost}/users/${target.idToken}/carts`)
   public async getUserCart(
     // Colon was ommitted in the parameter name, decorator will add it.
     @Param('id') id: number,

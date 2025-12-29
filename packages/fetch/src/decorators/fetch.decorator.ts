@@ -22,6 +22,7 @@ export interface FetchStatus {
   text: string;
 }
 
+type PathOrFunction<T = any> = string | ((target: T) => string);
 type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
 type BodyOrFunction<T = any> = FetchResult['body'] | ((target: T) => FetchResult['body'] | Promise<FetchResult['body']>);
 
@@ -46,7 +47,7 @@ interface TaskInit {
         | 'PATCH'
       )
     | string;
-  path: string;
+  path: PathOrFunction;
   options?: Omit<RequestInit, 'headers' | 'body'> & { 
     headers?: HeadersOrFunction; 
     body?: BodyOrFunction; 
@@ -74,7 +75,25 @@ export interface FetchResult extends TaskInit {
   error?: Error | undefined;
 }
 
+const resolvePathValue = async (pathOrFn: PathOrFunction, target: any) => {
+  let value: any;
+  if (typeof pathOrFn === 'function') {
+    // support (target) => string OR (target) => string | Promise<string>
+    value = (pathOrFn as any)(target);
+    if (isPromise(value) || isAsync(value)) {
+      value = await value;
+    }
+  } else {
+    value = pathOrFn;
+  }
 
+  // If it's a URL object, coerce to string
+  if (value instanceof URL) {
+    return value.href;
+  }
+
+  return String(value);
+};
 
 const buildParametersObject = (target: any, propertyKey: string | symbol) => {
   const param = getParameterDecoratorValues(
@@ -131,7 +150,7 @@ const getBodyInArgs = (
 
 export const Fetch = (
   method: string,
-  path: string,
+  path: PathOrFunction,
   options?: Omit<RequestInit, 'headers' | 'body'> & { 
     headers?: HeadersOrFunction; 
     body?: BodyOrFunction; 
@@ -182,7 +201,6 @@ export const Fetch = (
               res.body = options.body;
             }
           } else {
-            // Comportement actuel : chercher dans les args
             res.body = getBodyInArgs(
               init.method,
               init.decoratedParametersLength,
@@ -200,12 +218,17 @@ export const Fetch = (
 
           return res;
         })
+          .map(async (result: FetchResult) => {
+            const res = { ...result };
+            res.path = await resolvePathValue(result.path as PathOrFunction, init.target);
+            return res;
+          })
           .map((result: FetchResult) => {
-            let previousPath = result.path;
+            let previousPath = result.path as string;
 
             if (typeof window !== 'undefined') {
               // In browser environment, we can use the URL constructor.
-              previousPath = new URL(result.path, window.location.href).href;
+              previousPath = new URL(result.path as string, window.location.href).href;
             }
 
             const res = { ...result };
@@ -228,7 +251,7 @@ export const Fetch = (
 
             const res = { ...result };
             res.path = transformParam(
-              result.path,
+              result.path as string,
               result.decoratedParametersValues.param,
               ...result.args
             );
@@ -246,7 +269,7 @@ export const Fetch = (
 
             const res = { ...result };
             res.path = transformQuery(
-              result.path,
+              result.path as string,
               result.decoratedParametersValues.query,
               ...result.args
             );
@@ -278,8 +301,7 @@ export const Fetch = (
               res.body = await res.body;
             }
 
-            // https://stackoverflow.com/a/38236296/1060921
-            const fetchRes = await fetch(res.path, {
+            const fetchRes = await fetch(res.path as string, {
               ...(res.options as RequestInit) || {},
               method: res.method,
               // TODO: Type body properly.
@@ -335,7 +357,7 @@ export const Fetch = (
         method: method.toUpperCase(),
         path,
         options,
-        target,
+        target: this,
         propertyKey,
         args,
       };
