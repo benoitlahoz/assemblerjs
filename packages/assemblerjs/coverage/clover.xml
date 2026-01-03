@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767446115645" clover="3.2.0">
-  <project timestamp="1767446115645" name="All files">
-    <metrics statements="649" coveredstatements="495" conditionals="293" coveredconditionals="197" methods="237" coveredmethods="165" elements="1179" coveredelements="857" complexity="0" loc="649" ncloc="649" packages="19" files="35" classes="35"/>
+<coverage generated="1767454273859" clover="3.2.0">
+  <project timestamp="1767454273859" name="All files">
+    <metrics statements="680" coveredstatements="519" conditionals="294" coveredconditionals="193" methods="261" coveredmethods="184" elements="1235" coveredelements="896" complexity="0" loc="680" ncloc="680" packages="19" files="39" classes="39"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
       <file name="awaitable.service.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/e2e/fixtures/awaitable-simple/awaitable.service.ts">
@@ -223,87 +223,130 @@
       </file>
     </package>
     <package name="src.features.assembler.lib">
-      <metrics statements="75" coveredstatements="62" conditionals="30" coveredconditionals="21" methods="17" coveredmethods="13"/>
-      <file name="assembler.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/assembler.ts">
-        <metrics statements="66" coveredstatements="53" conditionals="26" coveredconditionals="17" methods="14" coveredmethods="10"/>
+      <metrics statements="106" coveredstatements="86" conditionals="31" coveredconditionals="17" methods="41" coveredmethods="32"/>
+      <file name="assembler-builder.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/assembler-builder.ts">
+        <metrics statements="16" coveredstatements="15" conditionals="2" coveredconditionals="1" methods="3" coveredmethods="3"/>
+        <line num="6" count="14" type="stmt"/>
+        <line num="10" count="14" type="stmt"/>
+        <line num="13" count="14" type="stmt"/>
+        <line num="16" count="14" type="stmt"/>
+        <line num="19" count="14" type="stmt"/>
+        <line num="21" count="27" type="stmt"/>
+        <line num="23" count="14" type="cond" truecount="1" falsecount="1"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="27" count="14" type="stmt"/>
         <line num="28" count="14" type="stmt"/>
         <line num="31" count="14" type="stmt"/>
         <line num="34" count="14" type="stmt"/>
-        <line num="37" count="14" type="stmt"/>
-        <line num="40" count="14" type="stmt"/>
-        <line num="42" count="27" type="stmt"/>
-        <line num="44" count="14" type="cond" truecount="1" falsecount="1"/>
-        <line num="45" count="0" type="stmt"/>
-        <line num="48" count="14" type="stmt"/>
-        <line num="49" count="14" type="stmt"/>
+        <line num="42" count="14" type="stmt"/>
+        <line num="44" count="14" type="stmt"/>
         <line num="52" count="14" type="stmt"/>
-        <line num="53" count="13" type="stmt"/>
-        <line num="62" count="14" type="stmt"/>
-        <line num="70" count="14" type="stmt"/>
-        <line num="71" count="13" type="stmt"/>
-        <line num="79" count="14" type="stmt"/>
-        <line num="87" count="14" type="stmt"/>
-        <line num="89" count="14" type="stmt"/>
-        <line num="92" count="14" type="stmt"/>
-        <line num="94" count="14" type="stmt"/>
-        <line num="95" count="14" type="stmt"/>
-        <line num="96" count="14" type="stmt"/>
-        <line num="110" count="14" type="stmt"/>
-        <line num="114" count="14" type="stmt"/>
-        <line num="127" count="14" type="stmt"/>
-        <line num="147" count="1" type="stmt"/>
-        <line num="148" count="3" type="stmt"/>
-        <line num="150" count="1" type="stmt"/>
-        <line num="163" count="33" type="cond" truecount="2" falsecount="0"/>
-        <line num="167" count="33" type="cond" truecount="1" falsecount="1"/>
-        <line num="168" count="0" type="stmt"/>
-        <line num="174" count="33" type="stmt"/>
-        <line num="181" count="33" type="stmt"/>
-        <line num="184" count="33" type="stmt"/>
-        <line num="191" count="33" type="stmt"/>
-        <line num="218" count="7" type="cond" truecount="1" falsecount="1"/>
-        <line num="219" count="0" type="stmt"/>
-        <line num="223" count="7" type="stmt"/>
-        <line num="224" count="7" type="stmt"/>
-        <line num="239" count="31" type="stmt"/>
-        <line num="243" count="31" type="stmt"/>
-        <line num="254" count="40" type="cond" truecount="4" falsecount="0"/>
-        <line num="255" count="7" type="stmt"/>
-        <line num="257" count="33" type="stmt"/>
-        <line num="272" count="44" type="cond" truecount="3" falsecount="0"/>
-        <line num="275" count="9" type="cond" truecount="1" falsecount="1"/>
-        <line num="276" count="0" type="stmt"/>
-        <line num="282" count="9" type="stmt"/>
-        <line num="286" count="35" type="cond" truecount="1" falsecount="1"/>
-        <line num="287" count="0" type="stmt"/>
-        <line num="294" count="35" type="stmt"/>
-        <line num="298" count="35" type="stmt"/>
-        <line num="300" count="35" type="stmt"/>
-        <line num="312" count="0" type="stmt"/>
-        <line num="314" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="316" count="0" type="stmt"/>
-        <line num="327" count="1" type="stmt"/>
-        <line num="328" count="1" type="stmt"/>
-        <line num="329" count="1" type="stmt"/>
-        <line num="330" count="3" type="cond" truecount="2" falsecount="0"/>
-        <line num="333" count="1" type="stmt"/>
-        <line num="337" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="338" count="0" type="stmt"/>
-        <line num="342" count="0" type="stmt"/>
-        <line num="352" count="0" type="stmt"/>
-        <line num="359" count="0" type="stmt"/>
+        <line num="54" count="14" type="stmt"/>
       </file>
-      <file name="hooks.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/hooks.ts">
-        <metrics statements="9" coveredstatements="9" conditionals="4" coveredconditionals="4" methods="3" coveredmethods="3"/>
-        <line num="14" count="10" type="stmt"/>
-        <line num="20" count="92" type="stmt"/>
-        <line num="21" count="92" type="stmt"/>
-        <line num="23" count="92" type="cond" truecount="2" falsecount="0"/>
-        <line num="24" count="5" type="cond" truecount="2" falsecount="0"/>
-        <line num="25" count="2" type="stmt"/>
-        <line num="28" count="2" type="stmt"/>
-        <line num="30" count="2" type="stmt"/>
-        <line num="33" count="3" type="stmt"/>
+      <file name="assembler.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/assembler.ts">
+        <metrics statements="28" coveredstatements="21" conditionals="8" coveredconditionals="4" methods="14" coveredmethods="9"/>
+        <line num="29" count="14" type="stmt"/>
+        <line num="30" count="14" type="stmt"/>
+        <line num="31" count="14" type="stmt"/>
+        <line num="39" count="115" type="stmt"/>
+        <line num="53" count="14" type="stmt"/>
+        <line num="56" count="14" type="stmt"/>
+        <line num="57" count="14" type="stmt"/>
+        <line num="58" count="14" type="stmt"/>
+        <line num="61" count="14" type="stmt"/>
+        <line num="64" count="14" type="stmt"/>
+        <line num="65" count="14" type="stmt"/>
+        <line num="68" count="14" type="stmt"/>
+        <line num="72" count="1" type="stmt"/>
+        <line num="73" count="1" type="stmt"/>
+        <line num="77" count="33" type="stmt"/>
+        <line num="81" count="7" type="stmt"/>
+        <line num="88" count="31" type="stmt"/>
+        <line num="92" count="0" type="cond" truecount="0" falsecount="4"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="95" count="0" type="stmt"/>
+        <line num="102" count="44" type="cond" truecount="3" falsecount="0"/>
+        <line num="105" count="9" type="stmt"/>
+        <line num="109" count="35" type="stmt"/>
+        <line num="115" count="0" type="stmt"/>
+        <line num="119" count="1" type="stmt"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="133" count="0" type="stmt"/>
+        <line num="140" count="0" type="stmt"/>
+      </file>
+      <file name="context-provider.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/context-provider.ts">
+        <metrics statements="3" coveredstatements="3" conditionals="0" coveredconditionals="0" methods="3" coveredmethods="3"/>
+        <line num="5" count="14" type="stmt"/>
+        <line num="8" count="14" type="stmt"/>
+        <line num="23" count="14" type="stmt"/>
+      </file>
+      <file name="hook-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/hook-manager.ts">
+        <metrics statements="18" coveredstatements="18" conditionals="4" coveredconditionals="4" methods="8" coveredmethods="8"/>
+        <line num="6" count="10" type="stmt"/>
+        <line num="13" count="92" type="stmt"/>
+        <line num="14" count="92" type="stmt"/>
+        <line num="16" count="92" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="5" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="2" type="stmt"/>
+        <line num="21" count="2" type="stmt"/>
+        <line num="23" count="2" type="stmt"/>
+        <line num="26" count="3" type="stmt"/>
+        <line num="31" count="14" type="stmt"/>
+        <line num="37" count="31" type="stmt"/>
+        <line num="41" count="31" type="stmt"/>
+        <line num="46" count="14" type="stmt"/>
+        <line num="47" count="13" type="stmt"/>
+        <line num="58" count="14" type="stmt"/>
+        <line num="59" count="13" type="stmt"/>
+        <line num="69" count="14" type="stmt"/>
+        <line num="73" count="42" type="stmt"/>
+      </file>
+      <file name="injectable-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/injectable-manager.ts">
+        <metrics statements="27" coveredstatements="21" conditionals="11" coveredconditionals="6" methods="8" coveredmethods="6"/>
+        <line num="12" count="14" type="stmt"/>
+        <line num="17" count="14" type="stmt"/>
+        <line num="18" count="14" type="stmt"/>
+        <line num="23" count="33" type="cond" truecount="2" falsecount="0"/>
+        <line num="27" count="33" type="cond" truecount="1" falsecount="1"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="34" count="33" type="stmt"/>
+        <line num="41" count="33" type="stmt"/>
+        <line num="44" count="33" type="stmt"/>
+        <line num="51" count="33" type="stmt"/>
+        <line num="55" count="33" type="stmt"/>
+        <line num="62" count="35" type="cond" truecount="1" falsecount="1"/>
+        <line num="63" count="0" type="stmt"/>
+        <line num="70" count="35" type="stmt"/>
+        <line num="74" count="35" type="stmt"/>
+        <line num="76" count="35" type="stmt"/>
+        <line num="80" count="0" type="stmt"/>
+        <line num="82" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="84" count="0" type="stmt"/>
+        <line num="88" count="1" type="stmt"/>
+        <line num="89" count="1" type="stmt"/>
+        <line num="90" count="1" type="stmt"/>
+        <line num="91" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="94" count="1" type="stmt"/>
+        <line num="98" count="1" type="stmt"/>
+        <line num="99" count="3" type="stmt"/>
+        <line num="104" count="0" type="stmt"/>
+      </file>
+      <file name="object-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/object-manager.ts">
+        <metrics statements="14" coveredstatements="8" conditionals="6" coveredconditionals="2" methods="5" coveredmethods="3"/>
+        <line num="2" count="14" type="stmt"/>
+        <line num="3" count="14" type="stmt"/>
+        <line num="6" count="7" type="cond" truecount="1" falsecount="1"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="11" count="7" type="stmt"/>
+        <line num="12" count="7" type="stmt"/>
+        <line num="16" count="7" type="stmt"/>
+        <line num="20" count="9" type="cond" truecount="1" falsecount="1"/>
+        <line num="21" count="0" type="stmt"/>
+        <line num="27" count="9" type="stmt"/>
+        <line num="31" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="36" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
       </file>
     </package>
     <package name="src.features.events.lib">

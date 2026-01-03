@@ -9,7 +9,7 @@ import type {
 import type {
   AssemblerContext,
   AssemblerPrivateContext,
-} from '@/features/assembler/types';
+} from '@/features/assembler/model/types';
 
 export abstract class AbstractInjectable<T> {
   public static of<TNew>(

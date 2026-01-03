@@ -9,13 +9,13 @@ import type {
 } from '@/features/assemblage';
 import { isAssemblage, getDefinition, getDefinitionValue } from '@/features/assemblage';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
-import { callHook } from '@/features/assembler';
+import { HookManager } from '@/features/assembler';
 import { registerEvents, unregisterEvents } from '@/features/events';
 import {
   resolveDependencies,
   resolveInjectableParameters,
 } from './dependencies';
-import { AbstractInjectable } from './abstract';
+import { AbstractInjectable } from '../model/abstract';
 
 export class Injectable<T> implements AbstractInjectable<T> {
   public readonly identifier: Identifier<T> | string | symbol;
@@ -102,7 +102,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
   public dispose(): void {
     if (this.singletonInstance) {
       unregisterEvents(this, this.singletonInstance);
-      callHook(
+      HookManager.callHook(
         this.singletonInstance,
         'onDispose',
         this.publicContext,
@@ -147,7 +147,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
     }
 
     // Call hook for transient instances.
-    callHook(instance, 'onInit', this.publicContext, config);
+    HookManager.callHook(instance, 'onInit', this.publicContext, config);
 
     return instance;
   }
