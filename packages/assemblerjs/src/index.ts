@@ -4,17 +4,17 @@ export {
   isAssemblage,
   getAssemblageDefinition,
   getAssemblageContext,
-} from './assemblage';
-export { Assembler } from './assembler';
-export { ListenerCollection, EventManager } from './events';
+} from './features/assemblage';
+export { Assembler } from './features/assembler';
+export { ListenerCollection, EventManager } from './features/events';
 
-export * from './decorators';
+export * from './shared/decorators';
 
-export { AbstractAssemblage } from './assemblage';
-export { AbstractAssembler } from './assembler';
-export { AbstractListenerCollection, AbstractEventManager } from './events';
+export { AbstractAssemblage } from './features/assemblage';
+export { AbstractAssembler } from './features/assembler';
+export { AbstractListenerCollection, AbstractEventManager } from './features/events';
 
-export type { Identifier } from './common';
-export type { AssemblerContext, AssemblerDispose } from './assembler';
-export type { AssemblageDefinition } from './assemblage';
-export type { Listener, EventChannel, EventChannelList } from './events';
+export type { Identifier } from './shared/common';
+export type { AssemblerContext, AssemblerDispose } from './features/assembler';
+export type { AssemblageDefinition } from './features/assemblage';
+export type { Listener, EventChannel, EventChannelList } from './features/events';

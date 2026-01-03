@@ -17,7 +17,7 @@ import {
   AwaiterAssemblage,
   AwaiterChannels,
 } from './fixtures/awaitable-simple/awaiter.service';
-import { getAssemblageContext } from '../src/assemblage';
+import { getAssemblageContext } from '../src/features/assemblage';
 
 describe('Awaitable', () => {
   it('should wait for dependency to be ready.', async () => {
