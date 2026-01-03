@@ -1,35 +1,53 @@
-import { getOwnCustomMetadata, defineCustomMetadata } from '@/shared/common';
-import { ReflectParamIndex, ReflectParamValue } from './constants';
+import type { Concrete } from '@assemblerjs/core';
+import { getOwnCustomMetadata } from '@/shared/common';
+import type { AbstractInjectable } from '@/features/injectable/model/abstract';
+import { ParameterDecoratorFactory } from './parameter-decorator-factory';
+import { ResolverStore } from '../resolvers';
+import { getParamValueKey } from './helpers';
+import type { ParameterResolver } from '../types';
+
 
 /**
- * Injects an object passed with `string` or `symbol` identifier.
+ * Resolver for @Global decorator.
  */
-export const Global = (identifier: string | symbol): ParameterDecorator => {
-  return (target: any, _: string | symbol | undefined, index: number) => {
-    decorateGlobal(identifier, target, index);
-  };
-};
+class GlobalResolver implements ParameterResolver {
+  resolve(index: number, injectable: AbstractInjectable<any>, concrete: Concrete<any>): any {
+    const identifiers = getOwnCustomMetadata(getParamValueKey('Global'), concrete);
+    const identifier = identifiers[index];
+    return injectable.privateContext.global(identifier);
+  }
+}
 
 /**
- * Decorator as a wrapper function.
+ * Legacy function for backward compatibility with constructor-decorator.
+ * @param identifier The identifier of the global object to inject
+ * @param target The target class
+ * @param index The parameter index
  */
 export const decorateGlobal = (
   identifier: string | symbol,
   target: any,
   index: number
 ) => {
-  // Get existing indexes for this decorator.
-  const paramIndexes: number[] =
-    getOwnCustomMetadata(ReflectParamIndex.Global, target) || [];
-  paramIndexes.push(index);
-
-  defineCustomMetadata(ReflectParamIndex.Global, paramIndexes, target);
-
-  // Get existing identifiers for this decorator.
-  const identifiers =
-    getOwnCustomMetadata(ReflectParamValue.GlobalIdentifier, target) || {};
-  identifiers[index] = identifier;
-
-  // Keep the token passed as identifier.
-  defineCustomMetadata(ReflectParamValue.GlobalIdentifier, identifiers, target);
+  // Call the decorator directly
+  Global(identifier)(target, undefined, index);
 };
+
+
+/**
+ * Injects a global object by its identifier.
+ * @param identifier The identifier of the global object to inject
+ * @returns A parameter decorator
+ */
+export const Global = (() => {
+  // Register the resolver when the decorator is created
+  ResolverStore.register('Global', GlobalResolver);
+
+  return ParameterDecoratorFactory.create<string | symbol>({
+    name: 'Global',
+    valueType: 'map',
+    resolver: GlobalResolver,
+    handler: decorateGlobal, // Register the handler for constructor-decorator
+  });
+})();
+

@@ -6,9 +6,8 @@ import {
 } from '@/shared/common';
 import { decorateAssemblage } from '@/features/assemblage';
 import type { ObjectLiteral } from '../types';
-import { getDecoratedParametersIndexes } from '../parameters/helpers';
-import { ReflectParamIndex, ReflectParamValue } from '../parameters/constants';
-import { decorateUse, decorateGlobal } from '../parameters';
+import { getDecoratedParametersIndexes, getParamIndexKey, getParamValueKey } from '../parameters/helpers';
+import { ParameterDecoratorFactory } from '../parameters/parameter-decorator-factory';
 
 /**
  * Create a custom decorator that adds a function called after the original constructor
@@ -29,7 +28,7 @@ export const createConstructorDecorator = <T extends ObjectLiteral>(
 /**
  * A custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
- * Note that it must be placed before the `Assemnblage` decorator.
+ * Note that it must be placed before the `Assemblage` decorator.
  * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
  * @param { function(definition?: ObjectLiteral): void | undefined } fn A function to execute after `super`.
@@ -58,63 +57,40 @@ export const ConstructorDecorator =
       Reflect.getOwnMetadata(ReflectParamTypes, Base) || [];
     const existingParamsIndexes = getDecoratedParametersIndexes(Base);
     const params: any[] = [];
+    const registeredDecorators = ParameterDecoratorFactory.getRegisteredDecorators();
 
     for (let i = 0; i < paramTypes.length; i++) {
-      if (existingParamsIndexes.Context.includes(i)) {
-        const paramIndexes: number[] =
-          getOwnCustomMetadata(ReflectParamIndex.Context, Base) || [];
-        paramIndexes.push(i);
-        defineCustomMetadata(ReflectParamIndex.Context, paramIndexes, klass);
-        continue;
+      let handled = false;
+
+      // Iterate through all registered decorators dynamically
+      for (const decoratorName of registeredDecorators) {
+        if (existingParamsIndexes[decoratorName]?.includes(i)) {
+          // Get the handler from the decorator's metadata
+          const handler = ParameterDecoratorFactory.getDecoratorHandler(decoratorName);
+          
+          if (handler) {
+            // Decorator with custom handler (like Use, Global)
+            const values = getOwnCustomMetadata(
+              getParamValueKey(decoratorName),
+              Base
+            );
+            handler(values[i], klass, i);
+          } else {
+            // Simple decorator without handler (like Context, Definition, etc.)
+            const paramIndexes: number[] =
+              getOwnCustomMetadata(getParamIndexKey(decoratorName), Base) || [];
+            paramIndexes.push(i);
+            defineCustomMetadata(getParamIndexKey(decoratorName), paramIndexes, klass);
+          }
+          
+          handled = true;
+          break;
+        }
       }
 
-      if (existingParamsIndexes.Definition.includes(i)) {
-        const paramIndexes: number[] =
-          getOwnCustomMetadata(ReflectParamIndex.Definition, Base) || [];
-        paramIndexes.push(i);
-        defineCustomMetadata(ReflectParamIndex.Definition, paramIndexes, klass);
-        continue;
-      }
-
-      if (existingParamsIndexes.Configuration.includes(i)) {
-        const paramIndexes: number[] =
-          getOwnCustomMetadata(ReflectParamIndex.Configuration, Base) || [];
-        paramIndexes.push(i);
-        defineCustomMetadata(
-          ReflectParamIndex.Configuration,
-          paramIndexes,
-          klass
-        );
-        continue;
-      }
-
-      if (existingParamsIndexes.Dispose.includes(i)) {
-        const paramIndexes: number[] =
-          getOwnCustomMetadata(ReflectParamIndex.Dispose, Base) || [];
-        paramIndexes.push(i);
-        defineCustomMetadata(ReflectParamIndex.Dispose, paramIndexes, klass);
+      // If parameter was not handled by any decorator, add to params if needed
+      if (!handled && paramTypes[i]) {
         params.push(paramTypes[i]);
-        continue;
-      }
-
-      if (existingParamsIndexes.Use.includes(i)) {
-        // Get identifiers for Base class.
-        const identifiers = getOwnCustomMetadata(
-          ReflectParamValue.UseIdentifier,
-          Base
-        );
-        decorateUse(identifiers[i], klass, i);
-        continue;
-      }
-
-      if (existingParamsIndexes.Global.includes(i)) {
-        // Get identifiers for Base class.
-        const identifiers = getOwnCustomMetadata(
-          ReflectParamValue.GlobalIdentifier,
-          Base
-        );
-        decorateGlobal(identifiers[i], klass, i);
-        continue;
       }
     }
 

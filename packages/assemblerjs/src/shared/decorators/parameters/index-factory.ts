@@ -1,8 +1,8 @@
 import { defineCustomMetadata, getOwnCustomMetadata } from '@/shared/common';
-import { ReflectParamIndex } from './constants';
 
 /**
  * Prepare `Assembler` to inject specific object in a dependency's constructor parameters.
+ * @deprecated Use ParameterDecoratorFactory instead
  */
 const paramIndexDecoratorFactory = (key: string) => (): ParameterDecorator => {
   return (target: any, _: string | symbol | undefined, index: number) => {
@@ -16,25 +16,7 @@ const paramIndexDecoratorFactory = (key: string) => (): ParameterDecorator => {
 };
 
 /**
- * Injects the Assembler's context.
+ * Legacy decorator factory - kept for backward compatibility.
+ * @deprecated Use the new decorators from simple-decorators.ts
  */
-const Context = paramIndexDecoratorFactory(ReflectParamIndex.Context);
-
-/**
- * Injects the assemblage's configuration object.
- */
-const Configuration = paramIndexDecoratorFactory(
-  ReflectParamIndex.Configuration
-);
-
-/**
- * Injects the assemblage's definition object.
- */
-const Definition = paramIndexDecoratorFactory(ReflectParamIndex.Definition);
-
-/**
- * Injects the Assembler's 'dispose' method.
- */
-const Dispose = paramIndexDecoratorFactory(ReflectParamIndex.Dispose);
-
-export { Context, Configuration, Definition, Dispose };
+export const createParamIndexDecorator = paramIndexDecoratorFactory;

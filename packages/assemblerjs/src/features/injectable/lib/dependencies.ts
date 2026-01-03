@@ -1,7 +1,21 @@
 import type { Concrete } from '@assemblerjs/core';
-import { getOwnCustomMetadata, getParamTypes } from '@/shared/common';
-import { ReflectParamValue, getDecoratedParametersIndexes } from '@/shared/decorators';
+import { getParamTypes } from '@/shared/common';
+import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
+import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
+
+/**
+ * Helper function to determine the decorator type for a given parameter index.
+ */
+const getDecoratorType = (indexes: ReturnType<typeof getDecoratedParametersIndexes>, index: number): string | null => {
+  if (indexes.Context.includes(index)) return 'Context';
+  if (indexes.Configuration.includes(index)) return 'Configuration';
+  if (indexes.Definition.includes(index)) return 'Definition';
+  if (indexes.Dispose.includes(index)) return 'Dispose';
+  if (indexes.Use.includes(index)) return 'Use';
+  if (indexes.Global.includes(index)) return 'Global';
+  return null;
+};
 
 /**
  * Get an array of parameters from an `Injectable` constructor, including decorated ones.
@@ -21,58 +35,17 @@ export const resolveInjectableParameters = <T>(
   const indexes = getDecoratedParametersIndexes(injectable.concrete);
 
   // Build parameters to pass to instance.
-  let i = 0;
-  for (const dependency of paramTypes) {
-    if (indexes.Context.includes(i)) {
-      parameters.push(injectable.publicContext);
-      i++;
-      continue;
+  for (let i = 0; i < paramTypes.length; i++) {
+    const decoratorType = getDecoratorType(indexes, i);
+
+    if (decoratorType) {
+      // Use the appropriate resolver for decorated parameters
+      const resolver = ParameterResolverFactory.getResolver(decoratorType);
+      parameters.push(resolver.resolve(i, injectable, injectable.concrete, configuration));
+    } else {
+      // Recursively require dependency to pass an instance to constructor.
+      parameters.push(injectable.privateContext.require(paramTypes[i]));
     }
-
-    if (indexes.Configuration.includes(i)) {
-      parameters.push(configuration || injectable.configuration);
-      i++;
-      continue;
-    }
-
-    if (indexes.Definition.includes(i)) {
-      parameters.push(injectable.definition);
-      i++;
-      continue;
-    }
-
-    if (indexes.Dispose.includes(i)) {
-      parameters.push(injectable.privateContext.dispose);
-      i++;
-      continue;
-    }
-
-    if (indexes.Use.includes(i)) {
-      const identifiers = getOwnCustomMetadata(
-        ReflectParamValue.UseIdentifier,
-        injectable.concrete
-      );
-      const identifier = identifiers[i];
-      parameters.push(injectable.privateContext.require(identifier));
-      i++;
-      continue;
-    }
-
-    if (indexes.Global.includes(i)) {
-      const identifiers = getOwnCustomMetadata(
-        ReflectParamValue.GlobalIdentifier,
-        injectable.concrete
-      );
-      const identifier = identifiers[i];
-      parameters.push(injectable.privateContext.global(identifier));
-      i++;
-      continue;
-    }
-
-    // Recursively require dependency to pass an instance to constructor.
-    parameters.push(injectable.privateContext.require(dependency));
-
-    i++;
   }
 
   return parameters;

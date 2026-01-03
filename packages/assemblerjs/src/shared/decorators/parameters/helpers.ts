@@ -1,49 +1,65 @@
 import type { Concrete } from '@assemblerjs/core';
 import { getOwnCustomMetadata } from '@/shared/common';
+import { ParameterDecoratorFactory } from './parameter-decorator-factory';
 import type { ParametersDecoratorsIndexes } from '../types';
-import { ReflectParamIndex } from './constants';
 
-const getContextIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Context, concrete) || [];
+/**
+ * Generates the reflection key for parameter index based on decorator name.
+ * Must match the format used by ParameterDecoratorFactory.
+ */
+export const getParamIndexKey = (decoratorName: string): string => {
+  return `assemblage:${decoratorName.toLowerCase()}.param.index`;
 };
 
-const getConfigurationIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Configuration, concrete) || [];
+/**
+ * Generates the reflection key for parameter value based on decorator name.
+ * Must match the format used by ParameterDecoratorFactory.
+ */
+export const getParamValueKey = (decoratorName: string): string => {
+  return `assemblage:${decoratorName.toLowerCase()}.param.value`;
 };
 
-const getDefinitionIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Definition, concrete) || [];
+/**
+ * Generic function to get parameter indexes for a specific decorator.
+ * @param decoratorName The name of the decorator (e.g., 'Context', 'Use', 'Global')
+ * @param concrete The concrete class to get indexes from
+ * @returns Array of parameter indexes
+ */
+export const getParameterIndexes = <T>(
+  decoratorName: string,
+  concrete: Concrete<T>
+): number[] => {
+  return getOwnCustomMetadata(getParamIndexKey(decoratorName), concrete) || [];
 };
 
-const getDisposeIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Dispose, concrete) || [];
+/**
+ * Generic function to get parameter values for a specific decorator.
+ * @param decoratorName The name of the decorator (e.g., 'Context', 'Use', 'Global')
+ * @param concrete The concrete class to get values from
+ * @returns The stored values (type depends on decorator's valueType configuration)
+ */
+export const getParameterValues = <T, V = any>(
+  decoratorName: string,
+  concrete: Concrete<T>
+): V => {
+  return getOwnCustomMetadata(getParamValueKey(decoratorName), concrete);
 };
 
-const getUseIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Use, concrete) || [];
-};
-
-const getGlobalIndex = <T>(concrete: Concrete<T>): number[] => {
-  return getOwnCustomMetadata(ReflectParamIndex.Global, concrete) || [];
-};
-
+/**
+ * Gets all decorated parameter indexes for registered decorators.
+ * Dynamically retrieves indexes for all decorators registered in ParameterDecoratorFactory.
+ * @param target The concrete class to inspect
+ * @returns Object with indexes for each decorator type
+ */
 export const getDecoratedParametersIndexes = <T>(
   target: Concrete<T>
 ): ParametersDecoratorsIndexes => {
-  // Get indexes of decorated constructor parameters, etc.
-  const Context: number[] = getContextIndex(target) || [];
-  const Definition: number[] = getDefinitionIndex(target) || [];
-  const Configuration: number[] = getConfigurationIndex(target) || [];
-  const Dispose: number[] = getDisposeIndex(target) || [];
-  const Use: number[] = getUseIndex(target) || [];
-  const Global: number[] = getGlobalIndex(target) || [];
+  const registeredDecorators = ParameterDecoratorFactory.getRegisteredDecorators();
+  const result: ParametersDecoratorsIndexes = {};
 
-  return {
-    Context,
-    Definition,
-    Configuration,
-    Dispose,
-    Use,
-    Global,
-  };
+  for (const decoratorName of registeredDecorators) {
+    result[decoratorName] = getParameterIndexes(decoratorName, target);
+  }
+
+  return result;
 };

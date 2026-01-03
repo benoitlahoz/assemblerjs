@@ -50,6 +50,45 @@ The entry point assemblage is called last.
 Called when disposing the assembler via the `dispose` method injected by the `@Dispose` decorator.
 This will be called like the `onInit` method, walking through the dependency tree, except for the entry point assemblage, called last.
 
+## Parameter Decorators
+
+`assembler.js` provides several built-in parameter decorators for dependency injection:
+
+- `@Context()` - Injects the `AssemblerContext` instance
+- `@Configuration()` - Injects configuration values
+- `@Definition()` - Injects the assemblage definition
+- `@Dispose()` - Injects the dispose function
+- `@Use(identifier)` - Injects registered objects by identifier
+- `@Global(identifier)` - Injects global objects by identifier
+
+### Creating Custom Decorators
+
+With `ParameterDecoratorFactory`, creating custom parameter decorators is now simple and eliminates boilerplate:
+
+```typescript
+import { ParameterDecoratorFactory } from 'assemblerjs';
+
+// Create a logger decorator (5 lines!)
+export const Logger = ParameterDecoratorFactory.create<string>({
+  name: 'Logger',
+  valueType: 'map',
+  resolver: LoggerResolver,
+  autoRegister: true
+});
+
+// Use it in your classes
+@Assemblage()
+export class MyService implements AbstractAssemblage {
+  constructor(@Logger('app') private logger: any) {}
+}
+```
+
+The factory automatically:
+- Registers the resolver
+- Generates reflection metadata keys
+- Handles parameter storage
+- Maintains type safety
+
 ## Events
 
 `assembler.js` provides an `EventManager` that can be subclassed by any assemblage.

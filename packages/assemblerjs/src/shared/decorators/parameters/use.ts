@@ -1,35 +1,52 @@
-import { getOwnCustomMetadata, defineCustomMetadata } from '@/shared/common';
-import { ReflectParamIndex, ReflectParamValue } from './constants';
+import type { Concrete } from '@assemblerjs/core';
+import { getOwnCustomMetadata } from '@/shared/common';
+import type { AbstractInjectable } from '@/features/injectable/model/abstract';
+import { ParameterDecoratorFactory } from './parameter-decorator-factory';
+import { ResolverStore } from '../resolvers';
+import { getParamValueKey } from './helpers';
+import type { ParameterResolver } from '../types';
 
 /**
- * Injects an object passed with `string` or `symbol` identifier.
+ * Resolver for @Use decorator.
  */
-export const Use = (identifier: string | symbol): ParameterDecorator => {
-  return (target: any, _: string | symbol | undefined, index: number) => {
-    decorateUse(identifier, target, index);
-  };
-};
+class UseResolver implements ParameterResolver {
+  resolve(index: number, injectable: AbstractInjectable<any>, concrete: Concrete<any>): any {
+    const identifiers = getOwnCustomMetadata(getParamValueKey('Use'), concrete);
+    const identifier = identifiers[index];
+    return injectable.privateContext.require(identifier);
+  }
+}
 
 /**
- * Decorator as a wrapper function.
+ * Legacy function for backward compatibility with constructor-decorator.
+ * @param identifier The identifier of the object to inject
+ * @param target The target class
+ * @param index The parameter index
  */
 export const decorateUse = (
   identifier: string | symbol,
   target: any,
   index: number
 ) => {
-  // Get existing indexes for this decorator.
-  const paramIndexes: number[] =
-    getOwnCustomMetadata(ReflectParamIndex.Use, target) || [];
-  paramIndexes.push(index);
-
-  defineCustomMetadata(ReflectParamIndex.Use, paramIndexes, target);
-
-  // Get existing identifiers for this decorator.
-  const identifiers =
-    getOwnCustomMetadata(ReflectParamValue.UseIdentifier, target) || {};
-  identifiers[index] = identifier;
-
-  // Keep the token passed as identifier.
-  defineCustomMetadata(ReflectParamValue.UseIdentifier, identifiers, target);
+  // Call the decorator directly
+  Use(identifier)(target, undefined, index);
 };
+
+/**
+ * Injects an object passed with `string` or `symbol` identifier.
+ * @param identifier The identifier of the object to inject
+ * @returns A parameter decorator
+ */
+export const Use = (() => {
+  // Register the resolver when the decorator is created
+  ResolverStore.register('Use', UseResolver);
+
+  return ParameterDecoratorFactory.create<string | symbol>({
+    name: 'Use',
+    valueType: 'map',
+    resolver: UseResolver,
+    handler: decorateUse, // Register the handler for constructor-decorator
+  });
+})();
+
+
