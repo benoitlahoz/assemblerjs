@@ -55,7 +55,49 @@ export type AssemblerDispose = AbstractAssembler['dispose'];
 /**
  * `Assembler` abstraction.
  */
-export abstract class AbstractAssembler extends AbstractEventManager {
+export interface InjectableResolver {
+  has<T>(identifier: Identifier<T>): boolean;
+  require<T>(
+    identifier: Identifier<T> | string | symbol,
+    configuration?: Record<string, any>
+  ): T;
+  concrete<T>(identifier: Identifier<T>): Concrete<T> | undefined;
+}
+
+export interface ObjectProvider {
+  use<T>(identifier: string | symbol, object: T): T;
+  global(key: string): any | undefined;
+  addGlobal(key: string, value: any): void;
+}
+
+export interface TagResolver {
+  tagged(...tags: string[]): any[];
+}
+
+export interface LifecycleManager {
+  prepareInitHook<T = AbstractAssemblage>(
+    instance: T,
+    configuration?: Record<string, any>
+  ): unknown[];
+}
+
+export interface InjectableRegistrar {
+  register<T>(injection: Injection<T>, instance?: boolean): Injectable<T>;
+}
+
+export interface ResolutionStrategy<T = any> {
+  resolve(injectable: Injectable<T>, configuration?: Record<string, any>): T;
+}
+
+export abstract class AbstractAssembler
+  extends AbstractEventManager
+  implements
+    InjectableResolver,
+    ObjectProvider,
+    TagResolver,
+    LifecycleManager,
+    InjectableRegistrar
+{
   public abstract privateContext: AssemblerContext;
   public abstract publicContext: AssemblerContext;
   public abstract size: number;

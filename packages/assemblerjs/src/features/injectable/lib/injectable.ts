@@ -10,21 +10,28 @@ import type {
 import { isAssemblage, getDefinition, getDefinitionValue } from '@/features/assemblage';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
-import { registerEvents, unregisterEvents } from '@/features/events';
+import { unregisterEvents } from '@/features/events';
+import { InjectableBuilder } from './injectable-builder';
+import type { AbstractInjectable } from '../model/abstract';
 import {
   resolveDependencies,
-  resolveInjectableParameters,
 } from './dependencies';
-import { AbstractInjectable } from '../model/abstract';
 
+/**
+ * Represents an injectable assemblage that can be built into instances.
+ * Handles dependency resolution, configuration management, and lifecycle.
+ */
 export class Injectable<T> implements AbstractInjectable<T> {
+  /** Unique identifier for this injectable. */
   public readonly identifier: Identifier<T> | string | symbol;
+  /** The concrete class to instantiate. */
   public readonly concrete: Concrete<T>;
+  /** Base configuration for this injectable. */
   public readonly configuration: Record<string, any>;
 
   private dependenciesIds: Identifier<unknown>[] = [];
-
-  private singletonInstance: T | undefined;
+  protected singletonInstance: T | undefined;
+  private builder: InjectableBuilder<T>;
 
   public static of<TNew>(
     buildable: Buildable<TNew>,
@@ -46,6 +53,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
     if (!isAssemblage(this.concrete)) {
       throw new Error(`Class '${this.concrete.name}' is not an Assemblage.`);
     }
+
+    this.builder = new InjectableBuilder(this);
 
     // Set context metadata for concrete assemblage.
     defineCustomMetadata(
@@ -114,49 +123,23 @@ export class Injectable<T> implements AbstractInjectable<T> {
   }
 
   /**
-   * Instantiate the assemblage or get its singleton instance.
+   * Instantiate the assemblage.
    *
    * @param { Record<string, any> } [configuration] Optional configuration to pass to
-   * a transient assemblage.
-   * If not provided, the global assemblage's configuration will be used.
-   * If the assemblage is a singleton, this parameter will be ignored.
+   * the assemblage.
    * @returns { T } The assemblage instance.
    */
   public build(configuration?: Record<string, any>): T {
-    if (this.singletonInstance) return this.singletonInstance;
-
-    const params = resolveInjectableParameters(this);
-    const instance = new this.concrete(...params) as T;
-
-    // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
-    registerEvents(this, instance);
-
-    if (this.isSingleton) {
-      this.singletonInstance = instance;
-      this.privateContext.prepareInitHook(instance, this.configuration);
-
-      return this.singletonInstance;
-    }
-
-    let config = {};
-    if (this.configuration) {
-      config = this.configuration;
-    }
-    if (configuration) {
-      config = { ...config, ...configuration };
-    }
-
-    // Call hook for transient instances.
-    HookManager.callHook(instance, 'onInit', this.publicContext, config);
-
-    return instance;
+    return this.builder.build(configuration);
   }
 
   /**
-   * Injectable assemblage's dependencies passed as 'constructor' parameters.
+   * Sets the singleton instance for this injectable.
+   * Used internally by resolution strategies.
+   * @param instance The singleton instance.
    */
-  public get dependencies(): (Identifier<unknown> | any)[] {
-    return this.dependenciesIds;
+  public setSingletonInstance(instance: T): void {
+    this.singletonInstance = instance;
   }
 
   /**
@@ -171,6 +154,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
    */
   public get isSingleton(): boolean {
     return getDefinitionValue('singleton', this.concrete);
+  }
+
+  /**
+   * Injectable assemblage's dependencies passed as 'constructor' parameters.
+   */
+  public get dependencies(): (Identifier<unknown> | any)[] {
+    return this.dependenciesIds;
   }
 
   /**

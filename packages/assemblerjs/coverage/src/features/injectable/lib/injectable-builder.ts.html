@@ -3,7 +3,7 @@
 <html lang="en">
 
 <head>
-    <title>Code coverage report for src/shared/decorators/parameters/index-factory.ts</title>
+    <title>Code coverage report for src/features/injectable/lib/injectable-builder.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../../../prettify.css" />
     <link rel="stylesheet" href="../../../../base.css" />
@@ -19,7 +19,7 @@
 <body>
 <div class='wrapper'>
     <div class='pad1'>
-        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/shared/decorators/parameters</a> index-factory.ts</h1>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">src/features/injectable/lib</a> injectable-builder.ts</h1>
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>9/9</span>
+                <span class='fraction'>10/10</span>
             </div>
         
             
@@ -103,87 +103,99 @@
 <a name='L38'></a><a href='#L38'>38</a>
 <a name='L39'></a><a href='#L39'>39</a>
 <a name='L40'></a><a href='#L40'>40</a>
-<a name='L41'></a><a href='#L41'>41</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">40x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">35x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { defineCustomMetadata, getOwnCustomMetadata } from '@/shared/common';
-import { ReflectParamIndex } from './constants';
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">36x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { registerEvents } from '@/features/events';
+import { resolveInjectableParameters } from './dependencies';
+import type { AbstractInjectable } from '../model/abstract';
 &nbsp;
 /**
- * Prepare `Assembler` to inject specific object in a dependency's constructor parameters.
+ * Handles the building of injectable instances, including parameter resolution and configuration merging.
  */
-const paramIndexDecoratorFactory = (key: string) =&gt; (): ParameterDecorator =&gt; {
-  return (target: any, _: string | symbol | undefined, index: number) =&gt; {
-    const paramIndexes: number[] = getOwnCustomMetadata(key, target) || [];
-    paramIndexes.push(index);
+export class InjectableBuilder&lt;T&gt; {
+  /**
+   * Creates an instance of InjectableBuilder.
+   * @param injectable The injectable to build instances for.
+   */
+  constructor(private injectable: AbstractInjectable&lt;T&gt;) {}
 &nbsp;
-    // Keep indexes of parameters that are decorated, just in case
-    // it has been added multiple times in constructor's parameters.
-    defineCustomMetadata(key, paramIndexes, target);
-  };
-};
+  /**
+   * Builds a new instance of the injectable's concrete class.
+   * Resolves constructor parameters, merges configurations, and registers events.
+   * @param configuration Optional runtime configuration to merge with the injectable's base configuration.
+   * @returns The built instance.
+   */
+  public build(configuration?: Record&lt;string, any&gt;): T {
+    const mergedConfig = this.mergeConfiguration(configuration);
+    const params = resolveInjectableParameters(this.injectable, mergedConfig);
+    const instance = new this.injectable.concrete(...params) as T;
 &nbsp;
-/**
- * Injects the Assembler's context.
- */
-const Context = paramIndexDecoratorFactory(ReflectParamIndex.Context);
+    // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
+    registerEvents(this.injectable, instance);
 &nbsp;
-/**
- * Injects the assemblage's configuration object.
- */
-const Configuration = paramIndexDecoratorFactory(
-  ReflectParamIndex.Configuration
-);
+    return instance;
+  }
 &nbsp;
-/**
- * Injects the assemblage's definition object.
- */
-const Definition = paramIndexDecoratorFactory(ReflectParamIndex.Definition);
-&nbsp;
-/**
- * Injects the Assembler's 'dispose' method.
- */
-const Dispose = paramIndexDecoratorFactory(ReflectParamIndex.Dispose);
-&nbsp;
-export { Context, Configuration, Definition, Dispose };
-&nbsp;</pre></td></tr></table></pre>
+  /**
+   * Merges the injectable's base configuration with optional runtime configuration.
+   * Runtime configuration takes precedence over base configuration.
+   * @param configuration Optional runtime configuration.
+   * @returns The merged configuration object.
+   */
+  private mergeConfiguration(configuration?: Record&lt;string, any&gt;): Record&lt;string, any&gt; {
+    const baseConfig = this.injectable.configuration || <span class="branch-1 cbranch-no" title="branch not covered" >{};</span>
+    if (configuration) {
+      return { ...baseConfig, ...configuration };
+    }
+    return baseConfig;
+  }
+}</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->

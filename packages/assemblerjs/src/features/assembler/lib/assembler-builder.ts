@@ -5,7 +5,7 @@ import { HookManager } from './hook-manager';
 export class AssemblerBuilder {
   constructor(private assembler: any) {}
 
-  public build<T>(entry: Concrete<T>): T {
+  public build<T>(entry: Concrete<T>, configuration?: Record<string, any>): T {
     // Entry assemblage is always a singleton.
     setDefinitionValue('singleton', true, entry);
 
@@ -13,7 +13,7 @@ export class AssemblerBuilder {
     const injectable = this.assembler.register([entry]);
 
     // Instance of entry assemblage will build recursively every dependency.
-    const instance = this.assembler.require(injectable.identifier);
+    const instance = this.assembler.require(injectable.identifier, configuration);
 
     // Remove entry instance from cache.
     const root = this.assembler.hookManager.getCache().find(

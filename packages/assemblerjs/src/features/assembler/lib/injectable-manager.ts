@@ -7,11 +7,14 @@ import {
 import { Injectable } from '@/features/injectable';
 import type { AssemblerContext, AssemblerPrivateContext } from '../model/types';
 import { HookManager } from './hook-manager';
+import { SingletonStrategy, TransientStrategy } from './resolution-strategies';
 
 export class InjectableManager {
   private injectables: Map<Identifier<unknown>, Injectable<unknown>> = new Map();
   private privateContext!: AssemblerPrivateContext;
   private publicContext!: AssemblerContext;
+  private singletonStrategy = new SingletonStrategy();
+  private transientStrategy = new TransientStrategy();
 
   public setContexts(privateContext: AssemblerPrivateContext, publicContext: AssemblerContext): void {
     this.privateContext = privateContext;
@@ -71,9 +74,11 @@ export class InjectableManager {
       identifier as Identifier<T>
     )! as Injectable<T>;
 
-    const built = injectable.build(configuration);
-
-    return built;
+    if (injectable.isSingleton) {
+      return this.singletonStrategy.resolve(injectable, configuration);
+    } else {
+      return this.transientStrategy.resolve(injectable, configuration);
+    }
   }
 
   public concrete<T>(identifier: Identifier<T>): any | undefined {

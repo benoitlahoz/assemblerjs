@@ -23,12 +23,13 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * Build the dependencies tree from an assemblage as entry point.
    *
    * @param { Concrete<T> } entry An assemblage concrete class.
+   * @param { Record<string, any> } configuration Optional configuration to pass to the build process.
    * @returns { T } An instance of `entry` marked as singleton.
    */
-  public static build<T>(entry: Concrete<T>): T {
+  public static build<T>(entry: Concrete<T>, configuration?: Record<string, any>): T {
     const assembler = new Assembler();
     const builder = new AssemblerBuilder(assembler);
-    return builder.build(entry);
+    return builder.build(entry, configuration);
   }
 
   protected injectableManager: InjectableManager;

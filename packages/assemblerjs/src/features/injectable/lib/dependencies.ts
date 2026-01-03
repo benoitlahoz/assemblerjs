@@ -7,10 +7,12 @@ import { AbstractInjectable } from '@/features/injectable';
  * Get an array of parameters from an `Injectable` constructor, including decorated ones.
  *
  * @param { Injectable<T> } injectable The `Injectable` to get constructor's parameters.
+ * @param { Record<string, any> } configuration Optional configuration to override the injectable's configuration.
  * @returns { any[] } An array of passed parameters.
  */
 export const resolveInjectableParameters = <T>(
-  injectable: AbstractInjectable<T>
+  injectable: AbstractInjectable<T>,
+  configuration?: Record<string, any>
 ) => {
   const parameters: any[] = [];
 
@@ -28,7 +30,7 @@ export const resolveInjectableParameters = <T>(
     }
 
     if (indexes.Configuration.includes(i)) {
-      parameters.push(injectable.configuration);
+      parameters.push(configuration || injectable.configuration);
       i++;
       continue;
     }
