@@ -25,8 +25,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('5. Child initialized');
       }
 
+      onInited() {
+        executionLog.push('7. Child inited');
+      }
+
       onDispose() {
-        executionLog.push('8. Child disposed');
+        executionLog.push('10. Child disposed');
       }
     }
 
@@ -47,8 +51,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('6. Parent initialized');
       }
 
+      onInited() {
+        executionLog.push('8. Parent inited');
+      }
+
       onDispose() {
-        executionLog.push('7. Parent disposed');
+        executionLog.push('9. Parent disposed');
       }
     }
 
@@ -63,6 +71,8 @@ describe('Lifecycle Hooks Execution Order', () => {
       '4. Parent constructed',
       '5. Child initialized',
       '6. Parent initialized',
+      '7. Child inited',
+      '8. Parent inited',
     ]);
 
     // Dispose triggers cleanup
@@ -76,8 +86,10 @@ describe('Lifecycle Hooks Execution Order', () => {
       '4. Parent constructed',
       '5. Child initialized',
       '6. Parent initialized',
-      '8. Child disposed',
-      '7. Parent disposed',
+      '7. Child inited',
+      '8. Parent inited',
+      '10. Child disposed',
+      '9. Parent disposed',
     ]);
   });
 
@@ -96,8 +108,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('7. ServiceA initialized');
       }
 
+      onInited() {
+        executionLog.push('10. ServiceA inited');
+      }
+
       onDispose() {
-        executionLog.push('12. ServiceA disposed');
+        executionLog.push('15. ServiceA disposed');
       }
     }
 
@@ -115,8 +131,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('8. ServiceB initialized');
       }
 
+      onInited() {
+        executionLog.push('11. ServiceB inited');
+      }
+
       onDispose() {
-        executionLog.push('11. ServiceB disposed');
+        executionLog.push('14. ServiceB disposed');
       }
     }
 
@@ -138,8 +158,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('9. ServiceC initialized');
       }
 
+      onInited() {
+        executionLog.push('12. ServiceC inited');
+      }
+
       onDispose() {
-        executionLog.push('10. ServiceC disposed');
+        executionLog.push('13. ServiceC disposed');
       }
     }
 
@@ -155,6 +179,9 @@ describe('Lifecycle Hooks Execution Order', () => {
       '7. ServiceA initialized',
       '8. ServiceB initialized',
       '9. ServiceC initialized',
+      '11. ServiceB inited',
+      '10. ServiceA inited',
+      '12. ServiceC inited',
     ]);
 
     await app.dispose();
@@ -169,9 +196,12 @@ describe('Lifecycle Hooks Execution Order', () => {
       '7. ServiceA initialized',
       '8. ServiceB initialized',
       '9. ServiceC initialized',
-      '12. ServiceA disposed',
-      '11. ServiceB disposed',
-      '10. ServiceC disposed',
+      '11. ServiceB inited',
+      '10. ServiceA inited',
+      '12. ServiceC inited',
+      '15. ServiceA disposed',
+      '14. ServiceB disposed',
+      '13. ServiceC disposed',
     ]);
   });
 
@@ -191,8 +221,13 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('5. AsyncChild initialized');
       }
 
+      async onInited() {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        executionLog.push('7. AsyncChild inited');
+      }
+
       onDispose() {
-        executionLog.push('8. AsyncChild disposed');
+        executionLog.push('10. AsyncChild disposed');
       }
     }
 
@@ -214,9 +249,14 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('6. AsyncParent initialized');
       }
 
+      async onInited() {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        executionLog.push('8. AsyncParent inited');
+      }
+
       async onDispose() {
         await new Promise((resolve) => setTimeout(resolve, 10));
-        executionLog.push('7. AsyncParent disposed');
+        executionLog.push('9. AsyncParent disposed');
       }
     }
 
@@ -232,6 +272,8 @@ describe('Lifecycle Hooks Execution Order', () => {
       '4. AsyncParent constructed',
       '5. AsyncChild initialized',
       '6. AsyncParent initialized',
+      '7. AsyncChild inited',
+      '8. AsyncParent inited',
     ]);
 
     await app.dispose();
@@ -243,7 +285,9 @@ describe('Lifecycle Hooks Execution Order', () => {
       '4. AsyncParent constructed',
       '5. AsyncChild initialized',
       '6. AsyncParent initialized',
-      '8. AsyncChild disposed',
+      '7. AsyncChild inited',
+      '8. AsyncParent inited',
+      '10. AsyncChild disposed',
     ]);
   });
 
@@ -268,6 +312,12 @@ describe('Lifecycle Hooks Execution Order', () => {
         executionLog.push('onInit called with context and config');
       }
 
+      onInited(context: AssemblerContext, configuration: Record<string, any>) {
+        expect(context).toBe(contextReceived);
+        expect(configuration).toEqual(config);
+        executionLog.push('onInited called with context and config');
+      }
+
       onDispose(context: AssemblerContext, configuration: Record<string, any>) {
         expect(context).toBe(contextReceived);
         expect(configuration).toEqual(config);
@@ -282,6 +332,7 @@ describe('Lifecycle Hooks Execution Order', () => {
     expect(configReceived).toEqual({});
     expect(executionLog).toContain('onRegister called with context and config');
     expect(executionLog).toContain('onInit called with context and config');
+    expect(executionLog).toContain('onInited called with context and config');
 
     await app.dispose();
 

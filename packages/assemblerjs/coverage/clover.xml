@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767527077293" clover="3.2.0">
-  <project timestamp="1767527077293" name="All files">
+<coverage generated="1767529846212" clover="3.2.0">
+  <project timestamp="1767529846212" name="All files">
     <metrics statements="670" coveredstatements="584" conditionals="234" coveredconditionals="179" methods="266" coveredmethods="215" elements="1170" coveredelements="978" complexity="0" loc="670" ncloc="670" packages="21" files="50" classes="50"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
@@ -307,11 +307,11 @@
         <line num="13" count="268" type="stmt"/>
         <line num="14" count="268" type="stmt"/>
         <line num="16" count="268" type="cond" truecount="2" falsecount="0"/>
-        <line num="17" count="31" type="cond" truecount="2" falsecount="0"/>
-        <line num="18" count="6" type="stmt"/>
-        <line num="21" count="6" type="stmt"/>
-        <line num="23" count="6" type="stmt"/>
-        <line num="26" count="25" type="stmt"/>
+        <line num="17" count="39" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="8" type="stmt"/>
+        <line num="21" count="7" type="stmt"/>
+        <line num="23" count="8" type="stmt"/>
+        <line num="26" count="31" type="stmt"/>
         <line num="31" count="51" type="stmt"/>
         <line num="37" count="87" type="stmt"/>
         <line num="41" count="87" type="stmt"/>
