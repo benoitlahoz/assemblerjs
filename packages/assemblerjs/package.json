@@ -48,6 +48,7 @@
   ],
   "scripts": {
     "test": "vitest --coverage --passWithNoTests",
+    "bench": "vitest bench",
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
   },
   "dependencies": {

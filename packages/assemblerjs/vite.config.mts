@@ -79,7 +79,7 @@ export default defineConfig(() => ({
     environment: 'node',
     include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     esbuild: {
-    tsconfigRaw: {
+      tsconfigRaw: {
         extends: './tsconfig.spec.json',
       },
     },
@@ -88,5 +88,9 @@ export default defineConfig(() => ({
       reportsDirectory: './coverage',
       provider: 'istanbul' as const,
     },
+  },
+  benchmark: {
+    include: ['e2e/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default' /* , 'json', 'html' */],
   },
 }));
