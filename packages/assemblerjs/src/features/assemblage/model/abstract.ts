@@ -47,8 +47,12 @@ export abstract class AbstractAssemblage {
    * Called when instance of class is disposed.
    *
    * @param { AssemblerContext } context The assembler's context.
+   * @param { Record<string, any> } configuration The configuration object.
    */
-  public abstract onDispose?(context: AssemblerContext): void;
+  public abstract onDispose?(
+    context: AssemblerContext,
+    configuration?: Record<string, any>
+  ): void;
 
   /**
    * Dispose the assemblage instance.

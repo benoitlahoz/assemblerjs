@@ -28,6 +28,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
   public readonly concrete: Concrete<T>;
   /** Base configuration for this injectable. */
   public readonly configuration: Record<string, any>;
+  /** Merged configuration used during build (base + runtime). */
+  private mergedConfiguration?: Record<string, any>;
 
   private dependenciesIds: Identifier<unknown>[] = [];
   protected singletonInstance: T | undefined;
@@ -111,7 +113,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
         this.singletonInstance,
         'onDispose',
         this.publicContext,
-        this.configuration
+        this.mergedConfiguration || this.configuration
       );
       clearInstance(this.singletonInstance, this.concrete as any);
     }
@@ -133,9 +135,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
    * Sets the singleton instance for this injectable.
    * Used internally by resolution strategies.
    * @param instance The singleton instance.
+   * @param mergedConfiguration Optional merged configuration to store.
    */
-  public setSingletonInstance(instance: T): void {
+  public setSingletonInstance(instance: T, mergedConfiguration?: Record<string, any>): void {
     this.singletonInstance = instance;
+    if (mergedConfiguration) {
+      this.mergedConfiguration = mergedConfiguration;
+    }
   }
 
   /**

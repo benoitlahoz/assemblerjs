@@ -10,7 +10,9 @@ export class SingletonStrategy implements ResolutionStrategy {
       return this.cache.get(key);
     }
     const instance = injectable.build(configuration);
-    injectable.setSingletonInstance(instance);
+    // Merge configuration: base + runtime
+    const mergedConfig = configuration ? { ...injectable.configuration, ...configuration } : injectable.configuration;
+    injectable.setSingletonInstance(instance, mergedConfig);
     this.cache.set(key, instance);
     injectable.privateContext.prepareInitHook(instance, injectable.configuration);
     return instance;

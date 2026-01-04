@@ -72,7 +72,39 @@ app.start(); // Output: "App started!"
 
 ### Assemblage
 
-The main building block of `assembler.js`. An **Assemblage** is a class decorated with `@Assemblage` that can be injected as a dependency. Classes should implement `AbstractAssemblage` for type safety.
+The main building block of `assembler.js`. An **Assemblage** is a class decorated with `@Assemblage` that can be injected as a dependency.
+
+**For concrete services**, implement `AbstractAssemblage` directly:
+
+```typescript
+@Assemblage()
+export class Logger implements AbstractAssemblage {
+  log(message: string) {
+    console.log(message);
+  }
+}
+```
+
+**For abstractions** (interfaces), create an abstract class that implements `AbstractAssemblage` and define your contract:
+
+```typescript
+// Define the abstraction
+abstract class AbstractLogger implements AbstractAssemblage {
+  abstract log(message: string): void;
+  abstract error(message: string): void;
+}
+
+// Implementations only implement the abstraction (which already extends AbstractAssemblage)
+@Assemblage()
+class ConsoleLogger implements AbstractLogger {
+  log(message: string) { console.log(message); }
+  error(message: string) { console.error(message); }
+}
+```
+
+This pattern allows you to swap implementations without changing dependent code (see [Abstraction Pattern](#abstraction-pattern) below).
+
+**Assemblage Configuration:**
 
 ```typescript
 @Assemblage({
@@ -97,38 +129,55 @@ Dependencies are declared in the `inject` property and injected via constructor:
 @Assemblage({
   inject: [
     [ConcreteClass],                              // Simple injection
-    [AbstractClass, ConcreteClass],               // Interface binding
+    [AbstractClass, ConcreteClass],               // Interface binding (AbstractClass must implement AbstractAssemblage)
     [AbstractClass, ConcreteClass, { config }],   // With configuration
   ],
 })
 class MyApp implements AbstractAssemblage {
   constructor(
     private service: ConcreteClass,
-    private abstraction: AbstractClass
+    private abstraction: AbstractClass  // Type is the abstraction, not the concrete implementation
   ) {}
 }
 ```
 
+**Key point:** When using interface binding `[AbstractClass, ConcreteClass]`:
+- The **first** parameter is your abstraction (which implements `AbstractAssemblage`)
+- The **second** parameter is the concrete implementation (which implements the abstraction)
+- The injected type is always the abstraction, allowing easy implementation swapping
+
 ### Abstraction Pattern
 
-`assembler.js` supports the abstraction pattern, allowing you to define interfaces (abstract classes) and swap implementations easily:
+`assembler.js` follows a powerful abstraction pattern for dependency injection:
+
+**The Pattern:**
+1. **Define an abstraction** that implements `AbstractAssemblage` with your contract (methods/properties)
+2. **Create concrete implementations** that implement your abstraction (NOT AbstractAssemblage directly)
+3. **Inject using the abstraction** as the type, allowing easy implementation swapping
+
+**Complete Example:**
 
 ```typescript
-// 1. Define an abstract class that implements AbstractAssemblage
+// 1. Define the abstraction - implements AbstractAssemblage + your contract
 abstract class AbstractLogger implements AbstractAssemblage {
   abstract log(message: string): void;
   abstract error(message: string): void;
+  abstract warn(message: string): void;  // Your custom methods
 }
 
-// 2. Create concrete implementations
+// 2. Create concrete implementations - implement the abstraction
 @Assemblage()
 class ConsoleLogger implements AbstractLogger {
   log(message: string) {
-    console.log(`[LOG] \${message}`);
+    console.log(`[LOG] ${message}`);
   }
   
   error(message: string) {
-    console.error(`[ERROR] \${message}`);
+    console.error(`[ERROR] ${message}`);
+  }
+  
+  warn(message: string) {
+    console.warn(`[WARN] ${message}`);
   }
 }
 
@@ -141,22 +190,27 @@ class FileLogger implements AbstractLogger {
   error(message: string) {
     // Write error to file
   }
+  
+  warn(message: string) {
+    // Write warning to file
+  }
 }
 
-// 3. Use the abstraction, not the concrete class
+// 3. Use the abstraction - bind to concrete implementation
 @Assemblage({
   inject: [
     [AbstractLogger, ConsoleLogger], // Bind abstraction to implementation
   ],
 })
 class Application implements AbstractAssemblage {
-  constructor(private logger: AbstractLogger) {
+  constructor(private logger: AbstractLogger) {  // Type is abstract
     // You can now easily swap ConsoleLogger with FileLogger
     // without changing Application code
   }
   
   start() {
     this.logger.log('Application started');
+    this.logger.warn('This is a warning');
   }
 }
 ```
@@ -166,6 +220,9 @@ class Application implements AbstractAssemblage {
 - ✅ **Testability** - Easy to mock abstract classes in tests
 - ✅ **Flexibility** - Change implementations without modifying dependent code
 - ✅ **Type Safety** - TypeScript ensures implementations match the contract
+- ✅ **Contract Enforcement** - Abstractions define the interface, implementations must comply
+
+**Important:** The abstraction (`AbstractLogger`) is what implements `AbstractAssemblage`. Concrete implementations (`ConsoleLogger`, `FileLogger`) only need to implement the abstraction.
 
 ### Singleton vs Transient
 
@@ -185,13 +242,14 @@ Dependencies are registered and built recursively from the entry assemblage. The
 
 ### 1. `onRegister` (Static)
 
-Called when the assemblage is registered. Other dependencies may or may not be registered yet.
+Called when the assemblage is registered. Other dependencies may or may not be registered yet. Receives the base configuration from the assemblage definition, not the runtime configuration.
 
 ```typescript
 @Assemblage()
 class MyService implements AbstractAssemblage {
   static onRegister(context: AssemblerContext, configuration: Record<string, any>) {
     console.log('Service registered');
+    // configuration = base config from @Assemblage() definition
   }
 }
 ```
@@ -223,9 +281,13 @@ class MyService implements AbstractAssemblage {
 }
 ```
 
+**Important:** The `configuration` parameter contains:
+- For the **entry point**: The configuration passed to `Assembler.build(EntryPoint, config)`
+- For **dependencies**: Their base configuration from `@Assemblage({ inject: [..., config] })`
+
 ### 4. `onDispose`
 
-Called when disposing the assembler. Use for cleanup (closing connections, releasing resources).
+Called when disposing the assembler. Use for cleanup (closing connections, releasing resources). **Disposal happens in reverse dependency order** - dependencies are disposed before their dependents.
 
 ```typescript
 @Assemblage()
@@ -236,6 +298,10 @@ class DatabaseService implements AbstractAssemblage {
   }
 }
 ```
+
+**Important:** The `configuration` parameter contains:
+- For the **entry point**: The configuration passed to `Assembler.build(EntryPoint, config)`
+- For **dependencies**: Their base configuration from `@Assemblage({ inject: [..., config] })`
 
 ### Execution Order Example
 
@@ -251,17 +317,30 @@ class ChildService implements AbstractAssemblage {
 @Assemblage({ inject: [[ChildService]] })
 class ParentService implements AbstractAssemblage {
   static onRegister() { console.log('2. Parent registered'); }
-  constructor(child: ChildService) { console.log('4. Parent constructed'); }
+  
+  constructor(
+    child: ChildService,
+    @Dispose() public dispose: () => void  // Inject dispose function
+  ) { 
+    console.log('4. Parent constructed'); 
+  }
+  
   onInit() { console.log('6. Parent initialized'); }
   onDispose() { console.log('7. Parent disposed'); }
 }
 
 const app = Assembler.build(ParentService);
-// Triggers onInit
+// Output: 1-6 (registration, construction, initialization)
 
-app.dispose();
-// Triggers onDispose
+await app.dispose();
+// Output: 8, 7 (disposal in reverse order: dependencies first, then parent)
 ```
+
+**Key Points:**
+- **Registration & Construction:** Top-down order (parent registers dependencies first)
+- **Initialization (`onInit`):** Bottom-up order (dependencies initialize first, entry point last)
+- **Disposal (`onDispose`):** Dependencies are disposed **before** their dependents
+- **Using `dispose()`:** Must be injected via `@Dispose()` decorator in the entry point constructor
 
 ## Parameter Decorators
 
@@ -271,7 +350,7 @@ app.dispose();
 
 #### `@Context()`
 
-Injects the `AssemblerContext` instance, providing access to the DI container.
+Injects the `AssemblerContext` instance, providing access to a subset of the container's methods.
 
 ```typescript
 @Assemblage()
@@ -322,7 +401,9 @@ class MyService implements AbstractAssemblage {
 
 #### `@Dispose()`
 
-Injects the dispose function to clean up resources programmatically.
+Injects the dispose function to clean up resources programmatically. **Required for the entry point** to access the `dispose()` method.
+
+**⚠️ Important:** This injects the dispose function for the **entire container** (all assemblages), not just the current assemblage. Calling `dispose()` will trigger cleanup for all registered assemblages. Use with caution.
 
 ```typescript
 @Assemblage()
@@ -330,10 +411,14 @@ class MyService implements AbstractAssemblage {
   constructor(@Dispose() private dispose: () => void) {}
 
   cleanup() {
-    // Manually trigger disposal
+    // ⚠️ This disposes the ENTIRE container, not just MyService
     this.dispose();
   }
 }
+
+// Usage
+const app = Assembler.build(MyService);
+await app.dispose(); // Calls onDispose on all assemblages
 ```
 
 #### `@Use(identifier)`
@@ -560,7 +645,7 @@ class PluginManager implements AbstractAssemblage {
 
 ## Assembler API
 
-The `Assembler` class provides static methods for bootstrapping and managing the DI container:
+The `Assembler` class **is the DI container**. It provides static methods for bootstrapping and managing assemblages:
 
 ```typescript
 import { Assembler } from 'assemblerjs';
@@ -568,7 +653,7 @@ import { Assembler } from 'assemblerjs';
 // Build and initialize an application
 const app = Assembler.build<MyApp>(MyApp, configuration?);
 
-// Get the AssemblerContext (container)
+// Get the AssemblerContext (provides access to container methods)
 const context = Assembler.context;
 
 // Dispose all resources and cleanup
@@ -577,7 +662,7 @@ await app.dispose();
 
 ## AssemblerContext API
 
-The `AssemblerContext` is the DI container managing all assemblages:
+The `AssemblerContext` provides access to a subset of the container's methods for dependency management. The actual container is `Assembler`.
 
 ```typescript
 class AssemblerContext {

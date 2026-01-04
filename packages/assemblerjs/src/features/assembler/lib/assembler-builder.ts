@@ -30,12 +30,13 @@ export class AssemblerBuilder {
     // Call onInit on every dependency of our entry point, from the less dependent to the more dependent.
     this.assembler.hookManager.callInitHooks(this.assembler.publicContext);
 
-    // Call hook on entry assemblage.
+    // Call hook on entry assemblage with the configuration passed to build().
+    const mergedConfig = configuration ? { ...injectable.configuration, ...configuration } : injectable.configuration;
     HookManager.callHook(
       instance,
       'onInit',
       this.assembler.publicContext,
-      injectable.configuration
+      mergedConfig
     );
 
     // Call onInited on every dependency of our entry point, in reverse order.
@@ -45,7 +46,7 @@ export class AssemblerBuilder {
       instance,
       'onInited',
       this.assembler.publicContext,
-      injectable.configuration
+      mergedConfig
     );
 
     // Clean up.
