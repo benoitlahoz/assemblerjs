@@ -136,4 +136,4 @@ MIT © Benoît Lahoz
 
 ---
 
-**Made with ❤️ for modern TypeScript applications**
+**Made with ❤️ in Marseille**
