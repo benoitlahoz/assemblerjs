@@ -6,14 +6,14 @@ import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
 
 /**
  * Helper function to determine the decorator type for a given parameter index.
+ * Now uses dynamic decorator registration instead of hardcoded names.
  */
 const getDecoratorType = (indexes: ReturnType<typeof getDecoratedParametersIndexes>, index: number): string | null => {
-  if (indexes.Context.includes(index)) return 'Context';
-  if (indexes.Configuration.includes(index)) return 'Configuration';
-  if (indexes.Definition.includes(index)) return 'Definition';
-  if (indexes.Dispose.includes(index)) return 'Dispose';
-  if (indexes.Use.includes(index)) return 'Use';
-  if (indexes.Global.includes(index)) return 'Global';
+  for (const [decoratorName, decoratorIndexes] of Object.entries(indexes)) {
+    if (decoratorIndexes.includes(index)) {
+      return decoratorName;
+    }
+  }
   return null;
 };
 
@@ -66,14 +66,10 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
 
   let i = 0;
   for (const dependency of paramTypes) {
-    if (
-      indexes.Context.includes(i) ||
-      indexes.Configuration.includes(i) ||
-      indexes.Definition.includes(i) ||
-      indexes.Dispose.includes(i) ||
-      indexes.Use.includes(i) ||
-      indexes.Global.includes(i)
-    ) {
+    // Check if this parameter has any decorator
+    const hasDecorator = Object.values(indexes).some(decoratorIndexes => decoratorIndexes.includes(i));
+    
+    if (hasDecorator) {
       i++;
       continue;
     }

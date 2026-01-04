@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767520086308" clover="3.2.0">
-  <project timestamp="1767520086308" name="All files">
-    <metrics statements="643" coveredstatements="557" conditionals="238" coveredconditionals="182" methods="258" coveredmethods="208" elements="1139" coveredelements="947" complexity="0" loc="643" ncloc="643" packages="20" files="46" classes="46"/>
+<coverage generated="1767520513931" clover="3.2.0">
+  <project timestamp="1767520513931" name="All files">
+    <metrics statements="640" coveredstatements="554" conditionals="220" coveredconditionals="165" methods="259" coveredmethods="209" elements="1119" coveredelements="928" complexity="0" loc="640" ncloc="640" packages="20" files="46" classes="46"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
       <file name="awaitable.service.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/e2e/fixtures/awaitable-simple/awaitable.service.ts">
@@ -122,7 +122,7 @@
       <file name="helpers.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/helpers.ts">
         <metrics statements="6" coveredstatements="5" conditionals="2" coveredconditionals="1" methods="3" coveredmethods="2"/>
         <line num="12" count="12" type="stmt"/>
-        <line num="13" count="393" type="cond" truecount="1" falsecount="1"/>
+        <line num="13" count="345" type="cond" truecount="1" falsecount="1"/>
         <line num="16" count="12" type="stmt"/>
         <line num="19" count="0" type="stmt"/>
         <line num="22" count="12" type="stmt"/>
@@ -197,12 +197,12 @@
         <line num="130" count="490" type="stmt"/>
         <line num="133" count="70" type="stmt"/>
         <line num="142" count="12" type="stmt"/>
-        <line num="145" count="343" type="cond" truecount="1" falsecount="1"/>
+        <line num="145" count="295" type="cond" truecount="1" falsecount="1"/>
         <line num="146" count="0" type="stmt"/>
-        <line num="148" count="343" type="stmt"/>
+        <line num="148" count="295" type="stmt"/>
         <line num="158" count="12" type="stmt"/>
-        <line num="162" count="318" type="stmt"/>
-        <line num="163" count="318" type="stmt"/>
+        <line num="162" count="270" type="stmt"/>
+        <line num="163" count="270" type="stmt"/>
         <line num="174" count="12" type="stmt"/>
         <line num="179" count="24" type="stmt"/>
         <line num="180" count="24" type="stmt"/>
@@ -525,16 +525,13 @@
       </file>
     </package>
     <package name="src.features.injectable.lib">
-      <metrics statements="83" coveredstatements="78" conditionals="50" coveredconditionals="44" methods="22" coveredmethods="20"/>
+      <metrics statements="80" coveredstatements="75" conditionals="32" coveredconditionals="27" methods="23" coveredmethods="21"/>
       <file name="dependencies.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/injectable/lib/dependencies.ts">
-        <metrics statements="31" coveredstatements="31" conditionals="22" coveredconditionals="21" methods="3" coveredmethods="3"/>
-        <line num="10" count="12" type="stmt"/>
-        <line num="11" count="47" type="cond" truecount="2" falsecount="0"/>
-        <line num="12" count="33" type="cond" truecount="2" falsecount="0"/>
-        <line num="13" count="31" type="cond" truecount="2" falsecount="0"/>
-        <line num="14" count="30" type="cond" truecount="2" falsecount="0"/>
-        <line num="15" count="28" type="cond" truecount="2" falsecount="0"/>
-        <line num="16" count="20" type="cond" truecount="1" falsecount="1"/>
+        <metrics statements="29" coveredstatements="29" conditionals="6" coveredconditionals="6" methods="4" coveredmethods="4"/>
+        <line num="11" count="12" type="stmt"/>
+        <line num="12" count="47" type="stmt"/>
+        <line num="13" count="189" type="cond" truecount="2" falsecount="0"/>
+        <line num="14" count="27" type="stmt"/>
         <line num="17" count="20" type="stmt"/>
         <line num="27" count="12" type="stmt"/>
         <line num="31" count="50" type="stmt"/>
@@ -553,12 +550,13 @@
         <line num="65" count="49" type="stmt"/>
         <line num="67" count="49" type="stmt"/>
         <line num="68" count="49" type="stmt"/>
-        <line num="69" count="47" type="cond" truecount="2" falsecount="0"/>
-        <line num="77" count="27" type="stmt"/>
-        <line num="78" count="27" type="stmt"/>
-        <line num="81" count="20" type="stmt"/>
-        <line num="82" count="20" type="stmt"/>
-        <line num="85" count="49" type="stmt"/>
+        <line num="70" count="189" type="stmt"/>
+        <line num="72" count="47" type="cond" truecount="2" falsecount="0"/>
+        <line num="73" count="27" type="stmt"/>
+        <line num="74" count="27" type="stmt"/>
+        <line num="77" count="20" type="stmt"/>
+        <line num="78" count="20" type="stmt"/>
+        <line num="81" count="49" type="stmt"/>
       </file>
       <file name="injectable-builder.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/injectable/lib/injectable-builder.ts">
         <metrics statements="10" coveredstatements="10" conditionals="4" coveredconditionals="3" methods="3" coveredmethods="3"/>
@@ -574,7 +572,7 @@
         <line num="43" count="49" type="stmt"/>
       </file>
       <file name="injectable.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/injectable/lib/injectable.ts">
-        <metrics statements="42" coveredstatements="37" conditionals="24" coveredconditionals="20" methods="16" coveredmethods="14"/>
+        <metrics statements="41" coveredstatements="36" conditionals="22" coveredconditionals="18" methods="16" coveredmethods="14"/>
         <line num="32" count="50" type="stmt"/>
         <line num="41" count="50" type="stmt"/>
         <line num="46" count="50" type="stmt"/>
@@ -600,23 +598,22 @@
         <line num="92" count="0" type="stmt"/>
         <line num="96" count="49" type="cond" truecount="2" falsecount="0"/>
         <line num="99" count="1" type="stmt"/>
-        <line num="100" count="48" type="cond" truecount="2" falsecount="0"/>
-        <line num="112" count="3" type="cond" truecount="1" falsecount="1"/>
-        <line num="113" count="3" type="stmt"/>
-        <line num="114" count="3" type="stmt"/>
-        <line num="120" count="3" type="stmt"/>
-        <line num="122" count="3" type="stmt"/>
-        <line num="133" count="50" type="stmt"/>
-        <line num="142" count="42" type="stmt"/>
-        <line num="149" count="1" type="cond" truecount="1" falsecount="1"/>
-        <line num="156" count="94" type="stmt"/>
-        <line num="163" count="0" type="stmt"/>
-        <line num="170" count="0" type="stmt"/>
-        <line num="177" count="50" type="cond" truecount="2" falsecount="0"/>
-        <line num="184" count="50" type="cond" truecount="2" falsecount="0"/>
-        <line num="191" count="15" type="cond" truecount="2" falsecount="0"/>
-        <line num="200" count="49" type="stmt"/>
-        <line num="207" count="60" type="cond" truecount="2" falsecount="0"/>
+        <line num="108" count="3" type="cond" truecount="1" falsecount="1"/>
+        <line num="109" count="3" type="stmt"/>
+        <line num="110" count="3" type="stmt"/>
+        <line num="116" count="3" type="stmt"/>
+        <line num="118" count="3" type="stmt"/>
+        <line num="129" count="50" type="stmt"/>
+        <line num="138" count="42" type="stmt"/>
+        <line num="145" count="1" type="cond" truecount="1" falsecount="1"/>
+        <line num="152" count="46" type="stmt"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="166" count="0" type="stmt"/>
+        <line num="173" count="50" type="cond" truecount="2" falsecount="0"/>
+        <line num="180" count="50" type="cond" truecount="2" falsecount="0"/>
+        <line num="187" count="15" type="cond" truecount="2" falsecount="0"/>
+        <line num="196" count="49" type="stmt"/>
+        <line num="203" count="60" type="cond" truecount="2" falsecount="0"/>
       </file>
     </package>
     <package name="src.features.injectable.model">
@@ -642,7 +639,7 @@
         <line num="31" count="12" type="stmt"/>
         <line num="32" count="0" type="stmt"/>
         <line num="43" count="12" type="stmt"/>
-        <line num="44" count="1410" type="stmt"/>
+        <line num="44" count="1314" type="stmt"/>
         <line num="50" count="12" type="stmt"/>
         <line num="51" count="99" type="cond" truecount="2" falsecount="0"/>
       </file>
