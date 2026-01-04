@@ -84,6 +84,33 @@ export class ParameterDecoratorFactory {
   }
 
   /**
+   * Validates that a parameter doesn't already have a decorator applied.
+   * @param target The target class
+   * @param index The parameter index
+   * @param currentParamIndex The metadata key for the current decorator being applied
+   * @throws Error if the parameter already has a decorator
+   */
+  private static validateSingleDecoratorPerParameter(target: any, index: number, currentParamIndex: string) {
+    // Check all registered decorators to see if this parameter index is already decorated
+    for (const decoratorName of this.registeredDecorators.keys()) {
+      const existingParamIndex = `assemblage:${decoratorName.toLowerCase()}.param.index`;
+      
+      // Skip the current decorator we're trying to apply
+      if (existingParamIndex === currentParamIndex) {
+        continue;
+      }
+
+      const existingIndexes = getOwnCustomMetadata(existingParamIndex, target) || [];
+      if (existingIndexes.includes(index)) {
+        throw new Error(
+          `Parameter at index ${index} already has decorator @${decoratorName}. ` +
+          `Multiple decorators per parameter are not allowed.`
+        );
+      }
+    }
+  }
+
+  /**
    * Stores parameter data using reflection metadata.
    */
   private static storeParameterData<T>(
@@ -94,6 +121,9 @@ export class ParameterDecoratorFactory {
     paramValue: string,
     valueType: 'single' | 'array' | 'map'
   ) {
+    // Check if this parameter already has a decorator
+    this.validateSingleDecoratorPerParameter(target, index, paramIndex);
+
     // 1. Store the index
     const indexes = getOwnCustomMetadata(paramIndex, target) || [];
     indexes.push(index);

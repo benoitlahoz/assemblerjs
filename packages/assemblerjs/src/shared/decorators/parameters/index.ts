@@ -6,4 +6,5 @@ export * from './definition';
 export * from './dispose';
 export * from './use';
 export * from './global';
+export * from './optional';
 export * from './helpers';
