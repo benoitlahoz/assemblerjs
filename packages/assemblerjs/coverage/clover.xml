@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767460957661" clover="3.2.0">
-  <project timestamp="1767460957661" name="All files">
-    <metrics statements="714" coveredstatements="557" conditionals="270" coveredconditionals="182" methods="293" coveredmethods="208" elements="1277" coveredelements="947" complexity="0" loc="714" ncloc="714" packages="20" files="47" classes="47"/>
+<coverage generated="1767520086308" clover="3.2.0">
+  <project timestamp="1767520086308" name="All files">
+    <metrics statements="643" coveredstatements="557" conditionals="238" coveredconditionals="182" methods="258" coveredmethods="208" elements="1139" coveredelements="947" complexity="0" loc="643" ncloc="643" packages="20" files="46" classes="46"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
       <file name="awaitable.service.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/e2e/fixtures/awaitable-simple/awaitable.service.ts">
@@ -131,7 +131,31 @@
     </package>
     <package name="src.features.assemblage.lib.definition">
       <metrics statements="75" coveredstatements="64" conditionals="42" coveredconditionals="39" methods="46" coveredmethods="38"/>
-      <file name="helpers.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/definition/helpers.ts">
+      <file name="inject.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/definition/inject.ts">
+        <metrics statements="21" coveredstatements="20" conditionals="4" coveredconditionals="4" methods="16" coveredmethods="15"/>
+        <line num="62" count="12" type="stmt"/>
+        <line num="63" count="39" type="stmt"/>
+        <line num="76" count="12" type="stmt"/>
+        <line num="79" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="80" count="8" type="cond" truecount="2" falsecount="0"/>
+        <line num="82" count="8" type="stmt"/>
+        <line num="83" count="8" type="stmt"/>
+        <line num="87" count="8" type="stmt"/>
+        <line num="89" count="7" type="stmt"/>
+        <line num="100" count="8" type="stmt"/>
+        <line num="102" count="1" type="stmt"/>
+        <line num="108" count="7" type="stmt"/>
+        <line num="112" count="8" type="stmt"/>
+        <line num="121" count="12" type="stmt"/>
+        <line num="122" count="2" type="stmt"/>
+        <line num="135" count="12" type="stmt"/>
+        <line num="136" count="49" type="stmt"/>
+        <line num="138" count="39" type="stmt"/>
+        <line num="140" count="8" type="stmt"/>
+        <line num="143" count="2" type="stmt"/>
+        <line num="146" count="0" type="stmt"/>
+      </file>
+      <file name="schema.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/definition/schema.ts">
         <metrics statements="52" coveredstatements="42" conditionals="38" coveredconditionals="35" methods="29" coveredmethods="22"/>
         <line num="13" count="12" type="stmt"/>
         <line num="16" count="70" type="cond" truecount="2" falsecount="0"/>
@@ -185,30 +209,6 @@
         <line num="181" count="24" type="stmt"/>
         <line num="184" count="24" type="stmt"/>
         <line num="190" count="24" type="stmt"/>
-      </file>
-      <file name="inject.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/definition/inject.ts">
-        <metrics statements="21" coveredstatements="20" conditionals="4" coveredconditionals="4" methods="16" coveredmethods="15"/>
-        <line num="62" count="12" type="stmt"/>
-        <line num="63" count="39" type="stmt"/>
-        <line num="76" count="12" type="stmt"/>
-        <line num="79" count="8" type="cond" truecount="2" falsecount="0"/>
-        <line num="80" count="8" type="cond" truecount="2" falsecount="0"/>
-        <line num="82" count="8" type="stmt"/>
-        <line num="83" count="8" type="stmt"/>
-        <line num="87" count="8" type="stmt"/>
-        <line num="89" count="7" type="stmt"/>
-        <line num="100" count="8" type="stmt"/>
-        <line num="102" count="1" type="stmt"/>
-        <line num="108" count="7" type="stmt"/>
-        <line num="112" count="8" type="stmt"/>
-        <line num="121" count="12" type="stmt"/>
-        <line num="122" count="2" type="stmt"/>
-        <line num="135" count="12" type="stmt"/>
-        <line num="136" count="49" type="stmt"/>
-        <line num="138" count="39" type="stmt"/>
-        <line num="140" count="8" type="stmt"/>
-        <line num="143" count="2" type="stmt"/>
-        <line num="146" count="0" type="stmt"/>
       </file>
       <file name="use.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/definition/use.ts">
         <metrics statements="2" coveredstatements="2" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
@@ -626,7 +626,7 @@
       </file>
     </package>
     <package name="src.shared.common">
-      <metrics statements="84" coveredstatements="12" conditionals="38" coveredconditionals="6" methods="41" coveredmethods="5"/>
+      <metrics statements="13" coveredstatements="12" conditionals="6" coveredconditionals="6" methods="6" coveredmethods="5"/>
       <file name="constants.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/shared/common/constants.ts">
         <metrics statements="5" coveredstatements="5" conditionals="4" coveredconditionals="4" methods="2" coveredmethods="2"/>
         <line num="4" count="12" type="stmt"/>
@@ -645,80 +645,6 @@
         <line num="44" count="1410" type="stmt"/>
         <line num="50" count="12" type="stmt"/>
         <line num="51" count="99" type="cond" truecount="2" falsecount="0"/>
-      </file>
-      <file name="utils_old.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/shared/common/utils_old.ts">
-        <metrics statements="71" coveredstatements="0" conditionals="32" coveredconditionals="0" methods="35" coveredmethods="0"/>
-        <line num="13" count="0" type="stmt"/>
-        <line num="24" count="0" type="stmt"/>
-        <line num="25" count="0" type="stmt"/>
-        <line num="26" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="27" count="0" type="stmt"/>
-        <line num="37" count="0" type="stmt"/>
-        <line num="38" count="0" type="stmt"/>
-        <line num="47" count="0" type="stmt"/>
-        <line num="56" count="0" type="stmt"/>
-        <line num="57" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="66" count="0" type="stmt"/>
-        <line num="69" count="0" type="stmt"/>
-        <line num="83" count="0" type="stmt"/>
-        <line num="84" count="0" type="cond" truecount="0" falsecount="3"/>
-        <line num="93" count="0" type="stmt"/>
-        <line num="94" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="106" count="0" type="stmt"/>
-        <line num="107" count="0" type="stmt"/>
-        <line num="108" count="0" type="stmt"/>
-        <line num="109" count="0" type="stmt"/>
-        <line num="111" count="0" type="stmt"/>
-        <line num="121" count="0" type="stmt"/>
-        <line num="138" count="0" type="stmt"/>
-        <line num="140" count="0" type="stmt"/>
-        <line num="142" count="0" type="stmt"/>
-        <line num="145" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="147" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="149" count="0" type="stmt"/>
-        <line num="152" count="0" type="stmt"/>
-        <line num="153" count="0" type="stmt"/>
-        <line num="155" count="0" type="stmt"/>
-        <line num="157" count="0" type="stmt"/>
-        <line num="158" count="0" type="stmt"/>
-        <line num="174" count="0" type="stmt"/>
-        <line num="178" count="0" type="stmt"/>
-        <line num="179" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="196" count="0" type="stmt"/>
-        <line num="197" count="0" type="stmt"/>
-        <line num="198" count="0" type="stmt"/>
-        <line num="216" count="0" type="stmt"/>
-        <line num="217" count="0" type="stmt"/>
-        <line num="218" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="235" count="0" type="stmt"/>
-        <line num="236" count="0" type="stmt"/>
-        <line num="237" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="239" count="0" type="stmt"/>
-        <line num="240" count="0" type="stmt"/>
-        <line num="254" count="0" type="stmt"/>
-        <line num="255" count="0" type="stmt"/>
-        <line num="256" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="257" count="0" type="stmt"/>
-        <line num="258" count="0" type="stmt"/>
-        <line num="260" count="0" type="stmt"/>
-        <line num="261" count="0" type="stmt"/>
-        <line num="273" count="0" type="stmt"/>
-        <line num="274" count="0" type="stmt"/>
-        <line num="291" count="0" type="stmt"/>
-        <line num="307" count="0" type="stmt"/>
-        <line num="310" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="312" count="0" type="stmt"/>
-        <line num="313" count="0" type="cond" truecount="0" falsecount="2"/>
-        <line num="316" count="0" type="stmt"/>
-        <line num="319" count="0" type="stmt"/>
-        <line num="322" count="0" type="stmt"/>
-        <line num="326" count="0" type="stmt"/>
-        <line num="336" count="0" type="stmt"/>
-        <line num="340" count="0" type="stmt"/>
-        <line num="341" count="0" type="stmt"/>
-        <line num="350" count="0" type="stmt"/>
-        <line num="351" count="0" type="stmt"/>
-        <line num="352" count="0" type="stmt"/>
       </file>
     </package>
     <package name="src.shared.decorators.class">

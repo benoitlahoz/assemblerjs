@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
-import { Assembler, Assemblage, AbstractAssemblage, Context, AssemblerContext } from '../src';
+import { Assembler, Assemblage, AbstractAssemblage, Context, type AssemblerContext } from '../src';
 
 describe('Assembler Context Methods', () => {
   it('should check if injectable is registered with has()', () => {

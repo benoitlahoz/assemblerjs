@@ -71,6 +71,11 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'node',
     include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    esbuild: {
+    tsconfigRaw: {
+        extends: './tsconfig.spec.json',
+      },
+    },
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage',
