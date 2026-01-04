@@ -68,7 +68,7 @@ export default defineConfig(() => ({
         preserveModules: true,
         preserveModulesRoot: 'src',
         // Use named exports
-        exports: 'named',
+        exports: 'named' as const,
       },
     },
     minify: false,
