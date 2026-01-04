@@ -63,8 +63,15 @@ export default defineConfig(() => ({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['@assemblerjs/core'],
+      output: {
+        // Preserve module structure for better tree-shaking
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        // Use named exports
+        exports: 'named',
+      },
     },
-    minify: 'terser' as const,
+    minify: false,
   },
   test: {
     watch: false,

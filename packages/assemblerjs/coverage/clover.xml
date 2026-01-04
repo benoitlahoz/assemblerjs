@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767521768410" clover="3.2.0">
-  <project timestamp="1767521768410" name="All files">
+<coverage generated="1767523128317" clover="3.2.0">
+  <project timestamp="1767523128317" name="All files">
     <metrics statements="666" coveredstatements="580" conditionals="226" coveredconditionals="172" methods="266" coveredmethods="215" elements="1158" coveredelements="967" complexity="0" loc="666" ncloc="666" packages="21" files="50" classes="50"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
