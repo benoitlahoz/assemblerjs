@@ -51,7 +51,7 @@
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
   },
   "dependencies": {
-    "@assemblerjs/core": "0.9.1"
+    "@assemblerjs/core": "0.9.6"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
