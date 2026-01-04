@@ -55,7 +55,7 @@ export class HookManager {
 
   public callInitedHooks(context: AssemblerContext): void {
     // Call onInited on every dependency of our entry point, in reverse order.
-    for (const assemblage of this.initCache.reverse()) {
+    for (const assemblage of [...this.initCache].reverse()) {
       HookManager.callHook(
         assemblage.instance,
         'onInited',
