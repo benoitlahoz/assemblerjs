@@ -4,8 +4,11 @@ import {
   AbstractAssemblage,
   Assemblage,
   Assembler,
+  Configuration,
   Context,
+  Definition,
   Optional,
+  Use,
 } from '../src';
 
 import { Logger } from './fixtures/optional/logger.service';
@@ -251,6 +254,182 @@ describe('Optional Decorator', () => {
       expect(service.logger).toBeInstanceOf(Logger);
       expect(service.cache).toBeInstanceOf(Cache);
       expect(service.database).toBeUndefined();
+    });
+  });
+
+  describe('Mixed decorators in constructor', () => {
+    it('should work with @Optional and @Context in same constructor', () => {
+      @Assemblage()
+      class ServiceWithContextAndOptional implements AbstractAssemblage {
+        constructor(
+          @Context() public context: any,
+          @Optional() public logger?: Logger
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithContextAndOptional);
+
+      expect(service).toBeInstanceOf(ServiceWithContextAndOptional);
+      expect(service.context).toBeDefined();
+      expect(service.context.require).toBeTypeOf('function');
+      expect(service.logger).toBeUndefined();
+    });
+
+    it('should work with @Optional, @Use and required dependencies', () => {
+      const config = { apiUrl: 'http://localhost:3000' };
+
+      @Assemblage({
+        use: [['config', config]],
+        inject: [[Database]],
+      })
+      class ServiceWithMixedDecorators implements AbstractAssemblage {
+        constructor(
+          public database: Database,
+          @Use('config') public config: any,
+          @Optional() public logger?: Logger,
+          @Optional() public cache?: Cache
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithMixedDecorators);
+
+      expect(service).toBeInstanceOf(ServiceWithMixedDecorators);
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.config).toBe(config);
+      expect(service.config.apiUrl).toBe('http://localhost:3000');
+      expect(service.logger).toBeUndefined();
+      expect(service.cache).toBeUndefined();
+    });
+
+    it('should work with @Optional and @Configuration', () => {
+      @Assemblage({
+        inject: [[Database]],
+      })
+      class ServiceWithConfigAndOptional implements AbstractAssemblage {
+        constructor(
+          public database: Database,
+          @Configuration() public config: any,
+          @Optional() public logger?: Logger
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithConfigAndOptional, { 
+        timeout: 5000,
+        retries: 3 
+      });
+
+      expect(service).toBeInstanceOf(ServiceWithConfigAndOptional);
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.config).toStrictEqual({ timeout: 5000, retries: 3 });
+      expect(service.logger).toBeUndefined();
+    });
+
+    it('should work with @Optional and @Definition', () => {
+      @Assemblage({
+        tags: 'my-service',
+        inject: [[Database]],
+      })
+      class ServiceWithDefinitionAndOptional implements AbstractAssemblage {
+        constructor(
+          @Definition() public definition: any,
+          public database: Database,
+          @Optional() public logger?: Logger,
+          @Optional() public cache?: Cache
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithDefinitionAndOptional);
+
+      expect(service).toBeInstanceOf(ServiceWithDefinitionAndOptional);
+      expect(service.definition.tags).toStrictEqual(['my-service']);
+      expect(service.definition.inject).toBeDefined();
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.logger).toBeUndefined();
+      expect(service.cache).toBeUndefined();
+    });
+
+    it('should work with all decorators types mixed', () => {
+      const config = { mode: 'production' };
+      const defaultLogger = new Logger();
+
+      @Assemblage({
+        use: [['config', config]],
+        inject: [[Database]],
+      })
+      class ComplexService implements AbstractAssemblage {
+        constructor(
+          @Context() public context: any,
+          public database: Database,
+          @Use('config') public config: any,
+          @Configuration() public runtimeConfig: any,
+          @Definition() public definition: any,
+          @Optional(defaultLogger) public logger: Logger,
+          @Optional() public cache?: Cache
+        ) {}
+      }
+
+      const service = Assembler.build(ComplexService, { env: 'test' });
+
+      expect(service).toBeInstanceOf(ComplexService);
+      expect(service.context).toBeDefined();
+      expect(service.context.require).toBeTypeOf('function');
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.config).toBe(config);
+      expect(service.config.mode).toBe('production');
+      expect(service.runtimeConfig.env).toBe('test');
+      expect(service.definition).toBeDefined();
+      expect(service.logger).toBe(defaultLogger);
+      expect(service.cache).toBeUndefined();
+    });
+
+    it('should prioritize injected dependencies over optional defaults', () => {
+      const defaultLogger = new Logger();
+
+      @Assemblage({
+        inject: [[Logger], [Database]],
+      })
+      class ServiceWithInjectedAndOptional implements AbstractAssemblage {
+        constructor(
+          public database: Database,
+          @Optional(defaultLogger) public logger: Logger,
+          @Optional() public cache?: Cache
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithInjectedAndOptional);
+
+      expect(service).toBeInstanceOf(ServiceWithInjectedAndOptional);
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.logger).toBeInstanceOf(Logger);
+      expect(service.logger).not.toBe(defaultLogger); // Should be injected instance
+      expect(service.cache).toBeUndefined();
+    });
+
+    it('should handle multiple @Optional with different defaults', () => {
+      const defaultLogger = new Logger();
+      const defaultConfig = { timeout: 1000 };
+
+      @Assemblage({
+        inject: [[Database]],
+      })
+      class ServiceWithMultipleOptionalDefaults implements AbstractAssemblage {
+        constructor(
+          public database: Database,
+          @Optional(defaultLogger) public logger: Logger,
+          @Optional(defaultConfig) public config: any,
+          @Optional(null) public cache: Cache | null,
+          @Optional() public metrics?: any
+        ) {}
+      }
+
+      const service = Assembler.build(ServiceWithMultipleOptionalDefaults);
+
+      expect(service).toBeInstanceOf(ServiceWithMultipleOptionalDefaults);
+      expect(service.database).toBeInstanceOf(Database);
+      expect(service.logger).toBe(defaultLogger);
+      expect(service.config).toBe(defaultConfig);
+      expect(service.cache).toBeNull();
+      expect(service.metrics).toBeUndefined();
     });
   });
 });
