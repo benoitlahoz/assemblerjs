@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767542571106" clover="3.2.0">
-  <project timestamp="1767542571107" name="All files">
-    <metrics statements="689" coveredstatements="598" conditionals="266" coveredconditionals="206" methods="260" coveredmethods="206" elements="1215" coveredelements="1010" complexity="0" loc="689" ncloc="689" packages="21" files="50" classes="50"/>
+<coverage generated="1767546182567" clover="3.2.0">
+  <project timestamp="1767546182567" name="All files">
+    <metrics statements="751" coveredstatements="597" conditionals="298" coveredconditionals="206" methods="269" coveredmethods="205" elements="1318" coveredelements="1008" complexity="0" loc="751" ncloc="751" packages="22" files="51" classes="51"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
       <file name="awaitable.service.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/e2e/fixtures/awaitable-simple/awaitable.service.ts">
@@ -126,6 +126,74 @@
         <line num="17" count="1" type="stmt"/>
       </file>
     </package>
+    <package name="scripts">
+      <metrics statements="62" coveredstatements="0" conditionals="32" coveredconditionals="0" methods="9" coveredmethods="0"/>
+      <file name="update-performance-badges.mjs" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/scripts/update-performance-badges.mjs">
+        <metrics statements="62" coveredstatements="0" conditionals="32" coveredconditionals="0" methods="9" coveredmethods="0"/>
+        <line num="12" count="0" type="stmt"/>
+        <line num="13" count="0" type="stmt"/>
+        <line num="14" count="0" type="stmt"/>
+        <line num="15" count="0" type="stmt"/>
+        <line num="21" count="0" type="stmt"/>
+        <line num="22" count="0" type="stmt"/>
+        <line num="23" count="0" type="stmt"/>
+        <line num="28" count="0" type="stmt"/>
+        <line num="30" count="0" type="stmt"/>
+        <line num="31" count="0" type="stmt"/>
+        <line num="40" count="0" type="stmt"/>
+        <line num="43" count="0" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+        <line num="51" count="0" type="stmt"/>
+        <line num="52" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="54" count="0" type="stmt"/>
+        <line num="55" count="0" type="stmt"/>
+        <line num="59" count="0" type="stmt"/>
+        <line num="66" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="67" count="0" type="stmt"/>
+        <line num="68" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="69" count="0" type="stmt"/>
+        <line num="71" count="0" type="stmt"/>
+        <line num="79" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="80" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="81" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="82" count="0" type="stmt"/>
+        <line num="89" count="0" type="stmt"/>
+        <line num="90" count="0" type="stmt"/>
+        <line num="91" count="0" type="stmt"/>
+        <line num="92" count="0" type="stmt"/>
+        <line num="93" count="0" type="stmt"/>
+        <line num="100" count="0" type="stmt"/>
+        <line num="102" count="0" type="stmt"/>
+        <line num="105" count="0" type="stmt"/>
+        <line num="112" count="0" type="stmt"/>
+        <line num="119" count="0" type="stmt"/>
+        <line num="121" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="122" count="0" type="stmt"/>
+        <line num="123" count="0" type="stmt"/>
+        <line num="124" count="0" type="stmt"/>
+        <line num="126" count="0" type="stmt"/>
+        <line num="127" count="0" type="stmt"/>
+        <line num="135" count="0" type="stmt"/>
+        <line num="136" count="0" type="stmt"/>
+        <line num="137" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="138" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="139" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="140" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="141" count="0" type="stmt"/>
+        <line num="146" count="0" type="stmt"/>
+        <line num="148" count="0" type="stmt"/>
+        <line num="149" count="0" type="stmt"/>
+        <line num="151" count="0" type="cond" truecount="0" falsecount="2"/>
+        <line num="152" count="0" type="stmt"/>
+        <line num="153" count="0" type="stmt"/>
+        <line num="156" count="0" type="stmt"/>
+        <line num="157" count="0" type="stmt"/>
+        <line num="159" count="0" type="stmt"/>
+        <line num="162" count="0" type="stmt"/>
+        <line num="163" count="0" type="stmt"/>
+        <line num="164" count="0" type="stmt"/>
+      </file>
+    </package>
     <package name="src.features.assemblage.lib">
       <metrics statements="14" coveredstatements="13" conditionals="4" coveredconditionals="3" methods="6" coveredmethods="5"/>
       <file name="decorator.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assemblage/lib/decorator.ts">
@@ -243,7 +311,7 @@
       </file>
     </package>
     <package name="src.features.assembler.lib">
-      <metrics statements="134" coveredstatements="123" conditionals="43" coveredconditionals="37" methods="46" coveredmethods="40"/>
+      <metrics statements="134" coveredstatements="122" conditionals="43" coveredconditionals="37" methods="46" coveredmethods="39"/>
       <file name="assembler-builder.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/assembler-builder.ts">
         <metrics statements="17" coveredstatements="16" conditionals="4" coveredconditionals="3" methods="3" coveredmethods="3"/>
         <line num="6" count="51" type="stmt"/>
@@ -302,14 +370,14 @@
         <line num="23" count="51" type="stmt"/>
       </file>
       <file name="hook-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/hook-manager.ts">
-        <metrics statements="29" coveredstatements="27" conditionals="8" coveredconditionals="8" methods="11" coveredmethods="9"/>
+        <metrics statements="29" coveredstatements="26" conditionals="8" coveredconditionals="8" methods="11" coveredmethods="8"/>
         <line num="6" count="15" type="stmt"/>
         <line num="13" count="103" type="stmt"/>
         <line num="14" count="103" type="stmt"/>
         <line num="16" count="103" type="cond" truecount="2" falsecount="0"/>
         <line num="17" count="17" type="cond" truecount="2" falsecount="0"/>
         <line num="18" count="1" type="stmt"/>
-        <line num="21" count="1" type="stmt"/>
+        <line num="21" count="0" type="stmt"/>
         <line num="24" count="0" type="stmt"/>
         <line num="26" count="1" type="stmt"/>
         <line num="29" count="16" type="stmt"/>
