@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1767531525217" clover="3.2.0">
-  <project timestamp="1767531525217" name="All files">
-    <metrics statements="678" coveredstatements="589" conditionals="262" coveredconditionals="202" methods="257" coveredmethods="205" elements="1197" coveredelements="996" complexity="0" loc="678" ncloc="678" packages="21" files="50" classes="50"/>
+<coverage generated="1767542571106" clover="3.2.0">
+  <project timestamp="1767542571107" name="All files">
+    <metrics statements="689" coveredstatements="598" conditionals="266" coveredconditionals="206" methods="260" coveredmethods="206" elements="1215" coveredelements="1010" complexity="0" loc="689" ncloc="689" packages="21" files="50" classes="50"/>
     <package name="e2e.fixtures.awaitable-simple">
       <metrics statements="17" coveredstatements="17" conditionals="6" coveredconditionals="5" methods="7" coveredmethods="7"/>
       <file name="awaitable.service.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/e2e/fixtures/awaitable-simple/awaitable.service.ts">
@@ -243,7 +243,7 @@
       </file>
     </package>
     <package name="src.features.assembler.lib">
-      <metrics statements="123" coveredstatements="114" conditionals="39" coveredconditionals="33" methods="43" coveredmethods="39"/>
+      <metrics statements="134" coveredstatements="123" conditionals="43" coveredconditionals="37" methods="46" coveredmethods="40"/>
       <file name="assembler-builder.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/assembler-builder.ts">
         <metrics statements="17" coveredstatements="16" conditionals="4" coveredconditionals="3" methods="3" coveredmethods="3"/>
         <line num="6" count="51" type="stmt"/>
@@ -302,25 +302,36 @@
         <line num="23" count="51" type="stmt"/>
       </file>
       <file name="hook-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/hook-manager.ts">
-        <metrics statements="18" coveredstatements="18" conditionals="4" coveredconditionals="4" methods="8" coveredmethods="8"/>
+        <metrics statements="29" coveredstatements="27" conditionals="8" coveredconditionals="8" methods="11" coveredmethods="9"/>
         <line num="6" count="15" type="stmt"/>
-        <line num="13" count="268" type="stmt"/>
-        <line num="14" count="268" type="stmt"/>
-        <line num="16" count="268" type="cond" truecount="2" falsecount="0"/>
-        <line num="17" count="39" type="cond" truecount="2" falsecount="0"/>
-        <line num="18" count="8" type="stmt"/>
-        <line num="21" count="7" type="stmt"/>
-        <line num="23" count="8" type="stmt"/>
-        <line num="26" count="31" type="stmt"/>
-        <line num="31" count="51" type="stmt"/>
-        <line num="37" count="87" type="stmt"/>
-        <line num="41" count="87" type="stmt"/>
-        <line num="46" count="50" type="stmt"/>
-        <line num="47" count="32" type="stmt"/>
-        <line num="58" count="50" type="stmt"/>
-        <line num="59" count="33" type="stmt"/>
-        <line num="69" count="50" type="stmt"/>
-        <line num="73" count="150" type="stmt"/>
+        <line num="13" count="103" type="stmt"/>
+        <line num="14" count="103" type="stmt"/>
+        <line num="16" count="103" type="cond" truecount="2" falsecount="0"/>
+        <line num="17" count="17" type="cond" truecount="2" falsecount="0"/>
+        <line num="18" count="1" type="stmt"/>
+        <line num="21" count="1" type="stmt"/>
+        <line num="24" count="0" type="stmt"/>
+        <line num="26" count="1" type="stmt"/>
+        <line num="29" count="16" type="stmt"/>
+        <line num="30" count="16" type="stmt"/>
+        <line num="31" count="16" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
+        <line num="36" count="86" type="stmt"/>
+        <line num="47" count="165" type="stmt"/>
+        <line num="49" count="165" type="cond" truecount="2" falsecount="0"/>
+        <line num="50" count="22" type="cond" truecount="2" falsecount="0"/>
+        <line num="53" count="7" type="stmt"/>
+        <line num="56" count="7" type="stmt"/>
+        <line num="60" count="15" type="stmt"/>
+        <line num="64" count="51" type="stmt"/>
+        <line num="70" count="87" type="stmt"/>
+        <line num="74" count="87" type="stmt"/>
+        <line num="79" count="50" type="stmt"/>
+        <line num="80" count="32" type="stmt"/>
+        <line num="91" count="50" type="stmt"/>
+        <line num="92" count="33" type="stmt"/>
+        <line num="102" count="50" type="stmt"/>
+        <line num="106" count="150" type="stmt"/>
       </file>
       <file name="injectable-manager.ts" path="/Users/benoitlahoz/Documents/Development/assemblerjs/packages/assemblerjs/src/features/assembler/lib/injectable-manager.ts">
         <metrics statements="30" coveredstatements="27" conditionals="13" coveredconditionals="10" methods="8" coveredmethods="7"/>
