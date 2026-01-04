@@ -49,7 +49,7 @@
   "scripts": {
     "test": "vitest --coverage --passWithNoTests",
     "bench": "vitest bench",
-    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
+    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme && node scripts/update-performance-badges.mjs"
   },
   "dependencies": {
     "@assemblerjs/core": "^0.9.6"

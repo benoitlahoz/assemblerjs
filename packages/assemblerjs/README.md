@@ -4,6 +4,15 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 
 ![Statements](https://img.shields.io/badge/statements-91.01%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-79.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.62%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.76%25-brightgreen.svg?style=flat)
 
+## Performance Metrics
+
+![Assembler Building](https://img.shields.io/badge/assembler%20building-156k%20ops%2Fsec-brightgreen.svg?style=flat)
+![Injectable Resolution](https://img.shields.io/badge/singleton%20cache-1.2M%20ops%2Fsec-brightgreen.svg?style=flat)
+![Event System](https://img.shields.io/badge/event%20emit-432k%20ops%2Fsec-brightgreen.svg?style=flat)
+![Decorators](https://img.shields.io/badge/decorators-890k%20ops%2Fsec-brightgreen.svg?style=flat)
+
+[→ Full Benchmarks](../../docs/assemblerjs/performance/benchmarks.md)
+
 ---
 
 ## Features
