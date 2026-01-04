@@ -1,5 +1,22 @@
 # assembler.js
 
+
+![Injectable Resolution](https://img.shields.io/badge/injectable--resolution-125k--ops%2Fsec-brightgreen.svg?style=flat) ![Event Emission](https://img.shields.io/badge/event--emission-12k--ops%2Fsec-green.svg?style=flat) ![Assembler Building](https://img.shields.io/badge/assembler--building-380--ops%2Fsec-brightgreen.svg?style=flat)
+
+---
+
+![Injectable Resolution](https://img.shields.io/badge/injectable--resolution-125k--ops%2Fsec-brightgreen.svg?style=flat) ![Event Emission](https://img.shields.io/badge/event--emission-12k--ops%2Fsec-green.svg?style=flat) ![Assembler Building](https://img.shields.io/badge/assembler--building-380--ops%2Fsec-brightgreen.svg?style=flat)
+
+---
+
+
+
+---
+
+
+
+---
+
 A general purpose and zero-dependency [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) library for node and browser.
 
 ![Statements](https://img.shields.io/badge/statements-91.01%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-79.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.62%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.76%25-brightgreen.svg?style=flat)

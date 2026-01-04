@@ -261,4 +261,5 @@ try {
 - [Dependency Injection](./dependency-injection.md) - Understand dependency resolution
 - [Parameter Decorators](../decorators/parameter-decorators.md) - Inject context and configuration
 - [Events](../features/events.md) - Setup event listeners in `onInit`
+- [Benchmarks](../performance/benchmarks.md) - Lifecycle hooks performance
 - [Advanced Examples](../guides/advanced-examples.md) - See lifecycle hooks in action

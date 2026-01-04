@@ -346,5 +346,6 @@ console.log(app2.count); // 0 (isolated!)
 
 - [Assemblage](../core-concepts/assemblage.md) - Configure singleton/transient
 - [Lifecycle Hooks](../core-concepts/lifecycle-hooks.md) - Instance lifecycle
+- [Benchmarks](../performance/benchmarks.md) - Singleton vs transient performance
 - [Advanced Examples](../guides/advanced-examples.md) - Real-world patterns
 - [Events](./events.md) - Event system for communication

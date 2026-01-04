@@ -106,6 +106,9 @@ Comprehensive documentation is available at:
 - [Advanced Examples](../../docs/assemblerjs/guides/advanced-examples.md) - Real-world patterns
 - [Tree-Shaking](../../docs/assemblerjs/guides/tree-shaking.md) - Bundle optimization
 
+#### Performance
+- [Benchmarks](../../docs/assemblerjs/performance/benchmarks.md) - Performance metrics & best practices
+
 ## Requirements
 
 - **Node.js:** ≥ 18.12.0

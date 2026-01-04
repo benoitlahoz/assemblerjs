@@ -342,4 +342,5 @@ class MyService implements AbstractAssemblage {
 - [Tags](./tags.md) - Group assemblages by category
 - [AssemblerContext API](../api/context.md) - Full context documentation
 - [Lifecycle Hooks](../core-concepts/lifecycle-hooks.md) - Setup listeners in `onInit`
+- [Benchmarks](../performance/benchmarks.md) - Event system performance
 - [Advanced Examples](../guides/advanced-examples.md) - Real-world event patterns

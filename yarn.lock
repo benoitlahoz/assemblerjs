@@ -10,13 +10,6 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@assemblerjs/core@0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@assemblerjs/core/-/core-0.9.1.tgz#d836938f6b03def60af99e32b5395ccbf4dc8acd"
-  integrity sha512-cCmwRGqCqVHes2DUz9EuFHWvOcFjTQ1hJrQIRUTtg7Gv9ceAltfb/cp2j5BHeEyIb3TY3H+/iT80u4EgPx34Ew==
-  dependencies:
-    error-polyfill "^0.1.3"
-
 "@assemblerjs/core@^0.8.6":
   version "0.8.31"
   resolved "https://registry.yarnpkg.com/@assemblerjs/core/-/core-0.8.31.tgz#99f8c70320be95ebe22221583c29a135c7b1f39a"

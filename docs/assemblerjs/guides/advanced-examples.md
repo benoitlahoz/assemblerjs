@@ -534,5 +534,6 @@ class ProductionDataService implements AbstractAssemblage {
 
 - [Core Concepts](../core-concepts/assemblage.md) - Understand the fundamentals
 - [Features](../features/events.md) - Explore event system
-- [API Reference](../api/assembler.md) - Detailed API documentation
 - [Tree-Shaking](./tree-shaking.md) - Optimize bundle size
+- [Benchmarks](../performance/benchmarks.md) - Performance metrics & best practices
+- [API Reference](../api/assembler.md) - Detailed API documentation

@@ -356,4 +356,5 @@ class App implements AbstractAssemblage {
 - [Getting Started](../getting-started/installation.md) - Install and setup
 - [Core Concepts](../core-concepts/assemblage.md) - Learn the fundamentals
 - [Advanced Examples](./advanced-examples.md) - See real-world patterns
+- [Benchmarks](../performance/benchmarks.md) - Performance metrics & best practices
 - [API Reference](../api/assembler.md) - Detailed API documentation
