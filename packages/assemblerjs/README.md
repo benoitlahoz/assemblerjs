@@ -1,6 +1,8 @@
 # assembler.js
 
-A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) library for Node.js and browsers.
+A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia.org/wiki/Dependency_injection) library for **Node.js and Browsers** 🌐.
+
+> ✨ **Universal Library**: Works seamlessly in Node.js, browsers, and any JavaScript environment that supports ES2020+
 
 ![Statements](https://img.shields.io/badge/statements-91.01%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-79.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.62%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.76%25-brightgreen.svg?style=flat)
 
@@ -25,12 +27,15 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 - 🎨 **Custom Decorators** - Easy creation with `ParameterDecoratorFactory` and `createConstructorDecorator`
 - 🔧 **Flexible Configuration** - Runtime configuration override
 - 🏷️ **Tags Support** - Group and retrieve dependencies by tags
-- 🌐 **Universal** - Works in Node.js and browsers
+- 🌐 **Universal** - **Works in Node.js AND Browsers** - No platform-specific dependencies
 - 🔄 **Singleton & Transient** - Control instance lifecycle
+- 📦 **Small Bundle Size** - Perfect for frontend applications (~5-6 KB minified)
 
 Inspired by [DIOD](https://github.com/artberri/diod) and [NestJS](https://nestjs.com/).
 
 ## Installation
+
+Install `assemblerjs` and its peer dependency `reflect-metadata` using npm or yarn:
 
 ```sh
 npm install assemblerjs reflect-metadata
@@ -44,6 +49,20 @@ yarn add assemblerjs reflect-metadata
 
 ```typescript
 import 'reflect-metadata';
+```
+
+> ✨ **Works everywhere**: This installation works for **Node.js, browsers (with Vite/Webpack/Rollup), React, Vue, Angular, and any JavaScript environment**.
+
+### Alternative: CDN (for quick prototyping)
+
+If you want to try assemblerjs without a build step:
+
+```html
+<script src="https://unpkg.com/reflect-metadata@latest/Reflect.js"></script>
+<script type="module">
+  import { Assemblage, Assembler } from 'https://unpkg.com/assemblerjs@latest/dist/index.js';
+  // Your code here
+</script>
 ```
 
 ## Quick Start

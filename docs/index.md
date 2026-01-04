@@ -1,6 +1,6 @@
 # assembler.js Documentation
 
-Welcome to the official documentation for **assembler.js** - a modern, type-safe, and lightweight Dependency Injection library for Node.js and browsers.
+Welcome to the official documentation for **assembler.js** - a modern, type-safe, and lightweight Dependency Injection library for **Node.js AND Browsers** 🌐.
 
 ## What is assembler.js?
 
@@ -13,7 +13,8 @@ Welcome to the official documentation for **assembler.js** - a modern, type-safe
 - 📡 **Built-in Event System** - Integrated EventManager
 - 🎨 **Custom Decorators** - Easy creation with factories
 - 🏷️ **Tags Support** - Group and retrieve dependencies
-- 🌐 **Universal** - Works in Node.js and browsers
+- 🌐 **Universal** - **Works seamlessly in Node.js AND Browsers** - No platform-specific code
+- 📦 **Browser-Friendly** - Small bundle size, perfect for frontend applications
 
 ## Quick Example
 
