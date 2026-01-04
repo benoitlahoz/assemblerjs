@@ -5,6 +5,7 @@
       "args": ["-i"]
     }
   },
+  "terminal.integrated.shellIntegration.enabled": true,
   "nxConsole.generateAiAgentRules": true,
   "typescript.tsdk": "node_modules/typescript/lib"
 }
