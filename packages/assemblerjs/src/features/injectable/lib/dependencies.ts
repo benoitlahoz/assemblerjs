@@ -4,6 +4,9 @@ import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
 import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
 
+// Cache for resolved dependencies to avoid repeated reflection calls
+const dependenciesCache = new WeakMap<Function, any[]>();
+
 /**
  * Helper function to determine the decorator type for a given parameter index.
  * Now uses dynamic decorator registration instead of hardcoded names.
@@ -53,11 +56,17 @@ export const resolveInjectableParameters = <T>(
 
 /**
  * Get an array of parameters from an `Concrete` constructor, excluding non-dependency ones.
+ * Uses cache to avoid repeated reflection calls for the same concrete class.
  *
  * @param { Concrete<T> } target The `Concrete` to get constructor's parameters.
  * @returns { any[] } An array of passed parameters.
  */
 export const resolveDependencies = <T>(target: Concrete<T>) => {
+  // Check cache first
+  if (dependenciesCache.has(target)) {
+    return dependenciesCache.get(target)!;
+  }
+
   const parameters: any[] = [];
 
   // Parameters passed in constructor.
@@ -77,6 +86,9 @@ export const resolveDependencies = <T>(target: Concrete<T>) => {
     parameters.push(dependency);
     i++;
   }
+
+  // Cache the result
+  dependenciesCache.set(target, parameters);
 
   return parameters;
 };

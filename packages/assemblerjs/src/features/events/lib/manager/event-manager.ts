@@ -12,6 +12,7 @@ import type { Listener } from '../collection/listener-collection.abstract';
 export class EventManager implements AbstractEventManager {
   private readonly listeners: ListenerCollection = new ListenerCollection();
   private readonly onceListeners: ListenerCollection = new ListenerCollection();
+  private readonly channelCache: Map<string, string> = new Map();
 
   public readonly channels: Set<string> = new Set(['*']);
 
@@ -22,6 +23,7 @@ export class EventManager implements AbstractEventManager {
   public dispose(): void {
     this.listeners.dispose();
     this.channels.clear();
+    this.channelCache.clear();
     clearInstance(this, EventManager);
   }
 
@@ -81,35 +83,23 @@ export class EventManager implements AbstractEventManager {
     const clean = this.cleanChannel(channel);
 
     // Will fail silently if channel is not authorized.
+    if (!this.channels.has(clean)) {
+      return this;
+    }
 
-    if (this.channels.has(clean)) {
-      const onceAll = this.onceListeners.get('*') || [];
-      const listenersAll = this.listeners.get('*') || [];
-      const once = this.onceListeners.get(clean) || [];
-      const listeners = this.listeners.get(clean) || [];
+    // Optimized: Single iteration over all listeners
+    const allListeners = [
+      ...(this.onceListeners.get('*') || []).map(l => ({ listener: l, once: true, channel: '*' as const })),
+      ...(this.listeners.get('*') || []).map(l => ({ listener: l, once: false, channel: '*' as const })),
+      ...(this.onceListeners.get(clean) || []).map(l => ({ listener: l, once: true, channel: clean })),
+      ...(this.listeners.get(clean) || []).map(l => ({ listener: l, once: false, channel: clean })),
+    ];
 
-      const iterateOnceAll = forOf(onceAll);
-      const iterateListenersAll = forOf(listenersAll);
-      const iterateOnce = forOf(once);
-      const iterateListeners = forOf(listeners);
-
-      iterateOnceAll((listener: Listener) => {
-        this.run(listener, ...args);
-        this.onceListeners.remove('*', listener);
-      });
-
-      iterateListenersAll((listener: Listener) => {
-        this.run(listener, ...args);
-      });
-
-      iterateOnce((listener: Listener) => {
-        this.run(listener, ...args);
-        this.onceListeners.remove(clean, listener);
-      });
-
-      iterateListeners((listener: Listener) => {
-        this.run(listener, ...args);
-      });
+    for (const { listener, once, channel: ch } of allListeners) {
+      this.run(listener, ...args);
+      if (once) {
+        this.onceListeners.remove(ch, listener);
+      }
     }
 
     return this;
@@ -124,6 +114,12 @@ export class EventManager implements AbstractEventManager {
   }
 
   private cleanChannel(channel: string): string {
-    return onlyAlphanumeric(channel, '*', ':', '.', '-', '_');
+    // Cache cleaned channels to avoid repeated string operations
+    if (this.channelCache.has(channel)) {
+      return this.channelCache.get(channel)!;
+    }
+    const clean = onlyAlphanumeric(channel, '*', ':', '.', '-', '_');
+    this.channelCache.set(channel, clean);
+    return clean;
   }
 }

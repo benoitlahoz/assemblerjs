@@ -1,5 +1,5 @@
 import type { Concrete } from '@assemblerjs/core';
-import { clearInstance, forOf } from '@assemblerjs/core';
+import { clearInstance } from '@assemblerjs/core';
 import { defineCustomMetadata, ReflectValue, type Identifier } from '@/shared/common';
 import type {
   AssemblageDefinition,
@@ -7,7 +7,7 @@ import type {
   Injection,
   InstanceInjection,
 } from '@/features/assemblage';
-import { isAssemblage, getDefinition, getDefinitionValue } from '@/features/assemblage';
+import { isAssemblage, getDefinition } from '@/features/assemblage';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
 import { unregisterEvents } from '@/features/events';
@@ -30,6 +30,18 @@ export class Injectable<T> implements AbstractInjectable<T> {
   public readonly configuration: Record<string, any>;
   /** Merged configuration used during build (base + runtime). */
   private mergedConfiguration?: Record<string, any>;
+  /** Cached definition to avoid repeated metadata lookups. */
+  private cachedDefinition?: AssemblageDefinition;
+  /** Cached injections to avoid repeated definition access. */
+  private cachedInjections?: Injection<unknown>[];
+  /** Cached objects to avoid repeated definition access. */
+  private cachedObjects?: InstanceInjection<unknown>[];
+  /** Cached tags to avoid repeated definition access. */
+  private cachedTags?: string | string[];
+  /** Cached events to avoid repeated definition access. */
+  private cachedEvents?: string[];
+  /** Cached globals to avoid repeated definition access. */
+  private cachedGlobals?: Record<string, any>;
 
   private dependenciesIds: Identifier<unknown>[] = [];
   protected singletonInstance: T | undefined;
@@ -52,7 +64,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
     this.concrete = buildable.concrete;
     this.configuration = buildable.configuration;
 
-    if (!isAssemblage(this.concrete)) {
+    // Validate assemblage in development mode only
+    if (process.env.NODE_ENV !== 'production' && !isAssemblage(this.concrete)) {
       throw new Error(`Class '${this.concrete.name}' is not an Assemblage.`);
     }
 
@@ -65,25 +78,18 @@ export class Injectable<T> implements AbstractInjectable<T> {
       this.concrete
     );
 
-    const iterateOwnInjections = forOf(this.injections);
-    const iterateOwnUsedInjections = forOf(this.objects);
+    // Optimized: Use native for...of instead of forOf wrapper
+    for (const injection of this.injections) {
+      this.privateContext.register(injection);
+    }
 
-    // Register injectable assemblage's own injections passed in 'inject' definition property.
-    iterateOwnInjections(<U>(injection: Injection<U>) =>
-      this.privateContext.register(injection)
-    );
-
-    // Register assemblage's injected objects (e.g. instances) passed in 'use' definition property.
-    iterateOwnUsedInjections(<U>(injection: InstanceInjection<U>) => {
-      if (
-        typeof injection[0] === 'string' ||
-        typeof injection[0] === 'symbol'
-      ) {
+    for (const injection of this.objects) {
+      if (typeof injection[0] === 'string' || typeof injection[0] === 'symbol') {
         this.privateContext.use(injection[0], injection[1]);
       } else {
         this.privateContext.register(injection as any, true);
       }
-    });
+    }
 
     // Cache dependencies.
     this.dependenciesIds = resolveDependencies(this.concrete);
@@ -146,16 +152,20 @@ export class Injectable<T> implements AbstractInjectable<T> {
 
   /**
    * Metadatas passed in assemblage's definition or in its parent definition.
+   * Cached to avoid repeated reflection calls.
    */
   public get definition(): AssemblageDefinition {
-    return getDefinition(this.concrete) || {};
+    if (!this.cachedDefinition) {
+      this.cachedDefinition = getDefinition(this.concrete) || {};
+    }
+    return this.cachedDefinition;
   }
 
   /**
    * `true` if assemblage is a singleton.
    */
   public get isSingleton(): boolean {
-    return getDefinitionValue('singleton', this.concrete);
+    return this.definition.singleton ?? false;
   }
 
   /**
@@ -176,36 +186,51 @@ export class Injectable<T> implements AbstractInjectable<T> {
    * Injectable assemblage's own injections defined in its decorator's definition.
    */
   public get injections(): Injection<unknown>[] {
-    return getDefinitionValue('inject', this.concrete) || [];
+    if (this.cachedInjections === undefined) {
+      this.cachedInjections = this.definition.inject || [];
+    }
+    return this.cachedInjections;
   }
 
   /**
    * Injectable assemblage's own objects (e.g. instances) injections defined in its decorator's definition.
    */
   public get objects(): InstanceInjection<unknown>[] {
-    return getDefinitionValue('use', this.concrete) || [];
+    if (this.cachedObjects === undefined) {
+      this.cachedObjects = this.definition.use || [];
+    }
+    return this.cachedObjects;
   }
 
   /**
    * Tags passed in assemblage's definition.
    */
   public get tags(): string[] {
-    return getDefinitionValue('tags', this.concrete) || [];
+    if (this.cachedTags === undefined) {
+      this.cachedTags = this.definition.tags || [];
+    }
+    return Array.isArray(this.cachedTags) ? this.cachedTags : [this.cachedTags];
   }
 
   /**
    * Global injections passed in assemblage's definition.
    * These injections are available in all assemblages and can be used
-   * to provide global services or utilities.
+   * to provide global values, services or utilities.
    */
   public get globals(): Record<string, any> | undefined {
-    return getDefinitionValue('global', this.concrete);
+    if (this.cachedGlobals === undefined) {
+      this.cachedGlobals = this.definition.global;
+    }
+    return this.cachedGlobals;
   }
 
   /**
    * Event channels passed in assemblage's definition.
    */
   public get events(): string[] {
-    return getDefinitionValue('events', this.concrete) || [];
+    if (this.cachedEvents === undefined) {
+      this.cachedEvents = this.definition.events || [];
+    }
+    return this.cachedEvents;
   }
 }

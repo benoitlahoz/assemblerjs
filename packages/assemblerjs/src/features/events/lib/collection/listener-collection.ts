@@ -55,47 +55,23 @@ export class ListenerCollection implements AbstractListenerCollection {
   public add(
     ...args: (EventChannel | Listener | Tuple<[EventChannel, Listener]>)[]
   ): ListenerCollection {
-    // Add listener to channel.
+    // Optimized: Direct imperative code instead of functional wrappers
+    let channel: EventChannel;
+    let listener: Listener;
 
-    const push = (res: { channel: EventChannel; listener: Listener }) =>
-      this.collection[res.channel].push(res.listener);
+    if (args.length === 2) {
+      channel = args[0] as EventChannel;
+      listener = args[1] as Listener;
+    } else {
+      const tuple = args[0] as Tuple<[EventChannel, Listener]>;
+      channel = tuple[0];
+      listener = tuple[1];
+    }
 
-    // Parse arguments (may be a tuple).
-
-    const parseArgs = conditionally({
-      if: () => args.length === 2,
-      then: () => {
-        return {
-          channel: args[0] as string,
-          listener: args[1] as Listener,
-        };
-      },
-      else: () => {
-        const tuple = args[0] as Tuple<[EventChannel, Listener]>;
-        return {
-          channel: tuple[0] as string,
-          listener: tuple[1] as Listener,
-        };
-      },
-    });
-
-    // Check if channel exists or create it if not.
-
-    const checkAndPush = conditionally({
-      if: (res: { channel: EventChannel; listener: Listener }) =>
-        !isDefined(this.collection[res.channel]),
-      then: (res: { channel: EventChannel; listener: Listener }) => {
-        this.collection[res.channel] = [];
-        push(res);
-      },
-      else: (res: { channel: EventChannel; listener: Listener }) => {
-        push(res);
-      },
-    });
-
-    // Run.
-
-    pipe(parseArgs, checkAndPush)();
+    if (!this.collection[channel]) {
+      this.collection[channel] = [];
+    }
+    this.collection[channel].push(listener);
 
     return this;
   }
@@ -184,7 +160,7 @@ export class ListenerCollection implements AbstractListenerCollection {
   }
 
   /**
-   * Clear the entire collction.
+   * Clear the entire collection.
    *
    * @returns { ListenerCollection } This collection.
    */
