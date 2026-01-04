@@ -13,11 +13,11 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 - 🌳 **Tree-Shakable** - Optimized bundle size (~5-6 KB for minimal usage)
 - ♻️ **Lifecycle Hooks** - `onRegister`, `onInit`, `onDispose`
 - 📡 **Built-in Event System** - Integrated EventManager
-- 🎨 **Custom Decorators** - Easy creation with `ParameterDecoratorFactory`
+- 🎨 **Custom Decorators** - Easy creation with `ParameterDecoratorFactory` and `createConstructorDecorator`
 - 🔧 **Flexible Configuration** - Runtime configuration override
 - 🏷️ **Tags Support** - Group and retrieve dependencies by tags
 - 🌐 **Universal** - Works in Node.js and browsers
-- �� **Singleton & Transient** - Control instance lifecycle
+- 🔄 **Singleton & Transient** - Control instance lifecycle
 
 Inspired by [DIOD](https://github.com/artberri/diod) and [NestJS](https://nestjs.com/).
 
@@ -506,6 +506,137 @@ The factory automatically:
 - `'single'` - Single value per decorator
 - `'array'` - Multiple values as array
 - `'map'` - Key-value mapping
+
+### Creating Custom Class Decorators
+
+The `createConstructorDecorator` function allows you to create **type-safe** custom class decorators that can be stacked with `@Assemblage`. These decorators execute code after the constructor and can access all injected dependencies.
+
+**Key features:**
+- 🔒 **Fully type-safe** with TypeScript generics
+- 📍 Can be placed **above** or **below** `@Assemblage` decorator
+- 🔄 Automatically preserves parameter decorators (`@Context()`, `@Use()`, etc.)
+- ✏️ Type-safe access to `this` to modify the instance
+- ⚙️ Receives a typed optional configuration object
+
+**Basic Type-Safe Example:**
+
+```typescript
+import { createConstructorDecorator, Assemblage, AbstractAssemblage } from 'assemblerjs';
+
+// 1. Define your configuration interface
+interface LoggerConfig {
+  prefix: string;
+  enabled: boolean;
+}
+
+// 2. Create a type-safe decorator
+// TInstance = your class type, TDefinition = config type
+const Logger = createConstructorDecorator<MyService, LoggerConfig>(function(config) {
+  // ⚠️ IMPORTANT: Use 'function', NOT arrow function to access 'this'
+  // `this` is now typed as MyService
+  // `config` is typed as LoggerConfig | undefined
+  
+  if (config?.enabled) {
+    this.logPrefix = config.prefix;
+    console.log(`[${this.logPrefix}] Instance created`);
+  }
+});
+
+// 3. Use it with your class
+@Logger({ prefix: 'APP', enabled: true })
+@Assemblage()
+class MyService implements AbstractAssemblage {
+  logPrefix?: string; // Add property for type safety
+  
+  doSomething() {
+    console.log(`[${this.logPrefix}] Doing something`);
+  }
+}
+```
+
+**Advanced Type-Safe Example with Parameter Decorators:**
+
+```typescript
+// Define configuration and extended interface
+interface TrackerConfig {
+  trackInit: boolean;
+  trackDispose: boolean;
+}
+
+interface WithInitTracker {
+  getInitSteps(): string[];
+}
+
+const InitTracker = createConstructorDecorator<Application & WithInitTracker, TrackerConfig>(
+  function(config) {
+    if (config?.trackInit) {
+      const initSteps: string[] = [];
+      
+      // Type-safe: `this` knows about Application properties
+      this.getInitSteps = () => initSteps;
+      
+      // Track initialization steps
+      const originalOnInit = this.onInit?.bind(this);
+      if (originalOnInit) {
+        this.onInit = async function(...args: any[]) {
+          initSteps.push('onInit started');
+          await originalOnInit(...args);
+          initSteps.push('onInit completed');
+        };
+      }
+    }
+  }
+);
+
+@InitTracker({ trackInit: true, trackDispose: false })
+@Assemblage({
+  inject: [[DatabaseService]],
+  use: [['config', { host: 'localhost' }]],
+})
+class Application implements AbstractAssemblage {
+  // Merge with extended interface for type safety
+  getInitSteps?: () => string[];
+  
+  constructor(
+    private db: DatabaseService,
+    @Use('config') private config: any,
+    @Context() private context: AssemblerContext
+  ) {
+    // All parameter decorators work normally
+  }
+  
+  async onInit() {
+    await this.db.connect();
+  }
+}
+
+const app = Assembler.build(Application);
+// Type-safe method call
+console.log(app.getInitSteps?.()); // ['onInit started', 'onInit completed']
+```
+
+**Type Signature:**
+
+```typescript
+function createConstructorDecorator<
+  TInstance = any,        // Type of your class instance
+  TDefinition = object    // Type of your config object
+>(
+  callback?: (this: TInstance, definition?: TDefinition) => void
+): (definition?: TDefinition) => ClassDecorator
+```
+
+**Important Notes:**
+- Always use `function` (not arrow function) to access `this`
+- The decorator function runs **after** the constructor
+- All parameter decorators (`@Use`, `@Context`, etc.) are preserved
+- Can be combined with multiple decorators
+- Add properties to your class for full type safety (see examples above)
+- Use intersection types (`MyClass & WithExtension`) for extending class types
+
+**Exported Types:**
+- `ConstructorDecoratorCallback<TInstance, TDefinition>` - Type for the callback function
+- `ConstructorDecoratorFunction<TDefinition>` - Type for the decorator function itself
 
 ## Event System
 

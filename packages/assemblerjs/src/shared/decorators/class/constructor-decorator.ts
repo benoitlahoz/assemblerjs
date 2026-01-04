@@ -10,39 +10,83 @@ import { getDecoratedParametersIndexes, getParamIndexKey, getParamValueKey } fro
 import { ParameterDecoratorFactory } from '../parameters/parameter-decorator-factory';
 
 /**
+ * Type for the callback function that will be executed after the constructor.
+ * @template TInstance The type of the class instance
+ * @template TDefinition The type of the definition/configuration object
+ */
+export type ConstructorDecoratorCallback<TInstance = any, TDefinition extends ObjectLiteral = ObjectLiteral> = 
+  (this: TInstance, definition?: TDefinition) => void;
+
+/**
+ * Type for the decorator function.
+ */
+export type ConstructorDecoratorFunction = 
+  <T extends new (...args: any[]) => any>(target: T) => T;
+
+/**
+ * Type for a function that creates a decorator.
+ * @template TDefinition The type of the definition/configuration object
+ */
+export type DecoratorFactory<TDefinition extends ObjectLiteral = ObjectLiteral> =
+  (definition?: TDefinition) => ConstructorDecoratorFunction;
+
+/**
  * Create a custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
- * Note that it must be placed before the `Assemblage` decorator.
+ * The decorator can be placed above or below the `Assemblage` decorator.
  * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(definition?: ObjectLiteral): void | undefined } fn A function to execute after `super`.
- * Do not use arrow function here if access to `this` is required.
- * @returns A new decorator.
+ * @template TInstance The type of the class instance (for type-safe access to `this`)
+ * @template TDefinition The type of the definition/configuration object
+ * @param fn A function to execute after `super`. Do not use arrow function here if access to `this` is required.
+ * @returns A decorator function that accepts an optional definition and returns a ClassDecorator
+ * 
+ * @example
+ * ```typescript
+ * // Define your decorator with typed definition
+ * interface LoggerConfig {
+ *   prefix: string;
+ *   enabled: boolean;
+ * }
+ * 
+ * const Logger = createConstructorDecorator<MyClass, LoggerConfig>(function(config) {
+ *   // `this` is typed as MyClass
+ *   this.logPrefix = config?.prefix || 'LOG';
+ * });
+ * 
+ * @Logger({ prefix: 'APP', enabled: true })
+ * @Assemblage()
+ * class MyClass implements AbstractAssemblage {
+ *   logPrefix?: string;
+ * }
+ * ```
  */
-export const createConstructorDecorator = <T extends ObjectLiteral>(
-  fn?: (definition?: T) => void
-): any => {
-  return (definition?: T) => ConstructorDecorator(fn, definition);
+export const createConstructorDecorator = <
+  TInstance = any,
+  TDefinition extends ObjectLiteral = ObjectLiteral
+>(
+  fn?: ConstructorDecoratorCallback<TInstance, TDefinition>
+): DecoratorFactory<TDefinition> => {
+  return (definition?: TDefinition) => ConstructorDecorator(fn, definition) as any;
 };
 
 /**
  * A custom decorator that adds a function called after the original constructor
  * and that can wrap an `Assemblage` with its own parameters decorator (e.g. @Use, @Context, ...).
- * Note that it must be placed before the `Assemblage` decorator.
+ * The decorator can be placed above or below the `Assemblage` decorator.
  * The `definition` optional parameter allows passing a configuration object to the decorator.
  *
- * @param { function(definition?: ObjectLiteral): void | undefined } fn A function to execute after `super`.
- * Do not use arrow function here if access to `this` is required.
- * @param { boolean | undefined } asAssemblage If `true` decorate the class as an assemblage (defaults to `true`).
- * @returns A new decorator.
+ * @template TDefinition The type of the definition/configuration object
+ * @param fn A function to execute after `super`. Do not use arrow function here if access to `this` is required.
+ * @param definition The configuration object to pass to the callback function
+ * @returns A ClassDecorator
  */
 export const ConstructorDecorator =
-  <T extends ObjectLiteral>(
-    fn?: (definition?: T) => void,
-    definition?: T
-  ): any =>
-  // eslint-disable-next-line
-  <T extends { new (...args: any[]): {} }>(Base: T): any => {
+  <TDefinition extends ObjectLiteral = ObjectLiteral>(
+    fn?: ConstructorDecoratorCallback<any, TDefinition>,
+    definition?: TDefinition
+  ) =>
+  <TConstructor extends new (...args: any[]) => any>(Base: TConstructor): TConstructor => {
     const klass = class extends Base {
       constructor(...args: any[]) {
         super(...args);
@@ -98,5 +142,5 @@ export const ConstructorDecorator =
     return decorateAssemblage(
       klass,
       getOwnCustomMetadata(ReflectValue.AssemblageDefinition, Base)
-    );
+    ) as TConstructor;
   };
