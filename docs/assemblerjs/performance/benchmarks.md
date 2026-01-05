@@ -44,7 +44,9 @@ Measures the performance of building applications of different sizes.
   - Shallow hierarchy (2-3 levels) - **O(n * d)** where d ≈ 2-3
   - Deep hierarchy (5-10 levels) - **O(n * d)** where d ≈ 5-10
 
-### 2. **Injectable Resolution** ([Source](../../../pa.
+### 2. **Injectable Resolution** ([Source](../../../packages/assemblerjs/bench/injectable-resolution.bench.ts))
+
+**Complexity:** O(1) for singleton (cached), O(n) for transient
 
 - **Singleton Resolution** - **O(1)** (cached after first resolution)
   - Simple singleton injection
@@ -64,7 +66,7 @@ Measures the performance of building applications of different sizes.
   - Context with dependencies
   - Mixed context and service injection
 
-### 3. **Decorators** ([Source](../../../packages/as.
+### 3. **Decorators** ([Source](../../../packages/assemblerjs/bench/decorators.bench.ts))
 
 **Complexity:** O(1) per decorator application, O(p) where p is parameter count
 
@@ -73,15 +75,13 @@ Measures the performance of building applications of different sizes.
   - Complex configuration overhead
   - Decorator with multiple options
 
-- **Parameter Decorators** - **O(p)** where p = number of parameterse options
-
-- **Parameter Decorators**
+- **Parameter Decorators** - **O(p)** where p = number of parameters
   - @Context() injection
   - @Dispose() callback injection
   - Multiple parameter decorators
   - Custom parameter decorators
 
-### 4. **Event System** ([Source](../.
+### 4. **Event System** ([Source](../../../packages/assemblerjs/bench/event-emission.bench.ts))
 
 **Complexity:** O(L) where L is the number of listeners per event
 
@@ -96,7 +96,9 @@ Measures the performance of building applications of different sizes.
 - **Listener Management** - **O(1)** for add, **O(L)** for remove
   - Adding listeners - **O(1)**
   - Removing listeners - **O(L)**
-  - Once listeners - **O(1)** add + **O(.
+  - Once listeners - **O(1)** add + **O(L)** remove after trigger
+
+### 5. **Context Management** ([Source](../../../packages/assemblerjs/bench/context-management.bench.ts))
 
 **Complexity:** O(1) for Map-based operations
 
@@ -106,12 +108,11 @@ Measures the performance of building applications of different sizes.
   - Clear context - **O(k)** where k = number of keys
   - Multiple context instances
 
-- **Context with Dependencies** - **O(1)** injectionta access:
+- **Context with Dependencies** - **O(1)** injection
+  - Context injection in constructors
+  - Context access in lifecycle hooks
 
-- **Context Operations**
-  - Get/set values
-  - Check key existence
-  - Clear context.
+### 6. **Lifecycle Hooks** ([Source](../../../packages/assemblerjs/bench/lifecycle-hooks.bench.ts))
 
 **Complexity:** O(n) where n is the number of services with hooks
 
@@ -123,10 +124,9 @@ Measures the performance of building applications of different sizes.
 
 - **Hook Chains** - **O(n)** for sequential execution
   - Sequential hook execution - **O(n)**
-  - Asynchronous hooks - **O(1)** individual, **O(n)** awaited chaink execution performance:
+  - Asynchronous hooks - **O(1)** individual, **O(n)** awaited chain
 
-- **Hook Invocation**
-  - onRegister() overhead.
+### 7. **Object Management** ([Source](../../../packages/assemblerjs/bench/object-management.bench.ts))
 
 **Complexity:** O(1) for simple objects, O(d) where d is dependency count
 
@@ -138,9 +138,9 @@ Measures the performance of building applications of different sizes.
 - **Memory Management**
   - Dispose operations - **O(1)** per service, **O(n)** total
   - Reference cleanup - **O(r)** where r = reference count
-  - Garbage collection impact - **O(n)** (runtime-dependent)([Source](../../../packages/assemblerjs/bench/object-management.bench.ts))
+  - Garbage collection impact - **O(n)** (runtime-dependent)
 
-Tests object creation and destru.
+### 8. **Complex Applications** ([Source](../../../packages/assemblerjs/bench/complex-applications.bench.ts))
 
 **Complexity:** Composite of all operations - O(n * d * L)
 
@@ -154,7 +154,7 @@ Tests object creation and destru.
   - Strategy patterns - **O(1)** strategy resolution
   - Observer patterns with DI - **O(n + L)** where n = services, L = listeners
 
-### 8. **Complex Applications** ([S.
+### 9. **Advanced Features** ([Source](../../../packages/assemblerjs/bench/advanced-features.bench.ts))
 
 **Complexity:** Varies by feature
 
@@ -167,22 +167,6 @@ Tests object creation and destru.
   - Custom parameter decorators - **O(p)** where p = parameter count
   - Custom class decorators - **O(1)** per decorator
   - Decorator composition - **O(d)** where d = decorator chain length
-  - Strategy patterns
-  - Observer patterns with DI
-
-### 9. **Advanced Features** ([Source](../../../packages/assemblerjs/bench/advanced-features.bench.ts))
-
-Specialized features and edge cases:
-
-- **Tags System**
-  - Tagged service registration
-  - Tag-based resolution
-  - Multiple tags per service
-
-- **Custom Decorators**
-  - Custom parameter decorators
-  - Custom class decorators
-  - Decorator composition
 
 ## Running Benchmarks
 
@@ -302,15 +286,15 @@ class OptimizedService {
 
 ### 5. Batch Context Operations
 
-Group related context operations:
+Group related service resolutions:
 
 ```typescript
-// ✅ Better - Batch operations
-context.set('key1', value1);
-context.set('key2', value2);
-context.set('key3', value3);
+// ✅ Better - Batch resolutions
+const service1 = context.require(Service1);
+const service2 = context.require(Service2);
+const service3 = context.require(Service3);
 
-// Instead of interleaved get/set
+// Instead of interleaved require/use patterns
 ```
 
 ## Continuous Monitoring
