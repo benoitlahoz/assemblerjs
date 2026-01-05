@@ -137,33 +137,6 @@ Comprehensive documentation is available at:
 #### Performance
 - [Benchmarks](../../docs/assemblerjs/performance/benchmarks.md) - Performance metrics & best practices
 
-## Requirements
-
-- **Node.js:** ≥ 18.12.0
-- **TypeScript:** ≥ 5.0 (with decorator support)
-- **reflect-metadata:** Required for dependency injection
-
-## For Contributors
-
-### Architecture
-
-This package is part of the `assemblerjs` monorepo and depends on:
-
-- **`@assemblerjs/core`** - Internal utilities package
-
-### Development
-
-```bash
-# Install dependencies from workspace root
-yarn install
-
-# Build the package
-npx nx build assemblerjs
-
-# Run tests
-npx nx test assemblerjs
-```
-
 ## Tree-Shaking & Bundle Optimization
 
 `assembler.js` is optimized for tree-shaking with modular exports. Import only what you need:
