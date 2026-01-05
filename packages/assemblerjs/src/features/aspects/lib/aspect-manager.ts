@@ -1,4 +1,5 @@
 import type { Concrete } from '@assemblerjs/core';
+import { isClass } from '@assemblerjs/core';
 import type { AssemblerContext } from '@/features/assembler';
 import type { AspectInjection } from '@/features/assemblage';
 import type { AspectMetadata, Advice, JoinPoint } from '../types';
@@ -38,17 +39,45 @@ export class AspectManager {
    * @param resolveContext Optional context to use for resolving the aspect (if different from manager's context)
    */
   public registerAspect(aspectInjection: AspectInjection<any>, resolveContext?: AssemblerContext): void {
-    const AspectClass = aspectInjection[0];
-    const config = aspectInjection.length > 1 ? aspectInjection[1] : undefined;
+    // Determine if this is an abstract/concrete pair or a direct injection
+    let AbstractClass: any;
+    let AspectClass: any;
+    let config: Record<string, any> | undefined;
     
-    // Check if already registered
+    if (aspectInjection.length === 1) {
+      // [AspectClass]
+      AbstractClass = aspectInjection[0];
+      AspectClass = aspectInjection[0];
+      config = undefined;
+    } else if (aspectInjection.length === 2) {
+      const second = aspectInjection[1];
+      if (isClass(second)) {
+        // [AbstractClass, ConcreteClass]
+        AbstractClass = aspectInjection[0];
+        AspectClass = second;
+        config = undefined;
+      } else {
+        // [AspectClass, config]
+        AbstractClass = aspectInjection[0];
+        AspectClass = aspectInjection[0];
+        config = second;
+      }
+    } else {
+      // [AbstractClass, ConcreteClass, config]
+      AbstractClass = aspectInjection[0];
+      AspectClass = aspectInjection[1] as any;
+      config = aspectInjection[2];
+    }
+    
+    // Check if already registered (use concrete class name as key)
     if (this.aspects.has(AspectClass.name)) {
       return;
     }
 
     // Resolve the aspect instance from the provided context or fallback to manager's context
+    // Use the abstract class as identifier to resolve from context
     const contextToUse = resolveContext || this.context;
-    const aspectInstance = contextToUse.require(AspectClass, config);
+    const aspectInstance = contextToUse.require(AbstractClass, config);
     const definition = getDefinition(AspectClass as any);
 
     if (!definition) {

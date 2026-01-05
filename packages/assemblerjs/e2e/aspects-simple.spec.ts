@@ -5,6 +5,7 @@ import {
   AbstractUserService,
   UserService,
   LoggingAspect,
+  AbstractLoggingAspect,
 } from './fixtures/aspects';
 
 describe('AOP - Simple Test', () => {
@@ -13,7 +14,7 @@ describe('AOP - Simple Test', () => {
       inject: [
         [AbstractUserService, UserService],
       ],
-      aspects: [[LoggingAspect]],
+      aspects: [[AbstractLoggingAspect, LoggingAspect]],
     })
     class App implements AbstractAssemblage {
       constructor(
@@ -25,14 +26,14 @@ describe('AOP - Simple Test', () => {
     const app = Assembler.build(App);
     
     // Get aspect instance from context
-    const loggingAspect = app.context.require(LoggingAspect) as LoggingAspect;
+    const loggingAspect = app.context.require(AbstractLoggingAspect);
     
     // Verify aspect is initialized
     expect(loggingAspect).toBeDefined();
     expect(loggingAspect.logs).toEqual([]);
     
     // Call a method
-    const result = await app.userService.create({ name: 'John', email: 'john@test.com' });
+    await app.userService.create({ name: 'John', email: 'john@test.com' });
     
     // Check aspect was triggered
     expect(loggingAspect.logs.length).toBeGreaterThan(0);

@@ -137,15 +137,19 @@ describe('AOP - Integration Tests', () => {
     const app = Assembler.build(App);
     
     // Try to create with missing email (should fail validation)
-    await expect(
-      app.userService.create({ name: 'David' })
-    ).rejects.toThrow('email is required');
+    try {
+      await app.userService.create({ name: 'David' });
+      expect.fail('Should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error).message).toBe('Validation failed: email is required');
+    }
     
     // Validation should have run
     expect(app.validationAspect.validations).toContain('validateCreate');
     
-    // Performance should still have measured (even if failed)
-    expect(app.performanceAspect.measurements.length).toBeGreaterThan(0);
+    // Performance should not have measured since validation failed first
+    expect(app.performanceAspect.measurements.length).toBe(0);
   });
 
   it('should work with caching aspect', async () => {

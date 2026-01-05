@@ -1,17 +1,21 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
-import { Assemblage, Assembler, AbstractAssemblage, Aspect, Before, AbstractAspect, type AdviceContext } from '../src';
 import {
-  AbstractUserService,
-  UserService,
-} from './fixtures/aspects';
+  Assemblage,
+  Assembler,
+  AbstractAssemblage,
+  Aspect,
+  Before,
+  AbstractAspect,
+  type AdviceContext,
+} from '../src';
+import { AbstractUserService, UserService } from './fixtures/aspects';
 
 describe('AOP - Pointcut Patterns', () => {
   describe('Wildcard patterns', () => {
     it('should match all methods with * wildcard', async () => {
       @Aspect()
-      @Assemblage()
-      class AllMethodsAspect extends AbstractAspect {
+      class AllMethodsAspect implements AbstractAspect {
         public calls: string[] = [];
 
         @Before('execution(UserService.*)')
@@ -32,11 +36,11 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
+
       await app.userService.create({ name: 'Alice', email: 'alice@test.com' });
       await app.userService.findAll();
       (app.userService as UserService).count();
-      
+
       expect(app.aspect.calls).toContain('create');
       expect(app.aspect.calls).toContain('findAll');
       expect(app.aspect.calls).toContain('count');
@@ -44,8 +48,7 @@ describe('AOP - Pointcut Patterns', () => {
 
     it('should match specific method with exact name', async () => {
       @Aspect()
-      @Assemblage()
-      class CreateOnlyAspect extends AbstractAspect {
+      class CreateOnlyAspect implements AbstractAspect {
         public calls: string[] = [];
 
         @Before('execution(UserService.create)')
@@ -66,18 +69,17 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
+
       await app.userService.create({ name: 'Bob', email: 'bob@test.com' });
       await app.userService.findAll();
-      
+
       expect(app.aspect.calls).toContain('create');
       expect(app.aspect.calls).not.toContain('findAll');
     });
 
     it('should match methods starting with pattern', async () => {
       @Aspect()
-      @Assemblage()
-      class FindMethodsAspect extends AbstractAspect {
+      class FindMethodsAspect implements AbstractAspect {
         public calls: string[] = [];
 
         @Before('execution(UserService.find*)')
@@ -98,11 +100,14 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
-      await app.userService.create({ name: 'Charlie', email: 'charlie@test.com' });
+
+      await app.userService.create({
+        name: 'Charlie',
+        email: 'charlie@test.com',
+      });
       await app.userService.findAll();
       (app.userService as UserService).findByEmail('charlie@test.com');
-      
+
       expect(app.aspect.calls).not.toContain('create');
       expect(app.aspect.calls).toContain('findAll');
       expect(app.aspect.calls).toContain('findByEmail');
@@ -111,12 +116,14 @@ describe('AOP - Pointcut Patterns', () => {
     it('should match any class with wildcard', async () => {
       @Aspect()
       @Assemblage()
-      class AnyClassAspect extends AbstractAspect {
+      class AnyClassAspect implements AbstractAspect {
         public calls: string[] = [];
 
         @Before('execution(*.create)')
         logAnyCreate(context: AdviceContext) {
-          this.calls.push(`${context.target.constructor.name}.${context.methodName}`);
+          this.calls.push(
+            `${context.target.constructor.name}.${context.methodName}`
+          );
         }
       }
 
@@ -132,9 +139,9 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
+
       await app.userService.create({ name: 'David', email: 'david@test.com' });
-      
+
       expect(app.aspect.calls).toContain('UserService.create');
     });
   });
@@ -143,7 +150,7 @@ describe('AOP - Pointcut Patterns', () => {
     it('should handle multiple pointcuts on same advice', async () => {
       @Aspect()
       @Assemblage()
-      class MultiPointcutAspect extends AbstractAspect {
+      class MultiPointcutAspect implements AbstractAspect {
         public calls: string[] = [];
 
         @Before('execution(UserService.create)')
@@ -166,12 +173,15 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
-      const user = await app.userService.create({ name: 'Eve', email: 'eve@test.com' });
+
+      const user = await app.userService.create({
+        name: 'Eve',
+        email: 'eve@test.com',
+      });
       await app.userService.update(user.id, { name: 'Eva' });
       await app.userService.delete(user.id);
       await app.userService.findAll();
-      
+
       expect(app.aspect.calls).toContain('create');
       expect(app.aspect.calls).toContain('update');
       expect(app.aspect.calls).toContain('delete');
@@ -181,7 +191,9 @@ describe('AOP - Pointcut Patterns', () => {
 
   describe('Pattern combinations', () => {
     it('should handle complex wildcard patterns', async () => {
-      @Aspect()      @Assemblage()      class ComplexPatternAspect implements AbstractAspect {
+      @Aspect()
+      @Assemblage()
+      class ComplexPatternAspect implements AbstractAspect {
         public operations: Array<{ type: string; method: string }> = [];
 
         @Before('execution(UserService.find*)')
@@ -209,21 +221,26 @@ describe('AOP - Pointcut Patterns', () => {
       }
 
       const app = Assembler.build(App);
-      
-      const user = await app.userService.create({ name: 'Frank', email: 'frank@test.com' });
+
+      const user = await app.userService.create({
+        name: 'Frank',
+        email: 'frank@test.com',
+      });
       await app.userService.findById(user.id);
       await app.userService.findAll();
       await app.userService.update(user.id, { name: 'Francis' });
-      
-      const readOps = app.aspect.operations.filter(op => op.type === 'read');
-      const writeOps = app.aspect.operations.filter(op => op.type === 'write');
-      
+
+      const readOps = app.aspect.operations.filter((op) => op.type === 'read');
+      const writeOps = app.aspect.operations.filter(
+        (op) => op.type === 'write'
+      );
+
       expect(readOps.length).toBe(2);
       expect(writeOps.length).toBe(2);
-      expect(readOps.map(op => op.method)).toContain('findById');
-      expect(readOps.map(op => op.method)).toContain('findAll');
-      expect(writeOps.map(op => op.method)).toContain('create');
-      expect(writeOps.map(op => op.method)).toContain('update');
+      expect(readOps.map((op) => op.method)).toContain('findById');
+      expect(readOps.map((op) => op.method)).toContain('findAll');
+      expect(writeOps.map((op) => op.method)).toContain('create');
+      expect(writeOps.map((op) => op.method)).toContain('update');
     });
   });
 });

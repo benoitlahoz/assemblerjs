@@ -4,7 +4,7 @@ import { Aspect, Before, AbstractAspect, type AdviceContext } from '../../../src
  * Security aspect for authorization checks
  */
 @Aspect()
-export class SecurityAspect extends AbstractAspect {
+export class SecurityAspect implements AbstractAspect {
   private currentUser: any = null;
   public checks: string[] = [];
 

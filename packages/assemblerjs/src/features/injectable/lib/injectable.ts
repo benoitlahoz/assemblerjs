@@ -1,5 +1,5 @@
 import type { Concrete } from '@assemblerjs/core';
-import { clearInstance } from '@assemblerjs/core';
+import { clearInstance, isClass } from '@assemblerjs/core';
 import { defineCustomMetadata, ReflectValue, type Identifier } from '@/shared/common';
 import type {
   AssemblageDefinition,
@@ -86,8 +86,9 @@ export class Injectable<T> implements AbstractInjectable<T> {
     // Phase 1: Register ALL aspects (from aspects[] and from inject[]) as injectables FIRST
     // This ensures they're available as dependencies but not yet in AspectManager
     for (const aspect of this.aspects) {
-      const [AspectClass] = aspect;
-      this.privateContext.register([AspectClass]);
+      // Register the aspect injection (supports [Concrete], [Abstract, Concrete], etc.)
+      const injection = this.resolveAspectToInjection(aspect);
+      this.privateContext.register(injection);
     }
     
     // Also check if any injection is an aspect and register it first
@@ -147,6 +148,36 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // through the `use` property of `AssemblerDefinition`.
       this.singletonInstance = buildable.instance;
     } 
+  }
+
+  /**
+   * Converts an AspectInjection to an Injection format for registration.
+   * Supports all AspectInjection formats:
+   * - [Concrete]
+   * - [Concrete, config]
+   * - [Abstract, Concrete]
+   * - [Abstract, Concrete, config]
+   * 
+   * @param aspect The aspect injection to convert
+   * @returns An Injection that can be registered in the context
+   */
+  private resolveAspectToInjection(aspect: any): Injection<any> {
+    if (aspect.length === 1) {
+      // [Concrete]
+      return [aspect[0]];
+    } else if (aspect.length === 2) {
+      const second = aspect[1];
+      if (isClass(second)) {
+        // [Abstract, Concrete]
+        return [aspect[0], aspect[1]];
+      } else {
+        // [Concrete, config]
+        return [aspect[0], aspect[1]];
+      }
+    } else {
+      // [Abstract, Concrete, config]
+      return [aspect[0], aspect[1], aspect[2]];
+    }
   }
 
   /**

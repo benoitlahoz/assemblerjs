@@ -4,7 +4,7 @@ import { Aspect, Before, After, AbstractAspect, type AdviceContext } from '../..
  * Caching aspect for read operations
  */
 @Aspect()
-export class CachingAspect extends AbstractAspect {
+export class CachingAspect implements AbstractAspect {
   private cache = new Map<string, any>();
   public hits = 0;
   public misses = 0;

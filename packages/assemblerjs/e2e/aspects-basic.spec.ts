@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
-import { Assemblage, Assembler, AbstractAssemblage } from '../src';
+import { Assemblage, Assembler, AbstractAssemblage, Context, type AssemblerContext } from '../src';
 import {
   AbstractUserService,
   UserService,
@@ -13,22 +13,22 @@ describe('AOP - Basic Advices', () => {
       @Assemblage({
         inject: [
           [AbstractUserService, UserService],
-          [LoggingAspect],
         ],
         aspects: [[LoggingAspect]],
       })
       class App implements AbstractAssemblage {
         constructor(
           public userService: AbstractUserService,
-          public loggingAspect: LoggingAspect
+          @Context() public context: AssemblerContext
         ) {}
       }
 
       const app = Assembler.build(App);
+      const loggingAspect = app.context.require(LoggingAspect) as LoggingAspect;
       
       await app.userService.create({ name: 'John', email: 'john@test.com' });
       
-      const beforeLog = app.loggingAspect.logs.find(log => log.includes('[BEFORE] create'));
+      const beforeLog = loggingAspect.logs.find(log => log.includes('[BEFORE] create'));
       expect(beforeLog).toBeDefined();
       expect(beforeLog).toContain('John');
       expect(beforeLog).toContain('john@test.com');

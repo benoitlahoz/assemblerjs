@@ -4,7 +4,7 @@ import { Aspect, Around, AbstractAspect, type AdviceContext } from '../../../src
  * Performance monitoring aspect
  */
 @Aspect()
-export class PerformanceAspect extends AbstractAspect {
+export class PerformanceAspect implements AbstractAspect {
   public measurements: Array<{ method: string; duration: number }> = [];
 
   onInit() {

@@ -4,7 +4,7 @@ import { Aspect, Before, AbstractAspect, type AdviceContext } from '../../../src
  * Validation aspect with high priority
  */
 @Aspect()
-export class ValidationAspect extends AbstractAspect {
+export class ValidationAspect implements AbstractAspect {
   public validations: string[] = [];
 
   onInit() {
