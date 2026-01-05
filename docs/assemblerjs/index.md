@@ -44,48 +44,46 @@ app.start();
 
 ## Documentation Structure
 
-### [🚀 Getting Started](./assemblerjs/getting-started/installation.md)
+### [🚀 Getting Started](./getting-started/installation.md)
 
 Learn the basics and get your first application running:
-- [Installation](./assemblerjs/getting-started/installation.md)
-- [Quick Start Guide](./assemblerjs/getting-started/quick-start.md)
-- [TypeScript Setup](./assemblerjs/getting-started/typescript-setup.md)
+- [Installation](./getting-started/installation.md)
+- [Quick Start Guide](./getting-started/quick-start.md)
+- [TypeScript Setup](./getting-started/typescript-setup.md)
 
-### [📖 Core Concepts](./assemblerjs/core-concepts/assemblage.md)
+### [📖 Core Concepts](./core-concepts/assemblage.md)
 
 Understand the fundamental concepts:
-- [Assemblage](./assemblerjs/core-concepts/assemblage.md) - Building blocks of the DI container
-- [Dependency Injection](./assemblerjs/core-concepts/dependency-injection.md) - Injection patterns
-- [Abstraction Pattern](./assemblerjs/core-concepts/abstraction-pattern.md) - Interface-based design
-- [Lifecycle Hooks](./assemblerjs/core-concepts/lifecycle-hooks.md) - Initialization & cleanup
+- [Assemblage](./core-concepts/assemblage.md) - Building blocks of the DI container
+- [Dependency Injection](./core-concepts/dependency-injection.md) - Injection patterns
+- [Abstraction Pattern](./core-concepts/abstraction-pattern.md) - Interface-based design
+- [Lifecycle Hooks](./core-concepts/lifecycle-hooks.md) - Initialization & cleanup
 
-### [🎨 Decorators](./assemblerjs/decorators/parameter-decorators.md)
+### [🎨 Decorators](./decorators/parameter-decorators.md)
 
 Master the decorator system:
-- [Parameter Decorators](./assemblerjs/decorators/parameter-decorators.md) - Built-in decorators (`@Context()`, `@Configuration()`, etc.)
-- [Custom Parameter Decorators](./assemblerjs/decorators/custom-parameter.md) - Create your own parameter decorators
-- [Custom Class Decorators](./assemblerjs/decorators/custom-class.md) - Type-safe class decorators
+- [Parameter Decorators](./decorators/parameter-decorators.md) - Built-in decorators (`@Context()`, `@Configuration()`, etc.)
+- [Custom Parameter Decorators](./decorators/custom-parameter.md) - Create your own parameter decorators
+- [Custom Class Decorators](./decorators/custom-class.md) - Type-safe class decorators
 
-### [✨ Features](./assemblerjs/features/events.md)
+### [✨ Features](./features/events.md)
 
 Explore advanced features:
-- [Event System](./assemblerjs/features/events.md) - Event-driven architecture with EventManager
-- [Tags](./assemblerjs/features/tags.md) - Group and retrieve assemblages by category
-- [Singleton vs Transient](./assemblerjs/features/singleton-transient.md) - Control instance lifecycle
+- [Event System](./features/events.md) - Event-driven architecture with EventManager
+- [Tags](./features/tags.md) - Group and retrieve assemblages by category
+- [Singleton vs Transient](./features/singleton-transient.md) - Control instance lifecycle
 
-### [📚 API Reference](./assemblerjs/api/assembler.md)
-
+### [📚 API Reference](./api/assembler.md)
 Complete API documentation:
-- [Assembler API](./assemblerjs/api/assembler.md) - Container bootstrap methods
-- [AssemblerContext API](./assemblerjs/api/context.md) - Context interface for dependency management
-- [Types](./assemblerjs/api/types.md) - TypeScript types and interfaces
+- [Assembler API](./api/assembler.md) - Container bootstrap methods
+- [AssemblerContext API](./api/context.md) - Context interface for dependency management
+- [Types](./api/types.md) - TypeScript types and interfaces
 
-### [📘 Guides](./assemblerjs/guides/advanced-examples.md)
+### [📘 Guides](./guides/advanced-examples.md)
 
 Real-world examples and optimization:
-- [Advanced Examples](./assemblerjs/guides/advanced-examples.md) - Multi-module apps, plugin systems, factories
-- [Tree-Shaking Guide](./assemblerjs/guides/tree-shaking.md) - Bundle optimization strategies
-
+- [Advanced Examples](./guides/advanced-examples.md) - Multi-module apps, plugin systems, factories
+- [Tree-Shaking Guide](./guides/tree-shaking.md) - Bundle optimization strategies
 ## Installation
 
 ```sh

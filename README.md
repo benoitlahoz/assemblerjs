@@ -11,7 +11,7 @@
 
 **A modern, type-safe, and lightweight ecosystem for building scalable TypeScript applications**
 
-[Documentation](./docs/assemblerjs/) • [Quick Start](#quick-start) • [Packages](#packages) • [Examples](#examples)
+[Documentation](./docs/assemblerjs/index.md) • [Quick Start](#quick-start) • [Packages](#packages) • [Examples](#examples)
 
 </div>
 
