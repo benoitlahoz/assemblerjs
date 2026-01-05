@@ -16,10 +16,7 @@ describe('Event Emission Performance', () => {
       const emitter = new EmitterService();
       emitter.on('test', () => { /* listener */ });
 
-      // Measure 10k emissions
-      for (let i = 0; i < 10000; i++) {
-        emitter.emit('test');
-      }
+      emitter.emit('test');
     });
 
     bench('Emit with 10 listeners', () => {

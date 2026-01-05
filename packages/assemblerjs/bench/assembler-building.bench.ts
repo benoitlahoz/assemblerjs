@@ -65,10 +65,8 @@ describe('Assembler Building Performance', () => {
         ) {}
       }
 
-      for (let i = 0; i < 100; i++) {
-        const app = Assembler.build(MediumApp);
-        if (!app.s1 || !app.s9) throw new Error('Build failed');
-      }
+      const app = Assembler.build(MediumApp);
+      if (!app.s1 || !app.s9) throw new Error('Build failed');
     });
 
     bench('Build large application (25 services)', () => {

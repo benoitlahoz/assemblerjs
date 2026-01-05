@@ -88,9 +88,10 @@ export default defineConfig(() => ({
       reportsDirectory: './coverage',
       provider: 'istanbul' as const,
     },
-  },
-  benchmark: {
-    include: ['bench/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    reporters: ['default' /* , 'json', 'html' */],
+    benchmark: {
+      include: ['bench/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+      reporters: ['default'],
+      outputJson: './bench/bench-results.json',
+    },
   },
 }));

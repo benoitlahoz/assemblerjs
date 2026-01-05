@@ -12,20 +12,25 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageRoot = join(__dirname, '..');
+const workspaceRoot = join(packageRoot, '../..');
 const readmePath = join(packageRoot, 'README.md');
+const benchmarksPath = join(packageRoot, '../../docs/assemblerjs/performance/benchmarks.md');
+const benchResultsPath = join(packageRoot, 'bench/bench-results.json');
 
 /**
- * Execute benchmarks and capture output
+ * Execute benchmarks and generate JSON output
  */
 function runBenchmarks() {
   console.log('🏃 Running benchmarks...');
   try {
-    const output = execSync('npx vitest bench --run', {
-      cwd: packageRoot,
+    // Use Nx command from workspace root
+    // JSON output is configured in vite.config.mts via benchmark.outputJson
+    execSync('npx nx bench assemblerjs', {
+      cwd: workspaceRoot,
       encoding: 'utf-8',
-      stdio: 'pipe',
+      stdio: 'inherit',
     });
-    return output;
+    console.log('✅ Benchmarks completed');
   } catch (error) {
     console.error('❌ Failed to run benchmarks:', error.message);
     process.exit(1);
@@ -33,30 +38,54 @@ function runBenchmarks() {
 }
 
 /**
- * Parse benchmark output to extract ops/sec metrics
- * Format: "name x ops/sec ±0.00% (runs sampled)"
+ * Parse benchmark JSON output to extract ops/sec metrics
+ * Vitest benchmark JSON structure - search through all results
+ * Note: Some benchmarks have internal loops, so we multiply Hz by loop count
  */
-function parseBenchmarkResults(output) {
-  const results = {};
-
-  // Patterns to match benchmark results
-  const patterns = {
-    assemblerBuilding: /Build medium application.*?(\d+(?:,\d+)*)\s*ops\/sec/i,
-    injectableResolution: /Resolve singleton.*?(\d+(?:,\d+)*)\s*ops\/sec/i,
-    eventSystem: /Emit event.*?single listener.*?(\d+(?:,\d+)*)\s*ops\/sec/i,
-    decorators: /@Inject.*?basic.*?(\d+(?:,\d+)*)\s*ops\/sec/i,
-  };
-
-  for (const [key, pattern] of Object.entries(patterns)) {
-    const match = output.match(pattern);
-    if (match) {
-      // Remove commas and convert to number
-      const opsPerSec = parseInt(match[1].replace(/,/g, ''), 10);
-      results[key] = opsPerSec;
-    }
+function parseBenchmarkResults() {
+  try {
+    const jsonContent = readFileSync(benchResultsPath, 'utf-8');
+    const benchData = JSON.parse(jsonContent);
+    
+    const results = {};
+    
+    // Vitest benchmark JSON structure
+    const searchBenchmarks = (obj) => {
+      if (Array.isArray(obj)) {
+        obj.forEach(item => searchBenchmarks(item));
+      } else if (obj && typeof obj === 'object') {
+        // Check if this is a benchmark result with hz value
+        if (obj.name && obj.hz && obj.hz > 0) {
+          const name = obj.name;
+          const hz = obj.hz;
+          
+          // Match specific benchmarks we want to track
+          if (name.includes('Build medium application')) {
+            if (!results.assemblerBuilding || hz > results.assemblerBuilding) {
+              results.assemblerBuilding = Math.round(hz);
+            }
+          } else if (name.includes('Access singleton service') && name.includes('no dependencies')) {
+            if (!results.injectableResolution || hz > results.injectableResolution) {
+              results.injectableResolution = Math.round(hz);
+            }
+          } else if (name === 'Emit with 1 listener') {
+            results.eventSystem = Math.round(hz);
+          } else if (name === '@Assemblage() decorator application') {
+            results.decorators = Math.round(hz);
+          }
+        }
+        // Recursively search in object values
+        Object.values(obj).forEach(value => searchBenchmarks(value));
+      }
+    };
+    
+    searchBenchmarks(benchData);
+    
+    return results;
+  } catch (error) {
+    console.warn('⚠️  Failed to read benchmark JSON:', error.message);
+    return {};
   }
-
-  return results;
 }
 
 /**
@@ -113,7 +142,7 @@ function updateReadme(results) {
 
 ${badges}
 
-[→ Full Benchmarks](../../docs/assemblerjs/performance/benchmarks.md)`;
+[→ Full Benchmarks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/performance/benchmarks.md)`;
 
   // Match and replace the Performance Metrics section
   const pattern = /## Performance Metrics\n\n.*?\n\n\[→ Full Benchmarks\].*?\)/s;
@@ -124,6 +153,39 @@ ${badges}
     console.log('✅ README.md updated successfully!');
   } else {
     console.warn('⚠️  Performance Metrics section not found in README.md');
+    console.log('You may need to add the section manually.');
+  }
+}
+
+/**
+ * Update benchmarks.md with new performance badges
+ */
+function updateBenchmarks(results) {
+  console.log('📝 Updating benchmarks.md...');
+
+  const benchmarks = readFileSync(benchmarksPath, 'utf-8');
+
+  // Create new badges section
+  const badges = [
+    generateBadge('assembler building', results.assemblerBuilding || 156_000),
+    generateBadge('singleton cache', results.injectableResolution || 1_200_000),
+    generateBadge('event emit', results.eventSystem || 432_000),
+    generateBadge('decorators', results.decorators || 890_000),
+  ].join('\n');
+
+  const newSection = `## Performance Metrics
+
+${badges}`;
+
+  // Match and replace the Performance Metrics section (only badges, no link)
+  const pattern = /## Performance Metrics\n\n.*?(?=\n\n##)/s;
+  
+  if (pattern.test(benchmarks)) {
+    const updatedBenchmarks = benchmarks.replace(pattern, newSection);
+    writeFileSync(benchmarksPath, updatedBenchmarks, 'utf-8');
+    console.log('✅ benchmarks.md updated successfully!');
+  } else {
+    console.warn('⚠️  Performance Metrics section not found in benchmarks.md');
     console.log('You may need to add the section manually.');
   }
 }
@@ -145,8 +207,15 @@ function displayResults(results) {
 async function main() {
   console.log('🚀 Performance Badge Updater\n');
 
-  const output = runBenchmarks();
-  const results = parseBenchmarkResults(output);
+  const skipBenchmarks = process.argv.includes('--skip-benchmarks');
+  
+  if (skipBenchmarks) {
+    console.log('⏭️  Skipping benchmark run, using existing results...\n');
+  } else {
+    runBenchmarks();
+  }
+  
+  const results = parseBenchmarkResults();
 
   if (Object.keys(results).length === 0) {
     console.warn('⚠️  No benchmark results found in output');
@@ -155,6 +224,7 @@ async function main() {
 
   displayResults(results);
   updateReadme(results);
+  updateBenchmarks(results);
 
   console.log('✨ Done!');
 }

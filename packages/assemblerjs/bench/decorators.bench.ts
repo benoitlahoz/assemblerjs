@@ -6,13 +6,11 @@ describe('Decorators Performance', () => {
   describe('Assemblage Decorator Performance', () => {
     bench('@Assemblage() decorator application', () => {
       // Measure decorator application overhead
-      for (let i = 0; i < 10000; i++) {
-        @Assemblage()
-        class DecoratedService implements AbstractAssemblage {}
+      @Assemblage()
+      class DecoratedService implements AbstractAssemblage {}
 
-        const instance = new DecoratedService();
-        if (!instance) throw new Error('Decorator failed');
-      }
+      const instance = new DecoratedService();
+      if (!instance) throw new Error('Decorator failed');
     });
 
     bench('@Assemblage() with complex config', () => {

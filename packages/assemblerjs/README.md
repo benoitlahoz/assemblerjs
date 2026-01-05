@@ -8,10 +8,16 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 
 ## Performance Metrics
 
-![Assembler Building](https://img.shields.io/badge/assembler%20building-156k%20ops%2Fsec-brightgreen.svg?style=flat)
-![Injectable Resolution](https://img.shields.io/badge/singleton%20cache-1.2M%20ops%2Fsec-brightgreen.svg?style=flat)
-![Event System](https://img.shields.io/badge/event%20emit-432k%20ops%2Fsec-brightgreen.svg?style=flat)
-![Decorators](https://img.shields.io/badge/decorators-890k%20ops%2Fsec-brightgreen.svg?style=flat)
+![assembler building](https://img.shields.io/badge/assembler%20building-14k%20ops%2Fsec-green.svg?style=flat)
+![singleton cache](https://img.shields.io/badge/singleton%20cache-183k%20ops%2Fsec-brightgreen.svg?style=flat)
+![event emit](https://img.shields.io/badge/event%20emit-582k%20ops%2Fsec-brightgreen.svg?style=flat)
+![decorators](https://img.shields.io/badge/decorators-685k%20ops%2Fsec-brightgreen.svg?style=flat)
+
+Real-world performance metrics:
+- **Assembler Building**: Complete build of a medium application (10 services with dependencies)
+- **Singleton Cache**: Resolution and access to a singleton service without dependencies
+- **Event Emit**: Single event emission with 1 registered listener
+- **Decorators**: Application of the `@Assemblage()` decorator on a class
 
 [→ Full Benchmarks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/performance/benchmarks.md)
 
