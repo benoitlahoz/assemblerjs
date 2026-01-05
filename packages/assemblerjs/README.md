@@ -13,7 +13,7 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 ![Event System](https://img.shields.io/badge/event%20emit-432k%20ops%2Fsec-brightgreen.svg?style=flat)
 ![Decorators](https://img.shields.io/badge/decorators-890k%20ops%2Fsec-brightgreen.svg?style=flat)
 
-[→ Full Benchmarks](../../docs/assemblerjs/performance/benchmarks.md)
+[→ Full Benchmarks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/performance/benchmarks.md)
 
 ---
 
@@ -100,42 +100,42 @@ app.start(); // Output: "App started!"
 
 Comprehensive documentation is available at:
 
-**[→ Full Documentation](../../docs/assemblerjs/)**
+**[→ Full Documentation](https://github.com/benoitlahoz/assemblerjs/tree/main/docs/assemblerjs)**
 
 ### Quick Links
 
 #### Getting Started
-- [Installation](../../docs/assemblerjs/getting-started/installation.md)
-- [Quick Start Guide](../../docs/assemblerjs/getting-started/quick-start.md)
-- [TypeScript Setup](../../docs/assemblerjs/getting-started/typescript-setup.md)
+- [Installation](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/getting-started/installation.md)
+- [Quick Start Guide](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/getting-started/quick-start.md)
+- [TypeScript Setup](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/getting-started/typescript-setup.md)
 
 #### Core Concepts
-- [Assemblage](../../docs/assemblerjs/core-concepts/assemblage.md) - Building blocks
-- [Dependency Injection](../../docs/assemblerjs/core-concepts/dependency-injection.md) - DI patterns
-- [Abstraction Pattern](../../docs/assemblerjs/core-concepts/abstraction-pattern.md) - Interface-based design
-- [Lifecycle Hooks](../../docs/assemblerjs/core-concepts/lifecycle-hooks.md) - Initialization & cleanup
+- [Assemblage](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/assemblage.md) - Building blocks
+- [Dependency Injection](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/dependency-injection.md) - DI patterns
+- [Abstraction Pattern](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/abstraction-pattern.md) - Interface-based design
+- [Lifecycle Hooks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/lifecycle-hooks.md) - Initialization & cleanup
 
 #### Decorators
-- [Parameter Decorators](../../docs/assemblerjs/decorators/parameter-decorators.md) - Built-in decorators
-- [Custom Parameter Decorators](../../docs/assemblerjs/decorators/custom-parameter.md) - Create your own
-- [Custom Class Decorators](../../docs/assemblerjs/decorators/custom-class.md) - Type-safe class decorators
+- [Parameter Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/parameter-decorators.md) - Built-in decorators
+- [Custom Parameter Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/custom-parameter.md) - Create your own
+- [Custom Class Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/custom-class.md) - Type-safe class decorators
 
 #### Features
-- [Event System](../../docs/assemblerjs/features/events.md) - Event-driven architecture
-- [Tags](../../docs/assemblerjs/features/tags.md) - Group assemblages
-- [Singleton vs Transient](../../docs/assemblerjs/features/singleton-transient.md) - Instance lifecycle
+- [Event System](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/features/events.md) - Event-driven architecture
+- [Tags](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/features/tags.md) - Group assemblages
+- [Singleton vs Transient](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/features/singleton-transient.md) - Instance lifecycle
 
 #### API Reference
-- [Assembler API](../../docs/assemblerjs/api/assembler.md) - Container methods
-- [AssemblerContext API](../../docs/assemblerjs/api/context.md) - Context interface
-- [Types](../../docs/assemblerjs/api/types.md) - TypeScript types
+- [Assembler API](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/api/assembler.md) - Container methods
+- [AssemblerContext API](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/api/context.md) - Context interface
+- [Types](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/api/types.md) - TypeScript types
 
 #### Guides
-- [Advanced Examples](../../docs/assemblerjs/guides/advanced-examples.md) - Real-world patterns
-- [Tree-Shaking](../../docs/assemblerjs/guides/tree-shaking.md) - Bundle optimization
+- [Advanced Examples](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/guides/advanced-examples.md) - Real-world patterns
+- [Tree-Shaking](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/guides/tree-shaking.md) - Bundle optimization
 
 #### Performance
-- [Benchmarks](../../docs/assemblerjs/performance/benchmarks.md) - Performance metrics & best practices
+- [Benchmarks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/performance/benchmarks.md) - Performance metrics & best practices
 
 ## Tree-Shaking & Bundle Optimization
 
