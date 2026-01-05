@@ -129,7 +129,6 @@ import 'reflect-metadata';
 
 - 📦 **NPM Package:** [assemblerjs](https://www.npmjs.com/package/assemblerjs)
 - 🐛 **Issue Tracker:** [GitHub Issues](https://github.com/benoitlahoz/assemblerjs/issues)
-- 📖 **Full README:** [FULL_README.md](./assemblerjs/FULL_README.md)
 
 ## License
 

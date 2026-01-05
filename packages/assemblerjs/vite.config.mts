@@ -90,7 +90,7 @@ export default defineConfig(() => ({
     },
   },
   benchmark: {
-    include: ['e2e/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['bench/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default' /* , 'json', 'html' */],
   },
 }));
