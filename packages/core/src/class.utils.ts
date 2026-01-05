@@ -26,9 +26,6 @@ export const clearInstance = <T extends object>(
 ): void => {
   const objKeys = <T extends object>(instance: T, ctor: Class<T>) => {
     return [
-      // Public methods.
-      ...Object.getOwnPropertyNames(ctor.prototype),
-      ...Object.getOwnPropertyNames(Object.getPrototypeOf(instance)),
       // Instance's variables.
       ...Object.getOwnPropertyNames(instance),
     ];

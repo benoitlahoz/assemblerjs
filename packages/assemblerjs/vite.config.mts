@@ -63,18 +63,34 @@ export default defineConfig(() => ({
     rollupOptions: {
       // External packages that should not be bundled into your library.
       external: ['@assemblerjs/core'],
+      output: {
+        // Preserve module structure for better tree-shaking
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        // Use named exports
+        exports: 'named' as const,
+      },
     },
-    minify: 'terser' as const,
+    minify: false,
   },
   test: {
     watch: false,
     globals: true,
     environment: 'node',
     include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    esbuild: {
+      tsconfigRaw: {
+        extends: './tsconfig.spec.json',
+      },
+    },
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage',
       provider: 'istanbul' as const,
     },
+  },
+  benchmark: {
+    include: ['bench/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    reporters: ['default' /* , 'json', 'html' */],
   },
 }));

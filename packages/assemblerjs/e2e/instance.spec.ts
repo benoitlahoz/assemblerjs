@@ -30,12 +30,13 @@ describe('Instance injection with class or token identifiers.', () => {
       constructor(
         public doNothing: DoNothing,
 
-        @Use('config') public config,
-        @Use('options') private options,
+        @Use('config') public config: any,
+        @Use('options') private options: any,
 
         @Context() public context: any
       ) {
-        expect(config.foo).toBe('bar');
+        expect(this.config.foo).toBe('bar');
+        expect(this.options.baz).toBe('ack');
       }
     }
 

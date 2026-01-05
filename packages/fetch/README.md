@@ -205,3 +205,7 @@ So if your original method signature is `(...args)`, the decorator will call `or
 ## License
 
 MIT
+
+---
+
+Part of the [AssemblerJS monorepo](../../README.md)

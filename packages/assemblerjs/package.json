@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose Dependency Injection library for node and browser.",
-  "version": "0.9.7",
+  "version": "1.0.0",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
@@ -28,6 +28,7 @@
     "reflect-metadata"
   ],
   "license": "MIT",
+  "sideEffects": false,
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -47,13 +48,15 @@
   ],
   "scripts": {
     "test": "vitest --coverage --passWithNoTests",
-    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme"
+    "bench": "vitest bench",
+    "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme && node scripts/update-performance-badges.mjs"
   },
   "dependencies": {
-    "@assemblerjs/core": "0.9.1"
+    "@assemblerjs/core": "^0.9.6",
+    "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
-    "@types/cookie-parser": "^1.4.9",
-    "cookie-parser": "^1.4.7"
+    "istanbul-badges-readme": "^0.2.3",
+    "vitest": "^3.0.0"
   }
 }

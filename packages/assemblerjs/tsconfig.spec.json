@@ -10,8 +10,10 @@
       "vitest"
     ],
     "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*", "./e2e/*"]
     }
   },
   "include": [
@@ -27,6 +29,12 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
+    "e2e/**/*.ts",
+    "e2e/**/*.tsx",
+    "bench/**/*.bench.ts",
+    "bench/**/*.bench.tsx",
+    "bench/**/*.bench.js",
+    "bench/**/*.bench.jsx",
     "src/**/*.d.ts"
   ],
   "references": [

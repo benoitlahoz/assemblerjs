@@ -17,7 +17,7 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@assemblerjs/core": "0.9.1",
+    "@assemblerjs/core": "^0.9.6",
     "@assemblerjs/dto": "0.8.8",
     "assemblerjs": "0.9.7",
     "express": "5.1.0"

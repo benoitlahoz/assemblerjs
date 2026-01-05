@@ -4,7 +4,7 @@ import {
   AbstractAssemblage,
   Assemblage,
   Assembler,
-  AssemblerContext,
+  type AssemblerContext,
   Context,
 } from '../src';
 

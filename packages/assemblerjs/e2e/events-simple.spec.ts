@@ -4,7 +4,7 @@ import {
   AbstractAssemblage,
   Assemblage,
   Assembler,
-  AssemblerContext,
+  type AssemblerContext,
   Context,
 } from '../src';
 import { EmitterAssemblage } from './fixtures/events-simple/emitter.service';
