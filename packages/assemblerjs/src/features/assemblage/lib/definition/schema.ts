@@ -4,6 +4,7 @@ import { defineCustomMetadata, getOwnCustomMetadata } from '@/shared/common';
 import { isAssemblage } from '../helpers';
 import type { Injection } from './inject';
 import type { InstanceInjection } from './use';
+import type { AspectInjection } from './aspects';
 import { AssemblageDefinition } from './types';
 
 /**
@@ -62,6 +63,21 @@ const schema: Record<string, any> = {
       throw new Error(`'use' property must be an array of tuples of length 2.`);
     },
     transform: (value?: InstanceInjection<unknown>[][]) => value,
+  },
+  aspects: {
+    test: (value: unknown) =>
+      typeof value === 'undefined' ||
+      (Array.isArray(value) &&
+        value.every(
+          (item: unknown) =>
+            Array.isArray(item) && item.length >= 1 && item.length <= 2
+        )),
+    throw: () => {
+      throw new Error(
+        `'aspects' property must be an array of tuples of length 1 or 2.`
+      );
+    },
+    transform: (value?: AspectInjection<unknown>[][]) => value,
   },
   tags: {
     test: (value: unknown) =>

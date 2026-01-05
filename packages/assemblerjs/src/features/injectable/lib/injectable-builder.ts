@@ -1,5 +1,6 @@
 import { registerEvents } from '@/features/events';
 import { resolveInjectableParameters } from './dependencies';
+import { AspectWeaver } from '@/features/aspects';
 import type { AbstractInjectable } from '../model/abstract';
 
 /**
@@ -15,18 +16,28 @@ export class InjectableBuilder<T> {
   /**
    * Builds a new instance of the injectable's concrete class.
    * Resolves constructor parameters, merges configurations, and registers events.
+   * Also applies aspect weaving if aspects are defined.
    * @param configuration Optional runtime configuration to merge with the injectable's base configuration.
-   * @returns The built instance.
+   * @returns The built instance (may be a Proxy if aspects are applied).
    */
   public build(configuration?: Record<string, any>): T {
     const mergedConfig = this.mergeConfiguration(configuration);
     const params = resolveInjectableParameters(this.injectable, mergedConfig);
+    
+    // Create the base instance
     const instance = new this.injectable.concrete(...params) as T;
 
-    // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
-    registerEvents(this.injectable, instance);
+    // Apply aspect weaving BEFORE registering events
+    const wovenInstance = AspectWeaver.weave(
+      instance,
+      this.injectable.concrete,
+      this.injectable.publicContext
+    );
 
-    return instance;
+    // Add event channels to eventual subclass of `EventManager` and forward to Assembler.
+    registerEvents(this.injectable, wovenInstance);
+
+    return wovenInstance;
   }
 
   /**

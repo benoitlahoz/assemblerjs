@@ -22,4 +22,5 @@ export enum ReflectFlags {
 export enum ReflectValue {
   AssemblageDefinition = 'assemblage:definition.value',
   AssemblageContext = 'assemblage:context.value',
+  AspectAdvices = 'aspect:advices',
 }

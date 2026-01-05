@@ -8,6 +8,7 @@ import type {
   InstanceInjection,
 } from '@/features/assemblage';
 import { isAssemblage, getDefinition } from '@/features/assemblage';
+import { AspectManager, isAspect } from '@/features/aspects';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
 import { unregisterEvents } from '@/features/events';
@@ -36,6 +37,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
   private cachedInjections?: Injection<unknown>[];
   /** Cached objects to avoid repeated definition access. */
   private cachedObjects?: InstanceInjection<unknown>[];
+  /** Cached aspects to avoid repeated definition access. */
+  private cachedAspects?: any[];
   /** Cached tags to avoid repeated definition access. */
   private cachedTags?: string | string[];
   /** Cached events to avoid repeated definition access. */
@@ -78,9 +81,29 @@ export class Injectable<T> implements AbstractInjectable<T> {
       this.concrete
     );
 
-    // Optimized: Use native for...of instead of forOf wrapper
+    // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
+    
+    // Phase 1: Register ALL aspects (from aspects[] and from inject[]) as injectables FIRST
+    // This ensures they're available as dependencies but not yet in AspectManager
+    for (const aspect of this.aspects) {
+      const [AspectClass] = aspect;
+      this.privateContext.register([AspectClass]);
+    }
+    
+    // Also check if any injection is an aspect and register it first
     for (const injection of this.injections) {
-      this.privateContext.register(injection);
+      const [ConcreteClass] = injection;
+      if (isAspect(ConcreteClass)) {
+        this.privateContext.register(injection);
+      }
+    }
+
+    // Phase 2: Register remaining (non-aspect) injections
+    for (const injection of this.injections) {
+      const [ConcreteClass] = injection;
+      if (!isAspect(ConcreteClass)) {
+        this.privateContext.register(injection);
+      }
     }
 
     for (const injection of this.objects) {
@@ -88,6 +111,24 @@ export class Injectable<T> implements AbstractInjectable<T> {
         this.privateContext.use(injection[0], injection[1]);
       } else {
         this.privateContext.register(injection as any, true);
+      }
+    }
+
+    // Phase 3: NOW register all aspects in AspectManager (they can resolve dependencies and be used for weaving)
+    // CRITICAL: Use publicContext for AspectManager (same as AspectWeaver), but privateContext to resolve aspects
+    const aspectManager = AspectManager.getInstance(this.publicContext);
+    
+    for (const aspect of this.aspects) {
+      aspectManager.registerAspect(aspect, this.privateContext);
+    }
+    
+    // Also register aspects that were in inject[]
+    for (const injection of this.injections) {
+      const [ConcreteClass] = injection;
+      if (isAspect(ConcreteClass)) {
+        // Convert injection to aspect injection format
+        const aspectInjection = injection.length > 1 ? injection : [ConcreteClass];
+        aspectManager.registerAspect(aspectInjection as any, this.privateContext);
       }
     }
 
@@ -200,6 +241,16 @@ export class Injectable<T> implements AbstractInjectable<T> {
       this.cachedObjects = this.definition.use || [];
     }
     return this.cachedObjects;
+  }
+
+  /**
+   * Injectable assemblage's aspects defined in its decorator's definition.
+   */
+  public get aspects(): any[] {
+    if (this.cachedAspects === undefined) {
+      this.cachedAspects = this.definition.aspects || [];
+    }
+    return this.cachedAspects;
   }
 
   /**
