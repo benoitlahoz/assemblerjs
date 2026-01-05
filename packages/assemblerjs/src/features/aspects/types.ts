@@ -46,6 +46,8 @@ export interface Advice {
   priority: number;
   /** Whether this advice is enabled */
   enabled: boolean;
+  /** Optional role identifier extracted from pointcut */
+  role?: string;
 }
 
 /**
@@ -59,4 +61,19 @@ export interface AspectMetadata {
   advices: Advice[];
   /** The aspect instance */
   instance?: any;
+}
+
+/**
+ * Aspect configuration for a specific assemblage context.
+ * Stores how an aspect should be applied in this particular context.
+ */
+export interface AspectContextConfig {
+  /** The aspect class name (used as key) */
+  aspectClassName: string;
+  /** The aspect instance (singleton shared across contexts) */
+  aspectInstance: any;
+  /** Optional role filter: only apply advices with this role */
+  role?: string;
+  /** Optional method filter: only apply to these methods */
+  methods?: string[] | ((methodName: string) => boolean) | '*';
 }

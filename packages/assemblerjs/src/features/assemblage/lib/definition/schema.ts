@@ -70,11 +70,17 @@ const schema: Record<string, any> = {
       (Array.isArray(value) &&
         value.every(
           (item: unknown) =>
-            Array.isArray(item) && item.length >= 1 && item.length <= 2
+            // Accept tuples [Aspect] or [Aspect, config]
+            (Array.isArray(item) && item.length >= 1 && item.length <= 2) ||
+            // Accept AspectConfig objects
+            (typeof item === 'object' &&
+              item !== null &&
+              !Array.isArray(item) &&
+              'aspect' in item)
         )),
     throw: () => {
       throw new Error(
-        `'aspects' property must be an array of tuples of length 1 or 2.`
+        `'aspects' property must be an array of tuples of length 1 or 2, or AspectConfig objects with an 'aspect' property.`
       );
     },
     transform: (value?: AspectInjection<unknown>[][]) => value,

@@ -119,8 +119,11 @@ export class Injectable<T> implements AbstractInjectable<T> {
     // CRITICAL: Use publicContext for AspectManager (same as AspectWeaver), but privateContext to resolve aspects
     const aspectManager = AspectManager.getInstance(this.publicContext);
     
+    // Generate a unique assemblage identifier for configuration tracking
+    const assemblageId = this.concrete.name;
+    
     for (const aspect of this.aspects) {
-      aspectManager.registerAspect(aspect, this.privateContext);
+      aspectManager.registerAspect(aspect, this.privateContext, assemblageId);
     }
     
     // Also register aspects that were in inject[]
@@ -129,7 +132,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
       if (isAspect(ConcreteClass)) {
         // Convert injection to aspect injection format
         const aspectInjection = injection.length > 1 ? injection : [ConcreteClass];
-        aspectManager.registerAspect(aspectInjection as any, this.privateContext);
+        aspectManager.registerAspect(aspectInjection as any, this.privateContext, assemblageId);
       }
     }
 
@@ -162,6 +165,14 @@ export class Injectable<T> implements AbstractInjectable<T> {
    * @returns An Injection that can be registered in the context
    */
   private resolveAspectToInjection(aspect: any): Injection<any> {
+    // Handle AspectConfig object format
+    if (!Array.isArray(aspect) && typeof aspect === 'object' && aspect.aspect) {
+      // AspectConfig { aspect, role?, methods?, config? }
+      // Return aspect injection: [Aspect] or [Aspect, config] if config exists
+      return aspect.config ? [aspect.aspect, aspect.config] : [aspect.aspect];
+    }
+    
+    // Handle tuple format
     if (aspect.length === 1) {
       // [Concrete]
       return [aspect[0]];

@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { Assemblage, Assembler, AbstractAssemblage, Context, type AssemblerContext } from '../src';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Assemblage, Assembler, AbstractAssemblage, Context, AspectManager, type AssemblerContext } from '../src';
 import {
   AbstractUserService,
   UserService,
@@ -9,6 +9,10 @@ import {
 } from './fixtures/aspects';
 
 describe('AOP - Simple Test', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   it('should register and use an aspect', async () => {
     @Assemblage({
       inject: [

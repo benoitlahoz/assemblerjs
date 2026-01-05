@@ -1,10 +1,11 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   Assemblage,
   Assembler,
   AbstractAssemblage,
   Context,
+  AspectManager,
   type AssemblerContext,
   Aspect,
   Before,
@@ -35,6 +36,10 @@ class LoggingAspectWithDependency implements AbstractAspect {
 }
 
 describe('AOP - Aspects with Dependencies', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   it('should support aspects with injected dependencies', async () => {
     @Assemblage({
       inject: [[AbstractUserService, UserService], [Logger]],

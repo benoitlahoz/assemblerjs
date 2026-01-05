@@ -2,6 +2,7 @@ import type { Concrete } from '@assemblerjs/core';
 import type { AssemblerContext } from '@/features/assembler';
 import { AspectManager } from './aspect-manager';
 import type { JoinPoint, AdviceContext, Advice } from '../types';
+import { getAppliedAspects } from '../decorators/apply-aspect';
 
 /**
  * AspectWeaver handles the weaving of aspects onto target instances.
@@ -15,20 +16,30 @@ export class AspectWeaver {
    * @param instance The instance to weave aspects onto
    * @param concrete The concrete class of the instance
    * @param context The assembler context
+   * @param contextId Optional assemblage context identifier for local configuration
    * @returns The woven instance (may be a Proxy)
    */
   public static weave<T>(
     instance: T,
     concrete: Concrete<T>,
-    context: AssemblerContext
+    context: AssemblerContext,
+    contextId?: string
   ): T {
     const aspectManager = AspectManager.getInstance(context);
     
     // Get ALL aspects from context that apply to this class based on pointcuts
-    const applicableAspects = aspectManager.getAspectsForTarget(concrete);
+    const applicableAspects = aspectManager.getAspectsForTarget(concrete, contextId);
 
-    // No applicable aspects? Return instance as-is
-    if (applicableAspects.length === 0) {
+    // Check if any methods have @ApplyAspect decorators
+    const prototype = Object.getPrototypeOf(instance);
+    const hasAppliedAspects = Object.getOwnPropertyNames(prototype).some(key => {
+      if (key === 'constructor' || typeof prototype[key] !== 'function') return false;
+      const appliedAspects = getAppliedAspects(prototype, key);
+      return appliedAspects.length > 0;
+    });
+
+    // No aspects at all? Return instance as-is
+    if (applicableAspects.length === 0 && !hasAppliedAspects) {
       return instance;
     }
 
@@ -54,9 +65,15 @@ export class AspectWeaver {
           };
 
           // Get applicable advices for this method
+          // Includes both:
+          // 1. Aspects matched by pointcut regex (automatic)
+          // 2. Aspects explicitly applied via @ApplyAspect decorator (manual)
           const advices = aspectManager.getAdvicesForJoinPoint(
             joinPoint,
-            applicableAspects
+            applicableAspects,
+            contextId,
+            target,
+            propertyKey
           );
 
           // Execute the advice chain

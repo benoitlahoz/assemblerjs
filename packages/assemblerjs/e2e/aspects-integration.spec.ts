@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { Assemblage, Assembler, AbstractAssemblage } from '../src';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Assemblage, Assembler, AbstractAssemblage, AspectManager } from '../src';
 import {
   AbstractUserService,
   UserService,
@@ -12,6 +12,10 @@ import {
 } from './fixtures/aspects';
 
 describe('AOP - Integration Tests', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   it('should work with multiple aspects on same target', async () => {
     @Assemblage({
       inject: [[AbstractUserService, UserService]],

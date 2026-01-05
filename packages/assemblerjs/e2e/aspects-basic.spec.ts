@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { Assemblage, Assembler, AbstractAssemblage, Context, type AssemblerContext } from '../src';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { Assemblage, Assembler, AbstractAssemblage, Context, AspectManager, type AssemblerContext } from '../src';
 import {
   AbstractUserService,
   UserService,
@@ -8,6 +8,10 @@ import {
 } from './fixtures/aspects';
 
 describe('AOP - Basic Advices', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   describe('@Before advice', () => {
     it('should execute before advice before the target method', async () => {
       @Assemblage({

@@ -3,6 +3,7 @@ import { getParamTypes } from '@/shared/common';
 import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
 import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
+import { AspectManager, isAspect } from '@/features/aspects';
 
 // Cache for resolved dependencies to avoid repeated reflection calls
 const dependenciesCache = new WeakMap<Function, any[]>();
@@ -46,8 +47,26 @@ export const resolveInjectableParameters = <T>(
       const resolver = ParameterResolverFactory.getResolver(decoratorType);
       parameters.push(resolver.resolve(i, injectable, injectable.concrete, configuration));
     } else {
-      // Recursively require dependency to pass an instance to constructor.
-      parameters.push(injectable.privateContext.require(paramTypes[i]));
+      const paramType = paramTypes[i];
+      
+      // CRITICAL: If the dependency is an Aspect, always use the singleton instance from AspectManager
+      // This ensures that the same aspect instance is used for both weaving and injection
+      if (isAspect(paramType)) {
+        const aspectManager = AspectManager.getInstance(injectable.publicContext);
+        const aspectInstance = aspectManager.getAspectInstance(paramType.name);
+        
+        if (!aspectInstance) {
+          throw new Error(
+            `Aspect ${paramType.name} is injected in constructor but not registered in aspects[]. ` +
+            `Add it to aspects[] in @Assemblage decorator.`
+          );
+        }
+        
+        parameters.push(aspectInstance);
+      } else {
+        // Recursively require dependency to pass an instance to constructor.
+        parameters.push(injectable.privateContext.require(paramType));
+      }
     }
   }
 

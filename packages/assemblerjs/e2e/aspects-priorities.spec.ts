@@ -1,10 +1,11 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   Assemblage,
   Assembler,
   AbstractAssemblage,
   Context,
+  AspectManager,
   type AssemblerContext,
 } from '../src';
 import {
@@ -16,6 +17,10 @@ import {
 } from './fixtures/aspects';
 
 describe('AOP - Aspect Priorities', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   it('should execute higher priority advices first', async () => {
     @Assemblage({
       inject: [[AbstractUserService, UserService]],

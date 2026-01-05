@@ -28,10 +28,12 @@ export class InjectableBuilder<T> {
     const instance = new this.injectable.concrete(...params) as T;
 
     // Apply aspect weaving BEFORE registering events
+    // Pass assemblage identifier for local configuration
     const wovenInstance = AspectWeaver.weave(
       instance,
       this.injectable.concrete,
-      this.injectable.publicContext
+      this.injectable.publicContext,
+      this.injectable.concrete.name
     );
 
     // Add event channels to eventual subclass of `EventManager` and forward to Assembler.

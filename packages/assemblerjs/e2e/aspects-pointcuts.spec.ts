@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   Assemblage,
   Assembler,
@@ -7,11 +7,16 @@ import {
   Aspect,
   Before,
   AbstractAspect,
+  AspectManager,
   type AdviceContext,
 } from '../src';
 import { AbstractUserService, UserService } from './fixtures/aspects';
 
 describe('AOP - Pointcut Patterns', () => {
+  beforeEach(() => {
+    AspectManager.resetGlobalState();
+  });
+
   describe('Wildcard patterns', () => {
     it('should match all methods with * wildcard', async () => {
       @Aspect()
