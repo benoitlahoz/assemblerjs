@@ -166,9 +166,9 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
         return 'fast';
       }
 
-      @Affect(PerformanceTransversal, { threshold: 50 }) // Low threshold
+      @Affect(PerformanceTransversal) // Use default transversal config
       async mediumMethod() {
-        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms - above 50, below 200
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms - OK with global config, above 50, below 200
         return 'medium';
       }
 
@@ -181,7 +181,7 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
 
     @Assemblage({
       inject: [[TestService]],
-      engage: [[PerformanceTransversal]], // No global config, configs are per @Affect
+      engage: [[PerformanceTransversal, { threshold: 100 }]], // Global config is overridden by @Affect
     })
     class App implements AbstractAssemblage {
       constructor(
