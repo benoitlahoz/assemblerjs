@@ -2,20 +2,11 @@
 
 <div align="center">
 
-![Assembler Building](https://img.shields.io/badge/assembler%20building-156k%20ops%2Fsec-brightgreen.svg?style=flat)
-![Injectable Resolution](https://img.shields.io/badge/singleton%20cache-1.2M%20ops%2Fsec-brightgreen.svg?style=flat)
-![Event System](https://img.shields.io/badge/event%20emit-432k%20ops%2Fsec-brightgreen.svg?style=flat)
-![Decorators](https://img.shields.io/badge/decorators-890k%20ops%2Fsec-brightgreen.svg?style=flat)
-
-![Statements](https://img.shields.io/badge/statements-91.01%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-79.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.62%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.76%25-brightgreen.svg?style=flat)
-
 **A modern, type-safe, and lightweight ecosystem for building scalable TypeScript applications**
 
 [Documentation](./docs/assemblerjs/index.md) • [Quick Start](#quick-start) • [Packages](#packages) • [Examples](#examples)
 
 </div>
-
----
 
 ## 🌟 Purpose
 
@@ -101,6 +92,7 @@ The core dependency injection system with support for lifecycle hooks, events, a
 - Type-safe dependency injection with decorators
 - Lifecycle hooks (`onRegister`, `onInit`, `onDispose`)
 - Built-in event system
+- AOP/Transversals for cross-cutting concerns (logging, security, caching)
 - Singleton & Transient scopes
 - Custom decorators
 - Tree-shakable (~5-35 KB depending on usage)
@@ -463,6 +455,7 @@ Comprehensive documentation is available in the [docs](./docs/assemblerjs/) dire
   - [Dependency Injection](./docs/assemblerjs/core-concepts/dependency-injection.md)
   - [Abstraction Pattern](./docs/assemblerjs/core-concepts/abstraction-pattern.md)
   - [Lifecycle Hooks](./docs/assemblerjs/core-concepts/lifecycle-hooks.md)
+  - [Transversals (AOP)](./docs/assemblerjs/core-concepts/transversals-aop.md)
 
 - **Features**
   - [Event System](./docs/assemblerjs/features/events.md)

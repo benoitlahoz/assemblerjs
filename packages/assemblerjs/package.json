@@ -56,7 +56,7 @@
     "reflect-metadata": "0.2.2"
   },
   "devDependencies": {
-    "istanbul-badges-readme": "^0.2.3",
+    "istanbul-badges-readme": "^1.9.0",
     "vitest": "^3.0.0"
   }
 }

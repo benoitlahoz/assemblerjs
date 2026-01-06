@@ -125,13 +125,14 @@ const app = Assembler.build(App);
 
 ## Optional Dependencies
 
-Mark dependencies as optional with `@Optional()`:
+Mark dependencies as optional with `@Optional(defaultValue?)`:
 
 ```typescript
 @Assemblage()
 class MyService implements AbstractAssemblage {
   constructor(
-    @Optional() private logger?: LoggerService
+    @Optional() private logger?: LoggerService,              // undefined if not available
+    @Optional(new ConsoleLogger()) private fallback: Logger  // uses default if not available
   ) {
     // logger will be undefined if LoggerService is not registered
     this.logger?.log('Service created');

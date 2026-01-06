@@ -4,16 +4,10 @@ This document provides comprehensive performance benchmarks for assemblerjs, dem
 
 ## Performance Metrics
 
-![assembler building](https://img.shields.io/badge/assembler%20building-14k%20ops%2Fsec-green.svg?style=flat)
-![singleton cache](https://img.shields.io/badge/singleton%20cache-183k%20ops%2Fsec-brightgreen.svg?style=flat)
-![event emit](https://img.shields.io/badge/event%20emit-582k%20ops%2Fsec-brightgreen.svg?style=flat)
-![decorators](https://img.shields.io/badge/decorators-685k%20ops%2Fsec-brightgreen.svg?style=flat)
-
-These metrics represent real-world operations measured with Vitest benchmarks:
-- **Assembler Building**: Complete build of a medium application (10 services with dependencies)
-- **Singleton Cache**: Resolution and access to a singleton service without dependencies
-- **Event Emit**: Single event emission with 1 registered listener
-- **Decorators**: Application of the `@Assemblage()` decorator on a class
+![assembler building](https://img.shields.io/badge/assembler%20building-11k%20ops%2Fsec-green.svg?style=flat)
+![singleton cache](https://img.shields.io/badge/singleton%20cache-104k%20ops%2Fsec-brightgreen.svg?style=flat)
+![event emit](https://img.shields.io/badge/event%20emit-539k%20ops%2Fsec-brightgreen.svg?style=flat)
+![decorators](https://img.shields.io/badge/decorators-550k%20ops%2Fsec-brightgreen.svg?style=flat)
 
 ## Computational Complexity (Big O Notation)
 

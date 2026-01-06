@@ -16,6 +16,7 @@ export { AbstractListenerCollection, AbstractEventManager } from './features/eve
 
 export {
   Transversal,
+  isTransversal,
   Before,
   After,
   Around,

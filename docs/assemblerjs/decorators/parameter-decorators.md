@@ -139,24 +139,38 @@ class ApiService implements AbstractAssemblage {
 - Inject environment variables
 - Inject API keys or secrets
 
-### @Optional()
+### @Optional(defaultValue?)
 
-Marks a dependency as optional. Returns `undefined` if not registered.
+Marks a dependency as optional. Returns the provided default value (or `undefined`) if the dependency is not registered.
 
 ```typescript
+// Without default value - returns undefined if not available
 @Assemblage()
-class MyService implements AbstractAssemblage {
+class ServiceWithOptional implements AbstractAssemblage {
   constructor(@Optional() private logger?: LoggerService) {
     // logger will be undefined if LoggerService is not registered
     this.logger?.log('Service created');
+  }
+}
+
+// With default value - returns the provided value if not available
+@Assemblage()
+class ServiceWithDefault implements AbstractAssemblage {
+  constructor(
+    @Optional(new ConsoleLogger()) private logger: LoggerService,
+    @Optional('default-config') private config: string,
+    @Optional(null) private cache: CacheService | null
+  ) {
+    this.logger.log('Using logger');
   }
 }
 ```
 
 **Use cases:**
 - Feature flags (optional features)
-- Development-only dependencies
-- Graceful degradation
+- Development-only dependencies  
+- Graceful degradation with fallback values
+- Default implementations
 
 ## Combining Decorators
 
@@ -172,7 +186,7 @@ class Application implements AbstractAssemblage {
   constructor(
     private db: DatabaseService,           // Regular injection
     @Use('config') private config: any,    // Use decorator
-    @Global('apiKey') private key: string, // Global decorator
+    @Global() private globals: any, // Global decorator
     @Context() private context: AssemblerContext, // Context
     @Definition() private def: AssemblageDefinition, // Definition
     @Optional() private logger?: Logger    // Optional dependency

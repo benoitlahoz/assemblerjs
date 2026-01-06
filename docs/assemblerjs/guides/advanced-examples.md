@@ -530,8 +530,677 @@ class ProductionDataService implements AbstractAssemblage {
 }
 ```
 
+## Aspect-Oriented Programming (AOP)
+
+Real-world examples using Transversals for cross-cutting concerns.
+
+### Comprehensive Logging System
+
+```typescript
+import { Transversal, Before, After, Around, AbstractTransversal, type AdviceContext } from 'assemblerjs';
+
+// Logging levels
+enum LogLevel {
+  DEBUG = 0,
+  INFO = 1,
+  WARN = 2,
+  ERROR = 3,
+}
+
+@Transversal()
+class LoggingTransversal implements AbstractTransversal {
+  private logs: Array<{ level: LogLevel; message: string; timestamp: Date }> = [];
+  private level: LogLevel = LogLevel.INFO;
+
+  constructor(@Configuration('logging') config?: { level?: string }) {
+    if (config?.level) {
+      this.level = LogLevel[config.level.toUpperCase() as keyof typeof LogLevel] ?? LogLevel.INFO;
+    }
+  }
+
+  onInit() {
+    console.log(`Logging initialized at level: ${LogLevel[this.level]}`);
+  }
+
+  @Before('execution(*.*)', 100)
+  logMethodEntry(context: AdviceContext) {
+    if (this.level <= LogLevel.DEBUG) {
+      const message = `→ Entering ${context.target.constructor.name}.${context.methodName}`;
+      this.log(LogLevel.DEBUG, message, context.args);
+    }
+  }
+
+  @After('execution(*.*)', 100)
+  logMethodExit(context: AdviceContext) {
+    if (this.level <= LogLevel.DEBUG) {
+      const message = `← Exiting ${context.target.constructor.name}.${context.methodName}`;
+      this.log(LogLevel.DEBUG, message, context.result);
+    }
+  }
+
+  @Around('execution(*.save*)', 50)
+  async logDataOperations(context: AdviceContext) {
+    const { methodName, args } = context;
+    
+    this.log(LogLevel.INFO, `Saving data via ${methodName}`, args[0]);
+    
+    try {
+      const result = await context.proceed!();
+      this.log(LogLevel.INFO, `Successfully saved`, result);
+      return result;
+    } catch (error) {
+      this.log(LogLevel.ERROR, `Failed to save`, error);
+      throw error;
+    }
+  }
+
+  private log(level: LogLevel, message: string, data?: any) {
+    this.logs.push({ level, message, timestamp: new Date() });
+    
+    const prefix = `[${LogLevel[level]}]`;
+    if (data !== undefined) {
+      console.log(prefix, message, data);
+    } else {
+      console.log(prefix, message);
+    }
+  }
+
+  getLogs(minLevel: LogLevel = LogLevel.INFO) {
+    return this.logs.filter(log => log.level >= minLevel);
+  }
+}
+
+// Usage
+@Assemblage({
+  inject: [[UserService]],
+  engage: [[LoggingTransversal]],
+})
+class App implements AbstractAssemblage {
+  constructor(
+    private userService: UserService,
+    public logger: LoggingTransversal
+  ) {}
+}
+
+const app = Assembler.build(App, { logging: { level: 'DEBUG' } });
+```
+
+### Performance Monitoring & Alerting
+
+```typescript
+@Transversal()
+class PerformanceTransversal implements AbstractTransversal {
+  private metrics = new Map<string, { count: number; totalTime: number; max: number; min: number }>();
+  private slowOperations: Array<{ method: string; duration: number; timestamp: Date }> = [];
+
+  constructor(
+    @Configuration('performance') private config?: {
+      threshold?: number;
+      alertCallback?: (method: string, duration: number) => void;
+    }
+  ) {
+    this.config = {
+      threshold: 100,
+      ...config
+    };
+  }
+
+  @Around('execution(*.*)')
+  async measurePerformance(context: AdviceContext) {
+    const start = performance.now();
+    const methodKey = `${context.target.constructor.name}.${context.methodName}`;
+    
+    try {
+      const result = await context.proceed!();
+      const duration = performance.now() - start;
+      
+      this.recordMetric(methodKey, duration);
+      
+      // Check threshold from @Affect config or default
+      const threshold = context.config?.threshold ?? this.config?.threshold ?? 100;
+      
+      if (duration > threshold) {
+        this.slowOperations.push({
+          method: methodKey,
+          duration,
+          timestamp: new Date()
+        });
+        
+        console.warn(`⚠️ Slow operation: ${methodKey} took ${duration.toFixed(2)}ms`);
+        
+        if (this.config?.alertCallback) {
+          this.config.alertCallback(methodKey, duration);
+        }
+      }
+      
+      return result;
+    } catch (error) {
+      const duration = performance.now() - start;
+      this.recordMetric(methodKey, duration);
+      throw error;
+    }
+  }
+
+  private recordMetric(method: string, duration: number) {
+    const existing = this.metrics.get(method);
+    
+    if (existing) {
+      existing.count++;
+      existing.totalTime += duration;
+      existing.max = Math.max(existing.max, duration);
+      existing.min = Math.min(existing.min, duration);
+    } else {
+      this.metrics.set(method, {
+        count: 1,
+        totalTime: duration,
+        max: duration,
+        min: duration
+      });
+    }
+  }
+
+  getMetrics() {
+    const results: any[] = [];
+    
+    this.metrics.forEach((metric, method) => {
+      results.push({
+        method,
+        calls: metric.count,
+        avgTime: (metric.totalTime / metric.count).toFixed(2),
+        maxTime: metric.max.toFixed(2),
+        minTime: metric.min.toFixed(2)
+      });
+    });
+    
+    return results.sort((a, b) => parseFloat(b.avgTime) - parseFloat(a.avgTime));
+  }
+
+  getSlowOperations() {
+    return this.slowOperations.sort((a, b) => b.duration - a.duration);
+  }
+}
+
+// Usage with different thresholds per method
+@Assemblage()
+class DataService {
+  @Affect(PerformanceTransversal, { threshold: 50 })  // Stricter for queries
+  async query(sql: string) {
+    // Implementation
+  }
+
+  @Affect(PerformanceTransversal, { threshold: 200 }) // Relaxed for reports
+  async generateReport() {
+    // Implementation
+  }
+}
+```
+
+### Security & Authorization
+
+```typescript
+@Transversal()
+class SecurityTransversal implements AbstractTransversal {
+  private currentUser: { id: string; roles: string[] } | null = null;
+
+  constructor(private authService: AuthService) {}
+
+  setCurrentUser(user: { id: string; roles: string[] }) {
+    this.currentUser = user;
+  }
+
+  @Before('execution(*.delete*)', 200)  // High priority
+  checkDeletePermission(context: AdviceContext) {
+    if (!this.currentUser) {
+      throw new Error('Authentication required');
+    }
+
+    const requiredRole = context.config?.requireRole || 'admin';
+    
+    if (!this.currentUser.roles.includes(requiredRole)) {
+      throw new Error(`Access denied. Required role: ${requiredRole}`);
+    }
+
+    console.log(`✓ User ${this.currentUser.id} authorized for ${context.methodName}`);
+  }
+
+  @Before('execution(*.create*)', 150)
+  checkCreatePermission(context: AdviceContext) {
+    if (!this.currentUser) {
+      throw new Error('Authentication required');
+    }
+
+    const requiredRole = context.config?.requireRole || 'user';
+    
+    if (!this.currentUser.roles.includes(requiredRole)) {
+      throw new Error(`Access denied. Required role: ${requiredRole}`);
+    }
+  }
+
+  @Around('execution(*.find*)', 100)
+  async filterByPermissions(context: AdviceContext) {
+    const result = await context.proceed!();
+    
+    // Filter results based on user permissions
+    if (Array.isArray(result)) {
+      return result.filter(item => this.canAccess(item));
+    }
+    
+    return this.canAccess(result) ? result : null;
+  }
+
+  private canAccess(item: any): boolean {
+    if (!item) return false;
+    
+    // Custom access logic
+    if (item.ownerId === this.currentUser?.id) {
+      return true;
+    }
+    
+    if (this.currentUser?.roles.includes('admin')) {
+      return true;
+    }
+    
+    return false;
+  }
+}
+
+// Usage
+@Assemblage()
+class DocumentService {
+  @Affect(SecurityTransversal, { requireRole: 'admin' })
+  deleteDocument(id: string) {
+    // Only admins can delete
+  }
+
+  @Affect(SecurityTransversal, { requireRole: 'editor' })
+  createDocument(data: any) {
+    // Editors and above can create
+  }
+
+  findDocuments() {
+    // Results filtered by permissions
+  }
+}
+```
+
+### Caching with Invalidation
+
+```typescript
+@Transversal()
+class CachingTransversal implements AbstractTransversal {
+  private cache = new Map<string, { value: any; timestamp: number; ttl: number }>();
+
+  constructor(
+    @Configuration() private config?: {
+      defaultTtl?: number;
+      maxSize?: number;
+    }
+  ) {
+    this.config = {
+      defaultTtl: 5000,
+      maxSize: 100,
+      ...config
+    };
+  }
+
+  @Around('execution(*.find*)', 50)
+  async cacheRead(context: AdviceContext) {
+    const cacheKey = this.generateKey(context);
+    const ttl = context.config?.ttl ?? this.config?.defaultTtl ?? 5000;
+    
+    // Check cache
+    const cached = this.cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < cached.ttl) {
+      console.log(`[CACHE HIT] ${cacheKey}`);
+      return cached.value;
+    }
+    
+    // Cache miss - proceed
+    console.log(`[CACHE MISS] ${cacheKey}`);
+    const result = await context.proceed!();
+    
+    // Store in cache
+    this.cache.set(cacheKey, {
+      value: result,
+      timestamp: Date.now(),
+      ttl
+    });
+    
+    // Enforce max size
+    if (this.cache.size > (this.config?.maxSize ?? 100)) {
+      this.evictOldest();
+    }
+    
+    return result;
+  }
+
+  @After('execution(*.save*)', 50)
+  @After('execution(*.update*)', 50)
+  @After('execution(*.delete*)', 50)
+  invalidateCache(context: AdviceContext) {
+    // Invalidate related cache entries
+    const pattern = `${context.target.constructor.name}.find`;
+    
+    let invalidated = 0;
+    this.cache.forEach((_, key) => {
+      if (key.startsWith(pattern)) {
+        this.cache.delete(key);
+        invalidated++;
+      }
+    });
+    
+    if (invalidated > 0) {
+      console.log(`[CACHE INVALIDATED] ${invalidated} entries`);
+    }
+  }
+
+  private generateKey(context: AdviceContext): string {
+    return `${context.target.constructor.name}.${context.methodName}:${JSON.stringify(context.args)}`;
+  }
+
+  private evictOldest() {
+    let oldest: { key: string; timestamp: number } | null = null;
+    
+    this.cache.forEach((value, key) => {
+      if (!oldest || value.timestamp < oldest.timestamp) {
+        oldest = { key, timestamp: value.timestamp };
+      }
+    });
+    
+    if (oldest) {
+      this.cache.delete(oldest.key);
+      console.log(`[CACHE EVICTED] ${oldest.key}`);
+    }
+  }
+
+  clearCache() {
+    this.cache.clear();
+  }
+
+  getCacheStats() {
+    return {
+      size: this.cache.size,
+      maxSize: this.config?.maxSize ?? 100,
+      entries: Array.from(this.cache.keys())
+    };
+  }
+}
+
+// Usage
+@Assemblage()
+class ProductService {
+  @Affect(CachingTransversal, { ttl: 10000 })  // 10 second cache
+  async findAll() {
+    // Expensive query
+  }
+
+  @Affect(CachingTransversal, { ttl: 60000 })  // 1 minute cache
+  async findById(id: string) {
+    // Cache longer for single items
+  }
+
+  async save(product: any) {
+    // Automatically invalidates findAll and findById caches
+  }
+}
+```
+
+### Validation with Custom Rules
+
+```typescript
+interface ValidationRule {
+  field: string;
+  validator: (value: any) => boolean;
+  message: string;
+}
+
+@Transversal()
+class ValidationTransversal implements AbstractTransversal {
+  private rules = new Map<string, ValidationRule[]>();
+
+  registerRule(methodPattern: string, rule: ValidationRule) {
+    const existing = this.rules.get(methodPattern) || [];
+    existing.push(rule);
+    this.rules.set(methodPattern, existing);
+  }
+
+  @Before('execution(*.create)', 150)
+  @Before('execution(*.update)', 150)
+  validateInput(context: AdviceContext) {
+    const [data] = context.args;
+    
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid input: data object required');
+    }
+
+    // Get rules from config or registered rules
+    const rules: ValidationRule[] = context.config?.rules || this.getMatchingRules(context);
+    
+    const errors: string[] = [];
+    
+    for (const rule of rules) {
+      const value = data[rule.field];
+      
+      if (!rule.validator(value)) {
+        errors.push(rule.message);
+      }
+    }
+    
+    if (errors.length > 0) {
+      throw new Error(`Validation failed:\n${errors.join('\n')}`);
+    }
+  }
+
+  private getMatchingRules(context: AdviceContext): ValidationRule[] {
+    const methodKey = `${context.target.constructor.name}.${context.methodName}`;
+    return this.rules.get(methodKey) || [];
+  }
+}
+
+// Usage
+@Assemblage({
+  inject: [[ProductService]],
+  engage: [[ValidationTransversal]],
+})
+class App implements AbstractAssemblage {
+  constructor(
+    private products: ProductService,
+    private validation: ValidationTransversal
+  ) {
+    // Register validation rules
+    this.validation.registerRule('ProductService.create', {
+      field: 'name',
+      validator: (v) => typeof v === 'string' && v.length > 0,
+      message: 'Product name is required'
+    });
+    
+    this.validation.registerRule('ProductService.create', {
+      field: 'price',
+      validator: (v) => typeof v === 'number' && v > 0,
+      message: 'Price must be a positive number'
+    });
+  }
+}
+
+// Or use @Affect with inline rules
+@Assemblage()
+class UserService {
+  @Affect(ValidationTransversal, {
+    rules: [
+      {
+        field: 'email',
+        validator: (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+        message: 'Invalid email format'
+      },
+      {
+        field: 'age',
+        validator: (v: number) => v >= 18,
+        message: 'Must be 18 or older'
+      }
+    ]
+  })
+  createUser(data: any) {
+    // Validated before execution
+  }
+}
+```
+
+### Error Handling & Retry Logic
+
+```typescript
+@Transversal()
+class ErrorHandlingTransversal implements AbstractTransversal {
+  private errorLog: Array<{ method: string; error: any; timestamp: Date }> = [];
+
+  constructor(@Configuration('errorHandling') private config?: {
+    maxRetries?: number;
+    retryDelay?: number;
+    fallbackValue?: any;
+  }) {
+    this.config = {
+      maxRetries: 3,
+      retryDelay: 1000,
+      ...config
+    };
+  }
+
+  @Around('execution(*.fetch*)', 100)
+  @Around('execution(*.api*)', 100)
+  async retryOnFailure(context: AdviceContext) {
+    const maxRetries = context.config?.maxRetries ?? this.config?.maxRetries ?? 3;
+    const retryDelay = context.config?.retryDelay ?? this.config?.retryDelay ?? 1000;
+    
+    let lastError: any;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await context.proceed!();
+      } catch (error) {
+        lastError = error;
+        
+        this.errorLog.push({
+          method: `${context.target.constructor.name}.${context.methodName}`,
+          error,
+          timestamp: new Date()
+        });
+        
+        if (attempt < maxRetries) {
+          console.log(`[RETRY] Attempt ${attempt}/${maxRetries} failed, retrying in ${retryDelay}ms...`);
+          await this.sleep(retryDelay * attempt);
+        }
+      }
+    }
+    
+    console.error(`[ERROR] All ${maxRetries} attempts failed for ${context.methodName}`);
+    
+    // Return fallback value if provided
+    if (context.config?.fallbackValue !== undefined) {
+      return context.config.fallbackValue;
+    }
+    
+    throw lastError;
+  }
+
+  @Around('execution(*.*)', 50)
+  async catchAndLog(context: AdviceContext) {
+    try {
+      return await context.proceed!();
+    } catch (error) {
+      this.errorLog.push({
+        method: `${context.target.constructor.name}.${context.methodName}`,
+        error,
+        timestamp: new Date()
+      });
+      
+      console.error(`[ERROR] ${context.methodName}:`, error);
+      throw error;
+    }
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  getErrorLog() {
+    return this.errorLog;
+  }
+
+  clearErrorLog() {
+    this.errorLog = [];
+  }
+}
+
+// Usage
+@Assemblage()
+class ApiService {
+  @Affect(ErrorHandlingTransversal, { maxRetries: 5, retryDelay: 2000 })
+  async fetchCriticalData(endpoint: string) {
+    // Will retry up to 5 times with 2s delay
+  }
+
+  @Affect(ErrorHandlingTransversal, { fallbackValue: [] })
+  async fetchOptionalData(endpoint: string) {
+    // Returns [] if all retries fail
+  }
+}
+```
+
+### Complete AOP Application
+
+```typescript
+// Combine all transversals
+@Assemblage({
+  inject: [[UserService], [ProductService]],
+  engage: [
+    [SecurityTransversal],
+    [ValidationTransversal],
+    [PerformanceTransversal, { threshold: 100 }],
+    [LoggingTransversal, { level: 'INFO' }],
+    [CachingTransversal, { defaultTtl: 5000 }],
+    [ErrorHandlingTransversal, { maxRetries: 3 }]
+  ]
+})
+class Application implements AbstractAssemblage {
+  constructor(
+    @Context() private context: AssemblerContext,
+    private users: UserService,
+    private products: ProductService,
+    private security: SecurityTransversal,
+    private performance: PerformanceTransversal,
+    private cache: CachingTransversal,
+    @Dispose() public dispose: () => void
+  ) {}
+
+  async run() {
+    // Set user
+    this.security.setCurrentUser({ id: 'user1', roles: ['admin'] });
+
+    // All operations are automatically:
+    // - Secured (authorization checks)
+    // - Validated (input validation)
+    // - Monitored (performance tracking)
+    // - Logged (method calls and results)
+    // - Cached (read operations)
+    // - Error handled (retry on failure)
+
+    await this.users.createUser({ name: 'Alice', email: 'alice@example.com' });
+    await this.products.findAll();
+    
+    // Get metrics
+    console.log('Performance Metrics:', this.performance.getMetrics());
+    console.log('Cache Stats:', this.cache.getCacheStats());
+  }
+}
+
+// Bootstrap
+const app = Assembler.build(Application);
+await app.run();
+await app.dispose();
+```
+
 ## Next Steps
 
+- [Transversals (AOP)](../core-concepts/transversals-aop.md) - Aspect-Oriented Programming
 - [Core Concepts](../core-concepts/assemblage.md) - Understand the fundamentals
 - [Features](../features/events.md) - Explore event system
 - [Tree-Shaking](./tree-shaking.md) - Optimize bundle size

@@ -76,7 +76,7 @@ export class ParameterDecoratorFactory {
     paramValue: string,
     valueType: 'single' | 'array' | 'map'
   ) {
-    return (param: T): ParameterDecorator => {
+    return (param?: T): ParameterDecorator => {
       return (target: any, _: string | symbol | undefined, index: number) => {
         this.storeParameterData(param, target, index, paramIndex, paramValue, valueType);
       };
