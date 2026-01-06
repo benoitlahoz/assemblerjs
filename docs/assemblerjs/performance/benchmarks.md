@@ -6,8 +6,8 @@ This document provides comprehensive performance benchmarks for assemblerjs, dem
 
 ![assembler building](https://img.shields.io/badge/assembler%20building-11k%20ops%2Fsec-green.svg?style=flat)
 ![singleton cache](https://img.shields.io/badge/singleton%20cache-104k%20ops%2Fsec-brightgreen.svg?style=flat)
-![event emit](https://img.shields.io/badge/event%20emit-539k%20ops%2Fsec-brightgreen.svg?style=flat)
-![decorators](https://img.shields.io/badge/decorators-550k%20ops%2Fsec-brightgreen.svg?style=flat)
+![event emit](https://img.shields.io/badge/event%20emit-558k%20ops%2Fsec-brightgreen.svg?style=flat)
+![decorators](https://img.shields.io/badge/decorators-588k%20ops%2Fsec-brightgreen.svg?style=flat)
 
 ## Computational Complexity (Big O Notation)
 
