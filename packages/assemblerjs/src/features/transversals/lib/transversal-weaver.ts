@@ -111,7 +111,7 @@ export class TransversalWeaver {
     try {
       // 1. Execute @Before advices
       for (const advice of beforeAdvices) {
-        const context: AdviceContext = { ...joinPoint };
+        const context: AdviceContext = { ...joinPoint, config: advice.config };
         advice.method.call(advice.transversalInstance, context);
       }
 
@@ -143,7 +143,7 @@ export class TransversalWeaver {
 
       // 4. Execute @After advices (synchronous)
       for (const advice of afterAdvices) {
-        const context: AdviceContext = { ...joinPoint, result };
+        const context: AdviceContext = { ...joinPoint, result, config: advice.config };
         advice.method.call(advice.transversalInstance, context);
       }
 
@@ -181,6 +181,7 @@ export class TransversalWeaver {
         const context: AdviceContext = {
           ...joinPoint,
           proceed,
+          config: advice.config,
         };
         return advice.method.call(advice.transversalInstance, context);
       } else {

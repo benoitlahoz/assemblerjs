@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { Assemblage, Assembler, AbstractAssemblage, Transversal, Before, Affect, Context, TransversalManager, type AdviceContext, type AssemblerContext } from '../src';
+import { PerformanceTransversal } from './fixtures/transversals';
 
 // Simple logging transversal
 @Transversal()
@@ -155,5 +156,55 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
     expect(app.mixedTransversal.logs).toContain('[AUTO] update');
     expect(app.mixedTransversal.logs).toContain('[MANUAL] update');
     expect(app.mixedTransversal.logs).toHaveLength(3);
+  });
+
+  it('should apply PerformanceTransversal with different threshold configs using @Affect', async () => {
+    @Assemblage()
+    class TestService {
+      @Affect(PerformanceTransversal, { threshold: 50 }) // Low threshold
+      fastMethod() {
+        return 'fast';
+      }
+
+      @Affect(PerformanceTransversal, { threshold: 50 }) // Low threshold
+      async mediumMethod() {
+        await new Promise(resolve => setTimeout(resolve, 100)); // 100ms - above 50, below 200
+        return 'medium';
+      }
+
+      @Affect(PerformanceTransversal, { threshold: 200 }) // High threshold
+      async slowMethod() {
+        await new Promise(resolve => setTimeout(resolve, 250)); // 250ms - above both thresholds
+        return 'slow';
+      }
+    }
+
+    @Assemblage({
+      inject: [[TestService]],
+      engage: [[PerformanceTransversal]], // No global config, configs are per @Affect
+    })
+    class App implements AbstractAssemblage {
+      constructor(
+        public testService: TestService,
+        public performanceTransversal: PerformanceTransversal,
+        @Context() public context: AssemblerContext
+      ) {}
+    }
+
+    const app = Assembler.build(App);
+
+    // Fast method: duration ~0ms < 50ms, should not be measured
+    app.testService.fastMethod();
+    expect(app.performanceTransversal.measurements.length).toBe(0);
+
+    // Medium method: 100ms >= 50ms, should be measured once
+    await app.testService.mediumMethod();
+    expect(app.performanceTransversal.measurements.length).toBe(1);
+    expect(app.performanceTransversal.measurements[0].method).toBe('mediumMethod');
+
+    // Slow method: 250ms >= 200ms, should be measured again
+    await app.testService.slowMethod();
+    expect(app.performanceTransversal.measurements.length).toBe(2);
+    expect(app.performanceTransversal.measurements[1].method).toBe('slowMethod');
   });
 });

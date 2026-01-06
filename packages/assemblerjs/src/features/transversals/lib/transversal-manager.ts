@@ -318,7 +318,10 @@ export class TransversalManager {
           }
           
           // Add the advice (bypass pointcut matching for explicitly affected methods)
-          advices.push(advice);
+          advices.push({
+            ...advice,
+            config: applied.config,
+          });
         }
       }
     }

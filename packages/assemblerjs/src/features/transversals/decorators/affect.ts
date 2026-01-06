@@ -33,17 +33,16 @@ export interface AffectedMethodConfig {
  */
 export function Affect(
   transversal: Identifier<any>,
-  options?: { role?: string; config?: Record<string, any> }
+  config?: Record<string, any>,
 ): MethodDecorator {
   return function (
     target: any,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) {
-    const config: AffectedMethodConfig = {
+    const affectedConfig: AffectedMethodConfig = {
       transversal,
-      role: options?.role,
-      config: options?.config,
+      config,
     };
     
     // Get existing affected methods or initialize empty array
@@ -51,7 +50,7 @@ export function Affect(
       Reflect.getOwnMetadata(ReflectValue.AffectedMethods, target, propertyKey) || [];
     
     // Add this transversal to the list
-    existingAffectedMethods.push(config);
+    existingAffectedMethods.push(affectedConfig);
     
     // Store back to metadata
     Reflect.defineMetadata(

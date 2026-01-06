@@ -21,9 +21,9 @@ export class PerformanceTransversal implements AbstractTransversal {
       const duration = Date.now() - start;
       
       // Use threshold to filter slow measurements
-    if (duration >= (this.config?.threshold ?? 0)) {
+    if (duration >= (context.config?.threshold ?? this.config?.threshold ?? 0)) {
         this.measurements.push({ method: context.methodName, duration });
-        console.warn(`Performance alert: ${context.methodName} took ${duration}ms (threshold: ${this.config?.threshold ?? 0}ms)`);
+        console.warn(`Performance alert: ${context.methodName} took ${duration}ms (threshold: ${context.config?.threshold ?? this.config?.threshold ?? 0}ms)`);
       }
       
       return result;
@@ -31,7 +31,7 @@ export class PerformanceTransversal implements AbstractTransversal {
       const duration = Date.now() - start;
       
       // Same logic for errors
-    if (duration >= (this.config?.threshold ?? 0)) {
+    if (duration >= (context.config?.threshold ?? this.config?.threshold ?? 0)) {
         this.measurements.push({ method: context.methodName, duration });
         console.error(`Performance error: ${context.methodName} failed after ${duration}ms`);
       }

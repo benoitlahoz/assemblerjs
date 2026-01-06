@@ -27,6 +27,8 @@ export interface JoinPoint {
 export interface AdviceContext extends JoinPoint {
   /** Function to proceed to the next advice or the original method (for around advice) */
   proceed?: () => any;
+  /** Optional config specific to this advice execution (from @Affect) */
+  config?: Record<string, any>;
 }
 
 /**
@@ -48,6 +50,8 @@ export interface Advice {
   enabled: boolean;
   /** Optional role identifier extracted from pointcut */
   role?: string;
+  /** Optional config specific to this advice (from @Affect) */
+  config?: Record<string, any>;
 }
 
 /**
