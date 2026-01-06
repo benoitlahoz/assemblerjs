@@ -191,9 +191,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">22x</span>
-<span class="cline-any cline-yes">198x</span>
-<span class="cline-any cline-yes">1150x</span>
-<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">206x</span>
+<span class="cline-any cline-yes">1166x</span>
+<span class="cline-any cline-yes">92x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">114x</span>
@@ -218,32 +218,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">211x</span>
-<span class="cline-any cline-yes">198x</span>
+<span class="cline-any cline-yes">206x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">198x</span>
+<span class="cline-any cline-yes">206x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">84x</span>
-<span class="cline-any cline-yes">84x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">114x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">92x</span>
+<span class="cline-any cline-yes">92x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">114x</span>
-<span class="cline-any cline-yes">45x</span>
-<span class="cline-any cline-yes">45x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">45x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">114x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-yes">44x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">45x</span>
+<span class="cline-any cline-yes">44x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">69x</span>
+<span class="cline-any cline-yes">70x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -273,11 +273,11 @@
 <span class="cline-any cline-yes">143x</span>
 <span class="cline-any cline-yes">143x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1150x</span>
+<span class="cline-any cline-yes">1154x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">198x</span>
-<span class="cline-any cline-yes">84x</span>
-<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">200x</span>
+<span class="cline-any cline-yes">86x</span>
+<span class="cline-any cline-yes">86x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">114x</span>
@@ -294,7 +294,7 @@ import { getParamTypes } from '@/shared/common';
 import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
 import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
-import { AspectManager, isAspect } from '@/features/aspects';
+import { TransversalManager, isTransversal } from '@/features/transversals';
 &nbsp;
 // Cache for resolved dependencies to avoid repeated reflection calls
 const dependenciesCache = new WeakMap&lt;Function, any[]&gt;();
@@ -340,20 +340,20 @@ export const resolveInjectableParameters = &lt;T&gt;(
     } else {
       const paramType = paramTypes[i];
       
-      // CRITICAL: If the dependency is an Aspect, always use the singleton instance from AspectManager
-      // This ensures that the same aspect instance is used for both weaving and injection
-      if (isAspect(paramType)) {
-        const aspectManager = AspectManager.getInstance(injectable.publicContext);
-        const aspectInstance = aspectManager.getAspectInstance(paramType.name);
+      // CRITICAL: If the dependency is a Transversal, always use the singleton instance from TransversalManager
+      // This ensures that the same transversal instance is used for both weaving and injection
+      if (isTransversal(paramType)) {
+        const transversalManager = TransversalManager.getInstance(injectable.publicContext);
+        const transversalInstance = transversalManager.getTransversalInstance(paramType.name);
         
-        <span class="missing-if-branch" title="if path not taken" >I</span>if (!aspectInstance) {
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (!transversalInstance) {
 <span class="cstat-no" title="statement not covered" >          throw new Error(</span>
-            `Aspect ${paramType.name} is injected in constructor but not registered in aspects[]. ` +
-            `Add it to aspects[] in @Assemblage decorator.`
+            `Transversal ${paramType.name} is injected in constructor but not registered in transversals[]. ` +
+            `Add it to transversals[] in @Assemblage decorator.`
           );
         }
         
-        parameters.push(aspectInstance);
+        parameters.push(transversalInstance);
       } else {
         // Recursively require dependency to pass an instance to constructor.
         parameters.push(injectable.privateContext.require(paramType));
@@ -409,7 +409,7 @@ export const resolveDependencies = &lt;T&gt;(target: Concrete&lt;T&gt;) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-05T18:35:57.107Z
+                at 2026-01-06T08:25:13.677Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

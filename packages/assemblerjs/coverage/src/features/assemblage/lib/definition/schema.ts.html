@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">87.5% </span>
+                <span class="strong">95.45% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>42/48</span>
+                <span class='fraction'>42/44</span>
             </div>
         
             
@@ -270,13 +270,7 @@
 <a name='L205'></a><a href='#L205'>205</a>
 <a name='L206'></a><a href='#L206'>206</a>
 <a name='L207'></a><a href='#L207'>207</a>
-<a name='L208'></a><a href='#L208'>208</a>
-<a name='L209'></a><a href='#L209'>209</a>
-<a name='L210'></a><a href='#L210'>210</a>
-<a name='L211'></a><a href='#L211'>211</a>
-<a name='L212'></a><a href='#L212'>212</a>
-<a name='L213'></a><a href='#L213'>213</a>
-<a name='L214'></a><a href='#L214'>214</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L208'></a><a href='#L208'>208</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -348,13 +342,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">99x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -443,9 +431,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">737x</span>
-<span class="cline-any cline-yes">152x</span>
+<span class="cline-any cline-yes">153x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">585x</span>
+<span class="cline-any cline-yes">584x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -495,7 +483,7 @@ import { defineCustomMetadata, getOwnCustomMetadata } from '@/shared/common';
 import { isAssemblage } from '../helpers';
 import type { Injection } from './inject';
 import type { InstanceInjection } from './use';
-import type { AspectInjection } from './aspects';
+import type { TransversalInjection } from './transversals';
 import { AssemblageDefinition } from './types';
 &nbsp;
 /**
@@ -555,26 +543,20 @@ const schema: Record&lt;string, any&gt; = {
     },
     transform: (value?: InstanceInjection&lt;unknown&gt;[][]) =&gt; value,
   },
-  aspects: {
+  engage: {
     test: (value: unknown) =&gt;
       typeof value === 'undefined' ||
       (Array.isArray(value) &amp;&amp;
         value.every(
           (item: unknown) =&gt;
-            // Accept tuples [Aspect] or [Aspect, config]
-            (Array.isArray(item) &amp;&amp; item.length &gt;= 1 &amp;&amp; item.length &lt;= 2) ||
-            // Accept AspectConfig objects
-            (<span class="branch-3 cbranch-no" title="branch not covered" >typeof item === 'object' &amp;&amp;</span>
-<span class="branch-4 cbranch-no" title="branch not covered" >              item !== null &amp;&amp;</span>
-<span class="branch-5 cbranch-no" title="branch not covered" >              !Array.isArray(item) &amp;&amp;</span>
-<span class="branch-6 cbranch-no" title="branch not covered" >              'aspect' in item)</span>
+            (Array.isArray(item) &amp;&amp; item.length &gt;= 1 &amp;&amp; item.length &lt;= 3)
         )),
     throw: <span class="fstat-no" title="function not covered" >() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(</span>
-        `'aspects' property must be an array of tuples of length 1 or 2, or AspectConfig objects with an 'aspect' property.`
+        `'engage' property must be an array of tuples of length 1, 2 or 3.`
       );
     },
-    transform: (value?: AspectInjection&lt;unknown&gt;[][]) =&gt; value,
+    transform: (value?: TransversalInjection&lt;unknown&gt;[][]) =&gt; value,
   },
   tags: {
     test: (value: unknown) =&gt;
@@ -656,7 +638,7 @@ export const getDefinition = &lt;T&gt;(
   assemblage: Concrete&lt;T&gt;
 ): AssemblageDefinition =&gt; {
   if (!isAssemblage(assemblage)) {
-    throw new Error(`Class '${assemblage.name}' is not an assemblage.`);
+    throw new Error(`Class '${assemblage.name}' is not an assemblage or transversal.`);
   }
   return getOwnCustomMetadata(ReflectValue.AssemblageDefinition, assemblage);
 };
@@ -709,7 +691,7 @@ export const setDefinitionValue = &lt;T&gt;(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-05T18:35:57.107Z
+                at 2026-01-06T08:25:13.677Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

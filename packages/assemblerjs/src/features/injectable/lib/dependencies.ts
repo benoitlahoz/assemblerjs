@@ -3,7 +3,7 @@ import { getParamTypes } from '@/shared/common';
 import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
 import { ParameterResolverFactory } from '@/shared/decorators/resolvers';
-import { AspectManager, isAspect } from '@/features/aspects';
+import { TransversalManager, isTransversal } from '@/features/transversals';
 
 // Cache for resolved dependencies to avoid repeated reflection calls
 const dependenciesCache = new WeakMap<Function, any[]>();
@@ -49,20 +49,20 @@ export const resolveInjectableParameters = <T>(
     } else {
       const paramType = paramTypes[i];
       
-      // CRITICAL: If the dependency is an Aspect, always use the singleton instance from AspectManager
-      // This ensures that the same aspect instance is used for both weaving and injection
-      if (isAspect(paramType)) {
-        const aspectManager = AspectManager.getInstance(injectable.publicContext);
-        const aspectInstance = aspectManager.getAspectInstance(paramType.name);
+      // CRITICAL: If the dependency is a Transversal, always use the singleton instance from TransversalManager
+      // This ensures that the same transversal instance is used for both weaving and injection
+      if (isTransversal(paramType)) {
+        const transversalManager = TransversalManager.getInstance(injectable.publicContext);
+        const transversalInstance = transversalManager.getTransversalInstance(paramType.name);
         
-        if (!aspectInstance) {
+        if (!transversalInstance) {
           throw new Error(
-            `Aspect ${paramType.name} is injected in constructor but not registered in aspects[]. ` +
-            `Add it to aspects[] in @Assemblage decorator.`
+            `Transversal ${paramType.name} is injected in constructor but not registered in transversals[]. ` +
+            `Add it to transversals[] in @Assemblage decorator.`
           );
         }
         
-        parameters.push(aspectInstance);
+        parameters.push(transversalInstance);
       } else {
         // Recursively require dependency to pass an instance to constructor.
         parameters.push(injectable.privateContext.require(paramType));

@@ -8,7 +8,7 @@ import type {
   InstanceInjection,
 } from '@/features/assemblage';
 import { isAssemblage, getDefinition } from '@/features/assemblage';
-import { AspectManager, isAspect } from '@/features/aspects';
+import { TransversalManager, isTransversal } from '@/features/transversals';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
 import { unregisterEvents } from '@/features/events';
@@ -38,7 +38,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
   /** Cached objects to avoid repeated definition access. */
   private cachedObjects?: InstanceInjection<unknown>[];
   /** Cached aspects to avoid repeated definition access. */
-  private cachedAspects?: any[];
+  private cachedTransversals?: any[];
   /** Cached tags to avoid repeated definition access. */
   private cachedTags?: string | string[];
   /** Cached events to avoid repeated definition access. */
@@ -83,26 +83,26 @@ export class Injectable<T> implements AbstractInjectable<T> {
 
     // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
     
-    // Phase 1: Register ALL aspects (from aspects[] and from inject[]) as injectables FIRST
-    // This ensures they're available as dependencies but not yet in AspectManager
-    for (const aspect of this.aspects) {
-      // Register the aspect injection (supports [Concrete], [Abstract, Concrete], etc.)
-      const injection = this.resolveAspectToInjection(aspect);
+    // Phase 1: Register ALL transversals (from transversals[] and from inject[]) as injectables FIRST
+    // This ensures they're available as dependencies but not yet in TransversalManager
+    for (const transversal of this.transversals) {
+      // Register the transversal injection (supports [Concrete], [Abstract, Concrete], etc.)
+      const injection = this.resolveTransversalToInjection(transversal);
       this.privateContext.register(injection);
     }
     
-    // Also check if any injection is an aspect and register it first
+    // Also check if any injection is an transversal and register it first
     for (const injection of this.injections) {
       const [ConcreteClass] = injection;
-      if (isAspect(ConcreteClass)) {
+      if (isTransversal(ConcreteClass)) {
         this.privateContext.register(injection);
       }
     }
 
-    // Phase 2: Register remaining (non-aspect) injections
+    // Phase 2: Register remaining (non-transversal) injections
     for (const injection of this.injections) {
       const [ConcreteClass] = injection;
-      if (!isAspect(ConcreteClass)) {
+      if (!isTransversal(ConcreteClass)) {
         this.privateContext.register(injection);
       }
     }
@@ -115,24 +115,20 @@ export class Injectable<T> implements AbstractInjectable<T> {
       }
     }
 
-    // Phase 3: NOW register all aspects in AspectManager (they can resolve dependencies and be used for weaving)
-    // CRITICAL: Use publicContext for AspectManager (same as AspectWeaver), but privateContext to resolve aspects
-    const aspectManager = AspectManager.getInstance(this.publicContext);
+    // Phase 3: Now that all injections are registered, register transversals in TransversalManager
+    const transversalManager = TransversalManager.getInstance(this.publicContext);
     
-    // Generate a unique assemblage identifier for configuration tracking
-    const assemblageId = this.concrete.name;
-    
-    for (const aspect of this.aspects) {
-      aspectManager.registerAspect(aspect, this.privateContext, assemblageId);
+    for (const transversal of this.transversals) {
+      transversalManager.registerTransversal(transversal, this.privateContext);
     }
     
     // Also register aspects that were in inject[]
     for (const injection of this.injections) {
       const [ConcreteClass] = injection;
-      if (isAspect(ConcreteClass)) {
-        // Convert injection to aspect injection format
-        const aspectInjection = injection.length > 1 ? injection : [ConcreteClass];
-        aspectManager.registerAspect(aspectInjection as any, this.privateContext, assemblageId);
+      if (isTransversal(ConcreteClass)) {
+        // Convert injection to transversal injection format
+        const transversalInjection = injection.length > 1 ? injection : [ConcreteClass];
+        transversalManager.registerTransversal(transversalInjection as any, this.privateContext);
       }
     }
 
@@ -154,40 +150,33 @@ export class Injectable<T> implements AbstractInjectable<T> {
   }
 
   /**
-   * Converts an AspectInjection to an Injection format for registration.
-   * Supports all AspectInjection formats:
+   * Converts an TransversalInjection to an Injection format for registration.
+   * Supports all TransversalInjection formats:
    * - [Concrete]
    * - [Concrete, config]
    * - [Abstract, Concrete]
    * - [Abstract, Concrete, config]
    * 
-   * @param aspect The aspect injection to convert
+   * @param transversal The transversal injection to convert
    * @returns An Injection that can be registered in the context
    */
-  private resolveAspectToInjection(aspect: any): Injection<any> {
-    // Handle AspectConfig object format
-    if (!Array.isArray(aspect) && typeof aspect === 'object' && aspect.aspect) {
-      // AspectConfig { aspect, role?, methods?, config? }
-      // Return aspect injection: [Aspect] or [Aspect, config] if config exists
-      return aspect.config ? [aspect.aspect, aspect.config] : [aspect.aspect];
-    }
-    
+  private resolveTransversalToInjection(transversal: any): Injection<any> {
     // Handle tuple format
-    if (aspect.length === 1) {
+    if (transversal.length === 1) {
       // [Concrete]
-      return [aspect[0]];
-    } else if (aspect.length === 2) {
-      const second = aspect[1];
+      return [transversal[0]];
+    } else if (transversal.length === 2) {
+      const second = transversal[1];
       if (isClass(second)) {
         // [Abstract, Concrete]
-        return [aspect[0], aspect[1]];
+        return [transversal[0], transversal[1]];
       } else {
         // [Concrete, config]
-        return [aspect[0], aspect[1]];
+        return [transversal[0], transversal[1]];
       }
     } else {
       // [Abstract, Concrete, config]
-      return [aspect[0], aspect[1], aspect[2]];
+      return [transversal[0], transversal[1], transversal[2]];
     }
   }
 
@@ -286,13 +275,13 @@ export class Injectable<T> implements AbstractInjectable<T> {
   }
 
   /**
-   * Injectable assemblage's aspects defined in its decorator's definition.
+   * Injectable assemblage's transversals defined in its decorator's definition.
    */
-  public get aspects(): any[] {
-    if (this.cachedAspects === undefined) {
-      this.cachedAspects = this.definition.aspects || [];
+  public get transversals(): any[] {
+    if (this.cachedTransversals === undefined) {
+      this.cachedTransversals = this.definition.engage || [];
     }
-    return this.cachedAspects;
+    return this.cachedTransversals;
   }
 
   /**

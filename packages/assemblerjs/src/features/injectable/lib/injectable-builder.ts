@@ -1,6 +1,6 @@
 import { registerEvents } from '@/features/events';
 import { resolveInjectableParameters } from './dependencies';
-import { AspectWeaver } from '@/features/aspects';
+import { TransversalWeaver } from '@/features/transversals';
 import type { AbstractInjectable } from '../model/abstract';
 
 /**
@@ -16,7 +16,7 @@ export class InjectableBuilder<T> {
   /**
    * Builds a new instance of the injectable's concrete class.
    * Resolves constructor parameters, merges configurations, and registers events.
-   * Also applies aspect weaving if aspects are defined.
+   * Also applies transversal weaving if aspects are defined.
    * @param configuration Optional runtime configuration to merge with the injectable's base configuration.
    * @returns The built instance (may be a Proxy if aspects are applied).
    */
@@ -27,9 +27,9 @@ export class InjectableBuilder<T> {
     // Create the base instance
     const instance = new this.injectable.concrete(...params) as T;
 
-    // Apply aspect weaving BEFORE registering events
+    // Apply transversal weaving BEFORE registering events
     // Pass assemblage identifier for local configuration
-    const wovenInstance = AspectWeaver.weave(
+    const wovenInstance = TransversalWeaver.weave(
       instance,
       this.injectable.concrete,
       this.injectable.publicContext,

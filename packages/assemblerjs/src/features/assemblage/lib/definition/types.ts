@@ -1,6 +1,6 @@
 import type { Injection } from './inject';
 import type { InstanceInjection } from './use';
-import type { AspectInjection } from './aspects';
+import type { TransversalInjection } from './transversals';
 
 /**
  * Assemblage definition interface.
@@ -11,9 +11,8 @@ export interface AssemblageDefinition {
   events?: string[];
   inject?: Injection<unknown>[];
   use?: InstanceInjection<unknown>[];
-  aspects?: AspectInjection<unknown>[];
+  engage?: TransversalInjection<unknown>[];
   tags?: string | string[];
   metadata?: Record<string, any>;
-  // Other packages can add global properties to the definition.
   global?: Record<string, any>;
 }
