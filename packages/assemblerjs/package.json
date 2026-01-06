@@ -54,9 +54,5 @@
   "dependencies": {
     "@assemblerjs/core": "^0.9.6",
     "reflect-metadata": "0.2.2"
-  },
-  "devDependencies": {
-    "istanbul-badges-readme": "^1.9.0",
-    "vitest": "^3.0.0"
   }
 }
