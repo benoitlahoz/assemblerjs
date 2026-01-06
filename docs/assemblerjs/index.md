@@ -13,6 +13,7 @@ Welcome to the official documentation for **assembler.js** - a modern, type-safe
 - 📡 **Built-in Event System** - Integrated EventManager
 - 🎨 **Custom Decorators** - Easy creation with factories
 - 🏷️ **Tags Support** - Group and retrieve dependencies
+- 🔀 **AOP/Transversals** - Aspect-Oriented Programming with cross-cutting concerns
 - 🌐 **Universal** - **Works seamlessly in Node.js AND Browsers** - No platform-specific code
 - 📦 **Browser-Friendly** - Small bundle size, perfect for frontend applications
 
@@ -58,6 +59,7 @@ Understand the fundamental concepts:
 - [Dependency Injection](./core-concepts/dependency-injection.md) - Injection patterns
 - [Abstraction Pattern](./core-concepts/abstraction-pattern.md) - Interface-based design
 - [Lifecycle Hooks](./core-concepts/lifecycle-hooks.md) - Initialization & cleanup
+- [Transversals (AOP)](./core-concepts/transversals-aop.md) - Aspect-Oriented Programming and cross-cutting concerns
 
 ### [🎨 Decorators](./decorators/parameter-decorators.md)
 
@@ -65,6 +67,7 @@ Master the decorator system:
 - [Parameter Decorators](./decorators/parameter-decorators.md) - Built-in decorators (`@Context()`, `@Configuration()`, etc.)
 - [Custom Parameter Decorators](./decorators/custom-parameter.md) - Create your own parameter decorators
 - [Custom Class Decorators](./decorators/custom-class.md) - Type-safe class decorators
+- [AOP Decorators](./decorators/aop-decorators.md) - `@Transversal()`, `@Before()`, `@After()`, `@Around()`, `@Affect()`
 
 ### [✨ Features](./features/events.md)
 

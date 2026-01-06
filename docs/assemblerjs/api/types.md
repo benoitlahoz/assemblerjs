@@ -30,6 +30,34 @@ class MyService implements AbstractAssemblage {
 }
 ```
 
+### AbstractTransversal
+
+Interface for transversal (aspect) classes that provide cross-cutting concerns.
+
+```typescript
+interface AbstractTransversal {
+  onInit?(context: AssemblerContext, configuration: Record<string, any>): void | Promise<void>;
+  onDispose?(context: AssemblerContext, configuration: Record<string, any>): void | Promise<void>;
+  static onRegister?(context: AssemblerContext, configuration?: Record<string, any>): void;
+}
+```
+
+**Usage:**
+
+```typescript
+@Transversal()
+class LoggingTransversal implements AbstractTransversal {
+  onInit() {
+    console.log('Transversal initialized');
+  }
+
+  @Before('execution(*.*)')
+  logMethodCall(context: AdviceContext) {
+    console.log('Method called:', context.methodName);
+  }
+}
+```
+
 ### AssemblageDefinition
 
 Configuration interface for the `@Assemblage` decorator.
@@ -39,6 +67,7 @@ interface AssemblageDefinition {
   singleton?: boolean;           // Default: true
   inject?: InjectDefinition[];   // Dependencies
   use?: UseDefinition[];         // Objects to register
+  engage?: TransversalInjection[]; // Transversals to apply
   tags?: string[];               // Tags for grouping
   events?: string[];             // Event channels
   metadata?: Record<string, any>; // Custom metadata
@@ -52,6 +81,7 @@ interface AssemblageDefinition {
 @Assemblage({
   singleton: true,
   inject: [[DatabaseService]],
+  engage: [[LoggingTransversal], [SecurityTransversal]],
   tags: ['service'],
   metadata: { version: '1.0' },
 })
@@ -85,6 +115,46 @@ type InjectDefinition =
 // Interface binding + configuration
 [AbstractLogger, ConsoleLogger, { level: 'debug' }]
 ```
+
+### TransversalInjection
+
+Type for transversal (aspect) injection definitions.
+
+```typescript
+type TransversalInjection<T = any> =
+  | [Identifier<T>]                                  // Simple transversal
+  | [Identifier<T>, Record<string, any>]             // Transversal with config
+  | [Identifier<T>, Identifier<T>]                   // Abstract binding
+  | [Identifier<T>, Identifier<T>, Record<string, any>]; // Abstract + config
+```
+
+**Examples:**
+
+```typescript
+// Simple transversal injection
+[LoggingTransversal]
+
+// With configuration
+[PerformanceTransversal, { threshold: 100 }]
+
+// Abstract binding
+[AbstractLoggingTransversal, ConsoleLoggingTransversal]
+
+// Abstract binding + configuration
+[AbstractLoggingTransversal, ConsoleLoggingTransversal, { level: 'debug' }]
+```
+
+**Usage in engage:**
+
+```typescript
+@Assemblage({
+  inject: [[UserService]],
+  engage: [
+    [LoggingTransversal],
+    [SecurityTransversal, { requireAuth: true }]
+  ]
+})
+class App implements AbstractAssemblage {}
 
 ### UseDefinition
 
@@ -208,6 +278,143 @@ const listener: Listener = (data) => {
 };
 
 context.on('event', listener);
+```
+
+## AOP (Transversal) Types
+
+### AdviceType
+
+Type for advice execution timing.
+
+```typescript
+type AdviceType = 'before' | 'after' | 'around';
+```
+
+**Usage:**
+
+```typescript
+const type: AdviceType = 'before';
+```
+
+### JoinPoint
+
+Information about the point of execution where an advice is applied.
+
+```typescript
+interface JoinPoint {
+  target: any;           // The target instance
+  methodName: string;    // The name of the method being called
+  args: any[];          // The arguments passed to the method
+  result?: any;         // The result of the method (for after advice)
+  error?: any;          // The error thrown by the method (if any)
+}
+```
+
+**Usage:**
+
+```typescript
+function logJoinPoint(joinPoint: JoinPoint) {
+  console.log('Method:', joinPoint.methodName);
+  console.log('Args:', joinPoint.args);
+  console.log('Result:', joinPoint.result);
+}
+```
+
+### AdviceContext
+
+Extended join point with control flow for advices.
+
+```typescript
+interface AdviceContext extends JoinPoint {
+  proceed?(): any | Promise<any>;  // Continue to next advice or original method
+  config?: Record<string, any>;    // Optional config from @Affect decorator
+}
+```
+
+**Usage:**
+
+```typescript
+@Transversal()
+class MyTransversal {
+  @Around('execution(*.*)')
+  async intercept(context: AdviceContext) {
+    console.log('Before:', context.methodName);
+    
+    // Call next advice or original method
+    const result = await context.proceed!();
+    
+    console.log('After:', result);
+    return result;
+  }
+}
+```
+
+### Advice
+
+Definition of a single advice to be applied.
+
+```typescript
+interface Advice {
+  type: AdviceType;                  // 'before' | 'after' | 'around'
+  pointcut: string;                  // Pointcut expression
+  method: Function;                  // The advice method to execute
+  transversalInstance: any;          // The transversal instance that owns this advice
+  priority: number;                  // Execution priority (higher first)
+  enabled: boolean;                  // Whether this advice is enabled
+  role?: string;                     // Optional role identifier
+  config?: Record<string, any>;      // Optional config from @Affect
+}
+```
+
+**Usage:**
+
+```typescript
+const advice: Advice = {
+  type: 'before',
+  pointcut: 'execution(UserService.*)',
+  method: myTransversal.logBefore,
+  transversalInstance: myTransversal,
+  priority: 100,
+  enabled: true
+};
+```
+
+### TransversalMetadata
+
+Metadata about a registered transversal.
+
+```typescript
+interface TransversalMetadata {
+  definition: any;      // The assemblage definition
+  advices: Advice[];    // The advices defined in this transversal
+  instance?: any;       // The transversal instance
+}
+```
+
+### AffectedMethodConfig
+
+Configuration for explicit transversal application via @Affect.
+
+```typescript
+interface AffectedMethodConfig {
+  transversal: Identifier<any>;      // The transversal class to apply
+  role?: string;                     // Optional role filter
+  config?: Record<string, any>;      // Optional configuration
+}
+```
+
+**Usage:**
+
+```typescript
+// Applied by @Affect decorator
+@Affect(LoggingTransversal, { level: 'debug' })
+methodName() { }
+
+// Equivalent configuration:
+const config: AffectedMethodConfig = {
+  transversal: LoggingTransversal,
+  config: { level: 'debug' }
+};
 ```
 
 ## Parameter Decorator Types
@@ -360,8 +567,10 @@ class MyService implements AbstractAssemblage {
 // Core types
 import { 
   AbstractAssemblage,
+  AbstractTransversal,
   AssemblageDefinition,
   InjectDefinition,
+  TransversalInjection,
   UseDefinition,
 } from 'assemblerjs';
 
@@ -370,6 +579,16 @@ import {
   AssemblerContext,
   Identifier,
   Listener,
+} from 'assemblerjs';
+
+// AOP types
+import {
+  AdviceType,
+  JoinPoint,
+  AdviceContext,
+  Advice,
+  TransversalMetadata,
+  AffectedMethodConfig,
 } from 'assemblerjs';
 
 // Decorator types
@@ -393,5 +612,7 @@ import { EventManager } from 'assemblerjs';
 
 - [Assembler API](./assembler.md) - Container methods
 - [AssemblerContext API](./context.md) - Context interface
+- [Transversals (AOP)](../core-concepts/transversals-aop.md) - Aspect-oriented programming
+- [AOP Decorators](../decorators/aop-decorators.md) - @Transversal, @Before, @After, @Around, @Affect
 - [Custom Class Decorators](../decorators/custom-class.md) - Use decorator types
 - [Custom Parameter Decorators](../decorators/custom-parameter.md) - Create resolvers

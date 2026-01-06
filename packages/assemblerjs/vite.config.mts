@@ -77,7 +77,8 @@ export default defineConfig(() => ({
     watch: false,
     globals: true,
     environment: 'node',
-    include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/fixtures/**', '../scripts/**'],
     esbuild: {
       tsconfigRaw: {
         extends: './tsconfig.spec.json',
@@ -87,6 +88,20 @@ export default defineConfig(() => ({
     coverage: {
       reportsDirectory: './coverage',
       provider: 'istanbul' as const,
+      reporter: ['text', 'json', 'html', 'json-summary'],
+      exclude: [
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/tests/fixtures/**',
+        '**/scripts/**',
+        '**/deprecated/**',
+        '**/*.config.*',
+        '**/*.spec.ts',
+        '**/*.test.ts',
+        '**/*.bench.ts',
+        '**/*.abstract.ts',
+        '**/abstract.ts',
+      ],
     },
     benchmark: {
       include: ['bench/**/*.bench.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],

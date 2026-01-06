@@ -4,20 +4,14 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 
 > ✨ **Universal Library**: Works seamlessly in Node.js, browsers, and any JavaScript environment that supports ES2020+
 
-![Statements](https://img.shields.io/badge/statements-91.01%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-79.6%25-red.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-87.62%25-yellow.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-90.76%25-brightgreen.svg?style=flat)
+![Statements](https://img.shields.io/badge/statements-93.78%25-brightgreen.svg?style=flat) ![Branches](https://img.shields.io/badge/branches-83.87%25-yellow.svg?style=flat) ![Functions](https://img.shields.io/badge/functions-93.63%25-brightgreen.svg?style=flat) ![Lines](https://img.shields.io/badge/lines-93.96%25-brightgreen.svg?style=flat)
 
 ## Performance Metrics
 
-![assembler building](https://img.shields.io/badge/assembler%20building-14k%20ops%2Fsec-green.svg?style=flat)
-![singleton cache](https://img.shields.io/badge/singleton%20cache-183k%20ops%2Fsec-brightgreen.svg?style=flat)
-![event emit](https://img.shields.io/badge/event%20emit-582k%20ops%2Fsec-brightgreen.svg?style=flat)
-![decorators](https://img.shields.io/badge/decorators-685k%20ops%2Fsec-brightgreen.svg?style=flat)
-
-Real-world performance metrics:
-- **Assembler Building**: Complete build of a medium application (10 services with dependencies)
-- **Singleton Cache**: Resolution and access to a singleton service without dependencies
-- **Event Emit**: Single event emission with 1 registered listener
-- **Decorators**: Application of the `@Assemblage()` decorator on a class
+![assembler building](https://img.shields.io/badge/assembler%20building-11k%20ops%2Fsec-green.svg?style=flat)
+![singleton cache](https://img.shields.io/badge/singleton%20cache-104k%20ops%2Fsec-brightgreen.svg?style=flat)
+![event emit](https://img.shields.io/badge/event%20emit-558k%20ops%2Fsec-brightgreen.svg?style=flat)
+![decorators](https://img.shields.io/badge/decorators-588k%20ops%2Fsec-brightgreen.svg?style=flat)
 
 [→ Full Benchmarks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/performance/benchmarks.md)
 
@@ -30,6 +24,7 @@ Real-world performance metrics:
 - 🌳 **Tree-Shakable** - Optimized bundle size (~5-6 KB for minimal usage)
 - ♻️ **Lifecycle Hooks** - `onRegister`, `onInit`, `onDispose`
 - 📡 **Built-in Event System** - Integrated EventManager
+- 🔀 **AOP/Transversals** - Cross-cutting concerns (logging, security, caching, performance)
 - 🎨 **Custom Decorators** - Easy creation with `ParameterDecoratorFactory` and `createConstructorDecorator`
 - 🔧 **Flexible Configuration** - Runtime configuration override
 - 🏷️ **Tags Support** - Group and retrieve dependencies by tags
@@ -120,11 +115,13 @@ Comprehensive documentation is available at:
 - [Dependency Injection](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/dependency-injection.md) - DI patterns
 - [Abstraction Pattern](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/abstraction-pattern.md) - Interface-based design
 - [Lifecycle Hooks](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/lifecycle-hooks.md) - Initialization & cleanup
+- [Transversals (AOP)](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/core-concepts/transversals-aop.md) - Aspect-Oriented Programming
 
 #### Decorators
 - [Parameter Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/parameter-decorators.md) - Built-in decorators
 - [Custom Parameter Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/custom-parameter.md) - Create your own
 - [Custom Class Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/custom-class.md) - Type-safe class decorators
+- [AOP Decorators](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/decorators/aop-decorators.md) - @Transversal, @Before, @After, @Around, @Affect
 
 #### Features
 - [Event System](https://github.com/benoitlahoz/assemblerjs/blob/main/docs/assemblerjs/features/events.md) - Event-driven architecture

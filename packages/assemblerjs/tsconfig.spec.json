@@ -13,7 +13,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "paths": {
-      "@/*": ["./src/*", "./e2e/*"]
+      "@/*": ["./src/*", "./tests/*"]
     }
   },
   "include": [
@@ -29,8 +29,8 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "e2e/**/*.ts",
-    "e2e/**/*.tsx",
+    "tests/**/*.ts",
+    "tests/**/*.tsx",
     "bench/**/*.bench.ts",
     "bench/**/*.bench.tsx",
     "bench/**/*.bench.js",

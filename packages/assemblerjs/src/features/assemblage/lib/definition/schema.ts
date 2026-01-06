@@ -4,6 +4,7 @@ import { defineCustomMetadata, getOwnCustomMetadata } from '@/shared/common';
 import { isAssemblage } from '../helpers';
 import type { Injection } from './inject';
 import type { InstanceInjection } from './use';
+import type { TransversalInjection } from './transversals';
 import { AssemblageDefinition } from './types';
 
 /**
@@ -62,6 +63,21 @@ const schema: Record<string, any> = {
       throw new Error(`'use' property must be an array of tuples of length 2.`);
     },
     transform: (value?: InstanceInjection<unknown>[][]) => value,
+  },
+  engage: {
+    test: (value: unknown) =>
+      typeof value === 'undefined' ||
+      (Array.isArray(value) &&
+        value.every(
+          (item: unknown) =>
+            (Array.isArray(item) && item.length >= 1 && item.length <= 3)
+        )),
+    throw: () => {
+      throw new Error(
+        `'engage' property must be an array of tuples of length 1, 2 or 3.`
+      );
+    },
+    transform: (value?: TransversalInjection<unknown>[][]) => value,
   },
   tags: {
     test: (value: unknown) =>
@@ -143,7 +159,7 @@ export const getDefinition = <T>(
   assemblage: Concrete<T>
 ): AssemblageDefinition => {
   if (!isAssemblage(assemblage)) {
-    throw new Error(`Class '${assemblage.name}' is not an assemblage.`);
+    throw new Error(`Class '${assemblage.name}' is not an assemblage or transversal.`);
   }
   return getOwnCustomMetadata(ReflectValue.AssemblageDefinition, assemblage);
 };

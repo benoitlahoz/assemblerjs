@@ -1,5 +1,5 @@
 import type { Concrete } from '@assemblerjs/core';
-import { clearInstance } from '@assemblerjs/core';
+import { clearInstance, isClass } from '@assemblerjs/core';
 import { defineCustomMetadata, ReflectValue, type Identifier } from '@/shared/common';
 import type {
   AssemblageDefinition,
@@ -8,6 +8,7 @@ import type {
   InstanceInjection,
 } from '@/features/assemblage';
 import { isAssemblage, getDefinition } from '@/features/assemblage';
+import { TransversalManager, isTransversal } from '@/features/transversals';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
 import { unregisterEvents } from '@/features/events';
@@ -36,6 +37,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
   private cachedInjections?: Injection<unknown>[];
   /** Cached objects to avoid repeated definition access. */
   private cachedObjects?: InstanceInjection<unknown>[];
+  /** Cached aspects to avoid repeated definition access. */
+  private cachedTransversals?: any[];
   /** Cached tags to avoid repeated definition access. */
   private cachedTags?: string | string[];
   /** Cached events to avoid repeated definition access. */
@@ -78,9 +81,30 @@ export class Injectable<T> implements AbstractInjectable<T> {
       this.concrete
     );
 
-    // Optimized: Use native for...of instead of forOf wrapper
-    for (const injection of this.injections) {
+    // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
+    
+    // Phase 1: Register ALL transversals (from transversals[] and from inject[]) as injectables FIRST
+    // This ensures they're available as dependencies but not yet in TransversalManager
+    for (const transversal of this.transversals) {
+      // Register the transversal injection (supports [Concrete], [Abstract, Concrete], etc.)
+      const injection = this.resolveTransversalToInjection(transversal);
       this.privateContext.register(injection);
+    }
+    
+    // Also check if any injection is an transversal and register it first
+    for (const injection of this.injections) {
+      const [ConcreteClass] = injection;
+      if (isTransversal(ConcreteClass)) {
+        this.privateContext.register(injection);
+      }
+    }
+
+    // Phase 2: Register remaining (non-transversal) injections
+    for (const injection of this.injections) {
+      const [ConcreteClass] = injection;
+      if (!isTransversal(ConcreteClass)) {
+        this.privateContext.register(injection);
+      }
     }
 
     for (const injection of this.objects) {
@@ -88,6 +112,23 @@ export class Injectable<T> implements AbstractInjectable<T> {
         this.privateContext.use(injection[0], injection[1]);
       } else {
         this.privateContext.register(injection as any, true);
+      }
+    }
+
+    // Phase 3: Now that all injections are registered, register transversals in TransversalManager
+    const transversalManager = TransversalManager.getInstance(this.publicContext);
+    
+    for (const transversal of this.transversals) {
+      transversalManager.registerTransversal(transversal, this.privateContext);
+    }
+    
+    // Also register aspects that were in inject[]
+    for (const injection of this.injections) {
+      const [ConcreteClass] = injection;
+      if (isTransversal(ConcreteClass)) {
+        // Convert injection to transversal injection format
+        const transversalInjection = injection.length > 1 ? injection : [ConcreteClass];
+        transversalManager.registerTransversal(transversalInjection as any, this.privateContext);
       }
     }
 
@@ -106,6 +147,37 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // through the `use` property of `AssemblerDefinition`.
       this.singletonInstance = buildable.instance;
     } 
+  }
+
+  /**
+   * Converts an TransversalInjection to an Injection format for registration.
+   * Supports all TransversalInjection formats:
+   * - [Concrete]
+   * - [Concrete, config]
+   * - [Abstract, Concrete]
+   * - [Abstract, Concrete, config]
+   * 
+   * @param transversal The transversal injection to convert
+   * @returns An Injection that can be registered in the context
+   */
+  private resolveTransversalToInjection(transversal: any): Injection<any> {
+    // Handle tuple format
+    if (transversal.length === 1) {
+      // [Concrete]
+      return [transversal[0]];
+    } else if (transversal.length === 2) {
+      const second = transversal[1];
+      if (isClass(second)) {
+        // [Abstract, Concrete]
+        return [transversal[0], transversal[1]];
+      } else {
+        // [Concrete, config]
+        return [transversal[0], transversal[1]];
+      }
+    } else {
+      // [Abstract, Concrete, config]
+      return [transversal[0], transversal[1], transversal[2]];
+    }
   }
 
   /**
@@ -200,6 +272,16 @@ export class Injectable<T> implements AbstractInjectable<T> {
       this.cachedObjects = this.definition.use || [];
     }
     return this.cachedObjects;
+  }
+
+  /**
+   * Injectable assemblage's transversals defined in its decorator's definition.
+   */
+  public get transversals(): any[] {
+    if (this.cachedTransversals === undefined) {
+      this.cachedTransversals = this.definition.engage || [];
+    }
+    return this.cachedTransversals;
   }
 
   /**
