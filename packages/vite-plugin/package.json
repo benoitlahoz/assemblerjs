@@ -1,0 +1,51 @@
+{
+  "name": "vite-plugin-assemblerjs",
+  "version": "0.1.0",
+  "description": "Vite plugin for seamless AssemblerJS integration with auto-configuration",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "license": "MIT",
+  "keywords": [
+    "vite",
+    "vite-plugin",
+    "assemblerjs",
+    "dependency-injection",
+    "di",
+    "ioc",
+    "decorators",
+    "swc",
+    "reflect-metadata",
+    "typescript"
+  ],
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!**/*.tsbuildinfo"
+  ],
+  "engines": {
+    "node": ">= 18.12.0"
+  },
+  "scripts": {
+    "test": "vitest --coverage --passWithNoTests",
+    "build": "vite build"
+  },
+  "peerDependencies": {
+    "vite": "^5.0.0 || ^6.0.0"
+  },
+  "dependencies": {
+    "@rollup/plugin-swc": "^0.4.0",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "vite": "^6.0.0"
+  }
+}
