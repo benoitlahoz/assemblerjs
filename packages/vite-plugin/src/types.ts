@@ -55,6 +55,41 @@ export interface AssemblerjsPluginOptions {
      */
     injectMode?: 'entry' | 'inline' | 'manual';
   };
+
+  /**
+   * Build-time validation configuration.
+   */
+  validation?: {
+    /**
+     * Enable build-time validation.
+     * @default true
+     */
+    enabled?: boolean;
+
+    /**
+     * Verify all injected dependencies exist.
+     * @default true
+     */
+    strictInjection?: boolean;
+
+    /**
+     * Detect circular dependencies.
+     * @default true
+     */
+    checkCircular?: boolean;
+
+    /**
+     * Verify tag references.
+     * @default true
+     */
+    validateTags?: boolean;
+
+    /**
+     * Warn about unused assemblages.
+     * @default false
+     */
+    warnUnusedAssemblages?: boolean;
+  };
 }
 
 /**

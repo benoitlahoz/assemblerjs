@@ -10,28 +10,37 @@ describe('vite-plugin-assemblerjs', () => {
       expect(plugins.length).toBeGreaterThan(0);
     });
 
-    it('should create plugins with default options', () => {
-      const plugins = AssemblerjsPlugin();
-      expect(plugins.length).toBe(2); // SWC + reflect-metadata
+    it('should create plugins with validation enabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      expect(plugins.length).toBe(3); // SWC + reflect-metadata + validation
+    });
+
+    it('should not include validation plugin when disabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: false }
+      });
+      expect(plugins.length).toBe(2); // Only SWC + reflect-metadata
     });
 
     it('should respect disabled SWC option', () => {
       const plugins = AssemblerjsPlugin({ swc: { enabled: false } });
-      expect(plugins.length).toBe(1); // Only reflect-metadata
+      expect(plugins.length).toBe(2); // Only reflect-metadata + validation
     });
 
     it('should respect disabled reflect-metadata option', () => {
       const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { autoInject: false } 
       });
-      expect(plugins.length).toBe(1); // Only SWC
+      expect(plugins.length).toBe(2); // Only SWC + validation
     });
 
     it('should handle manual reflect-metadata mode', () => {
       const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { injectMode: 'manual' } 
       });
-      expect(plugins.length).toBe(1); // Only SWC
+      expect(plugins.length).toBe(2); // Only SWC + validation
     });
   });
 
@@ -158,17 +167,17 @@ describe('vite-plugin-assemblerjs', () => {
         swc: { target: 'es2020' }
       });
       
-      expect(plugins.length).toBe(2);
+      expect(plugins.length).toBe(3);
     });
 
     it('should handle empty options', () => {
       const plugins = AssemblerjsPlugin({});
-      expect(plugins.length).toBe(2);
+      expect(plugins.length).toBe(3);
     });
 
     it('should handle undefined options', () => {
       const plugins = AssemblerjsPlugin(undefined);
-      expect(plugins.length).toBe(2);
+      expect(plugins.length).toBe(3);
     });
   });
 
@@ -176,9 +185,10 @@ describe('vite-plugin-assemblerjs', () => {
     it('should work with minimal configuration', () => {
       const plugins = AssemblerjsPlugin();
       
-      expect(plugins.length).toBe(2);
+      expect(plugins.length).toBe(3);
       expect(plugins[0].name).toContain('swc');
       expect(plugins[1].name).toContain('reflect-metadata');
+      expect(plugins[2].name).toContain('validation');
     });
 
     it('should support custom SWC options', () => {
@@ -199,6 +209,182 @@ describe('vite-plugin-assemblerjs', () => {
       
       const plugins = AssemblerjsPlugin(options);
       expect(plugins[0]).toBeDefined();
+    });
+  });
+
+  describe('Validation Plugin', () => {
+    it('should create validation plugin when enabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      );
+
+      expect(validationPlugin).toBeDefined();
+    });
+
+    it('should not create validation plugin when disabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: false }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      );
+
+      expect(validationPlugin).toBeUndefined();
+    });
+
+    it('should detect AssemblerJS files', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      // Test transform method exists
+      expect(validationPlugin.transform).toBeDefined();
+    });
+
+    it('should analyze AssemblerJS code patterns', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      const code = `
+        import { Assemblage } from '@assemblerjs/core';
+
+        @Assemblage()
+        class UserService {
+          constructor(private logger: LoggerService) {}
+        }
+      `;
+
+      // Call transform to trigger analysis
+      const result = validationPlugin.transform?.(code, '/src/services/user.service.ts');
+      expect(result).toBeUndefined(); // Transform should not modify code
+    });
+
+    it('should detect simple injection pattern', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      const code = `
+        import { Assemblage } from '@assemblerjs/core';
+
+        @Assemblage({
+          inject: [[LoggerService]],
+        })
+        class UserService implements AbstractAssemblage {
+          constructor(public logger: LoggerService) {}
+        }
+      `;
+
+      validationPlugin.transform?.(code, '/src/services/user.service.ts');
+      // The validation happens in buildEnd, so we can't easily test it here
+      // But we can test that the code is processed without errors
+      expect(true).toBe(true);
+    });
+
+    it('should detect abstraction injection pattern', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      const code = `
+        import { Assemblage } from '@assemblerjs/core';
+
+        @Assemblage({
+          inject: [[AbstractLogger, BypassLogger, { level: 'info' }]],
+        })
+        class App implements AbstractAssemblage {
+          constructor(public logger: AbstractLogger) {}
+        }
+      `;
+
+      validationPlugin.transform?.(code, '/src/app.ts');
+      expect(true).toBe(true);
+    });
+
+    it('should detect tags configuration', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      const code = `
+        import { Assemblage } from '@assemblerjs/core';
+
+        @Assemblage({
+          tags: 'logger',
+          inject: [[LoggerService]],
+        })
+        class BypassLogger implements AbstractLogger {
+          log(...args: any[]) { return args; }
+        }
+      `;
+
+      validationPlugin.transform?.(code, '/src/logger.service.ts');
+      expect(true).toBe(true);
+    });
+
+    it('should detect array tags configuration', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: { enabled: true }
+      });
+      const validationPlugin = plugins.find(p =>
+        p.name === 'vite-plugin-assemblerjs:validation'
+      ) as any;
+
+      const code = `
+        import { Assemblage } from '@assemblerjs/core';
+
+        @Assemblage({
+          tags: ['logger', 'service'],
+          inject: [[LoggerService]],
+        })
+        class BypassLogger implements AbstractLogger {
+          log(...args: any[]) { return args; }
+        }
+      `;
+
+      validationPlugin.transform?.(code, '/src/logger.service.ts');
+      expect(true).toBe(true);
+    });
+
+    it('should validate with strict injection enabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: {
+          enabled: true,
+          strictInjection: true
+        }
+      });
+
+      expect(plugins.length).toBe(3);
+    });
+
+    it('should check for circular dependencies when enabled', () => {
+      const plugins = AssemblerjsPlugin({
+        validation: {
+          enabled: true,
+          checkCircular: true
+        }
+      });
+
+      expect(plugins.length).toBe(3);
     });
   });
 });

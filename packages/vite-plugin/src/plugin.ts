@@ -1,6 +1,7 @@
 import type { Plugin as VitePlugin } from 'vite';
 import swc from '@rollup/plugin-swc';
 import type { AssemblerjsPluginOptions } from './types';
+import { createValidationPlugin } from './validation';
 
 const VIRTUAL_METADATA_ID = 'virtual:assemblerjs-metadata';
 const RESOLVED_METADATA_ID = '\0' + VIRTUAL_METADATA_ID;
@@ -33,26 +34,84 @@ const defaultOptions: Required<AssemblerjsPluginOptions> = {
     autoInject: true,
     injectMode: 'entry',
   },
+  validation: {
+    enabled: true,
+    strictInjection: true,
+    checkCircular: true,
+    validateTags: true,
+    warnUnusedAssemblages: false,
+  },
 };
 
 /**
  * Merge user options with defaults.
  */
 function mergeOptions(userOptions: AssemblerjsPluginOptions = {}): Required<AssemblerjsPluginOptions> {
+  return mergeDeep(defaultOptions, userOptions) as Required<AssemblerjsPluginOptions>;
+}
+
+/**
+ * Create reflect-metadata injection plugin.
+ */
+function createReflectMetadataPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugin {
   return {
-    swc: {
-      ...defaultOptions.swc,
-      ...userOptions.swc,
+    name: 'vite-plugin-assemblerjs:reflect-metadata',
+    enforce: 'pre',
+
+    // Resolve virtual module for reflect-metadata
+    resolveId(id: string) {
+      if (id === VIRTUAL_METADATA_ID) {
+        return RESOLVED_METADATA_ID;
+      }
+      return null;
     },
-    reflectMetadata: {
-      ...defaultOptions.reflectMetadata,
-      ...userOptions.reflectMetadata,
+
+    // Load virtual module content
+    load(id: string) {
+      if (id === RESOLVED_METADATA_ID) {
+        if (options.reflectMetadata.injectMode === 'inline') {
+          // Inline the reflect-metadata code
+          return `import 'reflect-metadata';`;
+        }
+        return `import 'reflect-metadata';`;
+      }
+      return null;
+    },
+
+    // Inject virtual module at entry point
+    transform(code: string, id: string) {
+      // Only inject in entry files (main.ts, index.ts, etc.)
+      if (options.reflectMetadata.injectMode === 'entry') {
+        const entryPatterns = [
+          /\/(main|index|app)\.(ts|tsx|js|jsx)$/,
+          /\/src\/(main|index|app)\.(ts|tsx|js|jsx)$/,
+        ];
+
+        const isEntry = entryPatterns.some(pattern => pattern.test(id));
+
+        if (isEntry && !code.includes('reflect-metadata') && !code.includes(VIRTUAL_METADATA_ID)) {
+          return {
+            code: `import '${VIRTUAL_METADATA_ID}';\n${code}`,
+            map: null,
+          };
+        }
+      }
+      return null;
+    },
+
+    // Provide info about the plugin
+    config() {
+      return {
+        optimizeDeps: {
+          include: ['reflect-metadata'],
+        },
+      };
     },
   };
 }
 
 /**
- * Create SWC plugin with AssemblerJS-specific configuration.
+ * Create SWC plugin with AssemblerJS configuration.
  */
 function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugin {
   // Default SWC configuration for AssemblerJS
@@ -90,6 +149,7 @@ function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugi
  * This plugin provides:
  * - Automatic SWC configuration for decorator metadata
  * - Automatic reflect-metadata injection
+ * - Build-time validation and error detection
  * 
  * @param userOptions - Plugin configuration options
  * @returns Vite plugin
@@ -98,10 +158,12 @@ function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugi
  * ```typescript
  * // vite.config.ts
  * import { defineConfig } from 'vite';
- * import { AssemblerjsPlugin } from 'vite-plugin-assemblerjs';
+ * import assemblerjs from 'vite-plugin-assemblerjs';
  * 
  * export default defineConfig({
- *   plugins: [AssemblerjsPlugin()]
+ *   plugins: [assemblerjs({
+ *     validation: { enabled: true }
+ *   })]
  * });
  * ```
  */
@@ -116,60 +178,12 @@ export default function AssemblerjsPlugin(userOptions: AssemblerjsPluginOptions 
 
   // Add reflect-metadata injection plugin if enabled
   if (options.reflectMetadata.autoInject && options.reflectMetadata.injectMode !== 'manual') {
-    plugins.push({
-      name: 'vite-plugin-assemblerjs:reflect-metadata',
-      enforce: 'pre',
+    plugins.push(createReflectMetadataPlugin(options));
+  }
 
-      // Resolve virtual module for reflect-metadata
-      resolveId(id: string) {
-        if (id === VIRTUAL_METADATA_ID) {
-          return RESOLVED_METADATA_ID;
-        }
-        return null;
-      },
-
-      // Load virtual module content
-      load(id: string) {
-        if (id === RESOLVED_METADATA_ID) {
-          if (options.reflectMetadata.injectMode === 'inline') {
-            // Inline the reflect-metadata code
-            return `import 'reflect-metadata';`;
-          }
-          return `import 'reflect-metadata';`;
-        }
-        return null;
-      },
-
-      // Inject virtual module at entry point
-      transform(code: string, id: string) {
-        // Only inject in entry files (main.ts, index.ts, etc.)
-        if (options.reflectMetadata.injectMode === 'entry') {
-          const entryPatterns = [
-            /\/(main|index|app)\.(ts|tsx|js|jsx)$/,
-            /\/src\/(main|index|app)\.(ts|tsx|js|jsx)$/,
-          ];
-
-          const isEntry = entryPatterns.some(pattern => pattern.test(id));
-
-          if (isEntry && !code.includes('reflect-metadata') && !code.includes(VIRTUAL_METADATA_ID)) {
-            return {
-              code: `import '${VIRTUAL_METADATA_ID}';\n${code}`,
-              map: null,
-            };
-          }
-        }
-        return null;
-      },
-
-      // Provide info about the plugin
-      config() {
-        return {
-          optimizeDeps: {
-            include: ['reflect-metadata'],
-          },
-        };
-      },
-    });
+  // Add validation plugin if enabled
+  if (options.validation.enabled) {
+    plugins.push(createValidationPlugin(options));
   }
 
   return plugins;
