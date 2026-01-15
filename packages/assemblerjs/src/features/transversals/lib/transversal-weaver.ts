@@ -31,7 +31,13 @@ export class TransversalWeaver {
     // Check if any methods have @Affect decorators
     const prototype = Object.getPrototypeOf(instance);
     const hasAffectedMethods = Object.getOwnPropertyNames(prototype).some(key => {
-      if (key === 'constructor' || typeof prototype[key] !== 'function') return false;
+      if (key === 'constructor') return false;
+      const descriptor = Object.getOwnPropertyDescriptor(prototype, key);
+      if (!descriptor) return false;
+      // Check if it's a method (function) or getter
+      const isFunction = descriptor.value && typeof descriptor.value === 'function';
+      const isGetter = descriptor.get && typeof descriptor.get === 'function';
+      if (!isFunction && !isGetter) return false;
       const affectedMethods = getAffectedMethods(prototype, key);
       return affectedMethods.length > 0;
     });
