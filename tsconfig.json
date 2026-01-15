@@ -23,6 +23,9 @@
     },
     {
       "path": "./packages/electron"
+    },
+    {
+      "path": "./packages/vite-plugin"
     }
   ]
 }
