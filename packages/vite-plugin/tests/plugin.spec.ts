@@ -1,34 +1,34 @@
 import { describe, it, expect } from 'vitest';
-import assemblerjsPlugin from '../src/plugin';
+import AssemblerjsPlugin from '../src/plugin';
 import type { AssemblerjsPluginOptions } from '../src/types';
 
 describe('vite-plugin-assemblerjs', () => {
   describe('Plugin Creation', () => {
     it('should return an array of plugins', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       expect(Array.isArray(plugins)).toBe(true);
       expect(plugins.length).toBeGreaterThan(0);
     });
 
     it('should create plugins with default options', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       expect(plugins.length).toBe(2); // SWC + reflect-metadata
     });
 
     it('should respect disabled SWC option', () => {
-      const plugins = assemblerjsPlugin({ swc: { enabled: false } });
+      const plugins = AssemblerjsPlugin({ swc: { enabled: false } });
       expect(plugins.length).toBe(1); // Only reflect-metadata
     });
 
     it('should respect disabled reflect-metadata option', () => {
-      const plugins = assemblerjsPlugin({ 
+      const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { autoInject: false } 
       });
       expect(plugins.length).toBe(1); // Only SWC
     });
 
     it('should handle manual reflect-metadata mode', () => {
-      const plugins = assemblerjsPlugin({ 
+      const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { injectMode: 'manual' } 
       });
       expect(plugins.length).toBe(1); // Only SWC
@@ -37,7 +37,7 @@ describe('vite-plugin-assemblerjs', () => {
 
   describe('SWC Configuration', () => {
     it('should configure SWC with correct defaults', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       const swcPlugin = plugins[0];
       
       expect(swcPlugin).toBeDefined();
@@ -45,7 +45,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should use custom target option', () => {
-      const plugins = assemblerjsPlugin({
+      const plugins = AssemblerjsPlugin({
         swc: { target: 'es2020' }
       });
       
@@ -53,12 +53,12 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should preserve class names by default', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       expect(plugins[0]).toBeDefined();
     });
 
     it('should allow disabling class name preservation', () => {
-      const plugins = assemblerjsPlugin({
+      const plugins = AssemblerjsPlugin({
         swc: { keepClassNames: false }
       });
       
@@ -68,7 +68,7 @@ describe('vite-plugin-assemblerjs', () => {
 
   describe('reflect-metadata Injection', () => {
     it('should create reflect-metadata plugin', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       const metadataPlugin = plugins.find(p => 
         p.name === 'vite-plugin-assemblerjs:reflect-metadata'
       );
@@ -78,7 +78,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should resolve virtual module ID', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       const metadataPlugin = plugins.find(p => 
         p.name === 'vite-plugin-assemblerjs:reflect-metadata'
       );
@@ -88,7 +88,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should load virtual module content', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       const metadataPlugin = plugins.find(p => 
         p.name === 'vite-plugin-assemblerjs:reflect-metadata'
       );
@@ -98,7 +98,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should inject in entry files', () => {
-      const plugins = assemblerjsPlugin({ 
+      const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { injectMode: 'entry' } 
       });
       const metadataPlugin = plugins.find(p => 
@@ -114,7 +114,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should not inject in non-entry files', () => {
-      const plugins = assemblerjsPlugin({ 
+      const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { injectMode: 'entry' } 
       });
       const metadataPlugin = plugins.find(p => 
@@ -128,7 +128,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should not inject if already present', () => {
-      const plugins = assemblerjsPlugin({ 
+      const plugins = AssemblerjsPlugin({ 
         reflectMetadata: { injectMode: 'entry' } 
       });
       const metadataPlugin = plugins.find(p => 
@@ -142,7 +142,7 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should configure optimizeDeps', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       const metadataPlugin = plugins.find(p => 
         p.name === 'vite-plugin-assemblerjs:reflect-metadata'
       );
@@ -154,7 +154,7 @@ describe('vite-plugin-assemblerjs', () => {
 
   describe('Options Merging', () => {
     it('should merge partial options with defaults', () => {
-      const plugins = assemblerjsPlugin({
+      const plugins = AssemblerjsPlugin({
         swc: { target: 'es2020' }
       });
       
@@ -162,19 +162,19 @@ describe('vite-plugin-assemblerjs', () => {
     });
 
     it('should handle empty options', () => {
-      const plugins = assemblerjsPlugin({});
+      const plugins = AssemblerjsPlugin({});
       expect(plugins.length).toBe(2);
     });
 
     it('should handle undefined options', () => {
-      const plugins = assemblerjsPlugin(undefined);
+      const plugins = AssemblerjsPlugin(undefined);
       expect(plugins.length).toBe(2);
     });
   });
 
   describe('Integration', () => {
     it('should work with minimal configuration', () => {
-      const plugins = assemblerjsPlugin();
+      const plugins = AssemblerjsPlugin();
       
       expect(plugins.length).toBe(2);
       expect(plugins[0].name).toContain('swc');
@@ -197,7 +197,7 @@ describe('vite-plugin-assemblerjs', () => {
         }
       };
       
-      const plugins = assemblerjsPlugin(options);
+      const plugins = AssemblerjsPlugin(options);
       expect(plugins[0]).toBeDefined();
     });
   });

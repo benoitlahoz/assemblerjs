@@ -29,6 +29,9 @@ export interface AssemblerjsPluginOptions {
 
     /**
      * Additional SWC options to merge with defaults.
+     * This should be a complete SWC configuration object that will be deep-merged
+     * with AssemblerJS defaults. You can override any SWC option while keeping
+     * AssemblerJS-specific settings (decorators, metadata, etc.).
      */
     options?: any;
   };

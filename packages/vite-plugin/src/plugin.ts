@@ -6,6 +6,21 @@ const VIRTUAL_METADATA_ID = 'virtual:assemblerjs-metadata';
 const RESOLVED_METADATA_ID = '\0' + VIRTUAL_METADATA_ID;
 
 /**
+ * Deep merge two objects.
+ */
+function mergeDeep(target: any, source: any): any {
+  const result = { ...target };
+  for (const key in source) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      result[key] = mergeDeep(result[key] || {}, source[key]);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
+/**
  * Default plugin options.
  */
 const defaultOptions: Required<AssemblerjsPluginOptions> = {
@@ -13,7 +28,6 @@ const defaultOptions: Required<AssemblerjsPluginOptions> = {
     enabled: true,
     target: 'es2021',
     keepClassNames: true,
-    options: undefined,
   },
   reflectMetadata: {
     autoInject: true,
@@ -41,7 +55,8 @@ function mergeOptions(userOptions: AssemblerjsPluginOptions = {}): Required<Asse
  * Create SWC plugin with AssemblerJS-specific configuration.
  */
 function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugin {
-  const swcOptions = {
+  // Default SWC configuration for AssemblerJS
+  const defaultSwcConfig = {
     swc: {
       jsc: {
         parser: {
@@ -60,9 +75,11 @@ function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugi
           sourceMap: true,
         },
       },
-      ...options.swc.options,
     },
   };
+
+  // Deep merge user options with defaults
+  const swcOptions = mergeDeep(defaultSwcConfig, options.swc.options || {});
 
   return swc(swcOptions) as VitePlugin;
 }
@@ -81,14 +98,14 @@ function createSwcPlugin(options: Required<AssemblerjsPluginOptions>): VitePlugi
  * ```typescript
  * // vite.config.ts
  * import { defineConfig } from 'vite';
- * import assemblerjs from 'vite-plugin-assemblerjs';
+ * import { AssemblerjsPlugin } from 'vite-plugin-assemblerjs';
  * 
  * export default defineConfig({
- *   plugins: [assemblerjs()]
+ *   plugins: [AssemblerjsPlugin()]
  * });
  * ```
  */
-export default function assemblerjsPlugin(userOptions: AssemblerjsPluginOptions = {}): VitePlugin[] {
+export default function AssemblerjsPlugin(userOptions: AssemblerjsPluginOptions = {}): VitePlugin[] {
   const options = mergeOptions(userOptions);
   const plugins: VitePlugin[] = [];
 
@@ -157,8 +174,3 @@ export default function assemblerjsPlugin(userOptions: AssemblerjsPluginOptions 
 
   return plugins;
 }
-
-/**
- * Named export for CommonJS compatibility.
- */
-export { assemblerjsPlugin };

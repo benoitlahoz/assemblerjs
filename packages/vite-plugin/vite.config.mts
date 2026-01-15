@@ -66,7 +66,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'node',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/fixtures/**'],
+    exclude: ['**/node_modules/**', '**/dist/**', '**/tests/fixtures/**', '**/examples/**'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage',
@@ -78,6 +78,7 @@ export default defineConfig(() => ({
         '**/*.config.*',
         '**/*.spec.ts',
         '**/*.test.ts',
+        '**/examples/**',
       ],
     },
   },

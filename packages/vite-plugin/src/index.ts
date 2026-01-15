@@ -11,5 +11,5 @@
  * @packageDocumentation
  */
 
-export { default, assemblerjsPlugin } from './plugin';
+export { default as AssemblerjsPlugin } from './plugin';
 export type { AssemblerjsPluginOptions, ViteConfig } from './types';

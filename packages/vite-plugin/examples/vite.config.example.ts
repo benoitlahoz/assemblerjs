@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import assemblerjs from '../src/index';
+import { AssemblerjsPlugin } from '../src/index';
 
 /**
  * Example Vite configuration with vite-plugin-assemblerjs
@@ -9,7 +9,7 @@ import assemblerjs from '../src/index';
 export default defineConfig({
   plugins: [
     // Add the plugin with default options
-    assemblerjs()
+    AssemblerjsPlugin()
   ]
 });
 
@@ -18,7 +18,7 @@ export default defineConfig({
  */
 export const advancedConfig = defineConfig({
   plugins: [
-    assemblerjs({
+    AssemblerjsPlugin({
       // SWC configuration
       swc: {
         enabled: true,
@@ -40,7 +40,7 @@ export const advancedConfig = defineConfig({
  */
 export const withoutSwcConfig = defineConfig({
   plugins: [
-    assemblerjs({
+    AssemblerjsPlugin({
       swc: {
         enabled: false, // You'll need to configure decorators elsewhere
       }
@@ -53,7 +53,7 @@ export const withoutSwcConfig = defineConfig({
  */
 export const manualMetadataConfig = defineConfig({
   plugins: [
-    assemblerjs({
+    AssemblerjsPlugin({
       reflectMetadata: {
         autoInject: false, // You'll need to import reflect-metadata manually
       }
