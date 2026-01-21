@@ -7,6 +7,11 @@ import { getParamValueKey } from './helpers';
 import type { ParameterResolver } from '../types';
 
 /**
+ * Identifier can be a string, symbol, or an abstract class/interface.
+ */
+export type UseIdentifier = string | symbol | Function;
+
+/**
  * Resolver for @Use decorator.
  */
 class UseResolver implements ParameterResolver {
@@ -24,7 +29,7 @@ class UseResolver implements ParameterResolver {
  * @param index The parameter index
  */
 export const decorateUse = (
-  identifier: string | symbol,
+  identifier: UseIdentifier,
   target: any,
   index: number
 ) => {
@@ -33,7 +38,12 @@ export const decorateUse = (
 };
 
 /**
- * Injects an object passed with `string` or `symbol` identifier.
+ * Injects an object passed with `string`, `symbol` or abstract class identifier.
+ * The identifier can be:
+ * - A string: @Use('logger')
+ * - A symbol: @Use(Symbol.for('logger'))
+ * - An abstract class: @Use(ILogger)
+ *
  * @param identifier The identifier of the object to inject
  * @returns A parameter decorator
  */
@@ -41,7 +51,7 @@ export const Use = (() => {
   // Register the resolver when the decorator is created
   ResolverStore.register('Use', UseResolver);
 
-  return ParameterDecoratorFactory.create<string | symbol>({
+  return ParameterDecoratorFactory.create<UseIdentifier>({
     name: 'Use',
     valueType: 'map',
     resolver: UseResolver,

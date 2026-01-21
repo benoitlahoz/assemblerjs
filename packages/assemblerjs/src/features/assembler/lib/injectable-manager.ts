@@ -43,13 +43,15 @@ export class InjectableManager {
     // Cache injectable.
     this.injectables.set(injectable.identifier as Identifier<T>, injectable);
 
-    // Call 'onRegister' hook.
-    HookManager.callHook(
-      injectable.concrete,
-      'onRegister',
-      this.publicContext,
-      injectable.configuration
-    );
+    // Call 'onRegister' hook only when a concrete assemblage exists.
+    if (injectable.concrete) {
+      HookManager.callHook(
+        injectable.concrete,
+        'onRegister',
+        this.publicContext,
+        injectable.configuration
+      );
+    }
 
     return injectable as Injectable<T>;
   }

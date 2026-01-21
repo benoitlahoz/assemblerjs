@@ -56,11 +56,16 @@ const schema: Record<string, any> = {
     test: (value: unknown) =>
       typeof value === 'undefined' ||
       (Array.isArray(value) &&
-        value.every(
-          (item: unknown) => Array.isArray(item) && item.length == 2
-        )),
+        value.every((item: unknown) => {
+          if (!Array.isArray(item) || item.length !== 2) {
+            return false;
+          }
+          // Second element can be an instance or a factory function
+          const secondElement = item[1];
+          return typeof secondElement !== 'undefined';
+        })),
     throw: () => {
-      throw new Error(`'use' property must be an array of tuples of length 2.`);
+      throw new Error(`'use' property must be an array of tuples of length 2 with [identifier, instance | factory].`);
     },
     transform: (value?: InstanceInjection<unknown>[][]) => value,
   },

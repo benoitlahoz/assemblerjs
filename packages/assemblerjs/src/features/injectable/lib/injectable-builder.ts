@@ -22,18 +22,35 @@ export class InjectableBuilder<T> {
    */
   public build(configuration?: Record<string, any>): T {
     const mergedConfig = this.mergeConfiguration(configuration);
-    const params = resolveInjectableParameters(this.injectable, mergedConfig);
     
-    // Create the base instance
-    const instance = new this.injectable.concrete(...params) as T;
+    // Build the base instance
+    let instance: T;
+
+    // If an instance was pre-provided (use: with instance), return it directly.
+    if ((this.injectable as any).singletonInstance) {
+      return (this.injectable as any).singletonInstance as T;
+    }
+    
+    if (this.injectable.factory) {
+      // If this injectable wraps a factory, execute it
+      instance = this.injectable.factory() as T;
+    } else if (this.injectable.concrete) {
+      // Otherwise, resolve parameters and instantiate the concrete class
+      const params = resolveInjectableParameters(this.injectable, mergedConfig);
+      instance = new this.injectable.concrete(...params) as T;
+    } else {
+      throw new Error(
+        `Injectable with identifier '${String(this.injectable.identifier)}' has neither concrete class nor factory.`
+      );
+    }
 
     // Apply transversal weaving BEFORE registering events
     // Pass assemblage identifier for local configuration
+    const concreteClass = this.injectable.concrete || (instance as any).constructor;
     const wovenInstance = TransversalWeaver.weave(
       instance,
-      this.injectable.concrete,
-      this.injectable.publicContext,
-      this.injectable.concrete.name
+      concreteClass,
+      this.injectable.publicContext
     );
 
     // Add event channels to eventual subclass of `EventManager` and forward to Assembler.

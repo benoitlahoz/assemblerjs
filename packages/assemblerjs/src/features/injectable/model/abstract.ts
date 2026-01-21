@@ -3,6 +3,7 @@ import type { Identifier } from '@/shared/common';
 import type {
   AssemblageDefinition,
   Buildable,
+  Factory,
   Injection,
   InstanceInjection,
 } from '@/features/assemblage';
@@ -25,7 +26,8 @@ export abstract class AbstractInjectable<T> {
   public abstract readonly privateContext: AssemblerPrivateContext;
   public abstract readonly publicContext: AssemblerContext;
   public abstract readonly identifier: Identifier<T> | string | symbol;
-  public abstract readonly concrete: Concrete<T>;
+  public abstract readonly concrete?: Concrete<T>;
+  public abstract readonly factory?: Factory<T>;
   public abstract readonly configuration: Record<string, any>;
   public abstract dependencies: (Identifier<unknown> | any)[];
   public abstract definition: AssemblageDefinition;

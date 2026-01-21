@@ -71,13 +71,13 @@ describe('schema.ts - Definition Schema Validation', () => {
         validateDefinition({
           use: 'not-an-array',
         })
-      ).toThrow("'use' property must be an array of tuples of length 2.");
+      ).toThrow("'use' property must be an array of tuples of length 2 with [identifier, instance | factory].");
 
       expect(() =>
         validateDefinition({
           use: [[1, 2, 3]], // wrong length
         })
-      ).toThrow("'use' property must be an array of tuples of length 2.");
+      ).toThrow("'use' property must be an array of tuples of length 2 with [identifier, instance | factory].");
     });
 
     it('should reject invalid engage type', () => {

@@ -48,10 +48,12 @@ export type Injection<T> =
  */
 export interface Buildable<T> {
   identifier: Identifier<T>;
-  concrete: Concrete<T>;
+  concrete?: Concrete<T>;
   instance?: T;
+  factory?: () => T;
   configuration: Record<string, any>;
 }
+
 
 /**
  * Resolve a `ConcreteInjection`.

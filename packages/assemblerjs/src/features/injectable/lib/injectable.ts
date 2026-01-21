@@ -17,6 +17,7 @@ import type { AbstractInjectable } from '../model/abstract';
 import {
   resolveDependencies,
 } from './dependencies';
+import { isFactory } from '@/features/assemblage';
 
 /**
  * Represents an injectable assemblage that can be built into instances.
@@ -26,7 +27,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
   /** Unique identifier for this injectable. */
   public readonly identifier: Identifier<T> | string | symbol;
   /** The concrete class to instantiate. */
-  public readonly concrete: Concrete<T>;
+  public readonly concrete: Concrete<T> | undefined;
   /** Base configuration for this injectable. */
   public readonly configuration: Record<string, any>;
   /** Merged configuration used during build (base + runtime). */
@@ -49,6 +50,7 @@ export class Injectable<T> implements AbstractInjectable<T> {
   private dependenciesIds: Identifier<unknown>[] = [];
   protected singletonInstance: T | undefined;
   private builder: InjectableBuilder<T>;
+  public readonly factory?: () => T;
 
   public static of<TNew>(
     buildable: Buildable<TNew>,
@@ -65,80 +67,96 @@ export class Injectable<T> implements AbstractInjectable<T> {
   ) {
     this.identifier = buildable.identifier;
     this.concrete = buildable.concrete;
+    (this as any).factory = buildable.factory;
     this.configuration = buildable.configuration;
 
     // Validate assemblage in development mode only
-    if (process.env.NODE_ENV !== 'production' && !isAssemblage(this.concrete)) {
+    if (process.env.NODE_ENV !== 'production' && this.concrete && !isAssemblage(this.concrete)) {
       throw new Error(`Class '${this.concrete.name}' is not an Assemblage.`);
     }
 
     this.builder = new InjectableBuilder(this);
 
     // Set context metadata for concrete assemblage.
-    defineCustomMetadata(
-      ReflectValue.AssemblageContext,
-      this.publicContext,
-      this.concrete
-    );
+    if (this.concrete) {
+      defineCustomMetadata(
+        ReflectValue.AssemblageContext,
+        this.publicContext,
+        this.concrete
+      );
 
-    // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
-    
-    // Phase 1: Register ALL transversals (from transversals[] and from inject[]) as injectables FIRST
-    // This ensures they're available as dependencies but not yet in TransversalManager
-    for (const transversal of this.transversals) {
-      // Register the transversal injection (supports [Concrete], [Abstract, Concrete], etc.)
-      const injection = this.resolveTransversalToInjection(transversal);
-      this.privateContext.register(injection);
-    }
-    
-    // Also check if any injection is an transversal and register it first
-    for (const injection of this.injections) {
-      const [ConcreteClass] = injection;
-      if (isTransversal(ConcreteClass)) {
+      // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
+      
+      // Phase 1: Register ALL transversals (from transversals[] and from inject[]) as injectables FIRST
+      // This ensures they're available as dependencies but not yet in TransversalManager
+      for (const transversal of this.transversals) {
+        // Register the transversal injection (supports [Concrete], [Abstract, Concrete], etc.)
+        const injection = this.resolveTransversalToInjection(transversal);
         this.privateContext.register(injection);
       }
-    }
-
-    // Phase 2: Register remaining (non-transversal) injections
-    for (const injection of this.injections) {
-      const [ConcreteClass] = injection;
-      if (!isTransversal(ConcreteClass)) {
-        this.privateContext.register(injection);
+      
+      // Also check if any injection is an transversal and register it first
+      for (const injection of this.injections) {
+        const [ConcreteClass] = injection;
+        if (isTransversal(ConcreteClass)) {
+          this.privateContext.register(injection);
+        }
       }
-    }
 
-    for (const injection of this.objects) {
-      if (typeof injection[0] === 'string' || typeof injection[0] === 'symbol') {
-        this.privateContext.use(injection[0], injection[1]);
-      } else {
-        this.privateContext.register(injection as any, true);
+      // Phase 2: Register remaining (non-transversal) injections
+      for (const injection of this.injections) {
+        const [ConcreteClass] = injection;
+        if (!isTransversal(ConcreteClass)) {
+          this.privateContext.register(injection);
+        }
       }
-    }
 
-    // Phase 3: Now that all injections are registered, register transversals in TransversalManager
-    const transversalManager = TransversalManager.getInstance(this.publicContext);
-    
-    for (const transversal of this.transversals) {
-      transversalManager.registerTransversal(transversal, this.privateContext);
-    }
-    
-    // Also register aspects that were in inject[]
-    for (const injection of this.injections) {
-      const [ConcreteClass] = injection;
-      if (isTransversal(ConcreteClass)) {
-        // Convert injection to transversal injection format
-        const transversalInjection = injection.length > 1 ? injection : [ConcreteClass];
-        transversalManager.registerTransversal(transversalInjection as any, this.privateContext);
+      for (const injection of this.objects) {
+        const [identifier, value] = injection;
+        const isUseFactory = isFactory(value);
+
+        // Route string and symbol identifiers to the ObjectManager, not the InjectableManager.
+        if (typeof identifier === 'string' || typeof identifier === 'symbol') {
+          const instance = isUseFactory ? (value as () => unknown)() : value;
+          this.privateContext.use(identifier, instance as any);
+          continue;
+        }
+
+        // For singleton assemblages, execute factory once and register the produced instance.
+        if (this.isSingleton && isUseFactory) {
+          const instance = (value as () => unknown)();
+          this.privateContext.register([identifier, instance] as any, true);
+        } else {
+          // Register through InjectableManager so factories are lazily executed when resolved.
+          this.privateContext.register(injection as any, true);
+        }
       }
-    }
 
-    // Cache dependencies.
-    this.dependenciesIds = resolveDependencies(this.concrete);
+      // Phase 3: Now that all injections are registered, register transversals in TransversalManager
+      const transversalManager = TransversalManager.getInstance(this.publicContext);
+      
+      for (const transversal of this.transversals) {
+        transversalManager.registerTransversal(transversal, this.privateContext);
+      }
+      
+      // Also register aspects that were in inject[]
+      for (const injection of this.injections) {
+        const [ConcreteClass] = injection;
+        if (isTransversal(ConcreteClass)) {
+          // Convert injection to transversal injection format
+          const transversalInjection = injection.length > 1 ? injection : [ConcreteClass];
+          transversalManager.registerTransversal(transversalInjection as any, this.privateContext);
+        }
+      }
 
-    // Cache globals.
-    if (this.globals) {
-      for (const key in this.globals) {
-        this.privateContext.addGlobal(key, this.globals[key]);
+      // Cache dependencies.
+      this.dependenciesIds = this.concrete ? resolveDependencies(this.concrete) : [];
+
+      // Cache globals.
+      if (this.globals) {
+        for (const key in this.globals) {
+          this.privateContext.addGlobal(key, this.globals[key]);
+        }
       }
     }
 
@@ -146,7 +164,11 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // Cache instance of the buildable if the dependency was registered with an object
       // through the `use` property of `AssemblerDefinition`.
       this.singletonInstance = buildable.instance;
-    } 
+    } else if (buildable.factory) {
+      // For `use:` factories we execute once and cache the result.
+      const instance = buildable.factory();
+      this.singletonInstance = instance;
+    }
   }
 
   /**
@@ -228,7 +250,11 @@ export class Injectable<T> implements AbstractInjectable<T> {
    */
   public get definition(): AssemblageDefinition {
     if (!this.cachedDefinition) {
-      this.cachedDefinition = getDefinition(this.concrete) || {};
+      if (!this.concrete) {
+        this.cachedDefinition = {};
+      } else {
+        this.cachedDefinition = getDefinition(this.concrete) || {};
+      }
     }
     return this.cachedDefinition;
   }

@@ -13,7 +13,9 @@ export const registerEvents = <T>(
   injectable: AbstractInjectable<T>,
   instance: T
 ) => {
-  const isEventManager = injectable.concrete.prototype instanceof EventManager;
+  const isEventManager =
+    injectable.concrete !== undefined &&
+    injectable.concrete.prototype instanceof EventManager;
   if (isEventManager) {
     const eventManager: EventManager = instance as EventManager;
     const registeredChannels = eventManager.channels;
@@ -49,7 +51,9 @@ export const unregisterEvents = <T>(
   injectable: AbstractInjectable<T>,
   instance: T
 ) => {
-  const isEventManager = injectable.concrete.prototype instanceof EventManager;
+  const isEventManager =
+    injectable.concrete !== undefined &&
+    injectable.concrete.prototype instanceof EventManager;
   if (isEventManager) {
     const eventManager: EventManager = instance as EventManager;
 
