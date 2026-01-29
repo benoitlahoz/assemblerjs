@@ -201,14 +201,21 @@ export const isPrototypeOf: (
 export const hasSuper = (method: any, superProp?: string): boolean => {
   if (!isFunction(method)) return false;
 
-  // Remove comments.
-  const noCommentString = method
-    .toString()
-    .replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '');
+  let code = method.toString();
+  
+  // Remove block comments /* ... */ - use [^]*? to avoid ReDoS
+  code = code.replace(/\/\*[^]*?\*\//g, '');
+  
+  // Remove line comments //
+  code = code.replace(/\/\/.*/g, '');
+  
+  // Remove strings (single quotes, double quotes, backticks) to avoid false positives
+  // Pattern handles escaped quotes inside strings
+  code = code.replace(/(['"`])(?:(?=(\\?))\2.)*?\1/g, '');
 
   return superProp
-    ? noCommentString.includes(`super.${superProp}`)
-    : noCommentString.includes(`super`);
+    ? code.includes(`super.${superProp}`)
+    : code.includes(`super`);
 };
 
 export default {

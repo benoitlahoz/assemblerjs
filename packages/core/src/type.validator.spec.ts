@@ -19,6 +19,7 @@ const {
   isTypeOf,
   isInstanceOf,
   hasCtor,
+  hasSuper,
 } = TypesUtils;
 
 describe('TypesUtils', () => {
@@ -144,5 +145,33 @@ describe('TypesUtils', () => {
     class MySubclass extends MyClass {}
     expect(hasCtor(new MySubclass())(MySubclass)).toBeTruthy();
     expect(hasCtor(new MySubclass())(MyClass)).toBeFalsy();
+  });
+
+  it('should check if a method calls super', () => {
+    // Test with comments containing "super" (should be ignored)
+    const methodWithComment = function () {
+      // super is mentioned in a comment
+      /* super also mentioned here */
+      return 'no actual super call';
+    };
+    expect(hasSuper(methodWithComment)).toBeFalsy();
+
+    // Test with "super" in a string literal (should be ignored)
+    const methodWithSuperInString = function () {
+      const msg = 'This mentions super but is not a call';
+      return msg;
+    };
+    expect(hasSuper(methodWithSuperInString)).toBeFalsy();
+
+    // Test regular function without super
+    const regularFunction = function () {
+      return 'just a function';
+    };
+    expect(hasSuper(regularFunction)).toBeFalsy();
+
+    // Test with non-function
+    expect(hasSuper('not a function')).toBeFalsy();
+    expect(hasSuper(null)).toBeFalsy();
+    expect(hasSuper(undefined)).toBeFalsy();
   });
 });
