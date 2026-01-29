@@ -67,6 +67,12 @@ export const registerMethodName = (
   method: ResponseMethod
 ): void => {
   const parsed = parseMimeType(mime);
+  
+  // Prevent prototype pollution
+  if (parsed.type === '__proto__' || parsed.type === 'constructor' || parsed.type === 'prototype') {
+    return;
+  }
+  
   const existing = fetchParserMethodName[parsed.type];
 
   if (typeof existing === 'undefined') {
@@ -75,6 +81,11 @@ export const registerMethodName = (
     fetchParserMethodName[parsed.type] = {
       '*': method,
     };
+  }
+
+  // Prevent prototype pollution on subtype
+  if (parsed.subtype === '__proto__' || parsed.subtype === 'constructor' || parsed.subtype === 'prototype') {
+    return;
   }
 
   fetchParserMethodName[parsed.type] = {
@@ -88,6 +99,16 @@ export const replaceMethodName = (
   method: ResponseMethod
 ): void => {
   const parsed = parseMimeType(mime);
+  
+  // Prevent prototype pollution
+  if (parsed.type === '__proto__' || parsed.type === 'constructor' || parsed.type === 'prototype') {
+    return;
+  }
+  
+  if (parsed.subtype === '__proto__' || parsed.subtype === 'constructor' || parsed.subtype === 'prototype') {
+    return;
+  }
+  
   const existing = fetchParserMethodName[parsed.type];
 
   if (typeof existing === 'undefined') {
