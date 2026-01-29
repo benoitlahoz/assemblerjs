@@ -209,9 +209,9 @@ export const hasSuper = (method: any, superProp?: string): boolean => {
   // Remove line comments //
   code = code.replace(/\/\/.*/g, '');
   
-  // Remove strings (single quotes, double quotes, backticks) to avoid false positives
-  // Pattern handles escaped quotes inside strings
-  code = code.replace(/(['"`])(?:(?=(\\?))\2.)*?\1/g, '');
+  // Remove strings to avoid false positives in string literals
+  // Simple approach: remove quoted strings
+  code = code.replace(/["'`]([^"'`])*?["'`]/g, '');
 
   return superProp
     ? code.includes(`super.${superProp}`)
