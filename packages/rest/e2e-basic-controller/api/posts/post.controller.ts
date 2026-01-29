@@ -15,7 +15,7 @@ export class PostController implements AbstractAssemblage {
   @Get('/')
   public findAll(_req: Request, res: Response) {
     const posts = this.repository.findAll();
-    res.status(200).send(JSON.stringify(posts || []));
+    res.status(200).json(posts || []);
   }
 
   @Get('/sender/:id')
@@ -24,7 +24,7 @@ export class PostController implements AbstractAssemblage {
     if (!posts) {
       res.sendStatus(404);
     }
-    res.status(200).send(JSON.stringify(posts));
+    res.status(200).json(posts);
   }
 
   @Get('/receiver/:id')
@@ -33,20 +33,20 @@ export class PostController implements AbstractAssemblage {
     if (!posts) {
       res.sendStatus(404);
     }
-    res.status(200).send(JSON.stringify(posts));
+    res.status(200).json(posts);
   }
 
   @Post('/')
   public create(req: Request, res: Response) {
     const post = this.repository.create(req.body);
-    res.status(201).send(JSON.stringify(post));
+    res.status(201).json(post);
   }
 
   @Delete('/delete/:id')
   public delete(req: Request, res: Response) {
     const deleted = this.repository.delete(Number(req.params.id));
     if (deleted) {
-      res.status(200).send(JSON.stringify(deleted));
+      res.status(200).json(deleted);
     }
     res.sendStatus(404);
   }
