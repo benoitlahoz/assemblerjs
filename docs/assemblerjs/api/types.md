@@ -606,7 +606,57 @@ import {
 
 // Event types
 import { EventManager } from 'assemblerjs';
+
+// Debug types
+import { AssemblerDebugOptions } from 'assemblerjs';
 ```
+
+## Debug Types
+
+### AssemblerDebugOptions
+
+Configuration interface for the debug logging system.
+
+```typescript
+interface AssemblerDebugOptions {
+  enabled?: boolean;
+  logger?: (level: 'info' | 'warn' | 'error', message: string, data?: any) => void;
+  logPhases?: {
+    registration?: boolean;
+    resolution?: boolean;
+    construction?: boolean;
+    hooks?: boolean;
+    cache?: boolean;
+  };
+  logTimings?: boolean;
+  logDependencyTree?: boolean;
+  useColors?: boolean;
+}
+```
+
+**Properties:**
+
+- `enabled` - Enable/disable debug logging (default: `true`)
+- `logger` - Custom logging function (default: uses `console.log`)
+- `logPhases` - Filter which build phases to log (default: all `true`)
+- `logTimings` - Include execution time for operations (default: `false`)
+- `logDependencyTree` - Log dependency tree visualization (default: `true`)
+- `useColors` - Use ANSI color codes in output (default: `true`)
+
+**Usage:**
+
+```typescript
+Assembler.enableDebug({
+  logTimings: true,
+  useColors: false,
+  logPhases: {
+    registration: true,
+    hooks: true,
+  },
+});
+```
+
+See [Debug Logging](../features/debug-logging.md) for complete documentation.
 
 ## Next Steps
 

@@ -1,4 +1,5 @@
 import type { Concrete } from '@assemblerjs/core';
+import type { Identifier } from '@/shared/common';
 import { getParamTypes } from '@/shared/common';
 import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
@@ -12,7 +13,10 @@ const dependenciesCache = new WeakMap<Function, any[]>();
  * Helper function to determine the decorator type for a given parameter index.
  * Now uses dynamic decorator registration instead of hardcoded names.
  */
-const getDecoratorType = (indexes: ReturnType<typeof getDecoratedParametersIndexes>, index: number): string | null => {
+const getDecoratorType = (indexes: ReturnType<typeof getDecoratedParametersIndexes> | never[], index: number): string | null => {
+  if (!indexes || typeof indexes !== 'object' || Array.isArray(indexes)) {
+    return null;
+  }
   for (const [decoratorName, decoratorIndexes] of Object.entries(indexes)) {
     if (decoratorIndexes.includes(index)) {
       return decoratorName;
@@ -35,8 +39,8 @@ export const resolveInjectableParameters = <T>(
   const parameters: any[] = [];
 
   // Parameters passed in constructor.
-  const paramTypes = getParamTypes(injectable.concrete);
-  const indexes = getDecoratedParametersIndexes(injectable.concrete);
+  const paramTypes = injectable.concrete ? getParamTypes(injectable.concrete) : [];
+  const indexes = injectable.concrete ? getDecoratedParametersIndexes(injectable.concrete) : [];
 
   // Build parameters to pass to instance.
   for (let i = 0; i < paramTypes.length; i++) {
@@ -45,7 +49,7 @@ export const resolveInjectableParameters = <T>(
     if (decoratorType) {
       // Use the appropriate resolver for decorated parameters
       const resolver = ParameterResolverFactory.getResolver(decoratorType);
-      parameters.push(resolver.resolve(i, injectable, injectable.concrete, configuration));
+      parameters.push(resolver.resolve(i, injectable, injectable.concrete as Concrete<T>, configuration));
     } else {
       const paramType = paramTypes[i];
       
@@ -65,7 +69,18 @@ export const resolveInjectableParameters = <T>(
         parameters.push(transversalInstance);
       } else {
         // Recursively require dependency to pass an instance to constructor.
-        parameters.push(injectable.privateContext.require(paramType));
+        // Pass param index, total params count, and expected type for better error messages
+        parameters.push(
+          injectable.privateContext.require(
+            paramType,
+            { 
+              __paramIndex: i, 
+              __paramCount: paramTypes.length,
+              __expectedType: paramType
+            },
+            injectable.identifier as Identifier<any>
+          )
+        );
       }
     }
   }

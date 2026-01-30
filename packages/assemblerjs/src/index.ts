@@ -26,7 +26,7 @@ export {
 export { AbstractTransversal } from './features/transversals';
 
 export type { Identifier } from './shared/common';
-export type { AssemblerContext, AssemblerDispose } from './features/assembler';
+export type { AssemblerContext, AssemblerDispose, AssemblerDebugOptions } from './features/assembler';
 export type { AssemblageDefinition } from './features/assemblage';
 export type { Listener, EventChannel, EventChannelList } from './features/events';
 export type { AdviceType, JoinPoint, AdviceContext, Advice, TransversalMetadata, AffectedMethodConfig } from './features/transversals';

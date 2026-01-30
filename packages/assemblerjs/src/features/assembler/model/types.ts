@@ -89,6 +89,25 @@ export interface ResolutionStrategy<T = any> {
   resolve(injectable: Injectable<T>, configuration?: Record<string, any>): T;
 }
 
+/**
+ * Debug options for Assembler build process
+ */
+export interface AssemblerDebugOptions {
+  enabled?: boolean;
+  logger?: (level: 'info' | 'warn' | 'error', message: string, data?: any) => void;
+  logPhases?: {
+    registration?: boolean;
+    resolution?: boolean;
+    construction?: boolean;
+    hooks?: boolean;
+    cache?: boolean;
+  };
+  logTimings?: boolean;
+  logDependencyTree?: boolean;
+  useColors?: boolean;
+  detectCycles?: boolean;
+}
+
 export abstract class AbstractAssembler
   extends AbstractEventManager
   implements
@@ -115,7 +134,8 @@ export abstract class AbstractAssembler
   public abstract has<T>(identifier: Identifier<T>): boolean;
   public abstract require<T>(
     identifier: Identifier<T> | string | symbol,
-    configuration?: Record<string, any>
+    configuration?: Record<string, any>,
+    caller?: Identifier<any>
   ): T;
   public abstract concrete<T>(
     identifier: Identifier<T>
