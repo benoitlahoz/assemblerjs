@@ -75,6 +75,7 @@ Explore advanced features:
 - [Event System](./features/events.md) - Event-driven architecture with EventManager
 - [Tags](./features/tags.md) - Group and retrieve assemblages by category
 - [Singleton vs Transient](./features/singleton-transient.md) - Control instance lifecycle
+- [Debug Logging](./guides/debug-logging.md) - Built-in debug logging system with cycle detection
 
 ### [📚 API Reference](./api/assembler.md)
 Complete API documentation:

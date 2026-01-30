@@ -2,6 +2,7 @@ import type { Concrete } from '@assemblerjs/core';
 import { isAsync } from '@assemblerjs/core';
 import { AbstractAssemblage } from '@/features/assemblage';
 import type { AssemblerContext } from '../model/types';
+import { DebugLogger } from './debug-logger';
 
 export class HookManager {
   public static callHook = <T>(
@@ -10,6 +11,9 @@ export class HookManager {
     context?: AssemblerContext,
     configuration?: Record<string, any>
   ): Promise<void> => {
+    const logger = DebugLogger.getInstance();
+    const endLog = logger.logHook(name, assemblage, configuration);
+
     return new Promise((resolve, reject) => {
       const hook: Function | undefined = (assemblage as AbstractAssemblage)[name];
 
@@ -18,9 +22,11 @@ export class HookManager {
           hook
             .bind(assemblage)(context, configuration)
             .then(() => {
+              if (endLog) endLog();
               resolve();
             })
             .catch((error: any) => {
+              if (endLog) endLog();
               reject(error);
             });
           return;
@@ -28,11 +34,14 @@ export class HookManager {
 
         try {
           hook.bind(assemblage)(context, configuration);
+          if (endLog) endLog();
           resolve();
         } catch (error) {
+          if (endLog) endLog();
           reject(error);
         }
       } else {
+        if (endLog) endLog();
         resolve();
       }
     });
@@ -44,6 +53,9 @@ export class HookManager {
     context?: AssemblerContext,
     configuration?: Record<string, any>
   ): void => {
+    const logger = DebugLogger.getInstance();
+    const endLog = logger.logHook(name, assemblage, configuration);
+
     const hook: Function | undefined = (assemblage as AbstractAssemblage)[name];
 
     if (hook) {
@@ -53,11 +65,15 @@ export class HookManager {
         hook.bind(assemblage)(context, configuration).catch(() => {
           // Ignore async hook errors in sync context for backward compatibility
         });
+        if (endLog) endLog();
         return;
       }
 
       // Call synchronous hook - errors will be thrown synchronously
       hook.bind(assemblage)(context, configuration);
+      if (endLog) endLog();
+    } else {
+      if (endLog) endLog();
     }
   };
 

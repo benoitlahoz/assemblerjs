@@ -49,7 +49,7 @@ describe('Object Manager', () => {
     class App implements AbstractAssemblage {}
 
     expect(() => Assembler.build(App)).toThrow(
-      "A value is already registered with identifier 'duplicate'."
+      "Object/value 'duplicate' is already registered (cannot register twice)."
     );
   });
 
@@ -62,7 +62,7 @@ describe('Object Manager', () => {
     const app: App = Assembler.build(App);
 
     expect(() => app.context.require('nonexistent')).toThrow(
-      "Injected object with identifier 'nonexistent' has not been registered."
+      "Object/value 'nonexistent' has not been registered in the object store."
     );
   });
 

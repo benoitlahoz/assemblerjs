@@ -9,16 +9,38 @@ import { Injectable } from '@/features/injectable';
 import { EventManager } from '@/features/events';
 import { AbstractAssembler } from '../model/types';
 
-import type { AssemblerContext, AssemblerPrivateContext } from '../model/types';
+import type { AssemblerContext, AssemblerPrivateContext, AssemblerDebugOptions } from '../model/types';
 import { InjectableManager } from './injectable-manager';
 import { ObjectManager } from './object-manager';
 import { HookManager } from './hook-manager';
 import { AssemblerBuilder } from './assembler-builder';
 import { ContextProvider } from './context-provider';
+import { DebugLogger } from './debug-logger';
+import { CycleDetector } from './cycle-detector';
+
 /**
  * `assembler.js` dependency injection container and handler.
  */
 export class Assembler extends EventManager implements AbstractAssembler {
+  /**
+   * Enable debug mode with optional configuration
+   */
+  public static enableDebug(options?: AssemblerDebugOptions): void {
+    DebugLogger.enable(options);
+    // Enable cycle detection if explicitly requested
+    if (options?.detectCycles === true) {
+      CycleDetector.enable();
+    }
+  }
+
+  /**
+   * Disable debug mode
+   */
+  public static disableDebug(): void {
+    DebugLogger.disable();
+    CycleDetector.disable();
+  }
+
   /**
    * Build the dependencies tree from an assemblage as entry point.
    *
@@ -27,9 +49,19 @@ export class Assembler extends EventManager implements AbstractAssembler {
    * @returns { T } An instance of `entry` marked as singleton.
    */
   public static build<T>(entry: Concrete<T>, configuration?: Record<string, any>): T {
+    const logger = DebugLogger.getInstance();
+    const startTime = performance.now();
+
+    logger.logBuildStart(entry);
+
     const assembler = new Assembler();
     const builder = new AssemblerBuilder(assembler);
-    return builder.build(entry, configuration);
+    const instance = builder.build(entry, configuration);
+
+    const duration = performance.now() - startTime;
+    logger.logBuildEnd(entry, duration);
+
+    return instance;
   }
 
   protected injectableManager: InjectableManager;
@@ -98,7 +130,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
 
   public require<T>(
     identifier: Identifier<T> | string | symbol,
-    configuration?: Record<string, any>
+    configuration?: Record<string, any>,
+    caller?: Identifier<any>
   ): T {
     switch (typeof identifier) {
       case 'string':
@@ -107,7 +140,7 @@ export class Assembler extends EventManager implements AbstractAssembler {
       }
 
       default: {
-        return this.injectableManager.require(identifier as Identifier<T>, configuration);
+        return this.injectableManager.require(identifier as Identifier<T>, configuration, caller);
       }
     }
   }

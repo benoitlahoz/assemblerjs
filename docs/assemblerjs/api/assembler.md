@@ -54,6 +54,55 @@ const context = Assembler.context;
 
 See [AssemblerContext API](./context.md) for available methods.
 
+### enableDebug(options?)
+
+Enable debug logging for the build process and dependency resolution.
+
+```typescript
+Assembler.enableDebug(options?);
+```
+
+**Parameters:**
+- `options` (optional) - Debug configuration object
+
+**Example:**
+
+```typescript
+// Enable with default options
+Assembler.enableDebug();
+
+// Enable with custom configuration
+Assembler.enableDebug({
+  logTimings: true,
+  useColors: true,
+  logPhases: {
+    registration: true,
+    hooks: true,
+  },
+});
+```
+
+See [Debug Logging](../features/debug-logging.md) for complete documentation and examples.
+
+### disableDebug()
+
+Disable debug logging and restore zero-overhead NoOp logger.
+
+```typescript
+Assembler.disableDebug();
+```
+
+**Example:**
+
+```typescript
+// Enable for debugging
+Assembler.enableDebug();
+const app = Assembler.build(MyApp);
+
+// Disable when done
+Assembler.disableDebug();
+```
+
 ## Build Process
 
 When you call `Assembler.build()`, the following happens:

@@ -65,7 +65,18 @@ export const resolveInjectableParameters = <T>(
         parameters.push(transversalInstance);
       } else {
         // Recursively require dependency to pass an instance to constructor.
-        parameters.push(injectable.privateContext.require(paramType));
+        // Pass param index, total params count, and expected type for better error messages
+        parameters.push(
+          injectable.privateContext.require(
+            paramType,
+            { 
+              __paramIndex: i, 
+              __paramCount: paramTypes.length,
+              __expectedType: paramType
+            },
+            injectable.identifier
+          )
+        );
       }
     }
   }
