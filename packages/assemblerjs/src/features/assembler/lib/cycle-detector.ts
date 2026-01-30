@@ -1,5 +1,4 @@
 import type { Identifier } from '@/shared/common';
-import { formatIdentifier } from './injectable-manager';
 
 export interface CycleDetectionResult {
   cycle: string[];
@@ -11,8 +10,8 @@ export interface CycleDetectionResult {
  */
 abstract class AbstractCycleDetector {
   abstract detect(
-    injectables: Map<Identifier, any>,
-    formatFn: (id: Identifier) => string
+    injectables: Map<Identifier<any>, any>,
+    formatFn: (id: Identifier<any>) => string
   ): CycleDetectionResult[];
 }
 
@@ -30,17 +29,17 @@ class NoOpCycleDetector extends AbstractCycleDetector {
  */
 class ActiveCycleDetector extends AbstractCycleDetector {
   detect(
-    injectables: Map<Identifier, any>,
-    formatFn: (id: Identifier) => string
+    injectables: Map<Identifier<any>, any>,
+    formatFn: (id: Identifier<any>) => string
   ): CycleDetectionResult[] {
     const cycles: CycleDetectionResult[] = [];
-    const visited = new Set<Identifier>();
+    const visited = new Set<Identifier<any>>();
 
     for (const [identifier] of injectables) {
       if (visited.has(identifier)) continue;
 
-      const path: Identifier[] = [];
-      const inPath = new Set<Identifier>();
+      const path: Identifier<any>[] = [];
+      const inPath = new Set<Identifier<any>>();
 
       if (this.hasCycleDFS(identifier, path, inPath, visited, injectables)) {
         // Cycle found - extract the cycle path
@@ -62,11 +61,11 @@ class ActiveCycleDetector extends AbstractCycleDetector {
    * DFS helper to detect cycles
    */
   private hasCycleDFS(
-    current: Identifier,
-    path: Identifier[],
-    inPath: Set<Identifier>,
-    visited: Set<Identifier>,
-    injectables: Map<Identifier, any>
+    current: Identifier<any>,
+    path: Identifier<any>[],
+    inPath: Set<Identifier<any>>,
+    visited: Set<Identifier<any>>,
+    injectables: Map<Identifier<any>, any>
   ): boolean {
     if (inPath.has(current)) {
       path.push(current);

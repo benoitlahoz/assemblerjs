@@ -200,7 +200,7 @@ export class InjectableManager {
     )! as Injectable<T>;
 
     // Track resolution start
-    this.resolvingStack.add(injectable.identifier);
+    this.resolvingStack.add(injectable.identifier as Identifier<any>);
 
     try {
       if (injectable.isSingleton) {
@@ -210,7 +210,7 @@ export class InjectableManager {
       }
     } finally {
       // Always cleanup after resolution (success or error)
-      this.resolvingStack.delete(injectable.identifier);
+      this.resolvingStack.delete(injectable.identifier as Identifier<any>);
     }
   }
 
@@ -253,7 +253,7 @@ export class InjectableManager {
   /**
    * Get the injectables map for cycle detection and other analysis
    */
-  public getInjectables(): Map<Identifier, any> {
+  public getInjectables(): Map<Identifier<any>, any> {
     return this.injectables;
   }
 }
