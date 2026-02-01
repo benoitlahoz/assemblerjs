@@ -18,6 +18,9 @@ export class TransversalManager {
   // Global transversal metadata (shared across all contexts)
   private static transversalMetadata = new Map<string, TransversalMetadata>();
 
+  // Mapping from Abstract class name to Concrete class name (for @Affect resolution)
+  private static abstractToConcreteMap = new Map<string, string>();
+
   private constructor(private context: AssemblerContext) {}
 
   /**
@@ -54,6 +57,7 @@ export class TransversalManager {
   public static resetGlobalState(): void {
     TransversalManager.transversalInstances.clear();
     TransversalManager.transversalMetadata.clear();
+    TransversalManager.abstractToConcreteMap.clear();
     TransversalManager.instances = new WeakMap<AssemblerContext, TransversalManager>();
   }
 
@@ -105,6 +109,11 @@ export class TransversalManager {
       }
     
     const transversalClassName = TransversalClass.name;
+    
+    // If Abstract and Concrete are different, store the mapping
+    if (AbstractClass !== TransversalClass) {
+      TransversalManager.abstractToConcreteMap.set(AbstractClass.name, transversalClassName);
+    }
     
     // Check if transversal is already instantiated globally
     if (!TransversalManager.transversalInstances.has(transversalClassName)) {
@@ -292,17 +301,31 @@ export class TransversalManager {
           ? transversalIdentifier.name 
           : String(transversalIdentifier);
         
-        // Try to find metadata by concrete class name first
-        let metadata = TransversalManager.transversalMetadata.get(transversalClassName);
+        // Try to resolve abstract to concrete using the mapping
+        let resolvedClassName = transversalClassName;
+        if (TransversalManager.abstractToConcreteMap.has(transversalClassName)) {
+          resolvedClassName = TransversalManager.abstractToConcreteMap.get(transversalClassName)!;
+        }
         
-        // If not found and transversalIdentifier is a function, try to find by checking if it extends an abstract class
-        if (!metadata && typeof transversalIdentifier === 'function') {
-          // Check if this class is registered under its parent (abstract) name
-          const parentClass = Object.getPrototypeOf(transversalIdentifier);
-          if (parentClass && parentClass.name) {
-            metadata = TransversalManager.transversalMetadata.get(parentClass.name);
+        // Try to find metadata by resolved (concrete) class name
+        let metadata = TransversalManager.transversalMetadata.get(resolvedClassName);
+        
+        // If not found, try lazy registration (for transversals used directly without engage)
+        if (!metadata) {
+          // Try to register the transversal on-demand
+          try {
+            // Register as [TransversalClass] without abstract binding
+            if (typeof transversalIdentifier === 'function') {
+              this.registerTransversal([transversalIdentifier]);
+              // Try again to get metadata
+              metadata = TransversalManager.transversalMetadata.get(resolvedClassName);
+            }
+          } catch (error) {
+            // Lazy registration failed, log it but continue
+            console.warn(`Failed to lazy-register transversal ${transversalClassName}:`, error);
           }
         }
+        
         if (!metadata) {
           console.warn(`@Affect: Transversal ${transversalClassName} not found. Make sure it's registered in transversals[].`);
           continue;
