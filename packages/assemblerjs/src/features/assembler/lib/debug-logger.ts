@@ -215,6 +215,12 @@ export class DebugLogger {
   }
 
   public static enable(options?: AssemblerDebugOptions): void {
+    // Only enable if options.enabled is not explicitly false
+    if (options?.enabled === false) {
+      DebugLogger.instance = new NoOpDebugLogger();
+      return;
+    }
+    
     DebugLogger.instance = new ActiveDebugLogger();
     if (options) {
       DebugLogger.instance.configure(options);

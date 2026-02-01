@@ -499,6 +499,7 @@ describe('Debug Logger - Phase 1 MVP', () => {
 
     @Assemblage({ inject: [[RegisteredService]] })
     class ServiceWithMissingDep implements AbstractAssemblage {
+      // @ts-ignore
       constructor(private missingDep: NeverRegisteredService) {}
     }
 
@@ -540,6 +541,7 @@ describe('Debug Logger - Phase 1 MVP', () => {
 
     @Assemblage({ inject: [[Dependency]] })
     class ServiceWithPrivateDep implements AbstractAssemblage {
+      // @ts-ignore
       constructor(private dep: Dependency) {}
     }
 

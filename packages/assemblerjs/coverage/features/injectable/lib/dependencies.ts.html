@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.61% </span>
+                <span class="strong">95.45% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>41/42</span>
+                <span class='fraction'>42/44</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">91.66% </span>
+                <span class="strong">80.95% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>11/12</span>
+                <span class='fraction'>17/21</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">97.5% </span>
+                <span class="strong">95.23% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>39/40</span>
+                <span class='fraction'>40/42</span>
             </div>
         
             
@@ -187,7 +187,12 @@
 <a name='L122'></a><a href='#L122'>122</a>
 <a name='L123'></a><a href='#L123'>123</a>
 <a name='L124'></a><a href='#L124'>124</a>
-<a name='L125'></a><a href='#L125'>125</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L125'></a><a href='#L125'>125</a>
+<a name='L126'></a><a href='#L126'>126</a>
+<a name='L127'></a><a href='#L127'>127</a>
+<a name='L128'></a><a href='#L128'>128</a>
+<a name='L129'></a><a href='#L129'>129</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -202,6 +207,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">299x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">299x</span>
 <span class="cline-any cline-yes">1633x</span>
 <span class="cline-any cline-yes">165x</span>
@@ -312,6 +320,7 @@
 <span class="cline-any cline-yes">234x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { Concrete } from '@assemblerjs/core';
+import type { Identifier } from '@/shared/common';
 import { getParamTypes } from '@/shared/common';
 import { getDecoratedParametersIndexes } from '@/shared/decorators';
 import { AbstractInjectable } from '@/features/injectable';
@@ -325,7 +334,10 @@ const dependenciesCache = new WeakMap&lt;Function, any[]&gt;();
  * Helper function to determine the decorator type for a given parameter index.
  * Now uses dynamic decorator registration instead of hardcoded names.
  */
-const getDecoratorType = (indexes: ReturnType&lt;typeof getDecoratedParametersIndexes&gt;, index: number): string | null =&gt; {
+const getDecoratorType = (indexes: ReturnType&lt;typeof getDecoratedParametersIndexes&gt; | never[], index: number): string | null =&gt; {
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (!indexes || typeof indexes !== 'object' || Array.isArray(indexes)) {
+<span class="cstat-no" title="statement not covered" >    return null;</span>
+  }
   for (const [decoratorName, decoratorIndexes] of Object.entries(indexes)) {
     if (decoratorIndexes.includes(index)) {
       return decoratorName;
@@ -348,8 +360,8 @@ export const resolveInjectableParameters = &lt;T&gt;(
   const parameters: any[] = [];
 &nbsp;
   // Parameters passed in constructor.
-  const paramTypes = getParamTypes(injectable.concrete);
-  const indexes = getDecoratedParametersIndexes(injectable.concrete);
+  const paramTypes = injectable.concrete ? getParamTypes(injectable.concrete) : <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
+  const indexes = injectable.concrete ? getDecoratedParametersIndexes(injectable.concrete) : <span class="branch-1 cbranch-no" title="branch not covered" >[];</span>
 &nbsp;
   // Build parameters to pass to instance.
   for (let i = 0; i &lt; paramTypes.length; i++) {
@@ -358,7 +370,7 @@ export const resolveInjectableParameters = &lt;T&gt;(
     if (decoratorType) {
       // Use the appropriate resolver for decorated parameters
       const resolver = ParameterResolverFactory.getResolver(decoratorType);
-      parameters.push(resolver.resolve(i, injectable, injectable.concrete, configuration));
+      parameters.push(resolver.resolve(i, injectable, injectable.concrete as Concrete&lt;T&gt;, configuration));
     } else {
       const paramType = paramTypes[i];
       
@@ -387,7 +399,7 @@ export const resolveInjectableParameters = &lt;T&gt;(
               __paramCount: paramTypes.length,
               __expectedType: paramType
             },
-            injectable.identifier
+            injectable.identifier as Identifier&lt;any&gt;
           )
         );
       }
@@ -442,7 +454,7 @@ export const resolveDependencies = &lt;T&gt;(target: Concrete&lt;T&gt;) =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-30T12:13:38.536Z
+                at 2026-01-30T13:32:17.284Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

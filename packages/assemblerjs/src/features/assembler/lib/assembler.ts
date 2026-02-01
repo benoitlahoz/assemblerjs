@@ -27,8 +27,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
    */
   public static enableDebug(options?: AssemblerDebugOptions): void {
     DebugLogger.enable(options);
-    // Enable cycle detection if explicitly requested
-    if (options?.detectCycles === true) {
+    // Enable cycle detection only if debug is enabled AND detectCycles is true
+    if (options?.enabled !== false && options?.detectCycles === true) {
       CycleDetector.enable();
     }
   }
