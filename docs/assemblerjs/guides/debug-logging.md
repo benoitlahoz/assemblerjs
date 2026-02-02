@@ -14,9 +14,13 @@ Assembler.enableDebug({
   enabled: true,
   logPhases: {
     registration: true,
+    registrationUse: true,
+    registrationGlobals: true,
     resolution: true,
     construction: true,
     hooks: true,
+    injectionUse: true,
+    injectionGlobal: true,
   },
   logTimings: true,
   useColors: true,

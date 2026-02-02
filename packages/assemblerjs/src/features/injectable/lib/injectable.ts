@@ -11,6 +11,7 @@ import { isAssemblage, getDefinition } from '@/features/assemblage';
 import { TransversalManager, isTransversal } from '@/features/transversals';
 import type { AssemblerContext, AssemblerPrivateContext } from '@/features/assembler';
 import { HookManager } from '@/features/assembler';
+import { DebugLogger } from '@/features/assembler/lib/debug-logger';
 import { unregisterEvents } from '@/features/events';
 import { InjectableBuilder } from './injectable-builder';
 import type { AbstractInjectable } from '../model/abstract';
@@ -79,11 +80,37 @@ export class Injectable<T> implements AbstractInjectable<T> {
 
     // Set context metadata for concrete assemblage.
     if (this.concrete) {
+      const logger = DebugLogger.getInstance();
       defineCustomMetadata(
         ReflectValue.AssemblageContext,
         this.publicContext,
         this.concrete
       );
+
+      // Cache globals early so @Global can resolve during injections.
+      if (this.globals) {
+        const globalKeys = Object.keys(this.globals);
+        const globalValues = globalKeys.map((key) => {
+          const value = (this.globals as any)[key];
+          return { key, value };
+        });
+        if (globalKeys.length > 0) {
+          logger.logPhaseStart('registrationGlobals', {
+            target: this.concrete?.name ?? String(this.identifier),
+            count: globalKeys.length,
+            keys: globalKeys,
+            values: globalValues,
+          });
+        }
+        for (const key in this.globals) {
+          this.privateContext.addGlobal(key, this.globals[key]);
+        }
+        if (globalKeys.length > 0) {
+          logger.logPhaseEnd('registrationGlobals', undefined, {
+            target: this.concrete?.name ?? String(this.identifier),
+          });
+        }
+      }
 
       // CRITICAL: Multi-phase registration to ensure aspects are available during weaving
       
@@ -111,6 +138,28 @@ export class Injectable<T> implements AbstractInjectable<T> {
         }
       }
 
+      if (this.objects.length > 0) {
+        const useKeys = this.objects.map(([identifier]) => {
+          if (typeof identifier === 'symbol') return identifier.toString();
+          if (typeof identifier === 'function') return identifier.name || identifier.toString();
+          return String(identifier);
+        });
+        const useValues = this.objects.map(([identifier, value]) => {
+          const key = typeof identifier === 'symbol'
+            ? identifier.toString()
+            : typeof identifier === 'function'
+              ? identifier.name || identifier.toString()
+              : String(identifier);
+          return { key, value };
+        });
+        logger.logPhaseStart('registrationUse', {
+          target: this.concrete?.name ?? String(this.identifier),
+          count: this.objects.length,
+          keys: useKeys,
+          values: useValues,
+        });
+      }
+
       for (const injection of this.objects) {
         const [identifier, value] = injection;
         const isUseFactory = isFactory(value);
@@ -130,6 +179,12 @@ export class Injectable<T> implements AbstractInjectable<T> {
           // Register through InjectableManager so factories are lazily executed when resolved.
           this.privateContext.register(injection as any, true);
         }
+      }
+
+      if (this.objects.length > 0) {
+        logger.logPhaseEnd('registrationUse', undefined, {
+          target: this.concrete?.name ?? String(this.identifier),
+        });
       }
 
       // Phase 3: Now that all injections are registered, register transversals in TransversalManager
@@ -152,12 +207,6 @@ export class Injectable<T> implements AbstractInjectable<T> {
       // Cache dependencies.
       this.dependenciesIds = this.concrete ? resolveDependencies(this.concrete) : [];
 
-      // Cache globals.
-      if (this.globals) {
-        for (const key in this.globals) {
-          this.privateContext.addGlobal(key, this.globals[key]);
-        }
-      }
     }
 
     if (buildable.instance) {

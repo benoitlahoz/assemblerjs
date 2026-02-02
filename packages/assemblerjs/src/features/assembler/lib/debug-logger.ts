@@ -24,15 +24,15 @@ function formatTarget(target: any): string {
   
   // For objects, try to get the constructor name first
   if (typeof target === 'object') {
-    // Try name property first
-    if (target.name && typeof target.name === 'string') {
-      return target.name;
-    }
-    
     // Check constructor name (important for class instances)
     const constructorName = target.constructor?.name;
     if (constructorName && constructorName !== 'Object') {
       return constructorName;
+    }
+    
+    // Fallback to name property if present
+    if (target.name && typeof target.name === 'string') {
+      return target.name;
     }
     
     return '[Object]';
@@ -55,6 +55,7 @@ export abstract class AbstractDebugLogger {
   abstract logPhaseEnd(phase: string, duration?: number, context?: any): void;
   abstract logResolution(identifier: string, strategy: 'singleton' | 'transient', cacheHit: boolean): void;
   abstract logConstruction(target: string): void;
+  abstract logInjection(type: 'use' | 'global', data: { target?: string; index: number; identifier: any }): void;
 }
 
 /**
@@ -73,6 +74,7 @@ class NoOpDebugLogger implements AbstractDebugLogger {
   logPhaseEnd(_phase: string, _duration?: number, _context?: any): void {}
   logResolution(_identifier: string, _strategy: 'singleton' | 'transient', _cacheHit: boolean): void {}
   logConstruction(_target: string): void {}
+  logInjection(_type: 'use' | 'global', _data: { target?: string; index: number; identifier: any }): void {}
 }
 /* eslint-enable @typescript-eslint/no-empty-function */
 
@@ -84,10 +86,14 @@ class ActiveDebugLogger implements AbstractDebugLogger {
     enabled: true,
     logPhases: {
       registration: true,
+      registrationUse: true,
+      registrationGlobals: true,
       resolution: true,
       construction: true,
       hooks: true,
       cache: true,
+      injectionUse: true,
+      injectionGlobal: true,
     },
     logTimings: false,
     logDependencyTree: true,
@@ -167,6 +173,11 @@ class ActiveDebugLogger implements AbstractDebugLogger {
   logConstruction(target: string): void {
     if (!this.shouldLog('construction')) return;
     this.log('info', `Constructing: ${target}`);
+  }
+
+  logInjection(type: 'use' | 'global', data: { target?: string; index: number; identifier: any }): void {
+    if (!this.shouldLog(type === 'use' ? 'injectionUse' : 'injectionGlobal')) return;
+    this.log('info', `Injecting: @${type === 'use' ? 'Use' : 'Global'}`, data);
   }
 
   private shouldLog(phase: string): boolean {

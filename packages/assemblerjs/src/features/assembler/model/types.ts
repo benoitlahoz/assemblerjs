@@ -97,10 +97,14 @@ export interface AssemblerDebugOptions {
   logger?: (level: 'info' | 'warn' | 'error', message: string, data?: any) => void;
   logPhases?: {
     registration?: boolean;
+    registrationUse?: boolean;
+    registrationGlobals?: boolean;
     resolution?: boolean;
     construction?: boolean;
     hooks?: boolean;
     cache?: boolean;
+    injectionUse?: boolean;
+    injectionGlobal?: boolean;
   };
   logTimings?: boolean;
   logDependencyTree?: boolean;

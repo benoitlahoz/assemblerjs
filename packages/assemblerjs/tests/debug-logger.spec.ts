@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Assembler, Assemblage, AbstractAssemblage, Context, type AssemblerContext } from '../src';
+import { Assembler, Assemblage, AbstractAssemblage, Use, Global, Context, type AssemblerContext } from '../src';
 
 describe('Debug Logger - Phase 1 MVP', () => {
   // Capture console.log output
@@ -148,6 +148,69 @@ describe('Debug Logger - Phase 1 MVP', () => {
     expect(logs.some(log => log.includes('\x1b[36m'))).toBe(true);
   });
 
+  it('should log registration phases for use and globals with real values', () => {
+    const customLogs: Array<{ level: string; message: string; data?: any }> = [];
+
+    Assembler.enableDebug({
+      logger: (level, message, data) => {
+        customLogs.push({ level, message, data });
+      },
+      logPhases: {
+        registrationUse: true,
+        registrationGlobals: true,
+      },
+    });
+
+    const shared = { value: 123 };
+    const globalConfig = { enabled: true };
+
+    @Assemblage({
+      use: [['shared', shared]],
+      global: { config: globalConfig },
+    })
+    class ServiceWithUseAndGlobals implements AbstractAssemblage {}
+
+    Assembler.build(ServiceWithUseAndGlobals);
+
+    const registrationUse = customLogs.find(log => log.message.includes('Phase: registrationUse started'));
+    const registrationGlobals = customLogs.find(log => log.message.includes('Phase: registrationGlobals started'));
+
+    expect(registrationUse).toBeDefined();
+    expect(registrationGlobals).toBeDefined();
+
+    expect(registrationUse?.data?.values).toEqual([{ key: 'shared', value: shared }]);
+    expect(registrationGlobals?.data?.values).toEqual([{ key: 'config', value: globalConfig }]);
+  });
+
+  it('should log injection via @Global and @Use', () => {
+    const customLogs: Array<{ level: string; message: string; data?: any }> = [];
+
+    Assembler.enableDebug({
+      logger: (level, message, data) => {
+        customLogs.push({ level, message, data });
+      },
+    });
+
+    const loggerInstance = { log: () => undefined };
+    const globalConfig = { enabled: true };
+
+    @Assemblage({
+      use: [['logger', loggerInstance]],
+      global: { config: globalConfig },
+    })
+    class ServiceWithInjectedValues implements AbstractAssemblage {
+      constructor(
+        @Use('logger') public logger: any,
+        @Global('config') public config: any
+      ) {}
+    }
+
+    Assembler.build(ServiceWithInjectedValues);
+
+    expect(customLogs.some(log => log.message.includes('Injecting: @Use') && log.data?.identifier === 'logger')).toBe(true);
+    expect(customLogs.some(log => log.message.includes('Injecting: @Global') && log.data?.identifier === 'config')).toBe(true);
+  });
+
   it('should allow filtering specific phases', () => {
     Assembler.enableDebug({
       logPhases: {
@@ -184,6 +247,33 @@ describe('Debug Logger - Phase 1 MVP', () => {
     expect(customLogs.length).toBeGreaterThan(0);
     expect(customLogs.some(log => log.message.includes('Build started'))).toBe(true);
     expect(customLogs.some(log => log.level === 'info')).toBe(true);
+  });
+
+  it('should prefer constructor name over instance name property in hook logs', () => {
+    const customLogs: Array<{ level: string; message: string; data?: any }> = [];
+
+    Assembler.enableDebug({
+      logger: (level, message, data) => {
+        customLogs.push({ level, message, data });
+      },
+    });
+
+    @Assemblage()
+    class NamedService implements AbstractAssemblage {
+      get name(): string {
+        return 'leaflet-map';
+      }
+
+      onInit() {
+        return;
+      }
+    }
+
+    Assembler.build(NamedService);
+
+    const hookLog = customLogs.find(log => log.message.includes('Hook: onInit'));
+    expect(hookLog).toBeDefined();
+    expect(hookLog?.data?.target).toBe('NamedService');
   });
 
   it('should log resolution errors before throwing', () => {

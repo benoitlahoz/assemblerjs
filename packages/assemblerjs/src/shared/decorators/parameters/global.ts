@@ -1,6 +1,7 @@
 import type { Concrete } from '@assemblerjs/core';
 import { getOwnCustomMetadata } from '@/shared/common';
 import type { AbstractInjectable } from '@/features/injectable/model/abstract';
+import { DebugLogger } from '@/features/assembler/lib/debug-logger';
 import { ParameterDecoratorFactory } from './parameter-decorator-factory';
 import { ResolverStore } from '../resolvers';
 import { getParamValueKey } from './helpers';
@@ -14,6 +15,11 @@ class GlobalResolver implements ParameterResolver {
   resolve(index: number, injectable: AbstractInjectable<any>, concrete: Concrete<any>): any {
     const identifiers = getOwnCustomMetadata(getParamValueKey('Global'), concrete);
     const identifier = identifiers[index];
+    DebugLogger.getInstance().logInjection('global', {
+      target: concrete?.name,
+      index,
+      identifier: typeof identifier === 'symbol' ? identifier.toString() : identifier,
+    });
     return injectable.privateContext.global(identifier);
   }
 }

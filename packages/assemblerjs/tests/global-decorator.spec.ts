@@ -141,4 +141,25 @@ describe('@Global Decorator', () => {
     expect(service.getDatabaseHost()).toBe('localhost');
     expect(service.dbConfig.port).toBe(5432);
   });
+
+  it('should register globals before resolving injected dependencies', () => {
+    const globalConfig = { flag: true };
+
+    @Assemblage()
+    class NeedsGlobal implements AbstractAssemblage {
+      constructor(@Global('config') public config: any) {}
+    }
+
+    @Assemblage({
+      inject: [[NeedsGlobal]],
+      global: { config: globalConfig },
+    })
+    class RootWithGlobals implements AbstractAssemblage {
+      constructor(public dep: NeedsGlobal) {}
+    }
+
+    const app = Assembler.build(RootWithGlobals);
+
+    expect(app.dep.config).toBe(globalConfig);
+  });
 });
