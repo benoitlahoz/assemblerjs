@@ -18,6 +18,10 @@ export interface JoinPoint {
   result?: any;
   /** The error thrown by the method (if any) */
   error?: any;
+  /** The name of the calling assemblage class (if available) */
+  caller?: string;
+  /** The identifier of the calling assemblage (if available) */
+  callerIdentifier?: string | symbol;
 }
 
 /**

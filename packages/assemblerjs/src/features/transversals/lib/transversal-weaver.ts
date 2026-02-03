@@ -5,10 +5,49 @@ import type { JoinPoint, AdviceContext, Advice } from '../types';
 import { getAffectedMethods } from '../decorators/affect';
 
 /**
+ * Metadata about a woven instance caller
+ */
+interface CallerMetadata {
+  className: string;
+  identifier?: string | symbol;
+}
+
+/**
  * TransversalWeaver handles the weaving of aspects onto target instances.
  * It creates Proxy wrappers to intercept method calls and apply advices.
  */
 export class TransversalWeaver {
+  /**
+   * Registry mapping woven proxy instances to their caller metadata.
+   * Uses WeakMap to allow garbage collection of instances.
+   */
+  private static callerRegistry = new WeakMap<object, CallerMetadata>();
+
+  /**
+   * Register caller metadata for a woven instance.
+   * This allows manual registration if needed beyond automatic weaving.
+   * 
+   * @param instance The woven instance
+   * @param className The name of the calling class
+   * @param identifier Optional identifier of the caller
+   */
+  public static registerCaller<T extends object>(
+    instance: T,
+    className: string,
+    identifier?: string | symbol
+  ): void {
+    this.callerRegistry.set(instance, { className, identifier });
+  }
+
+  /**
+   * Get the caller metadata for a woven instance.
+   * 
+   * @param instance The woven instance
+   * @returns The caller metadata or undefined if not found
+   */
+  public static getCallerMetadata(instance: object): CallerMetadata | undefined {
+    return this.callerRegistry.get(instance);
+  }
   /**
    * Weaves transversals onto an instance.
    * Returns a Proxy if transversals apply, otherwise returns the original instance.
@@ -48,7 +87,7 @@ export class TransversalWeaver {
     }
 
     // Create a Proxy to intercept method calls
-    return new Proxy(instance as any, {
+    const woven = new Proxy(instance as any, {
       get(target, propertyKey, receiver) {
         const property = Reflect.get(target, propertyKey, receiver);
 
@@ -61,11 +100,16 @@ export class TransversalWeaver {
         return function (this: any, ...args: any[]) {
           const methodName = String(propertyKey);
           
-          // Build the JoinPoint
+          // Get caller metadata from WeakMap if this is a woven proxy
+          const callerMetadata = TransversalWeaver.callerRegistry.get(this);
+          
+          // Build the JoinPoint with caller information
           const joinPoint: JoinPoint = {
             target,
             methodName,
             args,
+            caller: callerMetadata?.className,
+            callerIdentifier: callerMetadata?.identifier,
           };
 
           // Get applicable advices for this method
@@ -90,6 +134,14 @@ export class TransversalWeaver {
         };
       },
     }) as T;
+
+    // Register the woven proxy instance with its caller metadata
+    TransversalWeaver.callerRegistry.set(woven as any, {
+      className: concrete.name,
+      identifier: concrete.name,
+    });
+
+    return woven;
   }
 
   /**
