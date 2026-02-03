@@ -81,12 +81,14 @@ Explore advanced features:
 Complete API documentation:
 - [Assembler API](./api/assembler.md) - Container bootstrap methods
 - [AssemblerContext API](./api/context.md) - Context interface for dependency management
+- [TransversalWeaver API](./api/transversal-weaver.md) - Caller tracking and context management
 - [Types](./api/types.md) - TypeScript types and interfaces
 
 ### [📘 Guides](./guides/advanced-examples.md)
 
 Real-world examples and optimization:
 - [Advanced Examples](./guides/advanced-examples.md) - Multi-module apps, plugin systems, factories
+- [Caller Tracking](./guides/caller-tracking.md) - Audit logging, authorization, and request tracing with transversals
 - [Tree-Shaking Guide](./guides/tree-shaking.md) - Bundle optimization strategies
 ## Installation
 
@@ -103,6 +105,30 @@ yarn add assemblerjs reflect-metadata
 ```typescript
 import 'reflect-metadata';
 ```
+
+## 🎯 New: Caller Tracking in Transversals
+
+Track which service or component initiated method calls for audit logging, authorization, and request tracing!
+
+**Quick Example:**
+
+```typescript
+@Transversal()
+class AuditTransversal {
+  @Before('execution(*.*)')
+  audit(context: AdviceContext) {
+    console.log(`${context.caller} called ${context.methodName}`);
+  }
+}
+
+// In Vue or external code
+await TransversalWeaver.withCaller('UserEditComponent', async () => {
+  await userService.save(data);
+  // Logs: "UserEditComponent called save"
+});
+```
+
+📖 **Learn more:** [Caller Tracking Quick Start](../CALLER_TRACKING_QUICK_START.md) | [Complete Guide](./guides/caller-tracking.md) | [API Reference](./api/transversal-weaver.md)
 
 ## Requirements
 

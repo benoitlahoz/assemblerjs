@@ -25,6 +25,7 @@ A modern, type-safe, and lightweight [Dependency Injection](https://en.wikipedia
 - ♻️ **Lifecycle Hooks** - `onRegister`, `onInit`, `onDispose`
 - 📡 **Built-in Event System** - Integrated EventManager
 - 🔀 **AOP/Transversals** - Cross-cutting concerns (logging, security, caching, performance)
+  - 🎯 **Caller Tracking** - Audit logging, authorization, and request tracing with full caller context
 - 🎨 **Custom Decorators** - Easy creation with `ParameterDecoratorFactory` and `createConstructorDecorator`
 - 🔧 **Flexible Configuration** - Runtime configuration override
 - 🏷️ **Tags Support** - Group and retrieve dependencies by tags

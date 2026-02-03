@@ -302,13 +302,20 @@ Information about the point of execution where an advice is applied.
 
 ```typescript
 interface JoinPoint {
-  target: any;           // The target instance
-  methodName: string;    // The name of the method being called
-  args: any[];          // The arguments passed to the method
-  result?: any;         // The result of the method (for after advice)
-  error?: any;          // The error thrown by the method (if any)
+  target: any;                      // The target instance
+  methodName: string;               // The name of the method being called
+  args: any[];                      // The arguments passed to the method
+  result?: any;                     // The result of the method (for after advice)
+  error?: any;                      // The error thrown by the method (if any)
+  caller?: string;                  // Class name of the caller (if tracked)
+  callerIdentifier?: string | symbol; // Optional unique identifier for the caller
 }
 ```
+
+**Caller Properties:**
+
+- `caller` - The name of the class or component that initiated the method call. Populated automatically for DI-managed calls, or set via `TransversalWeaver.withCaller()` for external callers.
+- `callerIdentifier` - Optional identifier (typically a Symbol or UUID) to uniquely identify the caller. Useful for request tracing and correlation IDs.
 
 **Usage:**
 
@@ -317,6 +324,14 @@ function logJoinPoint(joinPoint: JoinPoint) {
   console.log('Method:', joinPoint.methodName);
   console.log('Args:', joinPoint.args);
   console.log('Result:', joinPoint.result);
+  
+  // Caller tracking
+  if (joinPoint.caller) {
+    console.log('Called by:', joinPoint.caller);
+    if (joinPoint.callerIdentifier) {
+      console.log('Caller ID:', joinPoint.callerIdentifier);
+    }
+  }
 }
 ```
 
@@ -328,6 +343,8 @@ Extended join point with control flow for advices.
 interface AdviceContext extends JoinPoint {
   proceed?(): any | Promise<any>;  // Continue to next advice or original method
   config?: Record<string, any>;    // Optional config from @Affect decorator
+  caller?: string;                 // Class name of the caller (inherited from JoinPoint)
+  callerIdentifier?: string | symbol; // Caller ID (inherited from JoinPoint)
 }
 ```
 
@@ -339,12 +356,23 @@ class MyTransversal {
   @Around('execution(*.*)')
   async intercept(context: AdviceContext) {
     console.log('Before:', context.methodName);
+    if (context.caller) {
+      console.log('Caller:', context.caller);
+    }
     
     // Call next advice or original method
     const result = await context.proceed!();
     
     console.log('After:', result);
     return result;
+  }
+  
+  @Before('execution(*.delete)')
+  checkAuthority(context: AdviceContext) {
+    // Use caller information for authorization
+    if (context.caller && !this.canDelete(context.caller)) {
+      throw new Error(`${context.caller} not authorized to delete`);
+    }
   }
 }
 ```

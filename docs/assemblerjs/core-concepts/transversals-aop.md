@@ -376,6 +376,184 @@ class LifecycleTransversal implements AbstractTransversal {
 }
 ```
 
+## Caller Tracking
+
+Transversals support caller tracking, allowing you to identify which assemblage or external component initiated a method call. This is useful for audit logging, permission checking, and request tracing.
+
+### Using Caller Information in Advices
+
+The `AdviceContext` provides caller information:
+
+- `caller` - The class name of the caller
+- `callerIdentifier` - Optional unique identifier (string or symbol) for the caller
+
+```typescript
+@Transversal()
+class AuditTransversal implements AbstractTransversal {
+  @Before('execution(*.*)')
+  auditCall(context: AdviceContext) {
+    console.log(
+      `[AUDIT] ${context.caller || 'Unknown'} called ${context.target.constructor.name}.${context.methodName}`
+    );
+  }
+
+  @Before('execution(*.delete)')
+  checkDeletePermission(context: AdviceContext) {
+    // Only allow deletions from specific callers
+    if (context.caller !== 'AdminService') {
+      throw new Error(`Access denied: ${context.caller} cannot delete`);
+    }
+  }
+}
+```
+
+### Tracking External Callers
+
+For callers outside the DI container (e.g., Vue components, external scripts), use `TransversalWeaver.withCaller()` or `TransversalWeaver.wrapCaller()`:
+
+#### One-time execution with withCaller
+
+```typescript
+import { TransversalWeaver } from 'assemblerjs';
+
+// In a Vue component
+export default {
+  methods: {
+    async saveUser() {
+      await TransversalWeaver.withCaller('UserEditComponent', async () => {
+        await this.userService.save(userData);
+        // Advices will see caller = 'UserEditComponent'
+      });
+    }
+  }
+};
+```
+
+#### Reusable wrapped functions with wrapCaller
+
+For functions you'll call multiple times, use `wrapCaller` to create a wrapped function:
+
+```typescript
+import { TransversalWeaver } from 'assemblerjs';
+
+// In a Vue component
+export default {
+  setup() {
+    // Create wrapped function once
+    const mergeClasses = TransversalWeaver.wrapCaller(
+      'LeafletMap',
+      'LeafletMap.vue',
+      (...args) => tailwind.mergeClasses(...args)
+    );
+
+    return {
+      // Can be called multiple times, always maintains caller context
+      mergeClasses
+    };
+  }
+};
+```
+
+### Setting Caller with Identifier
+
+For more detailed tracking, provide an identifier alongside the caller:
+
+```typescript
+@Transversal()
+class RequestTracingTransversal implements AbstractTransversal {
+  @Before('execution(*.*)')
+  traceRequest(context: AdviceContext) {
+    const callerId = context.callerIdentifier 
+      ? ` (ID: ${String(context.callerIdentifier)})`
+      : '';
+    console.log(`Request from: ${context.caller}${callerId}`);
+  }
+}
+
+// Usage
+const requestId = Symbol('request-123');
+await TransversalWeaver.withCaller('APIController', requestId, async () => {
+  await service.processRequest();
+});
+```
+
+### Getting Current Caller Context
+
+Access the current caller outside of advices using `TransversalWeaver.getCurrentCaller()`:
+
+```typescript
+class ServiceA {
+  someMethod() {
+    const caller = TransversalWeaver.getCurrentCaller();
+    if (caller) {
+      console.log(`Called by: ${caller.className} (ID: ${caller.identifier})`);
+    }
+  }
+}
+```
+
+### Working Without Transversals
+
+Caller tracking works even when no transversals are engaged:
+
+```typescript
+// No transversals needed for caller context to work
+@Assemblage()
+class App {
+  constructor(private service: ServiceA) {}
+
+  async run() {
+    await TransversalWeaver.withCaller('App', async () => {
+      const result = await this.service.someMethod();
+      // Even without advices, getCurrentCaller() will return 'App'
+    });
+  }
+}
+```
+
+### Use Cases
+
+1. **Audit Logging** - Track who accessed sensitive data
+   ```typescript
+   @Before('execution(*.findSensitiveData)')
+   auditAccess(context: AdviceContext) {
+     this.logger.info(`${context.caller} accessed sensitive data`);
+   }
+   ```
+
+2. **Permission Checking** - Restrict operations by caller
+   ```typescript
+   @Before('execution(*.delete)', 100)
+   checkAuthorization(context: AdviceContext) {
+     if (!this.canDelete(context.caller)) {
+       throw new Error(`${context.caller} not authorized to delete`);
+     }
+   }
+   ```
+
+3. **Request Tracing** - Track request flow across services
+   ```typescript
+   @Before('execution(*.*)')
+   traceFlow(context: AdviceContext) {
+     if (context.callerIdentifier) {
+       console.log(`[Trace ${context.callerIdentifier}] ${context.caller} → ${context.methodName}`);
+     }
+   }
+   ```
+
+4. **Conditional Behavior** - Different behavior based on caller
+   ```typescript
+   @Around('execution(*.getData)')
+   async getData(context: AdviceContext) {
+     if (context.caller === 'AdminService') {
+       return await context.proceed!(); // Full data
+     } else {
+       const data = await context.proceed!();
+       return this.filterSensitiveFields(data); // Filtered data
+     }
+   }
+   ```
+
 ## Performance Considerations
 
 - Transversals add overhead to method calls

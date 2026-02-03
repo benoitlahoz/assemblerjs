@@ -24,6 +24,13 @@ export class TransversalWeaver {
   private static callerRegistry = new WeakMap<object, CallerMetadata>();
 
   /**
+   * Stack context for caller information.
+   * Independent of Transversals - works even without any engaged aspects.
+   * Allows tracking callers from external sources (Vue, Node, etc).
+   */
+  private static callerStack: CallerMetadata[] = [];
+
+  /**
    * Register caller metadata for a woven instance.
    * This allows manual registration if needed beyond automatic weaving.
    * 
@@ -47,6 +54,134 @@ export class TransversalWeaver {
    */
   public static getCallerMetadata(instance: object): CallerMetadata | undefined {
     return this.callerRegistry.get(instance);
+  }
+
+  /**
+   * Execute a function with caller context.
+   * The caller info will be available in Transversal advices if present,
+   * or accessible via getCurrentCaller() at any time.
+   * 
+   * Works with or without Transversals engaged.
+   * 
+   * @param caller The name of the calling component/class
+   * @param identifier Optional identifier (class reference, symbol, etc)
+   * @param fn The function to execute
+   * @returns The result of the function (may be a Promise)
+   * 
+   * @example
+   * ```typescript
+   * // From Vue component
+   * TransversalWeaver.withCaller('MyVueComponent', () => {
+   *   await userService.save(data);
+   * });
+   * 
+   * // From Node with identifier
+   * TransversalWeaver.withCaller('UserService', UserService, () => {
+   *   await dataService.process();
+   * });
+   * ```
+   */
+  public static withCaller<T>(
+    caller: string,
+    identifier?: string | symbol | (() => T | Promise<T>),
+    fn?: () => T | Promise<T>
+  ): T | Promise<T> {
+    // Handle overloads: (caller, fn) or (caller, identifier, fn)
+    if (typeof identifier === 'function') {
+      fn = identifier;
+      identifier = undefined;
+    }
+
+    const metadata: CallerMetadata = { className: caller, identifier };
+    this.callerStack.push(metadata);
+
+    const result = fn!();
+    
+    // Handle Promise: pop after it resolves
+    if (result instanceof Promise) {
+      return result.finally(() => this.callerStack.pop());
+    }
+    
+    // For synchronous functions, pop immediately after execution
+    this.callerStack.pop();
+    return result;
+  }
+
+  /**
+   * Wrap a function with caller context.
+   * Returns a new function that will execute with the specified caller context.
+   * Useful for creating wrapped functions that can be called multiple times.
+   * 
+   * @param caller The name of the calling component/class
+   * @param identifier Optional identifier (class reference, symbol, etc)
+   * @param fn The function to wrap
+   * @returns A wrapped function that maintains caller context on each call
+   * 
+   * @example
+   * ```typescript
+   * // In Vue component
+   * const mergeClasses = TransversalWeaver.wrapCaller(
+   *   'LeafletMap',
+   *   'LeafletMap.vue',
+   *   (...args: any[]) => tailwind.mergeClasses(...args)
+   * );
+   * 
+   * // Now each call maintains the caller context
+   * mergeClasses('class1', 'class2'); // Advices see caller: LeafletMap
+   * ```
+   */
+  public static wrapCaller<T extends (...args: any[]) => any>(
+    caller: string,
+    identifier?: string | symbol | T,
+    fn?: T
+  ): T {
+    // Handle overloads: (caller, fn) or (caller, identifier, fn)
+    if (typeof identifier === 'function') {
+      fn = identifier;
+      identifier = undefined;
+    }
+
+    const metadata: CallerMetadata = { className: caller, identifier };
+
+    return ((...args: any[]) => {
+      this.callerStack.push(metadata);
+      
+      try {
+        const result = fn!(...args);
+        
+        // Handle Promise: pop after it resolves
+        if (result instanceof Promise) {
+          return result.finally(() => this.callerStack.pop());
+        }
+        
+        // For synchronous functions, pop immediately
+        this.callerStack.pop();
+        return result;
+      } catch (error) {
+        // Pop on error as well
+        this.callerStack.pop();
+        throw error;
+      }
+    }) as T;
+  }
+
+  /**
+   * Get the current caller metadata from the context stack.
+   * Returns undefined if no caller context is active.
+   * Works even if no Transversal is engaged.
+   * 
+   * @returns The current caller metadata or undefined
+   * 
+   * @example
+   * ```typescript
+   * TransversalWeaver.withCaller('MyComponent', () => {
+   *   const caller = TransversalWeaver.getCurrentCaller();
+   *   console.log(caller?.className); // 'MyComponent'
+   * });
+   * ```
+   */
+  public static getCurrentCaller(): CallerMetadata | undefined {
+    return this.callerStack[this.callerStack.length - 1];
   }
   /**
    * Weaves transversals onto an instance.
@@ -100,8 +235,11 @@ export class TransversalWeaver {
         return function (this: any, ...args: any[]) {
           const methodName = String(propertyKey);
           
-          // Get caller metadata from WeakMap if this is a woven proxy
-          const callerMetadata = TransversalWeaver.callerRegistry.get(this);
+          // Get caller metadata: prioritize stack context (Vue/Node/external via wrapCaller/withCaller), 
+          // then fallback to WeakMap (Assemblages calling each other)
+          const callerMetadata = 
+            TransversalWeaver.getCurrentCaller()
+            ?? TransversalWeaver.callerRegistry.get(this);
           
           // Build the JoinPoint with caller information
           const joinPoint: JoinPoint = {

@@ -22,6 +22,7 @@ export {
   Around,
   Affect,
   TransversalManager,
+  TransversalWeaver,
 } from './features/transversals';
 export { AbstractTransversal } from './features/transversals';
 

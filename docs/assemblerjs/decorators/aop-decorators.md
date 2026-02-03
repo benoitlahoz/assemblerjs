@@ -113,6 +113,10 @@ methodName(context: AdviceContext): void | Promise<void>
 - `methodName` - Name of the intercepted method
 - `args` - Array of arguments passed to the method
 - `config` - Optional configuration from @Affect decorator
+- `caller` (optional) - Class name of the component that initiated the call
+- `callerIdentifier` (optional) - Unique identifier for the caller (useful for tracing)
+
+See [Caller Tracking](../core-concepts/transversals-aop.md#caller-tracking) for detailed information.
 
 ### Examples
 
@@ -128,6 +132,19 @@ class LoggingTransversal {
 }
 ```
 
+#### With Caller Tracking
+
+```typescript
+@Transversal()
+class AuditTransversal {
+  @Before('execution(*.*)')
+  auditCall(context: AdviceContext) {
+    const caller = context.caller || 'Unknown';
+    console.log(`[AUDIT] ${caller} called ${context.methodName}`);
+  }
+}
+```
+
 #### With Priority
 
 ```typescript
@@ -135,8 +152,9 @@ class LoggingTransversal {
 class SecurityTransversal {
   @Before('execution(*.delete*)', 100)  // High priority
   checkPermission(context: AdviceContext) {
-    if (!this.hasPermission()) {
-      throw new Error('Access denied');
+    // Only AdminService can delete
+    if (context.caller !== 'AdminService') {
+      throw new Error(`Access denied: ${context.caller}`);
     }
   }
 }
@@ -204,6 +222,8 @@ methodName(context: AdviceContext): void | Promise<void>
 ### AdviceContext Properties (in addition to @Before)
 
 - `result` - The return value of the intercepted method
+- `caller` (optional) - Class name of the component that initiated the call
+- `callerIdentifier` (optional) - Unique identifier for the caller
 
 ### Examples
 
@@ -215,6 +235,19 @@ class LoggingTransversal {
   @After('execution(*.*)')
   logResult(context: AdviceContext) {
     console.log(`${context.methodName} returned:`, context.result);
+  }
+}
+```
+
+#### With Caller Information
+
+```typescript
+@Transversal()
+class AuditTransversal {
+  @After('execution(*.delete)')
+  auditDeletion(context: AdviceContext) {
+    const caller = context.caller || 'Unknown';
+    console.log(`[AUDIT] ${caller} deleted ${context.target.constructor.name}`);
   }
 }
 ```
@@ -283,6 +316,8 @@ methodName(context: AdviceContext): any | Promise<any>
 ### AdviceContext Properties (in addition to @Before/@After)
 
 - `proceed()` - Function to invoke the next advice or original method
+- `caller` (optional) - Class name of the component that initiated the call
+- `callerIdentifier` (optional) - Unique identifier for the caller
 
 ### Important
 
@@ -305,6 +340,27 @@ class PerformanceTransversal {
     console.log(`${context.methodName} took ${duration}ms`);
     
     return result;
+  }
+}
+```
+
+#### With Caller Tracking
+
+```typescript
+@Transversal()
+class DataFilteringTransversal {
+  @Around('execution(*.getData)')
+  async filterByRole(context: AdviceContext) {
+    const data = await context.proceed!();
+    
+    // Different filtering based on caller
+    if (context.caller === 'AdminDashboard') {
+      return data; // No filtering
+    } else if (context.caller === 'PublicAPI') {
+      return this.filterPublic(data);
+    } else {
+      return [];
+    }
   }
 }
 ```
