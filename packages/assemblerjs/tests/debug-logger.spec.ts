@@ -819,4 +819,91 @@ describe('Cycle Detector - Early Detection', () => {
       console.log('Cycle path detected:', pathLog);
     }
   });
+
+  it('should display dependency tree with proper indentation when logDependencyTree is enabled', () => {
+    const customLogs: string[] = [];
+    Assembler.enableDebug({
+      logger: (_level, message, data) => {
+        const logMessage = data ? `${message} ${JSON.stringify(data)}` : message;
+        customLogs.push(logMessage);
+      },
+      logDependencyTree: true,
+    });
+
+    @Assemblage()
+    class DatabaseService implements AbstractAssemblage {}
+
+    @Assemblage({ inject: [[DatabaseService]] })
+    class UserRepository implements AbstractAssemblage {
+      constructor(public db: DatabaseService) {}
+    }
+
+    @Assemblage({ inject: [[UserRepository]] })
+    class UserService implements AbstractAssemblage {
+      constructor(public repo: UserRepository) {}
+    }
+
+    @Assemblage({ inject: [[UserService]] })
+    class App implements AbstractAssemblage {
+      constructor(public userService: UserService) {}
+    }
+
+    Assembler.build(App);
+
+    // Filter dependency tree logs (with emoji markers)
+    const treeLines = customLogs.filter(log => log.includes('📦'));
+
+    // Should have hierarchical structure with indentation
+    expect(treeLines.length).toBeGreaterThan(0);
+    
+    // Check for top-level App (no indentation)
+    const appLog = treeLines.find(log => log.includes('📦 App'));
+    expect(appLog).toBeTruthy();
+    expect(appLog).toMatch(/📦 App/);
+
+    // Check for nested dependencies with indentation (2 spaces per level)
+    const userServiceLog = treeLines.find(log => log.includes('📦 UserService'));
+    expect(userServiceLog).toBeTruthy();
+    expect(userServiceLog).toMatch(/  📦 UserService/); // 2 spaces = depth 1
+
+    const userRepoLog = treeLines.find(log => log.includes('📦 UserRepository'));
+    expect(userRepoLog).toBeTruthy();
+    expect(userRepoLog).toMatch(/    📦 UserRepository/); // 4 spaces = depth 2
+
+    const dbLog = treeLines.find(log => log.includes('📦 DatabaseService'));
+    expect(dbLog).toBeTruthy();
+    expect(dbLog).toMatch(/      📦 DatabaseService/); // 6 spaces = depth 3
+
+    console.log('Dependency tree:\n' + treeLines.join('\n'));
+  });
+
+  it('should not display dependency tree when logDependencyTree is disabled', () => {
+    const customLogs: string[] = [];
+    Assembler.enableDebug({
+      logger: (_level, message, data) => {
+        const logMessage = data ? `${message} ${JSON.stringify(data)}` : message;
+        customLogs.push(logMessage);
+      },
+      logDependencyTree: false,
+    });
+
+    @Assemblage()
+    class DatabaseService implements AbstractAssemblage {}
+
+    @Assemblage({ inject: [[DatabaseService]] })
+    class UserService implements AbstractAssemblage {
+      constructor(public db: DatabaseService) {}
+    }
+
+    @Assemblage({ inject: [[UserService]] })
+    class App implements AbstractAssemblage {
+      constructor(public userService: UserService) {}
+    }
+
+    Assembler.build(App);
+
+    // Should NOT have any dependency tree logs
+    const treeLines = customLogs.filter(log => log.includes('📦'));
+    expect(treeLines.length).toBe(0);
+  });
 });

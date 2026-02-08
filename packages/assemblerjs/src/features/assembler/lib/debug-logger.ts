@@ -56,6 +56,8 @@ export abstract class AbstractDebugLogger {
   abstract logResolution(identifier: string, strategy: 'singleton' | 'transient', cacheHit: boolean): void;
   abstract logConstruction(target: string): void;
   abstract logInjection(type: 'use' | 'global', data: { target?: string; index: number; identifier: any }): void;
+  abstract logDependencyStart(identifier: string, caller?: string): void;
+  abstract logDependencyEnd(identifier: string): void;
 }
 
 /**
@@ -75,6 +77,8 @@ class NoOpDebugLogger implements AbstractDebugLogger {
   logResolution(_identifier: string, _strategy: 'singleton' | 'transient', _cacheHit: boolean): void {}
   logConstruction(_target: string): void {}
   logInjection(_type: 'use' | 'global', _data: { target?: string; index: number; identifier: any }): void {}
+  logDependencyStart(_identifier: string, _caller?: string): void {}
+  logDependencyEnd(_identifier: string): void {}
 }
 /* eslint-enable @typescript-eslint/no-empty-function */
 
@@ -99,6 +103,10 @@ class ActiveDebugLogger implements AbstractDebugLogger {
     logDependencyTree: true,
     useColors: true,
   };
+
+  // Dependency tree tracking
+  private dependencyStack: Array<{ identifier: string; caller?: string }> = [];
+  private visitedDependencies = new Set<string>();
 
   configure(options: AssemblerDebugOptions): void {
     this.options = {
@@ -212,6 +220,45 @@ class ActiveDebugLogger implements AbstractDebugLogger {
 
     const color = colors[level as keyof typeof colors] || colors.info;
     return `${color}${text}${colors.reset}`;
+  }
+
+  logDependencyStart(identifier: string, caller?: string): void {
+    if (!this.options.logDependencyTree) return;
+
+    const depth = this.dependencyStack.length;
+    const indent = '  '.repeat(depth);
+    const isCycle = this.visitedDependencies.has(identifier);
+    
+    // Push to stack before logging
+    this.dependencyStack.push({ identifier, caller });
+    
+    if (isCycle) {
+      this.log('warn', `${indent}🔄 ${identifier} (CYCLE DETECTED)`, caller ? { caller } : undefined);
+    } else {
+      this.visitedDependencies.add(identifier);
+      this.log('info', `${indent}📦 ${identifier}`, caller ? { caller } : undefined);
+    }
+  }
+
+  logDependencyEnd(identifier: string): void {
+    if (!this.options.logDependencyTree) return;
+
+    // Pop from stack
+    const entry = this.dependencyStack.pop();
+    
+    // Validate stack consistency
+    if (entry?.identifier !== identifier) {
+      this.log('error', 'Dependency stack corruption', {
+        expected: identifier,
+        actual: entry?.identifier,
+        stackDepth: this.dependencyStack.length,
+      });
+    }
+
+    // Clear visited set when we're back at root level
+    if (this.dependencyStack.length === 0) {
+      this.visitedDependencies.clear();
+    }
   }
 }
 

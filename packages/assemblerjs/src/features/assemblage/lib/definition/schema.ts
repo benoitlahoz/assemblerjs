@@ -52,6 +52,21 @@ const schema: Record<string, any> = {
     },
     transform: (value?: Injection<unknown>[][]) => value,
   },
+  provide: {
+    test: (value: unknown) =>
+      typeof value === 'undefined' ||
+      (Array.isArray(value) &&
+        value.every(
+          (item: unknown) =>
+            Array.isArray(item) && item.length >= 1 && item.length <= 3
+        )),
+    throw: () => {
+      throw new Error(
+        `'provide' property must be an array of tuples of length 1, 2 or 3.`
+      );
+    },
+    transform: (value?: Injection<unknown>[][]) => value,
+  },
   use: {
     test: (value: unknown) =>
       typeof value === 'undefined' ||
@@ -137,6 +152,20 @@ export const validateDefinition = (obj: Record<string, any>) => {
         `Property '${property}' is not a valid assemblage definition property.`
       );
     }
+  }
+
+  // Emit deprecation warning if 'inject' is used
+  if (res.inject !== undefined && res.provide === undefined) {
+    console.warn(
+      `⚠️  Deprecation Warning: The 'inject' option is deprecated and will be removed in a future version. Please use 'provide' instead.`
+    );
+  }
+
+  // If both 'inject' and 'provide' are present, warn and use 'provide'
+  if (res.inject !== undefined && res.provide !== undefined) {
+    console.warn(
+      `⚠️  Warning: Both 'inject' and 'provide' options found. Using 'provide' (inject is deprecated).`
+    );
   }
 
   for (const property in schema) {

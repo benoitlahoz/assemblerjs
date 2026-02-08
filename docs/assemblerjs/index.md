@@ -30,7 +30,7 @@ class Logger implements AbstractAssemblage {
   }
 }
 
-@Assemblage({ inject: [[Logger]] })
+@Assemblage({ provide: [[Logger]] })
 class App implements AbstractAssemblage {
   constructor(private logger: Logger) {}
 

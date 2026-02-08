@@ -158,10 +158,16 @@ export class InjectableManager {
     configuration?: Record<string, any>,
     caller?: Identifier<any>
   ): T {
+    const logger = DebugLogger.getInstance();
+    const identifierName = formatIdentifier(identifier);
+    const callerName = caller ? formatIdentifier(caller) : undefined;
+
+    // Log dependency tree start FIRST (before any checks)
+    logger.logDependencyStart(identifierName, callerName);
+
     if (!this.injectables.has(identifier as Identifier<T>)) {
       const isCircular = this.resolvingStack.has(identifier as Identifier<T>);
       const errorType = isCircular ? 'Circular dependency detected' : 'Dependency not registered';
-      const identifierName = formatIdentifier(identifier);
       const dependencyType = getDependencyType(identifier);
       const paramIndex = configuration?.__paramIndex;
       const paramCount = configuration?.__paramCount;
@@ -190,7 +196,10 @@ export class InjectableManager {
         errorData.expectedType = expectedTypeName;
       }
       
-      DebugLogger.getInstance().log('error', errorType, errorData);
+      logger.log('error', errorType, errorData);
+      
+      // Clean up dependency tree before throwing
+      logger.logDependencyEnd(identifierName);
       
       throw new Error(errorMessage);
     }
@@ -211,6 +220,9 @@ export class InjectableManager {
     } finally {
       // Always cleanup after resolution (success or error)
       this.resolvingStack.delete(injectable.identifier as Identifier<any>);
+      
+      // Log dependency tree end
+      logger.logDependencyEnd(identifierName);
     }
   }
 

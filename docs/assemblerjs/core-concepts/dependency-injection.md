@@ -1,14 +1,16 @@
 # Dependency Injection
 
-Dependencies are declared in the `inject` property of the `@Assemblage` decorator and injected via the constructor.
+Dependencies are declared in the `provide` property of the `@Assemblage` decorator and injected via the constructor.
+
+> **Note:** The `inject` property is deprecated in favor of `provide`. While `inject` still works, it will be removed in a future version.
 
 ## Basic Injection
 
-The simplest form injects a concrete class:
+The simplest form provides a concrete class:
 
 ```typescript
 @Assemblage({
-  inject: [[ConcreteClass]],
+  provide: [[ConcreteClass]],
 })
 class MyApp implements AbstractAssemblage {
   constructor(private service: ConcreteClass) {
@@ -23,7 +25,7 @@ Bind an abstraction to a concrete implementation:
 
 ```typescript
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractClass, ConcreteClass], // AbstractClass must implement AbstractAssemblage
   ],
 })
@@ -49,7 +51,7 @@ Pass configuration to dependencies:
 
 ```typescript
 @Assemblage({
-  inject: [
+  provide: [
     [DatabaseService, { host: 'localhost', port: 5432 }],
   ],
 })
@@ -71,7 +73,7 @@ Inject multiple dependencies:
 
 ```typescript
 @Assemblage({
-  inject: [
+  provide: [
     [Logger],
     [DatabaseService],
     [CacheService],
@@ -88,7 +90,7 @@ class MyApp implements AbstractAssemblage {
 }
 ```
 
-**Note:** Dependencies are resolved by type using TypeScript's reflection system. The order of constructor parameters doesn't need to match the `inject` array order.
+**Note:** Dependencies are resolved by type using TypeScript's reflection system. The order of constructor parameters doesn't need to match the `provide` array order.
 
 ## Dependency Resolution
 

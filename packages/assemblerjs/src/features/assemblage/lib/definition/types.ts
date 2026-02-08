@@ -9,7 +9,11 @@ import type { TransversalInjection } from './transversals';
 export interface AssemblageDefinition {
   singleton?: boolean;
   events?: string[];
+  /**
+   * @deprecated Use 'provide' instead. This option will be removed in a future version.
+   */
   inject?: Injection<unknown>[];
+  provide?: Injection<unknown>[];
   use?: InstanceInjection<unknown>[];
   engage?: TransversalInjection<unknown>[];
   tags?: string | string[];

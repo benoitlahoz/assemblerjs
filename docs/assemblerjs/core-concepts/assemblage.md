@@ -52,7 +52,7 @@ The `@Assemblage` decorator accepts a configuration object:
 ```typescript
 @Assemblage({
   singleton: true, // Default: true - share instance across the application
-  inject: [],      // Dependencies to inject
+  provide: [],     // Dependencies to provide (recommended)
   use: [],         // Objects/instances to register
   tags: [],        // Tags for grouping
   events: [],      // Event channels to register
@@ -69,7 +69,8 @@ export class MyService implements AbstractAssemblage {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `singleton` | `boolean` | `true` | If `true`, one instance is shared. If `false`, new instance per injection. |
-| `inject` | `Array` | `[]` | Dependencies to inject (see [Dependency Injection](./dependency-injection.md)) |
+| `provide` | `Array` | `[]` | Dependencies to provide (see [Dependency Injection](./dependency-injection.md)) |
+| `inject` | `Array` | `[]` | **⚠️ Deprecated** - Use `provide` instead. Will be removed in a future version. |
 | `use` | `Array` | `[]` | Objects/instances to register for `@Use()` decorator |
 | `tags` | `string[]` | `[]` | Tags for grouping (see [Tags](../features/tags.md)) |
 | `events` | `string[]` | `[]` | Event channels to register (see [Events](../features/events.md)) |

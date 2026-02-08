@@ -334,7 +334,8 @@ export class Injectable<T> implements AbstractInjectable<T> {
    */
   public get injections(): Injection<unknown>[] {
     if (this.cachedInjections === undefined) {
-      this.cachedInjections = this.definition.inject || [];
+      // Prioritize 'provide' over deprecated 'inject'
+      this.cachedInjections = this.definition.provide || this.definition.inject || [];
     }
     return this.cachedInjections;
   }
