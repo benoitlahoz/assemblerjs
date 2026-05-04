@@ -27,35 +27,35 @@ class TransientWithDep implements AbstractAssemblage {
 
 // Application classes that represent realistic usage
 @Assemblage({
-  inject: [[SingletonService]],
+  provide: [[SingletonService]],
 })
 class SingletonApp implements AbstractAssemblage {
   constructor(public singleton: SingletonService) {}
 }
 
 @Assemblage({
-  inject: [[SingletonWithDep]],
+  provide: [[SingletonWithDep]],
 })
 class SingletonWithDepApp implements AbstractAssemblage {
   constructor(public service: SingletonWithDep) {}
 }
 
 @Assemblage({
-  inject: [[TransientService]],
+  provide: [[TransientService]],
 })
 class TransientApp implements AbstractAssemblage {
   constructor(public transient: TransientService) {}
 }
 
 @Assemblage({
-  inject: [[TransientWithDep]],
+  provide: [[TransientWithDep]],
 })
 class TransientWithDepApp implements AbstractAssemblage {
   constructor(public service: TransientWithDep) {}
 }
 
 @Assemblage({
-  inject: [[SingletonService], [TransientService]],
+  provide: [[SingletonService], [TransientService]],
 })
 class MixedApp implements AbstractAssemblage {
   constructor(
@@ -65,7 +65,7 @@ class MixedApp implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[SingletonService], [SingletonWithDep], [TransientService], [TransientWithDep]],
+  provide: [[SingletonService], [SingletonWithDep], [TransientService], [TransientWithDep]],
 })
 class ComplexApp implements AbstractAssemblage {
   constructor(

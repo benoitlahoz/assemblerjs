@@ -4,7 +4,7 @@ import { AbstractLogger } from '../logger/logger.abstract';
 import { BypassLogger } from '../logger/logger-bypass.service';
 
 @Assemblage({
-  inject: [[AbstractLogger, BypassLogger]],
+  provide: [[AbstractLogger, BypassLogger]],
   tags: 'tags_test',
 })
 export class ErrorLogInjector implements AbstractErrorHandler {

@@ -399,7 +399,7 @@ export function useUserService() {
 ```typescript
 // Service with audit and authorization
 @Assemblage({
-  inject: [[Database], [AuditLog], [Permission]],
+  provide: [[Database], [AuditLog], [Permission]],
   engage: [[AuditTransversal], [AuthorizationTransversal]]
 })
 class SensitiveDataService {

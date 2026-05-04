@@ -19,7 +19,7 @@ describe('FunctionDecorator', () => {
     const AnAssemblage = decorateAssemblage(NotAnAssemblage);
 
     @Assemblage({
-      inject: [[AbstractClass, AnAssemblage]],
+      provide: [[AbstractClass, AnAssemblage]],
       use: [['env', { foo: 'bar' }]],
     })
     class App implements AbstractAssemblage {

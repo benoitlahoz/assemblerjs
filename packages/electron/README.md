@@ -76,7 +76,7 @@ class WindowManager implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[WindowManager]]
+  provide: [[WindowManager]]
 })
 class ElectronApp implements AbstractAssemblage {
   constructor(private windowManager: WindowManager) {}
@@ -135,7 +135,7 @@ class AppService implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[AppService]]
+  provide: [[AppService]]
 })
 class RendererApp implements AbstractAssemblage {
   constructor(private appService: AppService) {}
@@ -212,7 +212,7 @@ class DatabaseService implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[DatabaseService]]
+  provide: [[DatabaseService]]
 })
 class UserRepository implements AbstractAssemblage {
   constructor(private db: DatabaseService) {}

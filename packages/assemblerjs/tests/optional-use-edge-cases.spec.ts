@@ -111,7 +111,7 @@ describe('Optional and Use Decorators - Edge Cases', () => {
       }
 
       @Assemblage({
-        inject: [[Logger]]
+        provide: [[Logger]]
       })
       class ServiceWithClassUse implements AbstractAssemblage {
         constructor(@Use(Logger) public logger: Logger) {}

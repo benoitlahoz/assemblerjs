@@ -6,11 +6,11 @@ describe('Transversal Decorators - Branch Coverage', () => {
   describe('@Transversal validation', () => {
     it('should throw when definition contains inject property', () => {
       expect(() => {
-        @Transversal({ inject: [[String]] } as any)
+        @Transversal({ provide: [[String]] } as any)
         // @ts-expect-error - Testing runtime validation
         class InvalidTransversal implements AbstractAssemblage {}
       }).toThrow(
-        '@Transversal on class InvalidTransversal cannot have inject or use properties'
+        '@Transversal on class InvalidTransversal cannot have inject, provide or use properties'
       );
     });
 
@@ -20,20 +20,20 @@ describe('Transversal Decorators - Branch Coverage', () => {
         // @ts-expect-error - Testing runtime validation
         class InvalidTransversal implements AbstractAssemblage {}
       }).toThrow(
-        '@Transversal on class InvalidTransversal cannot have inject or use properties'
+        '@Transversal on class InvalidTransversal cannot have inject, provide or use properties'
       );
     });
 
     it('should throw when definition contains both inject and use', () => {
       expect(() => {
         @Transversal({
-          inject: [[String]],
+          provide: [[String]],
           use: [['testUse', 'test']],
         } as any)
         // @ts-expect-error - Testing runtime validation
         class InvalidTransversal implements AbstractAssemblage {}
       }).toThrow(
-        '@Transversal on class InvalidTransversal cannot have inject or use properties'
+        '@Transversal on class InvalidTransversal cannot have inject, provide or use properties'
       );
     });
 

@@ -33,7 +33,7 @@ describe('Optional Decorator', () => {
 
     it('should inject the dependency when available', () => {
       @Assemblage({
-        inject: [[Logger]],
+        provide: [[Logger]],
       })
       class ServiceWithOptional implements AbstractAssemblage {
         constructor(
@@ -68,7 +68,7 @@ describe('Optional Decorator', () => {
 
     it('should work with mix of required and optional dependencies', () => {
       @Assemblage({
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ServiceWithMixedDeps implements AbstractAssemblage {
         constructor(
@@ -108,7 +108,7 @@ describe('Optional Decorator', () => {
       const defaultLogger = new Logger();
 
       @Assemblage({
-        inject: [[Logger]],
+        provide: [[Logger]],
       })
       class ServiceWithDefaultOptional implements AbstractAssemblage {
         constructor(
@@ -237,7 +237,7 @@ describe('Optional Decorator', () => {
 
     it('should handle optional with inject array', () => {
       @Assemblage({
-        inject: [[Logger], [Cache]],
+        provide: [[Logger], [Cache]],
       })
       class ServiceWithInjectAndOptional implements AbstractAssemblage {
         constructor(
@@ -279,7 +279,7 @@ describe('Optional Decorator', () => {
 
       @Assemblage({
         use: [['config', config]],
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ServiceWithMixedDecorators implements AbstractAssemblage {
         constructor(
@@ -302,7 +302,7 @@ describe('Optional Decorator', () => {
 
     it('should work with @Optional and @Configuration', () => {
       @Assemblage({
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ServiceWithConfigAndOptional implements AbstractAssemblage {
         constructor(
@@ -326,7 +326,7 @@ describe('Optional Decorator', () => {
     it('should work with @Optional and @Definition', () => {
       @Assemblage({
         tags: 'my-service',
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ServiceWithDefinitionAndOptional implements AbstractAssemblage {
         constructor(
@@ -341,7 +341,7 @@ describe('Optional Decorator', () => {
 
       expect(service).toBeInstanceOf(ServiceWithDefinitionAndOptional);
       expect(service.definition.tags).toStrictEqual(['my-service']);
-      expect(service.definition.inject).toBeDefined();
+      expect(service.definition.provide).toBeDefined();
       expect(service.database).toBeInstanceOf(Database);
       expect(service.logger).toBeUndefined();
       expect(service.cache).toBeUndefined();
@@ -353,7 +353,7 @@ describe('Optional Decorator', () => {
 
       @Assemblage({
         use: [['config', config]],
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ComplexService implements AbstractAssemblage {
         constructor(
@@ -385,7 +385,7 @@ describe('Optional Decorator', () => {
       const defaultLogger = new Logger();
 
       @Assemblage({
-        inject: [[Logger], [Database]],
+        provide: [[Logger], [Database]],
       })
       class ServiceWithInjectedAndOptional implements AbstractAssemblage {
         constructor(
@@ -409,7 +409,7 @@ describe('Optional Decorator', () => {
       const defaultConfig = { timeout: 1000 };
 
       @Assemblage({
-        inject: [[Database]],
+        provide: [[Database]],
       })
       class ServiceWithMultipleOptionalDefaults implements AbstractAssemblage {
         constructor(

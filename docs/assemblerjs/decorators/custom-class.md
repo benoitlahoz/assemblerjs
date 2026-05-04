@@ -82,7 +82,7 @@ const InitTracker = createConstructorDecorator<Application & WithInitTracker, Tr
 
 @InitTracker({ trackInit: true, trackDispose: false })
 @Assemblage({
-  inject: [[DatabaseService]],
+  provide: [[DatabaseService]],
   use: [['config', { host: 'localhost' }]],
 })
 class Application implements AbstractAssemblage {
@@ -254,7 +254,7 @@ const ValidateDatabase = createConstructorDecorator<DatabaseService, void>(
 );
 
 @ValidateDatabase()
-@Assemblage({ inject: [[DatabaseConnection]] })
+@Assemblage({ provide: [[DatabaseConnection]] })
 class DatabaseService implements AbstractAssemblage {
   constructor(private connection: DatabaseConnection) {}
 }

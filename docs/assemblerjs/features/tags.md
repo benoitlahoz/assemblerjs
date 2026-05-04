@@ -11,7 +11,7 @@ class AuthPlugin implements AbstractAssemblage {}
 @Assemblage({ tags: ['plugin', 'storage'] })
 class StoragePlugin implements AbstractAssemblage {}
 
-@Assemblage({ inject: [[AuthPlugin], [StoragePlugin]] })
+@Assemblage({ provide: [[AuthPlugin], [StoragePlugin]] })
 class PluginManager implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {
     // Get all plugins
@@ -62,7 +62,7 @@ class CachePlugin extends Plugin {
 
 // Plugin manager
 @Assemblage({
-  inject: [[LoggerPlugin], [CachePlugin]],
+  provide: [[LoggerPlugin], [CachePlugin]],
 })
 class PluginSystem implements AbstractAssemblage {
   private plugins: Plugin[] = [];
@@ -94,7 +94,7 @@ class ApiModule implements AbstractAssemblage {}
 class AuthModule implements AbstractAssemblage {}
 
 @Assemblage({
-  inject: [[DatabaseModule], [ApiModule], [AuthModule]],
+  provide: [[DatabaseModule], [ApiModule], [AuthModule]],
 })
 class Application implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {
@@ -118,7 +118,7 @@ class ExperimentalFeature implements AbstractAssemblage {}
 class StableFeature implements AbstractAssemblage {}
 
 @Assemblage({
-  inject: [[BetaFeature], [ExperimentalFeature], [StableFeature]],
+  provide: [[BetaFeature], [ExperimentalFeature], [StableFeature]],
 })
 class FeatureManager implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {
@@ -144,7 +144,7 @@ class WebSocketService implements AbstractAssemblage {}
 class GrpcService implements AbstractAssemblage {}
 
 @Assemblage({
-  inject: [[HttpService], [WebSocketService], [GrpcService]],
+  provide: [[HttpService], [WebSocketService], [GrpcService]],
 })
 class ServiceRegistry implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {
@@ -269,7 +269,7 @@ class CorsMiddleware implements AbstractAssemblage {
 
 // Application
 @Assemblage({
-  inject: [[AuthPlugin], [LoggingPlugin], [CorsMiddleware]],
+  provide: [[AuthPlugin], [LoggingPlugin], [CorsMiddleware]],
 })
 class Application implements AbstractAssemblage {
   private plugins: Plugin[] = [];

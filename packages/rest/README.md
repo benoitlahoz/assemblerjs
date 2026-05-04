@@ -61,7 +61,7 @@ class UserController {
 
 // Bootstrap Express app with AssemblerJS
 @Assemblage({
-  inject: [[UserController]]
+  provide: [[UserController]]
 })
 class App implements AbstractAssemblage {
   private app = express();
@@ -315,7 +315,7 @@ class UserService implements AbstractAssemblage {
 
 @Controller('/users')
 @Assemblage({
-  inject: [[UserService]]
+  provide: [[UserService]]
 })
 class UserController implements AbstractAssemblage {
   constructor(private userService: UserService) {}
@@ -416,7 +416,7 @@ class Database implements AbstractAssemblage {
 // Controller
 @Controller('/api/users')
 @Assemblage({
-  inject: [[Database]]
+  provide: [[Database]]
 })
 class UserController implements AbstractAssemblage {
   constructor(private db: Database) {}
@@ -455,7 +455,7 @@ class UserController implements AbstractAssemblage {
 
 // Application
 @Assemblage({
-  inject: [[UserController]]
+  provide: [[UserController]]
 })
 class RestApp implements AbstractAssemblage {
   private app = express();

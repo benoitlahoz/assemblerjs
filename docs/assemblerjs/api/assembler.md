@@ -152,7 +152,7 @@ class DatabaseService implements AbstractAssemblage {
 
 // Define application
 @Assemblage({
-  inject: [[DatabaseService]],
+  provide: [[DatabaseService]],
   global: { appName: 'MyApp' },
 })
 class Application implements AbstractAssemblage {
@@ -199,7 +199,7 @@ For dependencies, configuration is specified in the `inject` array:
 
 ```typescript
 @Assemblage({
-  inject: [
+  provide: [
     [DatabaseService, { host: 'localhost', port: 5432 }],
   ],
 })

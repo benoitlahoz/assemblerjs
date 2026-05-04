@@ -34,7 +34,7 @@ describe('Lifecycle Hooks Execution Order', () => {
       }
     }
 
-    @Assemblage({ inject: [[ChildService]] })
+    @Assemblage({ provide: [[ChildService]] })
     class ParentService implements AbstractAssemblage {
       static onRegister() {
         executionLog.push('2. Parent registered');
@@ -140,7 +140,7 @@ describe('Lifecycle Hooks Execution Order', () => {
       }
     }
 
-    @Assemblage({ inject: [[ServiceA], [ServiceB]] })
+    @Assemblage({ provide: [[ServiceA], [ServiceB]] })
     class ServiceC implements AbstractAssemblage {
       static onRegister() {
         executionLog.push('3. ServiceC registered');
@@ -231,7 +231,7 @@ describe('Lifecycle Hooks Execution Order', () => {
       }
     }
 
-    @Assemblage({ inject: [[AsyncChildService]] })
+    @Assemblage({ provide: [[AsyncChildService]] })
     class AsyncParentService implements AbstractAssemblage {
       static onRegister() {
         executionLog.push('2. AsyncParent registered');

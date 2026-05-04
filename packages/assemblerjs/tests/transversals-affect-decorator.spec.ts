@@ -36,7 +36,7 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
   });
   it('should apply transversal only to methods with @Affect decorator', () => {
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [[LoggingTransversal]], // Register the transversal
     })
     class App implements AbstractAssemblage {
@@ -81,7 +81,7 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[ProductService]],
+      provide: [[ProductService]],
       engage: [[LoggingTransversal], [ValidationTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -134,7 +134,7 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[OrderService]],
+      provide: [[OrderService]],
       engage: [[MixedTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -180,7 +180,7 @@ describe('AOP (Transversals) - @Affect Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[TestService]],
+      provide: [[TestService]],
       engage: [[PerformanceTransversal, { threshold: 100 }]], // Global config is overridden by @Affect
     })
     class App implements AbstractAssemblage {

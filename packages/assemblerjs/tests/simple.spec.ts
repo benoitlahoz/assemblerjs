@@ -16,7 +16,7 @@ describe('Simple', () => {
 
   it('should inject a dependency identified only by its concrete class.', () => {
     @Assemblage({
-      inject: [[BypassLogger]],
+      provide: [[BypassLogger]],
     })
     class App implements AbstractAssemblage {
       constructor(public logger: BypassLogger) {}
@@ -32,7 +32,7 @@ describe('Simple', () => {
     };
 
     @Assemblage({
-      inject: [[AbstractLogger, BypassLogger, LoggerConfiguration]],
+      provide: [[AbstractLogger, BypassLogger, LoggerConfiguration]],
     })
     class App implements AbstractAssemblage {
       constructor(public logger: AbstractLogger) {}
@@ -45,7 +45,7 @@ describe('Simple', () => {
 
   it('should allow configuration override in build', () => {
     @Assemblage({
-      inject: [[AbstractLogger, BypassLogger, { level: 'info' }]],
+      provide: [[AbstractLogger, BypassLogger, { level: 'info' }]],
     })
     class App implements AbstractAssemblage {
       constructor(public logger: AbstractLogger, @Configuration() public config: any) {}

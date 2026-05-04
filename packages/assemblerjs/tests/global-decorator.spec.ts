@@ -64,7 +64,7 @@ describe('@Global Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[ConfigProvider]],
+      provide: [[ConfigProvider]],
       global: { config: globalConfig }
     })
     class MixedService implements AbstractAssemblage {
@@ -98,7 +98,7 @@ describe('@Global Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[InnerService]],
+      provide: [[InnerService]],
       global: { logger: globalLogger }
     })
     class OuterService implements AbstractAssemblage {
@@ -151,7 +151,7 @@ describe('@Global Decorator', () => {
     }
 
     @Assemblage({
-      inject: [[NeedsGlobal]],
+      provide: [[NeedsGlobal]],
       global: { config: globalConfig },
     })
     class RootWithGlobals implements AbstractAssemblage {

@@ -80,7 +80,7 @@ interface AssemblageDefinition {
 ```typescript
 @Assemblage({
   singleton: true,
-  inject: [[DatabaseService]],
+  provide: [[DatabaseService]],
   engage: [[LoggingTransversal], [SecurityTransversal]],
   tags: ['service'],
   metadata: { version: '1.0' },
@@ -148,7 +148,7 @@ type TransversalInjection<T = any> =
 
 ```typescript
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
   engage: [
     [LoggingTransversal],
     [SecurityTransversal, { requireAuth: true }]

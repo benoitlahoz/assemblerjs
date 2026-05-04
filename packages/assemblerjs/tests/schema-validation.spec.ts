@@ -59,10 +59,10 @@ describe('schema.ts - Definition Schema Validation', () => {
 
       expect(() =>
         validateDefinition({
-          inject: [[1, 2, 3, 4]], // too long
+          provide: [[1, 2, 3, 4]], // too long
         })
       ).toThrow(
-        "'inject' property must be an array of tuples of length 1, 2 or 3."
+        "'provide' property must be an array of tuples of length 1, 2 or 3."
       );
     });
 
@@ -157,7 +157,7 @@ describe('schema.ts - Definition Schema Validation', () => {
       const definition = {
         singleton: false,
         events: ['event1', 'event2'],
-        inject: [[Symbol.for('Logger')]],
+        provide: [[Symbol.for('Logger')]],
         use: [[String, new String('test')]],
         engage: [[Symbol.for('Transversal')]],
         tags: ['tag1'],

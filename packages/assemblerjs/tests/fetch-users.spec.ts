@@ -6,7 +6,7 @@ import { UserModule } from './fixtures/user-fetch/user.module';
 describe('FetchUsers', () => {
   it('should fetch users.', async () => {
     @Assemblage({
-      inject: [[UserModule]],
+      provide: [[UserModule]],
       use: [['api', 'https://dummyjson.com']],
     })
     class App {

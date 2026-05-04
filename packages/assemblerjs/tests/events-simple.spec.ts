@@ -13,7 +13,7 @@ import { SubscriberAssemblage } from './fixtures/events-simple/subscriber.servic
 describe('EventsSimple', () => {
   it('should send and receive events.', () => {
     @Assemblage({
-      inject: [[EmitterAssemblage], [SubscriberAssemblage]],
+      provide: [[EmitterAssemblage], [SubscriberAssemblage]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}

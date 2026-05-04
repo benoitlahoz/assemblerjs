@@ -149,7 +149,7 @@ describe('use: with factory functions', () => {
       }
 
       @Assemblage({
-        inject: [[Logger]],
+        provide: [[Logger]],
         use: [['config', () => new Config('https://api.example.com')]],
       })
       class App implements AbstractAssemblage {

@@ -50,7 +50,7 @@ describe('Object Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[SingletonDep], [TransientDep]],
+        provide: [[SingletonDep], [TransientDep]],
       })
       class MixedApp implements AbstractAssemblage {
         constructor(private singleton: SingletonDep, private transient: TransientDep) {}
@@ -120,7 +120,7 @@ describe('Object Management Performance', () => {
         }
       }
 
-      @Assemblage({ inject: [[LeafObject]] })
+      @Assemblage({ provide: [[LeafObject]] })
       class MiddleObject implements AbstractAssemblage {
         constructor(private leaf: LeafObject) {}
 
@@ -129,7 +129,7 @@ describe('Object Management Performance', () => {
         }
       }
 
-      @Assemblage({ inject: [[MiddleObject]] })
+      @Assemblage({ provide: [[MiddleObject]] })
       class RootObject implements AbstractAssemblage {
         constructor(private middle: MiddleObject) {}
 
@@ -177,7 +177,7 @@ describe('Object Management Performance', () => {
         getType() { return 'interface'; }
       }
 
-      @Assemblage({ inject: [[InterfaceService]] })
+      @Assemblage({ provide: [[InterfaceService]] })
       class InterfaceApp implements AbstractAssemblage {
         constructor(private service: IService) {}
 

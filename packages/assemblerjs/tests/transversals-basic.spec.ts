@@ -16,7 +16,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
   describe('@Before advice', () => {
     it('should execute before advice before the target method', async () => {
       @Assemblage({
-        inject: [
+        provide: [
           [AbstractUserService, UserService],
         ],
         engage: [[LoggingTransversal]],
@@ -41,7 +41,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
 
     it('should execute before advice for all matching methods', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[AbstractLoggingTransversal, LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -66,7 +66,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
   describe('@After advice', () => {
     it('should execute after advice after the target method', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -88,7 +88,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
 
     it('should have access to method result in after advice', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -112,7 +112,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
   describe('@Around advice', () => {
     it('should wrap the target method execution', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -136,7 +136,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
 
     it('should allow modification of execution flow', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -161,7 +161,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
 
     it('should handle errors in around advice', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -184,7 +184,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
   describe('Advice execution order', () => {
     it('should execute advices in correct order: before -> around -> method -> after', async () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -214,7 +214,7 @@ describe('AOP (Transversals) - Basic Advices', () => {
   describe('Synchronous methods', () => {
     it('should work with synchronous methods', () => {
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {

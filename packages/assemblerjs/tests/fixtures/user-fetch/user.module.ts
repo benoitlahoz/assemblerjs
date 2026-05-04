@@ -7,7 +7,7 @@ export interface UserAPIConfiguration {
 }
 
 @Assemblage({
-  inject: [[UserProvider], [UserController]],
+  provide: [[UserProvider], [UserController]],
   use: [['fetch', fetch]],
 })
 export class UserModule implements AbstractAssemblage {

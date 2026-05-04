@@ -1,11 +1,15 @@
 /**
- * Check at given interval if a property is defined and truthy to call an async method.
+ * Check at given interval if a condition becomes truthy to call an async method.
  *
- * @param { string } property The name of the class proprty to wait for.
+ * @param { string | ((instance?: any) => boolean | Promise<boolean>) } condition
+ * The property name or function used as readiness condition.
  * @param { number | undefined } interval The interval in milliseconds at which the value is checked (defaults to 25 milliseconds).
- * @returns { Promise<void> } A promise that calls the original method when resolving.
+ * @returns { Promise<any> } A promise that calls and returns the original method result when resolving.
  */
-export const Await = (property: string, interval = 25): MethodDecorator => {
+export const Await = (
+  condition: string | ((instance?: any) => boolean | Promise<boolean>),
+  interval = 25
+): MethodDecorator => {
   return ((
     _target: any,
     _propertyKey: string,
@@ -13,21 +17,23 @@ export const Await = (property: string, interval = 25): MethodDecorator => {
   ) => {
     const originalFn = descriptor.value!;
 
-    descriptor.value = async function (): Promise<void> {
-      return new Promise((resolve) => {
-        if ((this as any)[property]) {
-          originalFn.apply(this);
-          resolve();
-        } else {
-          const timeInterval = setInterval(() => {
-            if ((this as any)[property]) {
-              clearInterval(timeInterval);
-              originalFn.apply(this);
-              resolve();
-            }
-          }, interval);
-        }
-      });
+    const isReady = async (instance: any): Promise<boolean> => {
+      const value = typeof condition === 'function' ? condition(instance) : instance[condition];
+
+      if (typeof value === 'function') {
+        const fnResult = value.call(instance);
+        return Boolean(await Promise.resolve(fnResult));
+      }
+
+      return Boolean(await Promise.resolve(value));
+    };
+
+    descriptor.value = async function (...params: any[]): Promise<any> {
+      while (!(await isReady(this))) {
+        await new Promise((resolve) => setTimeout(resolve, interval));
+      }
+
+      return originalFn.apply(this, params);
     };
   }) as MethodDecorator;
 };

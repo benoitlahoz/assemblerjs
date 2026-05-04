@@ -113,7 +113,7 @@ Transversals are registered using the `engage` property in an assemblage definit
 
 ```typescript
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
   engage: [[LoggingTransversal], [ValidationTransversal]]
 })
 class App implements AbstractAssemblage {

@@ -43,7 +43,7 @@ describe('Lifecycle Hooks Performance', () => {
       }
 
       @Assemblage({
-        inject: [[Service1], [Service2], [Service3], [Service4]],
+        provide: [[Service1], [Service2], [Service3], [Service4]],
       })
       class ComplexApp implements AbstractAssemblage {
         constructor(
@@ -94,7 +94,7 @@ describe('Lifecycle Hooks Performance', () => {
       }
 
       @Assemblage({
-        inject: [[Level3Service]],
+        provide: [[Level3Service]],
       })
       class Level2Service implements AbstractAssemblage {
         constructor(private level3: Level3Service) {}
@@ -105,7 +105,7 @@ describe('Lifecycle Hooks Performance', () => {
       }
 
       @Assemblage({
-        inject: [[Level2Service]],
+        provide: [[Level2Service]],
       })
       class Level1App implements AbstractAssemblage {
         constructor(private level2: Level2Service) {}

@@ -39,7 +39,7 @@ class DatabaseModule implements AbstractAssemblage {
 // API module
 @Assemblage({ 
   tags: ['module', 'api'],
-  inject: [[DatabaseModule]],
+  provide: [[DatabaseModule]],
 })
 class ApiModule implements AbstractAssemblage {
   constructor(private db: DatabaseModule) {}
@@ -55,7 +55,7 @@ class ApiModule implements AbstractAssemblage {
 
 // Application
 @Assemblage({
-  inject: [[DatabaseModule], [ApiModule]],
+  provide: [[DatabaseModule], [ApiModule]],
   global: { 
     appName: 'MyApp',
     version: '1.0.0',
@@ -159,7 +159,7 @@ class CachePlugin extends Plugin {
 
 // Plugin system
 @Assemblage({
-  inject: [[AuthPlugin], [LoggingPlugin], [CachePlugin]],
+  provide: [[AuthPlugin], [LoggingPlugin], [CachePlugin]],
 })
 class PluginSystem implements AbstractAssemblage {
   private plugins: Plugin[] = [];
@@ -224,7 +224,7 @@ class Task implements AbstractAssemblage {
 }
 
 // Factory that creates tasks
-@Assemblage({ inject: [[Task]] })
+@Assemblage({ provide: [[Task]] })
 class TaskFactory implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {}
   
@@ -235,7 +235,7 @@ class TaskFactory implements AbstractAssemblage {
 }
 
 // Task runner
-@Assemblage({ inject: [[TaskFactory]] })
+@Assemblage({ provide: [[TaskFactory]] })
 class TaskRunner implements AbstractAssemblage {
   constructor(private factory: TaskFactory) {}
   
@@ -313,7 +313,7 @@ export class UserService
 
 // Email service (listens and emits)
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
   events: [Events.EMAIL_SENT],
 })
 export class EmailService 
@@ -364,7 +364,7 @@ export class EmailService
 }
 
 // Analytics service (listens)
-@Assemblage({ inject: [[UserService], [EmailService]] })
+@Assemblage({ provide: [[UserService], [EmailService]] })
 export class AnalyticsService implements AbstractAssemblage {
   private stats = {
     usersCreated: 0,
@@ -395,7 +395,7 @@ export class AnalyticsService implements AbstractAssemblage {
 
 // Application
 @Assemblage({
-  inject: [[UserService], [EmailService], [AnalyticsService]],
+  provide: [[UserService], [EmailService], [AnalyticsService]],
 })
 class Application implements AbstractAssemblage {
   constructor(
@@ -483,7 +483,7 @@ class MemoryCache implements AbstractCache {
 
 // Data service using abstractions
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractDataStore, FileDataStore],
     [AbstractCache, MemoryCache],
   ],
@@ -517,7 +517,7 @@ class DataService implements AbstractAssemblage {
 
 // Easy to swap implementations
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractDataStore, DatabaseStore],  // Swap FileDataStore
     [AbstractCache, RedisCache],         // Swap MemoryCache
   ],
@@ -612,7 +612,7 @@ class LoggingTransversal implements AbstractTransversal {
 
 // Usage
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
   engage: [[LoggingTransversal]],
 })
 class App implements AbstractAssemblage {
@@ -999,7 +999,7 @@ class ValidationTransversal implements AbstractTransversal {
 
 // Usage
 @Assemblage({
-  inject: [[ProductService]],
+  provide: [[ProductService]],
   engage: [[ValidationTransversal]],
 })
 class App implements AbstractAssemblage {
@@ -1150,7 +1150,7 @@ class ApiService {
 ```typescript
 // Combine all transversals
 @Assemblage({
-  inject: [[UserService], [ProductService]],
+  provide: [[UserService], [ProductService]],
   engage: [
     [SecurityTransversal],
     [ValidationTransversal],

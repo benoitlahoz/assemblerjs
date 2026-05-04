@@ -31,7 +31,7 @@ describe('TransversalManager - Advanced Coverage', () => {
       }
       
       @Assemblage({
-        inject: [[TestService]],
+        provide: [[TestService]],
         engage: [[LoggingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -72,7 +72,7 @@ describe('TransversalManager - Advanced Coverage', () => {
       }
 
       @Assemblage({
-        inject: [[DataService]],
+        provide: [[DataService]],
         engage: [[CachingTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -99,7 +99,7 @@ describe('TransversalManager - Advanced Coverage', () => {
       }
 
       @Assemblage({
-        inject: [[SimpleService]],
+        provide: [[SimpleService]],
       })
       class App implements AbstractAssemblage {
         constructor(

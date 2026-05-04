@@ -94,7 +94,7 @@ class AuditTransversal {
 
 ```typescript
 @Assemblage({
-  inject: [[Database]],
+  provide: [[Database]],
   engage: [[AuditTransversal]]
 })
 class UserService {
@@ -116,7 +116,7 @@ class UserService {
 
 // Usage
 @Assemblage({
-  inject: [[UserService]]
+  provide: [[UserService]]
 })
 class AdminService {
   constructor(private userService: UserService) {}
@@ -171,7 +171,7 @@ class AuthorizationTransversal {
 
 // Usage
 @Assemblage({
-  inject: [[Database]],
+  provide: [[Database]],
   engage: [[AuthorizationTransversal]]
 })
 class SensitiveDataService {

@@ -32,7 +32,7 @@ describe('Awaitable', () => {
     const ReceivedMessages: string[] = [];
 
     @Assemblage({
-      inject: [[AwaiterAssemblage], [AwaitableAssemblage]],
+      provide: [[AwaiterAssemblage], [AwaitableAssemblage]],
     })
     class App implements AbstractAssemblage {
       constructor(

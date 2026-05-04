@@ -15,7 +15,7 @@ describe('AOP (Transversals) - Simple Test', () => {
 
   it('should register and use a transversal', async () => {
     @Assemblage({
-      inject: [
+      provide: [
         [AbstractUserService, UserService],
       ],
       engage: [[AbstractLoggingTransversal, LoggingTransversal]],

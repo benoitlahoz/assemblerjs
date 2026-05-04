@@ -23,7 +23,7 @@ describe('AOP (Transversals) - Transversal Priorities', () => {
 
   it('should execute higher priority advices first', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [[ValidationTransversal], [PerformanceTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -46,7 +46,7 @@ describe('AOP (Transversals) - Transversal Priorities', () => {
 
   it('should stop execution if high priority advice throws', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [[ValidationTransversal], [PerformanceTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -76,7 +76,7 @@ describe('AOP (Transversals) - Transversal Priorities', () => {
 
   it('should handle multiple transversals with different priorities', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [ValidationTransversal], // priority 100
         [SecurityTransversal], // priority 90
@@ -115,7 +115,7 @@ describe('AOP (Transversals) - Transversal Priorities', () => {
 
   it('should execute transversals in priority order even with errors', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [[ValidationTransversal], [SecurityTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -143,7 +143,7 @@ describe('AOP (Transversals) - Transversal Priorities', () => {
 
   it('should handle transversal configuration', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [ValidationTransversal],
         [PerformanceTransversal, { threshold: 100 }], // High threshold to test filtering

@@ -49,7 +49,7 @@ class Logger implements AbstractAssemblage {
 
 // Define a service that depends on Logger
 @Assemblage({
-  inject: [[Logger]], // Declare dependencies
+  provide: [[Logger]], // Declare dependencies
 })
 class UserService implements AbstractAssemblage {
   constructor(private logger: Logger) {}
@@ -62,7 +62,7 @@ class UserService implements AbstractAssemblage {
 
 // Define an application
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
 })
 class App implements AbstractAssemblage {
   constructor(private userService: UserService) {}
@@ -273,7 +273,7 @@ class UserService extends EventManager {
 }
 
 @Assemblage({
-  inject: [[UserService]],
+  provide: [[UserService]],
 })
 class NotificationService {
   constructor(
@@ -371,7 +371,7 @@ class Database implements AbstractAssemblage {
 
 // User Repository
 @Assemblage({
-  inject: [[Database]],
+  provide: [[Database]],
 })
 class UserRepository implements AbstractAssemblage {
   constructor(private db: Database) {}
@@ -387,7 +387,7 @@ class UserRepository implements AbstractAssemblage {
 
 // User Service with Events
 @Assemblage({
-  inject: [[UserRepository]],
+  provide: [[UserRepository]],
   events: ['app:user:created'],
 })
 class UserService extends EventManager {
@@ -404,7 +404,7 @@ class UserService extends EventManager {
 
 // Application
 @Assemblage({
-  inject: [[Config, UserService]],
+  provide: [[Config, UserService]],
 })
 class App implements AbstractAssemblage {
   constructor(

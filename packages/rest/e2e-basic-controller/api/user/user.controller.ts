@@ -7,7 +7,7 @@ import { UserRepository } from './user.repository';
   path: '/user',
 })
 @Assemblage({
-  inject: [[UserRepository]],
+  provide: [[UserRepository]],
 })
 export class UserController implements AbstractAssemblage {
   constructor(private repository: UserRepository) {}

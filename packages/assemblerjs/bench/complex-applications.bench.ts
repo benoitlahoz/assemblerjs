@@ -84,55 +84,55 @@ describe('Complex Application Performance', () => {
         value = 'level-10';
       }
 
-      @Assemblage({ inject: [[Level10]] })
+      @Assemblage({ provide: [[Level10]] })
       class Level9 implements AbstractAssemblage {
         constructor(private l10: Level10) {}
         getValue() { return `level-9-${this.l10.value}`; }
       }
 
-      @Assemblage({ inject: [[Level9]] })
+      @Assemblage({ provide: [[Level9]] })
       class Level8 implements AbstractAssemblage {
         constructor(private l9: Level9) {}
         getValue() { return `level-8-${this.l9.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level8]] })
+      @Assemblage({ provide: [[Level8]] })
       class Level7 implements AbstractAssemblage {
         constructor(private l8: Level8) {}
         getValue() { return `level-7-${this.l8.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level7]] })
+      @Assemblage({ provide: [[Level7]] })
       class Level6 implements AbstractAssemblage {
         constructor(private l7: Level7) {}
         getValue() { return `level-6-${this.l7.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level6]] })
+      @Assemblage({ provide: [[Level6]] })
       class Level5 implements AbstractAssemblage {
         constructor(private l6: Level6) {}
         getValue() { return `level-5-${this.l6.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level5]] })
+      @Assemblage({ provide: [[Level5]] })
       class Level4 implements AbstractAssemblage {
         constructor(private l5: Level5) {}
         getValue() { return `level-4-${this.l5.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level4]] })
+      @Assemblage({ provide: [[Level4]] })
       class Level3 implements AbstractAssemblage {
         constructor(private l4: Level4) {}
         getValue() { return `level-3-${this.l4.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level3]] })
+      @Assemblage({ provide: [[Level3]] })
       class Level2 implements AbstractAssemblage {
         constructor(private l3: Level3) {}
         getValue() { return `level-2-${this.l3.getValue()}`; }
       }
 
-      @Assemblage({ inject: [[Level2]] })
+      @Assemblage({ provide: [[Level2]] })
       class VeryDeepApp implements AbstractAssemblage {
         constructor(private l2: Level2) {}
         getValue() { return `level-1-${this.l2.getValue()}`; }
@@ -154,39 +154,39 @@ describe('Complex Application Performance', () => {
       @Assemblage() class L3E implements AbstractAssemblage { data = 'E'; }
 
       // Level 2 services (intermediate nodes)
-      @Assemblage({ inject: [[L3A], [L3B]] })
+      @Assemblage({ provide: [[L3A], [L3B]] })
       class L2AB implements AbstractAssemblage {
         constructor(private a: L3A, private b: L3B) {}
         combine() { return this.a.data + this.b.data; }
       }
 
-      @Assemblage({ inject: [[L3C], [L3D]] })
+      @Assemblage({ provide: [[L3C], [L3D]] })
       class L2CD implements AbstractAssemblage {
         constructor(private c: L3C, private d: L3D) {}
         combine() { return this.c.data + this.d.data; }
       }
 
-      @Assemblage({ inject: [[L3E]] })
+      @Assemblage({ provide: [[L3E]] })
       class L2E implements AbstractAssemblage {
         constructor(private e: L3E) {}
         combine() { return this.e.data; }
       }
 
       // Level 1 services (aggregators)
-      @Assemblage({ inject: [[L2AB], [L2CD]] })
+      @Assemblage({ provide: [[L2AB], [L2CD]] })
       class L1ABCD implements AbstractAssemblage {
         constructor(private ab: L2AB, private cd: L2CD) {}
         combine() { return this.ab.combine() + this.cd.combine(); }
       }
 
-      @Assemblage({ inject: [[L2E]] })
+      @Assemblage({ provide: [[L2E]] })
       class L1E implements AbstractAssemblage {
         constructor(private e: L2E) {}
         combine() { return this.e.combine(); }
       }
 
       // Root service
-      @Assemblage({ inject: [[L1ABCD], [L1E]] })
+      @Assemblage({ provide: [[L1ABCD], [L1E]] })
       class ComplexGraphApp implements AbstractAssemblage {
         constructor(private abcd: L1ABCD, private e: L1E) {}
         getResult() { return this.abcd.combine() + this.e.combine(); }
@@ -204,20 +204,20 @@ describe('Complex Application Performance', () => {
       @Assemblage() class BaseB implements AbstractAssemblage { value = 2; }
 
       // Middle layer - both depend on both bases
-      @Assemblage({ inject: [[BaseA], [BaseB]] })
+      @Assemblage({ provide: [[BaseA], [BaseB]] })
       class Middle1 implements AbstractAssemblage {
         constructor(private a: BaseA, private b: BaseB) {}
         sum() { return this.a.value + this.b.value; }
       }
 
-      @Assemblage({ inject: [[BaseA], [BaseB]] })
+      @Assemblage({ provide: [[BaseA], [BaseB]] })
       class Middle2 implements AbstractAssemblage {
         constructor(private a: BaseA, private b: BaseB) {}
         product() { return this.a.value * this.b.value; }
       }
 
       // Top layer - depends on both middle services
-      @Assemblage({ inject: [[Middle1], [Middle2]] })
+      @Assemblage({ provide: [[Middle1], [Middle2]] })
       class DiamondApp implements AbstractAssemblage {
         constructor(private m1: Middle1, private m2: Middle2) {}
         compute() { return this.m1.sum() + this.m2.product(); }
@@ -248,19 +248,19 @@ describe('Complex Application Performance', () => {
       }
 
       // Service layer
-      @Assemblage({ inject: [[UserRepository]] })
+      @Assemblage({ provide: [[UserRepository]] })
       class UserService implements AbstractAssemblage {
         constructor(private repo: UserRepository) {}
         getUser(id: number) { return this.repo.findUser(id); }
       }
 
-      @Assemblage({ inject: [[ProductRepository]] })
+      @Assemblage({ provide: [[ProductRepository]] })
       class ProductService implements AbstractAssemblage {
         constructor(private repo: ProductRepository) {}
         getProduct(id: number) { return this.repo.findProduct(id); }
       }
 
-      @Assemblage({ inject: [[UserService], [ProductService]] })
+      @Assemblage({ provide: [[UserService], [ProductService]] })
       class OrderService implements AbstractAssemblage {
         constructor(private users: UserService, private products: ProductService) {}
         createOrder(userId: number, productId: number) {
@@ -285,7 +285,7 @@ describe('Complex Application Performance', () => {
 
       // Application layer
       @Assemblage({
-        inject: [
+        provide: [
           [OrderService],
           [Logger],
           [Cache],

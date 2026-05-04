@@ -27,7 +27,7 @@ describe('Parameter Decorators - Advanced Usage', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractLogger, FileLogger]],
+        provide: [[AbstractLogger, FileLogger]],
       })
       class ServiceWithSpecificLogger implements AbstractAssemblage {
         constructor(
@@ -150,7 +150,7 @@ describe('Parameter Decorators - Advanced Usage', () => {
       }
 
       @Assemblage({
-        inject: [[Logger]],
+        provide: [[Logger]],
         metadata: { serviceName: 'myService', version: '1.0' }
       })
       class ServiceWithDefinition implements AbstractAssemblage {
@@ -166,7 +166,7 @@ describe('Parameter Decorators - Advanced Usage', () => {
       expect(service.definition.metadata).toBeDefined();
       expect(service.definition.metadata.serviceName).toBe('myService');
       expect(service.definition.metadata.version).toBe('1.0');
-      expect(service.definition.inject).toBeDefined();
+      expect(service.definition.provide).toBeDefined();
     });
   });
 
@@ -182,7 +182,7 @@ describe('Parameter Decorators - Advanced Usage', () => {
       }
 
       @Assemblage({
-        inject: [[DisposableResource]],
+        provide: [[DisposableResource]],
       })
       class ServiceWithDispose implements AbstractAssemblage {
         constructor(
@@ -213,7 +213,7 @@ describe('Parameter Decorators - Advanced Usage', () => {
       }
 
       @Assemblage({
-        inject: [[CacheService]],
+        provide: [[CacheService]],
         global: { config: globalCache }
       })
       class ComplexService implements AbstractAssemblage {

@@ -47,7 +47,7 @@ describe('AOP (Transversals) - Abstract Binding Resolution', () => {
 
     // App registering with [Abstract, Concrete]
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [[AbstractAuditTransversal, ConcreteAuditTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -109,7 +109,7 @@ describe('AOP (Transversals) - Abstract Binding Resolution', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [
         [AbstractLoggingTransversal, ConcreteLoggingTransversal],
         [AbstractValidationTransversal, ConcreteValidationTransversal],
@@ -152,7 +152,7 @@ describe('AOP (Transversals) - Abstract Binding Resolution', () => {
     }
 
     @Assemblage({
-      inject: [[DataService]],
+      provide: [[DataService]],
       engage: [[SimpleAuditTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -207,7 +207,7 @@ describe('AOP (Transversals) - Abstract Binding Resolution', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [[AbstractPointcutTransversal, ConcretePointcutTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -263,7 +263,7 @@ describe('AOP (Transversals) - Abstract Binding Resolution', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [[AbstractCombinedTransversal, ConcreteCombinedTransversal]],
     })
     class App implements AbstractAssemblage {

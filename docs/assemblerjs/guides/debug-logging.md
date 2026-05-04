@@ -197,7 +197,7 @@ class ServiceB extends AbstractServiceB {
 }
 
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractServiceA, ServiceA],
     [AbstractServiceB, ServiceB],
   ],

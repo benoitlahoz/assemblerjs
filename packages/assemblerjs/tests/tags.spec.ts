@@ -18,7 +18,7 @@ describe('Tagged', () => {
     @Assemblage({
       // NB: `ErrorLogInjector` injects `BypassLogger` and they are both tagged as 'tags_test'.
 
-      inject: [[AbstractErrorHandler, ErrorLogInjector]],
+      provide: [[AbstractErrorHandler, ErrorLogInjector]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}

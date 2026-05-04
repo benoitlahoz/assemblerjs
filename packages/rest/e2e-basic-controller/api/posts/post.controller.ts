@@ -7,7 +7,7 @@ import { PostRepository } from './post.repository';
   path: '/post',
 })
 @Assemblage({
-  inject: [[PostRepository]],
+  provide: [[PostRepository]],
 })
 export class PostController implements AbstractAssemblage {
   constructor(private repository: PostRepository) {}

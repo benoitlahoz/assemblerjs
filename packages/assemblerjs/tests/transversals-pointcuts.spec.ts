@@ -30,7 +30,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[AllMethodsTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -63,7 +63,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[CreateOnlyTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -94,7 +94,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[FindMethodsTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -133,7 +133,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[AnyClassTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -167,7 +167,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[MultiPointcutTransversal]],
       })
       class App implements AbstractAssemblage {
@@ -215,7 +215,7 @@ describe('AOP (Transversals) - Pointcut Patterns', () => {
       }
 
       @Assemblage({
-        inject: [[AbstractUserService, UserService]],
+        provide: [[AbstractUserService, UserService]],
         engage: [[ComplexPatternTransversal]],
       })
       class App implements AbstractAssemblage {

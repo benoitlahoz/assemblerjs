@@ -17,7 +17,7 @@ describe('ErrorHandler', () => {
 
   it('should inject dependencies from root assemblage.', () => {
     @Assemblage({
-      inject: [[AbstractLogger, BypassLogger], [ErrorLog]],
+      provide: [[AbstractLogger, BypassLogger], [ErrorLog]],
     })
     class App implements AbstractAssemblage {
       constructor(public error: ErrorLog) {}
@@ -31,7 +31,7 @@ describe('ErrorHandler', () => {
 
   it('should inject nested dependencies from injected assemblage.', () => {
     @Assemblage({
-      inject: [[AbstractErrorHandler, ErrorLogInjector]],
+      provide: [[AbstractErrorHandler, ErrorLogInjector]],
     })
     class App implements AbstractAssemblage {
       constructor(

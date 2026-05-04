@@ -59,7 +59,7 @@ class FileLogger implements AbstractLogger {
 
 // 3. Use the abstraction - bind to concrete implementation
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractLogger, ConsoleLogger], // Bind abstraction to implementation
   ],
 })
@@ -112,7 +112,7 @@ class RedisCache implements AbstractCache {
 
 // Development - use MemoryCache
 @Assemblage({
-  inject: [[AbstractCache, MemoryCache]],
+  provide: [[AbstractCache, MemoryCache]],
 })
 class DevelopmentApp implements AbstractAssemblage {
   constructor(private cache: AbstractCache) {}
@@ -120,7 +120,7 @@ class DevelopmentApp implements AbstractAssemblage {
 
 // Production - use RedisCache
 @Assemblage({
-  inject: [[AbstractCache, RedisCache]],
+  provide: [[AbstractCache, RedisCache]],
 })
 class ProductionApp implements AbstractAssemblage {
   constructor(private cache: AbstractCache) {}
@@ -168,7 +168,7 @@ class MemoryCache implements AbstractCache {
 
 // Use abstractions
 @Assemblage({
-  inject: [
+  provide: [
     [AbstractDataStore, FileDataStore],
     [AbstractCache, MemoryCache],
   ],
@@ -215,7 +215,7 @@ class MockLogger implements AbstractLogger {
 
 // Test
 @Assemblage({
-  inject: [[AbstractLogger, MockLogger]],
+  provide: [[AbstractLogger, MockLogger]],
 })
 class TestApp implements AbstractAssemblage {
   constructor(private logger: AbstractLogger) {}

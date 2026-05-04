@@ -63,7 +63,7 @@ describe('Debug Logger - Phase 1 MVP', () => {
     @Assemblage()
     class DatabaseService implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[DatabaseService]] })
+    @Assemblage({ provide: [[DatabaseService]] })
     class UserService implements AbstractAssemblage {
       constructor(public db: DatabaseService) {}
     }
@@ -340,12 +340,12 @@ describe('Debug Logger - Phase 1 MVP', () => {
     @Assemblage()
     class ServiceA implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[ServiceA]] })
+    @Assemblage({ provide: [[ServiceA]] })
     class ServiceB implements AbstractAssemblage {
       constructor(public a: ServiceA) {}
     }
 
-    @Assemblage({ inject: [[ServiceA], [ServiceB]] })
+    @Assemblage({ provide: [[ServiceA], [ServiceB]] })
     class DuplicateDep implements AbstractAssemblage {
       // ServiceA is injected twice: once directly, once via ServiceB
       // This will trigger duplicate registration during dependency resolution
@@ -418,12 +418,12 @@ describe('Debug Logger - Phase 1 MVP', () => {
     @Assemblage()
     class ServiceA implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[ServiceA]] })
+    @Assemblage({ provide: [[ServiceA]] })
     class ServiceB implements AbstractAssemblage {
       constructor(public a: ServiceA) {}
     }
 
-    @Assemblage({ inject: [[ServiceA], [ServiceB]] })
+    @Assemblage({ provide: [[ServiceA], [ServiceB]] })
     class ServiceWithCircularDep implements AbstractAssemblage {
       // ServiceA is injected twice: once directly, once via ServiceB
       // This causes a circular dependency attempt
@@ -499,7 +499,7 @@ describe('Debug Logger - Phase 1 MVP', () => {
     @Assemblage()
     class ServiceB implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[ServiceA], [ServiceB]] })
+    @Assemblage({ provide: [[ServiceA], [ServiceB]] })
     class App implements AbstractAssemblage {
       constructor(public a: ServiceA, public b: ServiceB) {}
     }
@@ -587,7 +587,7 @@ describe('Debug Logger - Phase 1 MVP', () => {
     // NeverRegisteredService is NOT in the inject array, so it won't be registered
     class NeverRegisteredService implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[RegisteredService]] })
+    @Assemblage({ provide: [[RegisteredService]] })
     class ServiceWithMissingDep implements AbstractAssemblage {
       // @ts-ignore
       constructor(private missingDep: NeverRegisteredService) {}
@@ -624,18 +624,18 @@ describe('Debug Logger - Phase 1 MVP', () => {
     @Assemblage()
     class Dependency implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[Dependency]] })
+    @Assemblage({ provide: [[Dependency]] })
     class ServiceWithPublicDep implements AbstractAssemblage {
       constructor(public dep: Dependency) {}
     }
 
-    @Assemblage({ inject: [[Dependency]] })
+    @Assemblage({ provide: [[Dependency]] })
     class ServiceWithPrivateDep implements AbstractAssemblage {
       // @ts-ignore
       constructor(private dep: Dependency) {}
     }
 
-    @Assemblage({ inject: [[Dependency]] })
+    @Assemblage({ provide: [[Dependency]] })
     class ServiceWithProtectedDep implements AbstractAssemblage {
       constructor(protected dep: Dependency) {}
     }
@@ -670,7 +670,7 @@ describe('Cycle Detector - Early Detection', () => {
     }
 
     @Assemblage({
-      inject: [[ServiceA], [ServiceB]],
+      provide: [[ServiceA], [ServiceB]],
     })
     class App implements AbstractAssemblage {
       constructor(public serviceA: ServiceA) {}
@@ -721,7 +721,7 @@ describe('Cycle Detector - Early Detection', () => {
     }
 
     @Assemblage({
-      inject: [
+      provide: [
         [AbstractServiceA, ServiceA],
         [AbstractServiceB, ServiceB],
       ],
@@ -792,7 +792,7 @@ describe('Cycle Detector - Early Detection', () => {
     }
 
     @Assemblage({
-      inject: [
+      provide: [
         [AbstractServiceA, ServiceA],
         [AbstractServiceB, ServiceB],
         [AbstractServiceC, ServiceC],
@@ -833,17 +833,17 @@ describe('Cycle Detector - Early Detection', () => {
     @Assemblage()
     class DatabaseService implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[DatabaseService]] })
+    @Assemblage({ provide: [[DatabaseService]] })
     class UserRepository implements AbstractAssemblage {
       constructor(public db: DatabaseService) {}
     }
 
-    @Assemblage({ inject: [[UserRepository]] })
+    @Assemblage({ provide: [[UserRepository]] })
     class UserService implements AbstractAssemblage {
       constructor(public repo: UserRepository) {}
     }
 
-    @Assemblage({ inject: [[UserService]] })
+    @Assemblage({ provide: [[UserService]] })
     class App implements AbstractAssemblage {
       constructor(public userService: UserService) {}
     }
@@ -890,12 +890,12 @@ describe('Cycle Detector - Early Detection', () => {
     @Assemblage()
     class DatabaseService implements AbstractAssemblage {}
 
-    @Assemblage({ inject: [[DatabaseService]] })
+    @Assemblage({ provide: [[DatabaseService]] })
     class UserService implements AbstractAssemblage {
       constructor(public db: DatabaseService) {}
     }
 
-    @Assemblage({ inject: [[UserService]] })
+    @Assemblage({ provide: [[UserService]] })
     class App implements AbstractAssemblage {
       constructor(public userService: UserService) {}
     }

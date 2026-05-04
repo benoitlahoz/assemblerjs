@@ -37,7 +37,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[ServiceA], [ServiceB]],
+      provide: [[ServiceA], [ServiceB]],
       engage: [[CallerTrackingTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -103,7 +103,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[InnerService], [OuterService]],
+      provide: [[InnerService], [OuterService]],
       engage: [[CallerTrackingTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -130,7 +130,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       // No engage! No Transversal
     })
     class App implements AbstractAssemblage {
@@ -161,7 +161,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
     })
     class App implements AbstractAssemblage {
       constructor(
@@ -188,7 +188,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
     })
     class App implements AbstractAssemblage {
       constructor(
@@ -236,7 +236,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[TailwindService]],
+      provide: [[TailwindService]],
       engage: [[CallerTrackingTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -298,7 +298,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[UserService]],
+      provide: [[UserService]],
       engage: [[CallerTrackingTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -340,7 +340,7 @@ describe('AOP (Transversals) - Caller Tracking', () => {
     }
 
     @Assemblage({
-      inject: [[ErrorService]],
+      provide: [[ErrorService]],
     })
     class App implements AbstractAssemblage {
       constructor(

@@ -31,7 +31,7 @@ Define an application that depends on the logger:
 
 ```typescript
 @Assemblage({
-  inject: [[Logger]], // Declare dependencies
+  provide: [[Logger]], // Declare dependencies
 })
 class App implements AbstractAssemblage {
   constructor(private logger: Logger) {}
@@ -69,7 +69,7 @@ class Logger implements AbstractAssemblage {
 
 // Define an application that depends on Logger
 @Assemblage({
-  inject: [[Logger]], // Declare dependencies
+  provide: [[Logger]], // Declare dependencies
 })
 class App implements AbstractAssemblage {
   constructor(private logger: Logger) {}

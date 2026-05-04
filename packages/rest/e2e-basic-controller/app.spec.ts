@@ -13,7 +13,7 @@ import { Posts, Users } from './db';
 describe('API Server Application', () => {
   it('should run server.', async () => {
     @Assemblage({
-      inject: [[WebFrameworkAdapter, ExpressAdapter], [ApiController]],
+      provide: [[WebFrameworkAdapter, ExpressAdapter], [ApiController]],
       global: {
         '@assemblerjs/rest': {
           // This is the default adapter, so it can be omitted.

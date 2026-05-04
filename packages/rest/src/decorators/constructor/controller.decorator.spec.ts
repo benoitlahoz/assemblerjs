@@ -293,7 +293,7 @@ class MyController implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[WebFrameworkAdapter, ExpressAdapter], [MyController]],
+  provide: [[WebFrameworkAdapter, ExpressAdapter], [MyController]],
   global: {
     '@assemblerjs/rest': {
       adapter: WebFrameworkAdapter,

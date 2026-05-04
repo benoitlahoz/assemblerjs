@@ -72,7 +72,7 @@ class Database implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[Database]]
+  provide: [[Database]]
 })
 class UserRepository implements AbstractAssemblage {
   private model = UserModel;
@@ -102,7 +102,7 @@ class UserRepository implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[UserRepository]]
+  provide: [[UserRepository]]
 })
 class App implements AbstractAssemblage {
   constructor(private userRepo: UserRepository) {}

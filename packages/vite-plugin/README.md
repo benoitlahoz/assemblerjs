@@ -108,7 +108,7 @@ class Logger {
 }
 
 @Assemblage({
-  inject: [[Logger]]
+  provide: [[Logger]]
 })
 class App {
   constructor(private logger: Logger) {}

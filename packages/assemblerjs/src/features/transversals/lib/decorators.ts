@@ -43,13 +43,13 @@ export function isTransversal(target: any): boolean {
  * }
  * ```
  */
-export function Transversal(definition?: Omit<AssemblageDefinition, 'inject' | 'use'>) {
+export function Transversal(definition?: Omit<AssemblageDefinition, 'inject' | 'provide' | 'use'>) {
   return function <T extends new (...args: any[]) => any>(target: T) {
-    // Validate that definition doesn't have inject or use
+    // Validate that definition doesn't have inject, provide or use
     if (definition) {
-      if ('inject' in definition || 'use' in definition) {
+      if ('inject' in definition || 'provide' in definition || 'use' in definition) {
         throw new Error(
-          `@Transversal on class ${target.name} cannot have inject or use properties. ` +
+          `@Transversal on class ${target.name} cannot have inject, provide or use properties. ` +
           `Aspects receive dependencies through constructor parameters resolved from parent context.`
         );
       }
@@ -63,7 +63,7 @@ export function Transversal(definition?: Omit<AssemblageDefinition, 'inject' | '
       singleton: true,
       ...definition,
       // Explicitly ensure inject and use are empty
-      inject: [],
+      provide: [],
       use: [],
       // Add metadata to identify this as an transversal and preserve advices
       metadata: {

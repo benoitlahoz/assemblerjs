@@ -37,7 +37,7 @@ class Logger implements AbstractAssemblage {
 
 // Example service with dependency
 @Assemblage({
-  inject: [[Logger]]
+  provide: [[Logger]]
 })
 class UserService implements AbstractAssemblage {
   constructor(private logger: Logger) {}
@@ -54,7 +54,7 @@ class UserService implements AbstractAssemblage {
 
 // Example application
 @Assemblage({
-  inject: [[UserService]]
+  provide: [[UserService]]
 })
 // @ts-expect-error No common properties
 class App implements AbstractAssemblage {

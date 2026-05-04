@@ -10,7 +10,7 @@ import { TransientAssemblage } from './fixtures/transient/transient.service';
 describe('Singleton or Transient', () => {
   it('should get a different instance when requiring a transient assemblage.', () => {
     @Assemblage({
-      inject: [[AbstractLogger, BypassLogger], [TransientAssemblage]],
+      provide: [[AbstractLogger, BypassLogger], [TransientAssemblage]],
     })
     class App implements AbstractAssemblage {
       constructor(

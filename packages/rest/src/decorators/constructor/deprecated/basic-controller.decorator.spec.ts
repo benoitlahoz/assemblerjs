@@ -39,7 +39,7 @@ class LeafController implements AbstractAssemblage {
   path: '///info',
 })
 @Assemblage({
-  inject: [[LeafController]],
+  provide: [[LeafController]],
 })
 class SubController implements AbstractAssemblage {
   public path!: string | RegExp;
@@ -70,7 +70,7 @@ class SubController implements AbstractAssemblage {
   path: 'api   ',
 })
 @Assemblage({
-  inject: [[SubController]],
+  provide: [[SubController]],
 })
 class MainController implements AbstractAssemblage {
   public path!: string | RegExp;
@@ -97,7 +97,7 @@ class MainController implements AbstractAssemblage {
 describe('ControllerDecorator', () => {
   it('should create controllers on top of assemblages. ', () => {
     @Assemblage({
-      inject: [[MainController], [WebFrameworkAdapter, ExpressAdapter]],
+      provide: [[MainController], [WebFrameworkAdapter, ExpressAdapter]],
       global: {
         '@assemblerjs/rest': {
           // This is the default adapter, so it can be omitted.

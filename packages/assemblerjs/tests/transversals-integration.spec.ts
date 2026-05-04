@@ -18,7 +18,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should work with multiple aspects on same target', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [LoggingTransversal],
         [ValidationTransversal],
@@ -50,7 +50,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should handle transversal interactions and cross-cutting concerns', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [ValidationTransversal],
         [SecurityTransversal],
@@ -98,7 +98,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
     }
 
     @Assemblage({
-      inject: [
+      provide: [
         [AbstractUserService, UserService],
         [AnotherService],
       ],
@@ -122,7 +122,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should handle errors gracefully through transversal chain', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [ValidationTransversal],
         [LoggingTransversal],
@@ -158,7 +158,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should work with caching transversal', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [[CachingTransversal]],
     })
     class App implements AbstractAssemblage {
@@ -201,7 +201,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
     }
 
     @Assemblage({
-      inject: [[TransientService]],
+      provide: [[TransientService]],
     })
     class App implements AbstractAssemblage {
       constructor(
@@ -219,7 +219,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should work without aspects (no proxy overhead)', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       // No aspects
     })
     class App implements AbstractAssemblage {
@@ -236,7 +236,7 @@ describe('AOP (Transversals) - Integration Tests', () => {
 
   it('should handle complex real-world scenario', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService]],
+      provide: [[AbstractUserService, UserService]],
       engage: [
         [ValidationTransversal],
         [SecurityTransversal],

@@ -18,7 +18,7 @@ describe('Decorators Performance', () => {
       for (let i = 0; i < 5000; i++) {
         @Assemblage({
           singleton: false,
-          inject: [],
+          provide: [],
           events: ['test:event'],
         })
         class ComplexDecoratedService implements AbstractAssemblage {}
@@ -61,7 +61,7 @@ describe('Decorators Performance', () => {
       class BaseService implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[BaseService]],
+        provide: [[BaseService]],
       })
       class MultiDecoratorService implements AbstractAssemblage {
         constructor(
@@ -86,7 +86,7 @@ describe('Decorators Performance', () => {
       // Measure metadata access performance
       for (let i = 0; i < 10000; i++) {
         @Assemblage({
-          inject: [],
+          provide: [],
           events: ['test'],
         })
         class MetadataService implements AbstractAssemblage {}
@@ -101,7 +101,7 @@ describe('Decorators Performance', () => {
       for (let i = 0; i < 5000; i++) {
         @Assemblage({
           singleton: false,
-          inject: [
+          provide: [
             // Simulate complex injection config
             [{ identifier: 'ServiceA' }],
             [{ identifier: 'ServiceB' }],
@@ -123,7 +123,7 @@ describe('Decorators Performance', () => {
       @Assemblage()
       class DepService implements AbstractAssemblage {}
 
-      @Assemblage({ inject: [[DepService]] })
+      @Assemblage({ provide: [[DepService]] })
       class DecoratorApp implements AbstractAssemblage {
         constructor(private dep: DepService) {}
       }

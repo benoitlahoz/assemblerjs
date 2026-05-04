@@ -11,7 +11,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[SingletonService]],
+        provide: [[SingletonService]],
       })
       class ContextApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private singleton: SingletonService) {}
@@ -38,7 +38,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[TransientService]],
+        provide: [[TransientService]],
       })
       class TransientContextApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private transient: TransientService) {}
@@ -67,7 +67,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[EventService]],
+        provide: [[EventService]],
       })
       class ContextEventApp implements AbstractAssemblage {
         private eventReceived = false;
@@ -100,7 +100,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[DirectService]],
+        provide: [[DirectService]],
       })
       class DirectApp implements AbstractAssemblage {
         constructor(private service: DirectService) {}
@@ -124,7 +124,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[ContextService]],
+        provide: [[ContextService]],
       })
       class ContextAccessApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private service: ContextService) {}
@@ -157,7 +157,7 @@ describe('Context Management Performance', () => {
       }
 
       @Assemblage({
-        inject: [[DisposableContextService]],
+        provide: [[DisposableContextService]],
       })
       class ContextDisposeApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private service: DisposableContextService) {}
@@ -187,7 +187,7 @@ describe('Context Management Performance', () => {
       @Assemblage() class S5 implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[S1], [S2], [S3], [S4], [S5]],
+        provide: [[S1], [S2], [S3], [S4], [S5]],
       })
       class MultiContextApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private s1: S1, private s2: S2, private s3: S3, private s4: S4, private s5: S5) {}

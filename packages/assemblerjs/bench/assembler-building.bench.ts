@@ -22,7 +22,7 @@ describe('Assembler Building Performance', () => {
       class ServiceB implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[ServiceA], [ServiceB]],
+        provide: [[ServiceA], [ServiceB]],
       })
       class SmallApp implements AbstractAssemblage {
         constructor(private a: ServiceA, private b: ServiceB) {}
@@ -56,7 +56,7 @@ describe('Assembler Building Performance', () => {
       class S9 implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[S1], [S2], [S3], [S4], [S5], [S6], [S7], [S8], [S9]],
+        provide: [[S1], [S2], [S3], [S4], [S5], [S6], [S7], [S8], [S9]],
       })
       class MediumApp implements AbstractAssemblage {
         constructor(
@@ -99,22 +99,22 @@ describe('Assembler Building Performance', () => {
       @Assemblage()
       class Level5 implements AbstractAssemblage {}
 
-      @Assemblage({ inject: [[Level5]] })
+      @Assemblage({ provide: [[Level5]] })
       class Level4 implements AbstractAssemblage {
         constructor(private l5: Level5) {}
       }
 
-      @Assemblage({ inject: [[Level4]] })
+      @Assemblage({ provide: [[Level4]] })
       class Level3 implements AbstractAssemblage {
         constructor(private l4: Level4) {}
       }
 
-      @Assemblage({ inject: [[Level3]] })
+      @Assemblage({ provide: [[Level3]] })
       class Level2 implements AbstractAssemblage {
         constructor(private l3: Level3) {}
       }
 
-      @Assemblage({ inject: [[Level2]] })
+      @Assemblage({ provide: [[Level2]] })
       class DeepApp implements AbstractAssemblage {
         constructor(private l2: Level2) {}
       }
@@ -139,7 +139,7 @@ describe('Assembler Building Performance', () => {
       @Assemblage() class A10 implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[A1], [A2], [A3], [A4], [A5], [A6], [A7], [A8], [A9], [A10]],
+        provide: [[A1], [A2], [A3], [A4], [A5], [A6], [A7], [A8], [A9], [A10]],
       })
       class WideApp implements AbstractAssemblage {
         constructor(
@@ -173,7 +173,7 @@ describe('Assembler Building Performance', () => {
         getData() { return 'data'; }
       }
 
-      @Assemblage({ inject: [[BaseService]] })
+      @Assemblage({ provide: [[BaseService]] })
       class ComplexService implements AbstractAssemblage {
         constructor(private base: BaseService) {}
         process() { return this.base.getData().toUpperCase(); }

@@ -74,6 +74,64 @@ import { /* type helpers */ } from '@assemblerjs/core';
 import { /* collection helpers */ } from '@assemblerjs/core';
 ```
 
+### Method Decorators
+
+`@assemblerjs/core` also exports method decorators, including `Await`.
+
+```typescript
+import { Await } from '@assemblerjs/core';
+```
+
+`Await` delays method execution until a condition becomes truthy.
+
+```typescript
+Await(
+  condition: string | ((instance?: any) => boolean | Promise<boolean>),
+  interval?: number
+)
+```
+
+- `condition` can be:
+  - the name of a boolean property (example: `'ready'`)
+  - the name of a sync/async method returning a boolean (example: `'isReady'`)
+  - a standalone sync/async function that may ignore the instance parameter
+- `interval` is the polling interval in milliseconds (default: `25`)
+
+Examples:
+
+```typescript
+class Service {
+  ready = false;
+
+  @Await('ready')
+  async start() {
+    return 'started';
+  }
+}
+
+class AnotherService {
+  private connected = false;
+
+  isConnected() {
+    return this.connected;
+  }
+
+  @Await('isConnected', 10)
+  async fetch() {
+    return 'ok';
+  }
+}
+
+let featureEnabled = false;
+
+class ExternalConditionService {
+  @Await(async () => featureEnabled)
+  async run() {
+    return true;
+  }
+}
+```
+
 ## For Contributors
 
 ### Development

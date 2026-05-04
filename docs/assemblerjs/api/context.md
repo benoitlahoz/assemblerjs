@@ -214,7 +214,7 @@ class StoragePlugin implements AbstractAssemblage {
 }
 
 @Assemblage({
-  inject: [[AuthPlugin], [StoragePlugin]],
+  provide: [[AuthPlugin], [StoragePlugin]],
   global: { version: '1.0.0' },
 })
 class PluginManager implements AbstractAssemblage {
@@ -287,7 +287,7 @@ class Task implements AbstractAssemblage {
   }
 }
 
-@Assemblage({ inject: [[Task]] })
+@Assemblage({ provide: [[Task]] })
 class TaskFactory implements AbstractAssemblage {
   constructor(@Context() private context: AssemblerContext) {}
   

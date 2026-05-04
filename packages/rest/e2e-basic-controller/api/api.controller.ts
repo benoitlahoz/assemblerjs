@@ -7,7 +7,7 @@ import { PostController } from './posts/post.controller';
   path: 'api',
 })
 @Assemblage({
-  inject: [[UserController], [PostController]],
+  provide: [[UserController], [PostController]],
 })
 export class ApiController implements AbstractAssemblage {
   constructor(public users: UserController, public posts: PostController) {}

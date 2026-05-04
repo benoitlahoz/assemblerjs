@@ -42,7 +42,7 @@ describe('AOP (Transversals) - Aspects with Dependencies', () => {
 
   it('should support transversals with injected dependencies', async () => {
     @Assemblage({
-      inject: [[AbstractUserService, UserService], [Logger]],
+      provide: [[AbstractUserService, UserService], [Logger]],
       engage: [[LoggingTransversalWithDependency]],
     })
     class App implements AbstractAssemblage {

@@ -52,7 +52,7 @@ const app = Assembler.build(DatabaseService, {
 
 **Configuration sources:**
 - For **entry point**: Configuration passed to `Assembler.build(EntryPoint, config)`
-- For **dependencies**: Base configuration from `@Assemblage({ inject: [..., config] })`
+- For **dependencies**: Base configuration from `@Assemblage({ provide: [..., config] })`
 
 ### @Definition()
 
@@ -178,7 +178,7 @@ You can combine multiple decorators in a single constructor:
 
 ```typescript
 @Assemblage({
-  inject: [[DatabaseService]],
+  provide: [[DatabaseService]],
   use: [['config', { host: 'localhost' }]],
   global: { apiKey: 'secret' },
 })

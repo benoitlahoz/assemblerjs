@@ -12,7 +12,7 @@ describe('Assembler Context Methods', () => {
     }
 
     @Assemblage({
-      inject: [[TestService]],
+      provide: [[TestService]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}
@@ -28,7 +28,7 @@ describe('Assembler Context Methods', () => {
     class TestService implements AbstractAssemblage {}
 
     @Assemblage({
-      inject: [[TestService]],
+      provide: [[TestService]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}
@@ -63,7 +63,7 @@ describe('Assembler Context Methods', () => {
     }
 
     @Assemblage({
-      inject: [[ApiService], [ApiController], [DatabaseService]],
+      provide: [[ApiService], [ApiController], [DatabaseService]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}
@@ -88,7 +88,7 @@ describe('Assembler Context Methods', () => {
     }
 
     @Assemblage({
-      inject: [[ConfigurableService, { setting: 'value' }]],
+      provide: [[ConfigurableService, { setting: 'value' }]],
     })
     class App implements AbstractAssemblage {
       constructor(@Context() public context: AssemblerContext) {}

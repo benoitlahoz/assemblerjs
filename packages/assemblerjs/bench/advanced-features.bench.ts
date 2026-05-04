@@ -21,7 +21,7 @@ describe('Advanced Features Performance', () => {
       }
 
       @Assemblage({
-        inject: [[DatabaseService], [CacheService], [LoggerService]],
+        provide: [[DatabaseService], [CacheService], [LoggerService]],
       })
       class TaggedApp implements AbstractAssemblage {
         constructor(
@@ -64,7 +64,7 @@ describe('Advanced Features Performance', () => {
       }
 
       @Assemblage({
-        inject: [[ApiService]],
+        provide: [[ApiService]],
       })
       class MultiTagApp implements AbstractAssemblage {
         constructor(@Context() private context: any, private api: ApiService) {}
@@ -98,7 +98,7 @@ describe('Advanced Features Performance', () => {
       class Scheduler implements AbstractAssemblage {}
 
       @Assemblage({
-        inject: [[Worker1], [Worker2], [Worker3], [Scheduler]],
+        provide: [[Worker1], [Worker2], [Worker3], [Scheduler]],
       })
       class TagDiscoveryApp implements AbstractAssemblage {
         constructor(@Context() private context: any) {}
@@ -240,7 +240,7 @@ describe('Advanced Features Performance', () => {
         @Assemblage({
           singleton: true,
           tags: ['test', 'metadata'],
-          inject: [],
+          provide: [],
           events: ['meta:event'],
         })
         class MetadataService implements AbstractAssemblage {}
@@ -299,7 +299,7 @@ describe('Advanced Features Performance', () => {
 
       // Business service
       @Assemblage({
-        inject: [[Database], [Cache]],
+        provide: [[Database], [Cache]],
         tags: ['service', 'business'],
       })
       class UserService implements AbstractAssemblage {
@@ -325,7 +325,7 @@ describe('Advanced Features Performance', () => {
 
       // Main application
       @Assemblage({
-        inject: [[UserService], [EventBus], [Cache]],
+        provide: [[UserService], [EventBus], [Cache]],
         tags: ['app', 'main'],
       })
       class FullApp implements AbstractAssemblage {
