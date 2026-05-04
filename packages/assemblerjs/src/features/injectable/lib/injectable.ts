@@ -255,10 +255,10 @@ export class Injectable<T> implements AbstractInjectable<T> {
    * Dispose the injectable by deleting its singleton if exists
    * and deleting all injectable's properties.
    */
-  public dispose(): void {
+  public async dispose(): Promise<void> {
     if (this.singletonInstance) {
       unregisterEvents(this, this.singletonInstance);
-      HookManager.callHook(
+      await HookManager.callHook(
         this.singletonInstance,
         'onDispose',
         this.publicContext,

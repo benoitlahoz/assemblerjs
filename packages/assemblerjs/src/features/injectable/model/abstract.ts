@@ -38,6 +38,6 @@ export abstract class AbstractInjectable<T> {
   public abstract tags: string[];
   public abstract events: string[];
 
-  public abstract dispose(): void;
+  public abstract dispose(): Promise<void>;
   public abstract build(): T;
 }

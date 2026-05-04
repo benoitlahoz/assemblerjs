@@ -101,8 +101,8 @@ export class Assembler extends EventManager implements AbstractAssembler {
     this.injectableManager.setContexts(this.privateContext, this.publicContext);
   }
 
-  public override dispose(): void {
-    this.injectableManager.dispose();
+  public override async dispose(): Promise<void> {
+    await this.injectableManager.dispose();
     clearInstance(this, Assembler as any);
   }
 

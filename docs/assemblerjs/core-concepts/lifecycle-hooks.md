@@ -8,7 +8,7 @@ Dependencies are registered and built recursively from the entry assemblage. The
 2. **`constructor`** - Instance is built with dependencies injected
 3. **`onInit`** - Called when dependency tree is ready (bottom-up)
 4. **`onInited`** - Called after all `onInit` hooks complete (bottom-up, then entry point)
-5. **`onDispose`** - Called during cleanup (top-down: entry point first, then dependencies)
+5. **`onDispose`** - Called during cleanup (reverse dependency order: dependencies first, then dependents)
 
 ## 1. onRegister (Static)
 
@@ -211,12 +211,12 @@ class ServiceC {
 - **Registration & Construction:** Top-down order (entry point registers dependencies first)
 - **Initialization (`onInit`):** Bottom-up order (dependencies A → B → entry point C)
 - **Post-initialization (`onInited`):** Reverse order for dependencies (B → A), then entry point (C)
-- **Disposal (`onDispose`):** Top-down order (entry point first, then dependencies)
+- **Disposal (`onDispose`):** Reverse dependency order (dependencies first, then dependents)
 - **Using `dispose()`:** Must be injected via `@Dispose()` decorator in the entry point constructor
 
 ## Async Hooks
 
-Both `onInit`, `onInited`, and `onDispose` can be async:
+`onInit`, `onInited`, and `onDispose` can be declared as `async`:
 
 ```typescript
 @Assemblage()

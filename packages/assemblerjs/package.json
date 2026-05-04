@@ -1,7 +1,7 @@
 {
   "name": "assemblerjs",
   "description": "A general purpose Dependency Injection library for node and browser.",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
@@ -52,7 +52,7 @@
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme && node scripts/update-performance-badges.mjs"
   },
   "dependencies": {
-    "@assemblerjs/core": "^0.9.6",
+    "@assemblerjs/core": "^0.9.8",
     "reflect-metadata": "0.2.2"
   }
 }

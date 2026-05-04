@@ -146,5 +146,5 @@ export abstract class AbstractAssembler
   ): Concrete<T> | undefined;
   public abstract tagged(...tags: string[]): any[];
   public abstract global(key: string): any | undefined;
-  public abstract override dispose(): void;
+  public abstract override dispose(): Promise<void>;
 }

@@ -244,9 +244,9 @@ export class InjectableManager {
     return res;
   }
 
-  public dispose(): void {
+  public async dispose(): Promise<void> {
     for (const [_, injectable] of this.injectables) {
-      injectable.dispose();
+      await injectable.dispose();
     }
     // Clear resolving stack
     this.resolvingStack.clear();

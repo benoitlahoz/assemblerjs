@@ -52,12 +52,12 @@ export abstract class AbstractAssemblage {
   public abstract onDispose?(
     context: AssemblerContext,
     configuration?: Record<string, any>
-  ): void;
+  ): void | Promise<void>;
 
   /**
    * Dispose the assemblage instance.
    */
-  public abstract dispose?(): void;
+  public abstract dispose?(): void | Promise<void>;
 
   /**
    * When decorated with '@Waitable', waits for a specific property to be truthy before resolving.

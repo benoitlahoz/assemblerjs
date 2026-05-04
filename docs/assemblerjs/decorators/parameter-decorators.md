@@ -97,7 +97,7 @@ const app = Assembler.build(MyService);
 await app.dispose(); // Calls onDispose on all assemblages
 ```
 
-See [Lifecycle Hooks](../core-concepts/lifecycle-hooks.md#4-ondispose) for disposal order.
+See [Lifecycle Hooks](../core-concepts/lifecycle-hooks.md#5-ondispose) for disposal order.
 
 ### @Use(identifier)
 

@@ -288,6 +288,7 @@ describe('Lifecycle Hooks Execution Order', () => {
       '7. AsyncChild inited',
       '8. AsyncParent inited',
       '10. AsyncChild disposed',
+      '9. AsyncParent disposed',
     ]);
   });
 

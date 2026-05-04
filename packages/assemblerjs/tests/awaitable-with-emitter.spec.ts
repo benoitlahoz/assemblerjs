@@ -55,19 +55,23 @@ describe('Awaitable', () => {
 
     const app: App = Assembler.build(App);
 
-    await new Promise<void>((resolve) => {
-      setTimeout(() => {
-        // Messages should have been received in a strict order.
-        expect(ReceivedMessages).toStrictEqual(ExpectedOrderedMessages);
+    await new Promise<void>((resolve, reject) => {
+      setTimeout(async () => {
+        try {
+          // Messages should have been received in a strict order.
+          expect(ReceivedMessages).toStrictEqual(ExpectedOrderedMessages);
 
-        app.dispose();
+          await app.dispose();
 
-        // 'App' should be empty.
-        expect(app.awaitable).toBeUndefined();
-        expect(app.awaiter).toBeUndefined();
-        expect(app.dispose).toBeUndefined();
+          // 'App' should be empty.
+          expect(app.awaitable).toBeUndefined();
+          expect(app.awaiter).toBeUndefined();
+          expect(app.dispose).toBeUndefined();
 
-        resolve();
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
       }, 200);
     });
   });
