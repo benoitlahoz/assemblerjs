@@ -16,9 +16,9 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@assemblerjs/core": "^0.9.6"
+    "@assemblerjs/core": "0.9.8"
   },
   "devDependencies": {
-    "reflect-metadata": "0.2.2"
+    "reflect-metadata": "^0.2.2"
   }
 }

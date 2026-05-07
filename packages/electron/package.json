@@ -26,11 +26,12 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@assemblerjs/core": "^0.9.6",
-    "assemblerjs": "0.9.7",
-    "electron": "38.4.0"
+    "@assemblerjs/core": "0.9.8",
+    "assemblerjs": "1.2.1",
+    "electron": "38.4.0",
+    "@electron-toolkit/preload": "^3.0.2"
   },
   "devDependencies": {
-    "reflect-metadata": "0.2.2"
+    "reflect-metadata": "^0.2.2"
   }
 }

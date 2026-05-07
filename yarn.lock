@@ -10,20 +10,6 @@
     "@jridgewell/gen-mapping" "^0.3.5"
     "@jridgewell/trace-mapping" "^0.3.24"
 
-"@assemblerjs/core@0.9.1":
-  version "0.9.1"
-  resolved "https://registry.yarnpkg.com/@assemblerjs/core/-/core-0.9.1.tgz#d836938f6b03def60af99e32b5395ccbf4dc8acd"
-  integrity sha512-cCmwRGqCqVHes2DUz9EuFHWvOcFjTQ1hJrQIRUTtg7Gv9ceAltfb/cp2j5BHeEyIb3TY3H+/iT80u4EgPx34Ew==
-  dependencies:
-    error-polyfill "^0.1.3"
-
-"@assemblerjs/core@^0.8.6":
-  version "0.8.31"
-  resolved "https://registry.yarnpkg.com/@assemblerjs/core/-/core-0.8.31.tgz#99f8c70320be95ebe22221583c29a135c7b1f39a"
-  integrity sha512-A+F5HG9gUmkrIb9SVn1pmnbaoPDv+Jkzs3BnZfNJK55++4F5p0q7cItFU6hN1N30eDf2Fihk0OhDauobB0GUDw==
-  dependencies:
-    error-polyfill "^0.1.3"
-
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.10.4", "@babel/code-frame@^7.27.1":
   version "7.27.1"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.27.1.tgz#200f715e66d52a23b221a9435534a91cc13ad5be"
@@ -1518,7 +1504,7 @@
   resolved "https://registry.yarnpkg.com/@polka/url/-/url-1.0.0-next.29.tgz#5a40109a1ab5f84d6fd8fc928b19f367cbe7e7b1"
   integrity sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==
 
-"@rollup/plugin-swc@0.4.0", "@rollup/plugin-swc@^0.4.0":
+"@rollup/plugin-swc@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@rollup/plugin-swc/-/plugin-swc-0.4.0.tgz#fb637e505dfd4506bd92258e8fc616d348a212be"
   integrity sha512-oAtqXa8rOl7BOK1Rz3rRxI+LIL53S9SqO2KSq2UUUzWgOgXg6492Jh5mL2mv/f9cpit8zFWdwILuVeozZ0C8mg==
@@ -2895,13 +2881,6 @@ asn1@~0.2.3:
   dependencies:
     safer-buffer "~2.1.0"
 
-assemblerjs@0.9.7, assemblerjs@^0.9.1:
-  version "0.9.7"
-  resolved "https://registry.yarnpkg.com/assemblerjs/-/assemblerjs-0.9.7.tgz#9aadad0c3a38fc32591573cb8785e690e9b4c6f5"
-  integrity sha512-u24LNuBqDLjNMe+PaKgTyd8SkxIDrWyZdEjyCTMeD9jlUpVPe8SoExXcju+kzA8549qpXf5xHSrj53MRGzjTNg==
-  dependencies:
-    "@assemblerjs/core" "0.9.1"
-
 assert-plus@1.0.0, assert-plus@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-1.0.0.tgz#f12e0f3c5d77b0b1cdd9146942e4e96c1e4dd525"
@@ -3310,12 +3289,12 @@ check-error@^2.1.1:
   resolved "https://registry.yarnpkg.com/check-error/-/check-error-2.1.1.tgz#87eb876ae71ee388fa0471fe423f494be1d96ccc"
   integrity sha512-OAlb+T7V4Op9OwdkjmguYRqncdlx5JiofwOAUkmTF+jNdHwzTaTs4sRAGpzLF3oOz5xAyDGrPgeIDFQmDOTiJw==
 
-class-transformer@0.5.1, class-transformer@^0.5.1:
+class-transformer@^0.5.1:
   version "0.5.1"
   resolved "https://registry.yarnpkg.com/class-transformer/-/class-transformer-0.5.1.tgz#24147d5dffd2a6cea930a3250a677addf96ab336"
   integrity sha512-SQa1Ws6hUbfC98vKGxZH3KFY0Y1lm5Zm0SY8XX9zbK7FJCyVEac3ATW0RIpwzW+oOfmHE5PMPufDG9hCfoEOMw==
 
-class-validator@0.14.2, class-validator@^0.14.2:
+class-validator@^0.14.2:
   version "0.14.2"
   resolved "https://registry.yarnpkg.com/class-validator/-/class-validator-0.14.2.tgz#a3de95edd26b703e89c151a2023d3c115030340d"
   integrity sha512-3kMVRF2io8N8pY1IFIXlho9r8IPUUIfHe2hYVtiebvAzU2XeQFXTv+XI4WX+TnXmtwXMDcjngcpkiPM0O9PvLw==
@@ -3924,7 +3903,7 @@ error-ex@^1.3.1:
   dependencies:
     is-arrayish "^0.2.1"
 
-error-polyfill@0.1.3, error-polyfill@^0.1.3:
+error-polyfill@^0.1.3:
   version "0.1.3"
   resolved "https://registry.yarnpkg.com/error-polyfill/-/error-polyfill-0.1.3.tgz#df848b61ad8834f7a5db69a70b9913df86721d15"
   integrity sha512-XHJk60ufE+TG/ydwp4lilOog549iiQF2OAPhkk9DdiYWMrltz5yhDz/xnKuenNwP7gy3dsibssO5QpVhkrSzzg==
@@ -6708,7 +6687,7 @@ real-require@^0.2.0:
   resolved "https://registry.yarnpkg.com/real-require/-/real-require-0.2.0.tgz#209632dea1810be2ae063a6ac084fee7e33fba78"
   integrity sha512-57frrGM/OCTLqLOAh0mhVA9VBMHd+9U7Zb2THMGdBUoZVOtGbJzjxsYGDJ3A9AYYCP4hn6y1TVbaOfzWtm5GFg==
 
-reflect-metadata@0.2.2, reflect-metadata@^0.2.2:
+reflect-metadata@^0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/reflect-metadata/-/reflect-metadata-0.2.2.tgz#400c845b6cba87a21f2c65c4aeb158f4fa4d9c5b"
   integrity sha512-urBwgfrvVP/eAyXx4hluJivBKzuEbSQs9rKWCrCkbSxNv8mxPcUZKeuoF3Uy4mJl3Lwprp6yy5/39VWigZ4K6Q==

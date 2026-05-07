@@ -17,14 +17,14 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
-    "@assemblerjs/core": "^0.9.6",
+    "@assemblerjs/core": "0.9.8",
     "@assemblerjs/dto": "0.8.8",
-    "assemblerjs": "0.9.7",
+    "assemblerjs": "1.2.1",
     "express": "5.1.0"
   },
   "devDependencies": {
-    "reflect-metadata": "0.2.2",
-    "class-validator": "0.14.2",
+    "reflect-metadata": "^0.2.2",
+    "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.6"
   }
 }

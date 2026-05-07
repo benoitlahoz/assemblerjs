@@ -52,7 +52,7 @@
     "coverage": "vitest run --coverage --passWithNoTests && istanbul-badges-readme && node scripts/update-performance-badges.mjs"
   },
   "dependencies": {
-    "@assemblerjs/core": "^0.9.8",
-    "reflect-metadata": "0.2.2"
+    "@assemblerjs/core": "0.9.8",
+    "reflect-metadata": "^0.2.2"
   }
 }
