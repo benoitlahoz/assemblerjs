@@ -52,8 +52,8 @@ export class ExpressAdapter implements AbstractHttpAdapter {
     this.close();
   }
 
-  public listen(port: number): void {
-    this.httpServer.listen(port);
+  public listen(port: number, host = '0.0.0.0', backlog?: number): void {
+    this.httpServer.listen(port, host, backlog);
   }
 
   public close(): void {

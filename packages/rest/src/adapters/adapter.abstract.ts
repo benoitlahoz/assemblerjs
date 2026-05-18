@@ -34,7 +34,11 @@ export abstract class AbstractHttpAdapter extends AbstractAssemblage {
   ): void;
 
   /** Start listening on the given port. */
-  abstract listen(port: number): void | Promise<void>;
+  abstract listen(
+    port: number,
+    host?: string,
+    backlog?: number
+  ): void | Promise<void>;
 
   /** Stop the server and release the port. */
   abstract close(): void | Promise<void>;

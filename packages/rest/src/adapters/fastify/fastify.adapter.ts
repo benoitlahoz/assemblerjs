@@ -74,8 +74,12 @@ export class FastifyAdapter implements AbstractHttpAdapter {
     this.close();
   }
 
-  public async listen(port: number): Promise<void> {
-    await this.app.listen({ port, host: '0.0.0.0' });
+  public async listen(
+    port: number,
+    host = '0.0.0.0',
+    backlog?: number
+  ): Promise<void> {
+    await this.app.listen({ port, host, backlog });
   }
 
   public async close(): Promise<void> {
