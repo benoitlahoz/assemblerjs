@@ -1,12 +1,12 @@
-import type { Request, Response } from 'express';
+import type { HttpRequest, HttpResponse } from '@/http.types';
 import { AssemblerContext } from 'assemblerjs';
 import { MetadataStorage } from '@/metadata/metadata-storage';
 
 export const createCustomParameterDecorator =
   (
     fn: (
-      req: Request,
-      res: Response,
+      req: HttpRequest,
+      res: HttpResponse,
       context: AssemblerContext,
       identifier: string | undefined
     ) => any | Promise<any>

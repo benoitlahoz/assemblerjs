@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { HttpRequest, HttpResponse } from '@/http.types';
 import { DecoratedParameterPrivateKeys } from '@/decorators/parameters/parameters-decorators.keys';
 import { AssemblerContext } from 'assemblerjs';
 
@@ -53,8 +53,8 @@ export type CustomParameterMetadata = {
   [property: string]: {
     [index: number]: {
       fn: (
-        req: Request,
-        res: Response,
+        req: HttpRequest,
+        res: HttpResponse,
         context: AssemblerContext,
         identifier: string | undefined
       ) => void;

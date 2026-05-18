@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { HttpRequest, HttpResponse } from '@/http.types';
 import { AssemblerContext } from 'assemblerjs';
 import { ControllerPrivateKeys } from '@/decorators/constructor/controller.keys';
 import { DecoratedParameterPrivateKeys } from '@/decorators/parameters/parameters-decorators.keys';
@@ -12,7 +12,7 @@ import type {
   RouteMetadata,
 } from './metadata.types';
 
-class _MetadataStorage {
+export class MetadataStorageImpl {
   ////////////////////////////////////////////////////////////////////////////
   //
   // Routes
@@ -356,8 +356,8 @@ class _MetadataStorage {
     propertyKey: string | symbol | undefined,
     index: number,
     fn: (
-      req: Request,
-      res: Response,
+      req: HttpRequest,
+      res: HttpResponse,
       context: AssemblerContext,
       identifier: string | undefined
     ) => void,
@@ -404,4 +404,4 @@ class _MetadataStorage {
   }
 }
 
-export const MetadataStorage = new _MetadataStorage();
+export const MetadataStorage = new MetadataStorageImpl();

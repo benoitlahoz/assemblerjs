@@ -14,10 +14,12 @@ import express, {
   type NextFunction,
   type Response,
 } from 'express';
-import cookieParser from 'cookie-parser';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const cookieParser: (options?: Record<string, any>) => any = require('cookie-parser');
 import { Controller } from './controller.decorator';
 import { Get, Post } from '../methods/http-methods.decorators';
-import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
+import { AbstractHttpAdapter } from '@/adapters';
+import { ExpressAdapter } from '@/adapters/express';
 import { HttpStatus, Middleware, Redirect } from '../methods';
 import {
   Body,
@@ -36,6 +38,7 @@ import {
 import { NotFoundError } from '@/errors';
 import { HttpHeaders } from '../methods/http-headers.decorator';
 import { createCustomParameterDecorator } from '../parameters/create-custom-parameter-decorator';
+import type { HttpRequest, HttpResponse } from '@/http.types';
 
 const beforeMiddleware = vi.fn(
   (_req: Request, _res: Response, next: NextFunction): void => {
@@ -53,19 +56,19 @@ const afterMiddleware = vi.fn((result: any, req: Request, res: Response) => {
 
 const OriginalUrl = createCustomParameterDecorator(
   (
-    req: Request,
-    _res: Response,
+    req: HttpRequest,
+    _res: HttpResponse,
     _context: AssemblerContext,
     _identifier?: string
   ) => {
-    return req.originalUrl;
+    return req.path;
   }
 );
 
 const CustomParam = createCustomParameterDecorator(
   (
-    req: Request,
-    _res: Response,
+    req: HttpRequest,
+    _res: HttpResponse,
     _context: AssemblerContext,
     identifier: string | undefined
   ) => {
@@ -75,8 +78,8 @@ const CustomParam = createCustomParameterDecorator(
 
 const UserById = createCustomParameterDecorator(
   async (
-    req: Request,
-    _res: Response,
+    req: HttpRequest,
+    _res: HttpResponse,
     _context: AssemblerContext,
     identifier: string | undefined
   ) => {
@@ -293,16 +296,11 @@ class MyController implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[WebFrameworkAdapter, ExpressAdapter], [MyController]],
-  global: {
-    '@assemblerjs/rest': {
-      adapter: WebFrameworkAdapter,
-    },
-  },
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [MyController]],
 })
 class App {
   constructor(
-    public server: WebFrameworkAdapter,
+    public server: AbstractHttpAdapter,
     public myController: MyController
   ) {}
   public async onInit(): Promise<void> {
@@ -513,5 +511,107 @@ describe('Controller', () => {
       id: '1',
       name: 'User 1',
     });
+  });
+});
+
+// --- Nested Controller Tests ---
+
+@Controller({ path: '/orders' })
+@Assemblage()
+class OrdersController implements AbstractAssemblage {
+  public path!: string | RegExp;
+
+  @Get('/')
+  public getOrders(): { orders: string[] } {
+    return { orders: ['order1', 'order2'] };
+  }
+
+  @Get('/:id')
+  public getOrder(@Param('id') id: string): { id: string; name: string } {
+    return { id, name: `Order ${id}` };
+  }
+}
+
+@Controller({ path: '/users' })
+@Assemblage()
+class UsersController implements AbstractAssemblage {
+  public path!: string | RegExp;
+
+  @Get('/')
+  public getUsers(): { users: string[] } {
+    return { users: ['alice', 'bob'] };
+  }
+}
+
+@Controller({ path: '/api/v1' })
+@Assemblage({
+  provide: [[OrdersController], [UsersController]],
+})
+class ApiV1Controller implements AbstractAssemblage {
+  public path!: string | RegExp;
+
+  constructor(
+    public orders: OrdersController,
+    public users: UsersController
+  ) {}
+
+  @Get('/status')
+  public status(): { ok: boolean; version: string } {
+    return { ok: true, version: '1.0' };
+  }
+}
+
+@Assemblage({
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiV1Controller]],
+})
+class NestedApp implements AbstractAssemblage {
+  constructor(
+    public server: AbstractHttpAdapter,
+    public api: ApiV1Controller
+  ) {}
+
+  public async onInit(): Promise<void> {
+    (this.server.app as any).use(express.json());
+  }
+
+  public async onInited(): Promise<void> {
+    this.server.listen(9999);
+  }
+}
+
+describe('Controller - Nested path propagation', () => {
+  const nestedApp = Assembler.build(NestedApp);
+
+  it('should propagate parent path to child controllers', () => {
+    expect(nestedApp.api.orders.path).toBe('/api/v1/orders');
+    expect(nestedApp.api.users.path).toBe('/api/v1/users');
+  });
+
+  it('should register parent own routes at correct path', async () => {
+    const res = await fetch('http://localhost:9999/api/v1/status');
+    expect(res.ok).toBeTruthy();
+    const data = await res.json();
+    expect(data).toStrictEqual({ ok: true, version: '1.0' });
+  });
+
+  it('should register child list route at propagated path', async () => {
+    const res = await fetch('http://localhost:9999/api/v1/orders');
+    expect(res.ok).toBeTruthy();
+    const data = await res.json();
+    expect(data).toStrictEqual({ orders: ['order1', 'order2'] });
+  });
+
+  it('should register child parametric route at propagated path', async () => {
+    const res = await fetch('http://localhost:9999/api/v1/orders/42');
+    expect(res.ok).toBeTruthy();
+    const data = await res.json();
+    expect(data).toStrictEqual({ id: '42', name: 'Order 42' });
+  });
+
+  it('should register second child routes at propagated path', async () => {
+    const res = await fetch('http://localhost:9999/api/v1/users');
+    expect(res.ok).toBeTruthy();
+    const data = await res.json();
+    expect(data).toStrictEqual({ users: ['alice', 'bob'] });
   });
 });

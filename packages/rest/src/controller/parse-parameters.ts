@@ -1,4 +1,4 @@
-import type { Request, Response } from 'express';
+import type { HttpRequest, HttpResponse, HttpNextFunction } from '@/http.types';
 import { DecoratedParameterPrivateKeys } from '@/decorators/parameters/parameters-decorators.keys';
 import { MetadataStorage } from '@/metadata/metadata-storage';
 import { switchCase } from '@assemblerjs/core';
@@ -151,13 +151,13 @@ const parseCookiesDecorator = (
 const parseCustomDecorator = async (
   args: any[],
   target: any,
-  req: Request,
-  res: Response,
+  req: HttpRequest,
+  res: HttpResponse,
   identifier: string | symbol,
   index: string | number,
   fn: (
-    req: Request,
-    res: Response,
+    req: HttpRequest,
+    res: HttpResponse,
     context: AssemblerContext,
     identifier?: string | symbol
   ) => void
@@ -185,14 +185,14 @@ const switchDecorator = async (
   index: string | number,
   fn:
     | ((
-        req: Request,
-        res: Response,
+        req: HttpRequest,
+        res: HttpResponse,
         context: AssemblerContext,
         identifier?: string | symbol
       ) => void)
     | undefined,
-  req: Request,
-  res: Response,
+  req: HttpRequest,
+  res: HttpResponse,
   next: any
 ) =>
   switchCase({
@@ -238,9 +238,9 @@ export const parseParametersDecorators = async (
   args: any[],
   target: any,
   handlerName: string | symbol,
-  req: Request,
-  res: Response,
-  next: any
+  req: HttpRequest,
+  res: HttpResponse,
+  next: HttpNextFunction
 ): Promise<any[]> => {
   for (const typeKey of Object.values(DecoratedParameterPrivateKeys)) {
     if (typeKey === DecoratedParameterPrivateKeys.Custom) {
