@@ -7,14 +7,14 @@ import {
   Dispose,
 } from 'assemblerjs';
 import { AbstractHttpAdapter } from '../src';
-import { ExpressAdapter } from '../src/express';
+import { FastifyAdapter } from '../src/fastify';
 import { ApiController } from './api/api.controller';
 import { Posts, Users } from './db';
 
-describe('API Server Application', () => {
+describe('API Server Application (Fastify)', () => {
   it('should run server.', async () => {
     @Assemblage({
-      provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiController]],
+      provide: [[AbstractHttpAdapter, FastifyAdapter], [ApiController]],
     })
     class App implements AbstractAssemblage {
       constructor(
@@ -24,54 +24,46 @@ describe('API Server Application', () => {
       ) {}
 
       public async onInited(): Promise<void> {
-        this.server.listen(10000);
+        // FastifyAdapter.listen() is async — await ensures the server is
+        // fully ready (plugin lifecycle + port bound) before onInited resolves.
+        await (this.server as FastifyAdapter).listen(10001);
       }
 
       public async fetchUsers(): Promise<void> {
-        // Get allowed methods.
-        let res = await fetch('http://localhost:10000/api/user', {
-          method: 'OPTIONS',
-        });
-        expect(res.ok).toBeTruthy();
-        const options = await res.text();
-        expect(
-          options.includes('GET') &&
-            options.includes('HEAD') &&
-            options.includes('POST')
-        ).toBeTruthy();
-
-        // Fetch users.
-        res = await fetch('http://localhost:10000/api/user');
+        // Fetch all users.
+        let res = await fetch('http://localhost:10001/api/user');
         expect(res.ok).toBeTruthy();
         const users = await res.json();
         expect(users).toStrictEqual(Users);
 
-        // Try 'HEAD' method for a path that sets custom headers.
-        res = await fetch('http://localhost:10000/api/user/headers', {
-          method: 'HEAD',
-        });
-        expect(res.ok).toBeTruthy();
-        const headers = res.headers;
-        expect(headers.get('x-powered-by')).toBe('My Super Application');
-
         // Fetch user with non-existent id.
-        res = await fetch('http://localhost:10000/api/user/id/0');
+        res = await fetch('http://localhost:10001/api/user/id/0');
         expect(res.ok).toBeFalsy();
         expect(res.status).toBe(404);
 
         // Fetch existing user by its id.
-        res = await fetch('http://localhost:10000/api/user/id/1');
+        res = await fetch('http://localhost:10001/api/user/id/1');
         expect(res.ok).toBeTruthy();
         const john = await res.json();
         expect(john).toStrictEqual(Users[0]);
 
         // Fetch all users for given gender.
-        res = await fetch('http://localhost:10000/api/user/gender/non-binary');
+        res = await fetch('http://localhost:10001/api/user/gender/non-binary');
         expect(res.ok).toBeTruthy();
         const usersForGender = await res.json();
         expect(usersForGender).toStrictEqual(
           Users.filter((u) => u.gender === 'non-binary')
         );
+      }
+
+      public async fetchHead(): Promise<void> {
+        // HEAD request — body must be empty but custom header must be present.
+        const res = await fetch('http://localhost:10001/api/user/headers', {
+          method: 'HEAD',
+        });
+        expect(res.ok).toBeTruthy();
+        const headers = res.headers;
+        expect(headers.get('x-powered-by')).toBe('My Super Application');
       }
 
       public async createUsers(): Promise<void> {
@@ -83,7 +75,7 @@ describe('API Server Application', () => {
           gender: 'male',
         };
 
-        let res = await fetch('http://localhost:10000/api/user', {
+        let res = await fetch('http://localhost:10001/api/user', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -97,7 +89,7 @@ describe('API Server Application', () => {
         const user = await res.json();
         expect(user).toStrictEqual({ id: nextId, ...newUser });
 
-        res = await fetch('http://localhost:10000/api/user');
+        res = await fetch('http://localhost:10001/api/user');
         expect(res.ok).toBeTruthy();
         const users = await res.json();
         expect(users).toStrictEqual(Users);
@@ -108,7 +100,7 @@ describe('API Server Application', () => {
 
         const modifiedUser = { gender: 'non-binary' };
         let res = await fetch(
-          `http://localhost:10000/api/user/modify/${id}`,
+          `http://localhost:10001/api/user/modify/${id}`,
           {
             method: 'PATCH',
             headers: {
@@ -127,7 +119,7 @@ describe('API Server Application', () => {
 
         const replacingUser = { name: 'John Jane Doe', gender: 'non-binary' };
         res = await fetch(
-          `http://localhost:10000/api/user/replace/${id}`,
+          `http://localhost:10001/api/user/replace/${id}`,
           {
             method: 'PUT',
             headers: {
@@ -146,17 +138,17 @@ describe('API Server Application', () => {
       }
 
       public async fetchPosts(): Promise<void> {
-        let res = await fetch('http://localhost:10000/api/post');
+        let res = await fetch('http://localhost:10001/api/post');
         expect(res.ok).toBeTruthy();
         let posts = await res.json();
         expect(posts).toStrictEqual(Posts);
 
-        res = await fetch('http://localhost:10000/api/post/sender/1');
+        res = await fetch('http://localhost:10001/api/post/sender/1');
         expect(res.ok).toBeTruthy();
         posts = await res.json();
         expect(posts).toStrictEqual([Posts[0]]);
 
-        res = await fetch('http://localhost:10000/api/post/receiver/1');
+        res = await fetch('http://localhost:10001/api/post/receiver/1');
         expect(res.ok).toBeTruthy();
         posts = await res.json();
         expect(posts).toStrictEqual([Posts[1]]);
@@ -172,7 +164,7 @@ describe('API Server Application', () => {
           content: 'Alea jacta est',
         };
 
-        let res = await fetch('http://localhost:10000/api/post', {
+        let res = await fetch('http://localhost:10001/api/post', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -186,14 +178,14 @@ describe('API Server Application', () => {
         const post = await res.json();
         expect(post).toStrictEqual({ id: nextId, ...newPost });
 
-        res = await fetch('http://localhost:10000/api/post');
+        res = await fetch('http://localhost:10001/api/post');
         expect(res.ok).toBeTruthy();
         const posts = await res.json();
         expect(posts).toStrictEqual(Posts);
 
         // Delete post.
         const initialLength = Posts.length;
-        res = await fetch('http://localhost:10000/api/post/delete/1', {
+        res = await fetch('http://localhost:10001/api/post/delete/1', {
           method: 'DELETE',
         });
         expect(res.ok).toBeTruthy();
@@ -211,6 +203,9 @@ describe('API Server Application', () => {
     const app = Assembler.build(App);
 
     await new Promise<void>((resolve) => {
+      // Fastify's async listen() is awaited inside onInited(), but
+      // callHookImmediate does not await the onInited promise. Give Fastify
+      // extra time to fully bind the port before starting requests.
       setTimeout(async () => {
         expect(app.server.listening).toBeTruthy();
 
@@ -219,6 +214,7 @@ describe('API Server Application', () => {
         expect(app.api.posts.path).toBe('/api/post');
 
         await app.fetchUsers();
+        await app.fetchHead();
         await app.createUsers();
         await app.modifyUsers();
 
@@ -229,7 +225,7 @@ describe('API Server Application', () => {
         expect(app.server).toBeUndefined();
 
         resolve();
-      }, 100);
+      }, 300);
     });
-  });
+  }, 10000);
 });

@@ -52,10 +52,15 @@ export default defineConfig(() => ({
       transformMixedEsModules: true,
     },
     lib: {
-      // Could also be a dictionary or array of multiple entry points.
-      entry: 'src/index.ts',
-      name: 'assemnblerjs-rest',
-      fileName: 'index',
+      // Multiple entry points — one per sub-path export
+      entry: {
+        index: 'src/index.ts',
+        express: 'src/express.ts',
+        fastify: 'src/fastify.ts',
+      },
+      name: 'assemblerjs-rest',
+      fileName: (format, entryName) =>
+        `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
       // Change this to the formats you want to support.
       // Don't forget to update your package.json as well.
       formats: ['es' as const, 'cjs' as const],
@@ -64,12 +69,14 @@ export default defineConfig(() => ({
       // External packages that should not be bundled into your library.
       external: [
         'express',
+        'fastify',
         'cookie-parser',
         'body-parser',
         'assemblerjs',
         '@assemblerjs/core',
         '@assemblerjs/dto',
         'class-validator',
+        'node:http',
       ],
     },
     minify: 'terser' as const,

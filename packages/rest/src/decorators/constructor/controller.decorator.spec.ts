@@ -18,7 +18,8 @@ import express, {
 const cookieParser: (options?: Record<string, any>) => any = require('cookie-parser');
 import { Controller } from './controller.decorator';
 import { Get, Post } from '../methods/http-methods.decorators';
-import { ExpressAdapter, AbstractHttpAdapter } from '@/adapters';
+import { AbstractHttpAdapter } from '@/adapters';
+import { ExpressAdapter } from '@/adapters/express';
 import { HttpStatus, Middleware, Redirect } from '../methods';
 import {
   Body,

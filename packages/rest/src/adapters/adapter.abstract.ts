@@ -1,3 +1,4 @@
+import type { Server } from 'node:http';
 import { AbstractAssemblage } from 'assemblerjs';
 import type {
   HttpMiddleware,
@@ -7,6 +8,12 @@ import type {
 } from '@/http.types';
 
 export abstract class AbstractHttpAdapter extends AbstractAssemblage {
+  /**
+   * The underlying Node.js `http.Server` instance.
+   * Always defined after construction — before `listen()` is called.
+   */
+  abstract readonly httpServer: Server;
+
   /**
    * Register a route with the underlying HTTP framework.
    *
@@ -25,4 +32,13 @@ export abstract class AbstractHttpAdapter extends AbstractAssemblage {
       next: HttpNextFunction
     ) => Promise<void>
   ): void;
+
+  /** Start listening on the given port. */
+  abstract listen(port: number): void | Promise<void>;
+
+  /** Stop the server and release the port. */
+  abstract close(): void | Promise<void>;
+
+  /** Whether the server is currently listening. */
+  abstract get listening(): boolean;
 }

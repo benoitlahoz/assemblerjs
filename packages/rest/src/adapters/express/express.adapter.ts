@@ -1,4 +1,4 @@
-import { Server } from 'node:http';
+import { createServer, type Server } from 'node:http';
 import type { Application } from 'express';
 import express from 'express';
 import { Assemblage } from 'assemblerjs';
@@ -8,19 +8,23 @@ import type {
   HttpResponse,
   HttpNextFunction,
 } from '@/http.types';
-import { AbstractHttpAdapter } from './adapter.abstract';
-import { HttpAdapter } from './http-adapter.decorator';
+import { AbstractHttpAdapter } from '../adapter.abstract';
+import { HttpAdapter } from '../http-adapter.decorator';
 
 @HttpAdapter()
 @Assemblage()
 export class ExpressAdapter implements AbstractHttpAdapter {
   public readonly app: Application;
-  private server?: Server;
+  public readonly httpServer: Server;
 
   public use: Application['use'];
 
   constructor() {
     this.app = express();
+    // Created in the constructor so Socket.IO (and other consumers) can attach
+    // to the http.Server before listen() is called. Routes are registered on
+    // this.app, not on httpServer, so order doesn't matter.
+    this.httpServer = createServer(this.app);
 
     this.use = this.app.use.bind(this.app);
 
@@ -48,16 +52,16 @@ export class ExpressAdapter implements AbstractHttpAdapter {
     this.close();
   }
 
-  public listen(port: number) {
-    this.server = this.app.listen(port);
+  public listen(port: number): void {
+    this.httpServer.listen(port);
   }
 
-  public close() {
-    this.server?.close();
+  public close(): void {
+    this.httpServer.close();
   }
 
   public get listening(): boolean {
-    return this.server?.listening || false;
+    return this.httpServer?.listening ?? false;
   }
 
   public get routes(): string[] {
