@@ -6,23 +6,23 @@ import {
   Assembler,
   Dispose,
 } from 'assemblerjs';
-import { WebFrameworkAdapter, ExpressAdapter } from '../src';
+import { AbstractHttpAdapter, ExpressAdapter } from '../src';
 import { ApiController } from './api/api.controller';
 import { Posts, Users } from './db';
 
 describe('API Server Application', () => {
   it('should run server.', async () => {
     @Assemblage({
-      provide: [[WebFrameworkAdapter, ExpressAdapter], [ApiController]],
+      provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiController]],
       global: {
         '@assemblerjs/rest': {
-          adapter: WebFrameworkAdapter,
+          adapter: AbstractHttpAdapter,
         },
       },
     })
     class App implements AbstractAssemblage {
       constructor(
-        public server: WebFrameworkAdapter,
+        public server: AbstractHttpAdapter,
         public api: ApiController,
         @Dispose() public dispose: () => void
       ) {}

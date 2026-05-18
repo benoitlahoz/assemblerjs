@@ -18,7 +18,7 @@ import express, {
 const cookieParser: (options?: Record<string, any>) => any = require('cookie-parser');
 import { Controller } from './controller.decorator';
 import { Get, Post } from '../methods/http-methods.decorators';
-import { ExpressAdapter, WebFrameworkAdapter } from '@/adapters';
+import { ExpressAdapter, AbstractHttpAdapter } from '@/adapters';
 import { HttpStatus, Middleware, Redirect } from '../methods';
 import {
   Body,
@@ -295,16 +295,16 @@ class MyController implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[WebFrameworkAdapter, ExpressAdapter], [MyController]],
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [MyController]],
   global: {
     '@assemblerjs/rest': {
-      adapter: WebFrameworkAdapter,
+      adapter: AbstractHttpAdapter,
     },
   },
 })
 class App {
   constructor(
-    public server: WebFrameworkAdapter,
+    public server: AbstractHttpAdapter,
     public myController: MyController
   ) {}
   public async onInit(): Promise<void> {
@@ -566,16 +566,16 @@ class ApiV1Controller implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[WebFrameworkAdapter, ExpressAdapter], [ApiV1Controller]],
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiV1Controller]],
   global: {
     '@assemblerjs/rest': {
-      adapter: WebFrameworkAdapter,
+      adapter: AbstractHttpAdapter,
     },
   },
 })
 class NestedApp implements AbstractAssemblage {
   constructor(
-    public server: WebFrameworkAdapter,
+    public server: AbstractHttpAdapter,
     public api: ApiV1Controller
   ) {}
 

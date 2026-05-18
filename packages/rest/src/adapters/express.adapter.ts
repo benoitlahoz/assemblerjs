@@ -8,10 +8,10 @@ import type {
   HttpResponse,
   HttpNextFunction,
 } from '@/http.types';
-import { WebFrameworkAdapter } from './adapter.abstract';
+import { AbstractHttpAdapter } from './adapter.abstract';
 
 @Assemblage()
-export class ExpressAdapter implements WebFrameworkAdapter {
+export class ExpressAdapter implements AbstractHttpAdapter {
   public readonly app: Application;
   private server?: Server;
 

@@ -1,6 +1,6 @@
 import type { AssemblerContext } from 'assemblerjs';
 import { createConstructorDecorator } from 'assemblerjs';
-import { WebFrameworkAdapter } from '@/adapters/adapter.abstract';
+import { AbstractHttpAdapter } from '@/adapters/adapter.abstract';
 import { cleanPath } from '@/controller/clean-path';
 import { ControllerPrivateKeys } from '../controller.keys';
 import type { ControllerDefinition } from '../controller.decorator';
@@ -28,7 +28,7 @@ const wrapOnInited = (target: any) => {
 
   const wrappedInited = function (context: AssemblerContext) {
     const globalAdapterIdentifier =
-      context.global('@assemblerjs/rest')?.adapter || WebFrameworkAdapter;
+      context.global('@assemblerjs/rest')?.adapter || AbstractHttpAdapter;
 
     if (!context.has(globalAdapterIdentifier)) {
       throw new Error(
@@ -36,7 +36,7 @@ const wrapOnInited = (target: any) => {
       );
     }
 
-    const adapter: WebFrameworkAdapter = context.require(
+    const adapter: AbstractHttpAdapter = context.require(
       globalAdapterIdentifier
     );
 

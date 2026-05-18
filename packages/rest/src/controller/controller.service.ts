@@ -1,6 +1,6 @@
 import { getAssemblageContext } from 'assemblerjs';
 import { DtoValidationError } from '@assemblerjs/dto';
-import { WebFrameworkAdapter } from '@/adapters';
+import { AbstractHttpAdapter } from '@/adapters';
 import type {
   HttpStatusMetadata,
   RedirectMetadata,
@@ -39,18 +39,18 @@ export class ControllerServiceImpl {
   public addSerializer(serializer: ResponseSerializer): void {
     this.serializers.unshift(serializer);
   }
-  public getAdapter(target: Function): WebFrameworkAdapter {
+  public getAdapter(target: Function): AbstractHttpAdapter {
     const context = this.getContext(target);
 
     const globalAdapterIdentifier =
       context.global(GlobalAssemblageAdapterIdentifier)?.adapter ||
-      WebFrameworkAdapter;
+      AbstractHttpAdapter;
 
     if (!context.has(globalAdapterIdentifier)) {
       throw new Error(`Adapter not found: ${globalAdapterIdentifier}`);
     }
 
-    const adapter: WebFrameworkAdapter = context.require(
+    const adapter: AbstractHttpAdapter = context.require(
       globalAdapterIdentifier
     );
     return adapter;

@@ -6,7 +6,7 @@ import type {
   HttpNextFunction,
 } from '@/http.types';
 
-export abstract class WebFrameworkAdapter extends AbstractAssemblage {
+export abstract class AbstractHttpAdapter extends AbstractAssemblage {
   /**
    * Register a route with the underlying HTTP framework.
    *
