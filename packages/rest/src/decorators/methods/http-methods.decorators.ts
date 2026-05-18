@@ -4,14 +4,14 @@ import { MetadataStorage } from '@/metadata/metadata-storage';
 
 // https://javascript.plainenglish.io/how-to-write-simple-router-decorators-for-expressjs-with-typescript-3b8340b4d453
 const httpMethodDecoratorFactory = (method: RouteMethods) => {
-  return (path: string, info?: string): MethodDecorator => {
+  return (path: string, summary?: string): MethodDecorator => {
     return (target, propertyKey) => {
       MetadataStorage.addRoute(
         target,
         method,
         cleanPath(path, 'remove'),
         propertyKey,
-        info || ''
+        summary || ''
       );
     };
   };

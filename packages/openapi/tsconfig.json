@@ -4,6 +4,15 @@
   "include": [],
   "references": [
     {
+      "path": "../dto"
+    },
+    {
+      "path": "../rest"
+    },
+    {
+      "path": "../assemblerjs"
+    },
+    {
       "path": "../core"
     },
     {

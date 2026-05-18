@@ -206,6 +206,30 @@ const metadata = getDtoMetadata(CreateUserDto);
 // Use metadata for runtime introspection
 ```
 
+## OpenAPI Integration
+
+`@assemblerjs/dto` works natively with `@assemblerjs/openapi`. Annotating a DTO class with `@Dto()` registers its `class-validator` metadata so that `DtoSchemaExtractor` can produce a JSON Schema at spec generation time.
+
+```typescript
+import { Dto } from '@assemblerjs/dto';
+import { IsString, IsInt, IsEmail, IsOptional } from 'class-validator';
+import { Returns } from '@assemblerjs/openapi';
+
+@Dto()
+class UserDto {
+  @IsInt() id!: number;
+  @IsString() name!: string;
+  @IsEmail() @IsOptional() email?: string;
+}
+
+// In a REST controller:
+@Returns(200, UserDto, 'A single user')
+@Get('/:id')
+getOne(@Param('id') id: string) { ... }
+```
+
+The `UserDto` schema will be emitted under `components/schemas/UserDto` and referenced via `$ref` in the response object. See [`@assemblerjs/openapi`](../openapi/README.md) for full details.
+
 ## Requirements
 
 - **Node.js:** ≥ 18.12.0

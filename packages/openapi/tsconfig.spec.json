@@ -10,6 +10,7 @@
       "vitest"
     ],
     "forceConsistentCasingInFileNames": true,
+    "strictPropertyInitialization": false,
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -27,7 +28,8 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "e2e/**/*.ts"
   ],
   "references": [
     {
