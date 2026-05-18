@@ -33,8 +33,9 @@ export default defineConfig(() => ({
     dts({
       entryRoot: 'src',
       tsconfigPath: join(__dirname, 'tsconfig.lib.json'),
-      rollupTypes: true,
+      rollupTypes: false,
       insertTypesEntry: true,
+      exclude: ['**/node_modules/**'],
     }),
   ],
   esbuild: false as const,
@@ -77,6 +78,7 @@ export default defineConfig(() => ({
         '@assemblerjs/dto',
         'class-validator',
         'node:http',
+        'node:https',
       ],
     },
     minify: 'terser' as const,
