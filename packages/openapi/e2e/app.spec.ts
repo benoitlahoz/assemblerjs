@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
+import SwaggerParser from '@apidevtools/swagger-parser';
 import { AbstractAssemblage, Assemblage, Assembler, Dispose } from 'assemblerjs';
 import { AbstractHttpAdapter } from '@assemblerjs/rest';
 import { ExpressAdapter } from '@assemblerjs/rest/express';
@@ -158,5 +159,46 @@ describe('OpenAPI e2e', () => {
     expect(body.status).toBe(400);
 
     await app2.dispose();
+  });
+
+  it('generates a valid OpenAPI 3.0 document', async () => {
+    @Assemblage({
+      provide: [
+        [AbstractHttpAdapter, ExpressAdapter],
+        [UserController],
+        [
+          AbstractOpenApiModule,
+          OpenApiModule,
+          {
+            info: { title: 'Validate Test', version: '1.0.0' },
+            servers: [{ url: `http://localhost:${PORT + 2}` }],
+          },
+        ],
+      ],
+    })
+    class App3 implements AbstractAssemblage {
+      constructor(
+        public server: AbstractHttpAdapter,
+        public users: UserController,
+        public openApi: AbstractOpenApiModule,
+        @Dispose() public dispose: () => void
+      ) {}
+
+      public onInited(): void {
+        this.server.listen(PORT + 2);
+      }
+    }
+
+    const app3 = Assembler.build(App3);
+
+    await new Promise<void>((r) => setTimeout(r, 100));
+
+    const res = await fetch(`http://localhost:${PORT + 2}/openapi/json`);
+    const spec = await res.json();
+
+    // Throws if the document is not a valid OpenAPI 3.x document
+    await expect(SwaggerParser.validate(structuredClone(spec))).resolves.toBeDefined();
+
+    await app3.dispose();
   });
 });
