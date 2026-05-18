@@ -1,10 +1,15 @@
 # @assemblerjs/rest
 
-REST framework for AssemblerJS with Express.js integration and type-safe decorators for controllers, routes, middleware, and request handling.
+REST framework for AssemblerJS with type-safe decorators for controllers, routes, middleware, and request handling. Ships with `ExpressAdapter` and `FastifyAdapter` — swap the HTTP backend without touching your controllers.
 
 ## Overview
 
-`@assemblerjs/rest` provides a declarative way to build REST APIs using AssemblerJS. It decouples your controllers and routes from any specific HTTP framework through an adapter layer — `ExpressAdapter` is provided out of the box. Controllers, middleware, parameter extraction, and serialization are all framework-agnostic.
+`@assemblerjs/rest` provides a declarative way to build REST APIs using AssemblerJS. It decouples your controllers and routes from any specific HTTP framework through an adapter layer. Two adapters are provided out of the box:
+
+- **`ExpressAdapter`** — powered by [Express v5](https://expressjs.com/)
+- **`FastifyAdapter`** — powered by [Fastify v5](https://fastify.dev/)
+
+Controllers, middleware, parameter extraction, and serialization are all framework-agnostic.
 
 ## Features
 
@@ -13,16 +18,21 @@ REST framework for AssemblerJS with Express.js integration and type-safe decorat
 - 📦 **Parameter Decorators** — `@Body()`, `@Param()`, `@Query()`, `@Header()`, `@Headers()`, `@Cookie()`, `@Cookies()`, `@Req()`, `@Res()`
 - 🔌 **Scoped Middleware** — `@Middleware`, `@BeforeMiddleware`, `@AfterMiddleware` per route
 - ✅ **DTO Integration** — Works with `@assemblerjs/dto` for automatic validation
-- 🔌 **Adapter Pattern** — Swap the HTTP framework without touching controllers
+- 🔌 **Adapter Pattern** — Swap the HTTP framework without touching controllers (`ExpressAdapter` / `FastifyAdapter`)
+- 🔒 **HTTPS** — TLS support for both adapters via `HttpAdapterConfiguration`
 - 🏗️ **AssemblerJS DI** — Full dependency injection support
 - 🔒 **Type-Safe** — Complete TypeScript support
 
 ## Installation
 
 ```bash
+# Express (default)
 npm install @assemblerjs/rest assemblerjs express reflect-metadata
-# or
 yarn add @assemblerjs/rest assemblerjs express reflect-metadata
+
+# Fastify
+npm install @assemblerjs/rest assemblerjs fastify reflect-metadata
+yarn add @assemblerjs/rest assemblerjs fastify reflect-metadata
 ```
 
 ```bash
@@ -100,24 +110,63 @@ Assembler.build(App);
 
 ## Adapter Pattern
 
-`@assemblerjs/rest` resolves the HTTP adapter via a tag, not a fixed token. This means you can:
+`@assemblerjs/rest` resolves the HTTP adapter via a tag, not a fixed token. Adapters are registered in the DI `provide` tuple: `[AbstractToken, ConcreteAdapter, optionalConfig?]`.
 
-- Use `ExpressAdapter` directly
-- Subclass `ExpressAdapter` to add Helmet, CORS, rate-limiting, etc.
-- Write a completely custom adapter (e.g. Fastify) and register it with `@HttpAdapter()`
+- Use `ExpressAdapter` or `FastifyAdapter` directly.
+- Subclass an existing adapter to add Helmet, CORS, rate-limiting, etc.
+- Write a completely custom adapter by implementing `AbstractHttpAdapter` and decorating with `@HttpAdapter()`.
 
-### Using `ExpressAdapter` directly
+### `ExpressAdapter`
+
+Import from the `@assemblerjs/rest/express` sub-path:
 
 ```typescript
+import { AbstractHttpAdapter } from '@assemblerjs/rest';
+import { ExpressAdapter } from '@assemblerjs/rest/express';
+
 @Assemblage({
   provide: [[AbstractHttpAdapter, ExpressAdapter], [MyController]],
 })
 class App implements AbstractAssemblage { ... }
 ```
 
-### Customizing `ExpressAdapter`
+### `FastifyAdapter`
 
-Subclass it, add `@HttpAdapter()` above `@Assemblage()`, and register it against any token:
+Import from the `@assemblerjs/rest/fastify` sub-path. `listen()` is async, so `onInited` should be `async`:
+
+```typescript
+import { AbstractHttpAdapter } from '@assemblerjs/rest';
+import { FastifyAdapter } from '@assemblerjs/rest/fastify';
+
+@Assemblage({
+  provide: [[AbstractHttpAdapter, FastifyAdapter], [MyController]],
+})
+class App implements AbstractAssemblage {
+  constructor(
+    private server: AbstractHttpAdapter,
+    private ctrl: MyController,
+    @Dispose() private dispose: () => void
+  ) {}
+
+  public async onInited(): Promise<void> {
+    await this.server.listen(3000);
+  }
+}
+```
+
+### `listen(port, host?, backlog?)`
+
+Both adapters share the same signature:
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `port` | `number` | — | TCP port to bind |
+| `host` | `string` | `'0.0.0.0'` | Bind address |
+| `backlog` | `number` | — | Connection backlog (Express only) |
+
+### Customizing an adapter
+
+Subclass, add `@HttpAdapter()` above `@Assemblage()`, and register it against any token:
 
 ```typescript
 import { HttpAdapter, ExpressAdapter, AbstractHttpAdapter } from '@assemblerjs/rest';
@@ -135,7 +184,6 @@ class SecuredAdapter extends ExpressAdapter {
 }
 
 @Assemblage({
-  // token can be AbstractHttpAdapter or any abstraction
   provide: [[AbstractHttpAdapter, SecuredAdapter], [MyController]],
 })
 class App implements AbstractAssemblage { ... }
@@ -151,10 +199,50 @@ import { Assemblage } from 'assemblerjs';
 
 @HttpAdapter()
 @Assemblage()
-class FastifyAdapter implements AbstractHttpAdapter {
+class MyAdapter implements AbstractHttpAdapter {
   // implement registerRoute(), listen(), close(), listening, …
 }
 ```
+
+## HTTPS / TLS
+
+Both adapters accept an optional `HttpAdapterConfiguration` as the **third element** of the DI tuple. Pass it to enable TLS — the configuration is injected at construction time via AssemblerJS's `@Configuration()` mechanism.
+
+```typescript
+import { readFileSync } from 'node:fs';
+import { AbstractHttpAdapter, HttpAdapterConfiguration } from '@assemblerjs/rest';
+import { ExpressAdapter } from '@assemblerjs/rest/express';   // or FastifyAdapter
+import { Assemblage, Assembler } from 'assemblerjs';
+
+const tlsConfig: HttpAdapterConfiguration = {
+  tls: {
+    key:  readFileSync('server.key'),
+    cert: readFileSync('server.crt'),
+  },
+};
+
+@Assemblage({
+  provide: [
+    [AbstractHttpAdapter, ExpressAdapter, tlsConfig],
+    [MyController],
+  ],
+})
+class App implements AbstractAssemblage {
+  constructor(
+    private server: AbstractHttpAdapter,
+    private ctrl: MyController,
+    @Dispose() private dispose: () => void
+  ) {}
+
+  public onInited(): void {
+    this.server.listen(443, '0.0.0.0');
+  }
+}
+
+Assembler.build(App);
+```
+
+`tls` accepts any option from Node.js's `https.ServerOptions` (e.g. `ca`, `passphrase`, `requestCert`, …). The same object shape works for both `ExpressAdapter` and `FastifyAdapter`.
 
 ## Decorators
 
@@ -349,18 +437,20 @@ ControllerService.addSerializer(new XmlSerializer());
 
 ## Full Application Example
 
+### With `ExpressAdapter`
+
 ```typescript
 import 'reflect-metadata';
 import { Assemblage, Assembler, AbstractAssemblage, Dispose } from 'assemblerjs';
 import {
   AbstractHttpAdapter,
-  ExpressAdapter,
   Controller,
   Get, Post, Put, Delete,
   Body, Param,
   HttpStatus,
   NotFoundError,
 } from '@assemblerjs/rest';
+import { ExpressAdapter } from '@assemblerjs/rest/express';
 
 @Assemblage()
 class UserService implements AbstractAssemblage {
@@ -433,7 +523,7 @@ class App implements AbstractAssemblage {
     @Dispose() private dispose: () => void
   ) {}
 
-  public async onInited(): Promise<void> {
+  public onInited(): void {
     this.server.listen(3000);
     console.log('Server running on http://localhost:3000');
   }
@@ -442,10 +532,35 @@ class App implements AbstractAssemblage {
 Assembler.build(App);
 ```
 
+### With `FastifyAdapter`
+
+Replace the adapter import and make `onInited` async:
+
+```typescript
+import { FastifyAdapter } from '@assemblerjs/rest/fastify';
+
+@Assemblage({
+  provide: [[AbstractHttpAdapter, FastifyAdapter], [UserController]],
+})
+class App implements AbstractAssemblage {
+  constructor(
+    private server: AbstractHttpAdapter,
+    private users: UserController,
+    @Dispose() private dispose: () => void
+  ) {}
+
+  public async onInited(): Promise<void> {
+    await this.server.listen(3000);
+    console.log('Server running on http://localhost:3000');
+  }
+}
+```
+
 ## Requirements
 
 - **Node.js:** ≥ 18.12.0
-- **Express:** ≥ 5.0
+- **Express:** ≥ 5.0 (if using `ExpressAdapter`)
+- **Fastify:** ≥ 5.0 (if using `FastifyAdapter`)
 - **TypeScript:** ≥ 5.0
 - **reflect-metadata:** Required
 
