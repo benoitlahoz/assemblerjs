@@ -9,7 +9,9 @@ import type {
   HttpNextFunction,
 } from '@/http.types';
 import { AbstractHttpAdapter } from './adapter.abstract';
+import { HttpAdapter } from './http-adapter.decorator';
 
+@HttpAdapter()
 @Assemblage()
 export class ExpressAdapter implements AbstractHttpAdapter {
   public readonly app: Application;

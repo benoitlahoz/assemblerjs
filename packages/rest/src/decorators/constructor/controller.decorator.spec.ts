@@ -296,11 +296,6 @@ class MyController implements AbstractAssemblage {
 
 @Assemblage({
   provide: [[AbstractHttpAdapter, ExpressAdapter], [MyController]],
-  global: {
-    '@assemblerjs/rest': {
-      adapter: AbstractHttpAdapter,
-    },
-  },
 })
 class App {
   constructor(
@@ -567,11 +562,6 @@ class ApiV1Controller implements AbstractAssemblage {
 
 @Assemblage({
   provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiV1Controller]],
-  global: {
-    '@assemblerjs/rest': {
-      adapter: AbstractHttpAdapter,
-    },
-  },
 })
 class NestedApp implements AbstractAssemblage {
   constructor(

@@ -14,11 +14,6 @@ describe('API Server Application', () => {
   it('should run server.', async () => {
     @Assemblage({
       provide: [[AbstractHttpAdapter, ExpressAdapter], [ApiController]],
-      global: {
-        '@assemblerjs/rest': {
-          adapter: AbstractHttpAdapter,
-        },
-      },
     })
     class App implements AbstractAssemblage {
       constructor(

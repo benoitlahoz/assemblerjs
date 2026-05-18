@@ -4,17 +4,18 @@ REST framework for AssemblerJS with Express.js integration and type-safe decorat
 
 ## Overview
 
-`@assemblerjs/rest` provides a declarative way to build REST APIs using Express.js with AssemblerJS. It offers decorators for controllers, routes, middleware, and request handling, bringing NestJS-like patterns to Express with full TypeScript support.
+`@assemblerjs/rest` provides a declarative way to build REST APIs using AssemblerJS. It decouples your controllers and routes from any specific HTTP framework through an adapter layer — `ExpressAdapter` is provided out of the box. Controllers, middleware, parameter extraction, and serialization are all framework-agnostic.
 
 ## Features
 
-- 🎯 **Controller Decorators** - Define REST controllers declaratively
-- 🛣️ **Route Decorators** - `@Get`, `@Post`, `@Put`, `@Patch`, `@Delete`
-- 📦 **Parameter Decorators** - `@Body`, `@Param`, `@Query`, `@Headers`, `@Req`, `@Res`
-- 🔌 **Middleware Support** - Apply middleware with decorators
-- ✅ **DTO Integration** - Works with `@assemblerjs/dto` for validation
-- 🏗️ **AssemblerJS DI** - Full dependency injection support
-- 🔒 **Type-Safe** - Complete TypeScript support
+- 🎯 **Controller Decorators** — Define REST controllers declaratively
+- 🛣️ **Route Decorators** — `@Get`, `@Post`, `@Put`, `@Patch`, `@Delete`, `@Head`, `@Options`, …
+- 📦 **Parameter Decorators** — `@Body()`, `@Param()`, `@Query()`, `@Header()`, `@Headers()`, `@Cookie()`, `@Cookies()`, `@Req()`, `@Res()`
+- 🔌 **Scoped Middleware** — `@Middleware`, `@BeforeMiddleware`, `@AfterMiddleware` per route
+- ✅ **DTO Integration** — Works with `@assemblerjs/dto` for automatic validation
+- 🔌 **Adapter Pattern** — Swap the HTTP framework without touching controllers
+- 🏗️ **AssemblerJS DI** — Full dependency injection support
+- 🔒 **Type-Safe** — Complete TypeScript support
 
 ## Installation
 
@@ -25,7 +26,7 @@ yarn add @assemblerjs/rest assemblerjs express reflect-metadata
 ```
 
 ```bash
-# Optional: for DTO validation
+# Optional: DTO validation
 npm install @assemblerjs/dto class-validator class-transformer
 ```
 
@@ -33,195 +34,244 @@ npm install @assemblerjs/dto class-validator class-transformer
 
 ```typescript
 import 'reflect-metadata';
-import express from 'express';
-import { Assemblage, Assembler, AbstractAssemblage } from 'assemblerjs';
-import { Controller, Get, Post, Body, Param } from '@assemblerjs/rest';
+import {
+  Assemblage,
+  Assembler,
+  AbstractAssemblage,
+  Dispose,
+} from 'assemblerjs';
+import {
+  AbstractHttpAdapter,
+  ExpressAdapter,
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  NotFoundError,
+} from '@assemblerjs/rest';
 
-// Define a controller
-@Controller('/users')
-class UserController {
+// 1. Define a controller
+@Controller({ path: '/users' })
+@Assemblage()
+class UserController implements AbstractAssemblage {
+  private users = [{ id: 1, name: 'John Doe' }];
+
   @Get()
   getUsers() {
-    return [
-      { id: '1', name: 'John Doe' },
-      { id: '2', name: 'Jane Smith' }
-    ];
+    return this.users;
   }
 
   @Get('/:id')
   getUser(@Param('id') id: string) {
-    return { id, name: 'John Doe' };
+    const user = this.users.find((u) => u.id === Number(id));
+    if (!user) throw new NotFoundError(`User ${id} not found`);
+    return user;
   }
 
   @Post()
-  createUser(@Body() data: any) {
-    return { id: '3', ...data };
+  createUser(@Body() data: { name: string }) {
+    const user = { id: this.users.length + 1, ...data };
+    this.users.push(user);
+    return user;
   }
 }
 
-// Bootstrap Express app with AssemblerJS
+// 2. Bootstrap the application
+//    - provide: [[AbstractHttpAdapter, ExpressAdapter]] registers ExpressAdapter
+//      as the HTTP adapter; no global: block required.
 @Assemblage({
-  provide: [[UserController]]
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [UserController]],
 })
 class App implements AbstractAssemblage {
-  private app = express();
+  constructor(
+    private server: AbstractHttpAdapter,
+    private users: UserController,
+    @Dispose() private dispose: () => void
+  ) {}
 
-  constructor(private userController: UserController) {
-    this.app.use(express.json());
-  }
-
-  async onInit() {
-    this.app.listen(3000, () => {
-      console.log('✓ Server running on http://localhost:3000');
-    });
+  public async onInited(): Promise<void> {
+    this.server.listen(3000);
   }
 }
 
-const app = Assembler.build(App);
+Assembler.build(App);
+```
+
+## Adapter Pattern
+
+`@assemblerjs/rest` resolves the HTTP adapter via a tag, not a fixed token. This means you can:
+
+- Use `ExpressAdapter` directly
+- Subclass `ExpressAdapter` to add Helmet, CORS, rate-limiting, etc.
+- Write a completely custom adapter (e.g. Fastify) and register it with `@HttpAdapter()`
+
+### Using `ExpressAdapter` directly
+
+```typescript
+@Assemblage({
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [MyController]],
+})
+class App implements AbstractAssemblage { ... }
+```
+
+### Customizing `ExpressAdapter`
+
+Subclass it, add `@HttpAdapter()` above `@Assemblage()`, and register it against any token:
+
+```typescript
+import { HttpAdapter, ExpressAdapter, AbstractHttpAdapter } from '@assemblerjs/rest';
+import { Assemblage } from 'assemblerjs';
+import helmet from 'helmet';
+
+@HttpAdapter()
+@Assemblage()
+class SecuredAdapter extends ExpressAdapter {
+  constructor() {
+    super();
+    this.app.use(helmet());
+    this.app.set('trust proxy', 1);
+  }
+}
+
+@Assemblage({
+  // token can be AbstractHttpAdapter or any abstraction
+  provide: [[AbstractHttpAdapter, SecuredAdapter], [MyController]],
+})
+class App implements AbstractAssemblage { ... }
+```
+
+### Writing a custom adapter
+
+Implement the `AbstractHttpAdapter` contract and decorate with `@HttpAdapter()`:
+
+```typescript
+import { HttpAdapter, AbstractHttpAdapter } from '@assemblerjs/rest';
+import { Assemblage } from 'assemblerjs';
+
+@HttpAdapter()
+@Assemblage()
+class FastifyAdapter implements AbstractHttpAdapter {
+  // implement registerRoute(), listen(), close(), listening, …
+}
 ```
 
 ## Decorators
 
-### `@Controller(basePath, options?)`
+### `@Controller({ path })`
 
-Define a REST controller:
+Define a REST controller and its base path:
 
 ```typescript
-@Controller('/api/users')
-class UserController {
-  // Routes here
-}
+@Controller({ path: '/api/users' })
+@Assemblage()
+class UserController implements AbstractAssemblage { ... }
+```
 
-// With options
-@Controller('/api/users', {
-  middleware: [authMiddleware, loggingMiddleware]
+Controllers can be nested by injecting sub-controllers — their paths are composed automatically:
+
+```typescript
+@Controller({ path: '/api' })
+@Assemblage({
+  provide: [[UserController], [PostController]],
 })
-class UserController {
-  // Routes here
+class ApiController implements AbstractAssemblage {
+  constructor(
+    public users: UserController,   // path becomes /api/user
+    public posts: PostController,   // path becomes /api/post
+  ) {}
 }
 ```
 
 ### HTTP Method Decorators
 
-#### `@Get(path?)`
+| Decorator | HTTP method |
+|---|---|
+| `@Get(path?)` | GET |
+| `@Post(path?)` | POST |
+| `@Put(path?)` | PUT |
+| `@Patch(path?)` | PATCH |
+| `@Delete(path?)` | DELETE |
+| `@Head(path?)` | HEAD |
+| `@Options(path?)` | OPTIONS |
+| `@All(path?)` | All methods |
 
 ```typescript
-@Get()
-getAllUsers() {
-  return [];
-}
-
 @Get('/:id')
-getUser(@Param('id') id: string) {
-  return { id };
-}
-```
+getUser(@Param('id') id: string) { ... }
 
-#### `@Post(path?)`
-
-```typescript
 @Post()
-createUser(@Body() data: CreateUserDto) {
-  return { id: '123', ...data };
-}
-```
-
-#### `@Put(path?)` / `@Patch(path?)`
-
-```typescript
-@Put('/:id')
-updateUser(@Param('id') id: string, @Body() data: UpdateUserDto) {
-  return { id, ...data };
-}
-
-@Patch('/:id')
-partialUpdate(@Param('id') id: string, @Body() data: Partial<UpdateUserDto>) {
-  return { id, ...data };
-}
-```
-
-#### `@Delete(path?)`
-
-```typescript
-@Delete('/:id')
-deleteUser(@Param('id') id: string) {
-  return { success: true, id };
-}
+@HttpStatus(201)
+createUser(@Body() data: CreateUserDto) { ... }
 ```
 
 ### Parameter Decorators
 
-#### `@Body()`
-
-Extract request body:
-
-```typescript
-@Post()
-create(@Body() data: CreateDto) {
-  return data;
-}
-```
-
-#### `@Param(name?)`
-
-Extract URL parameters:
+| Decorator | Description |
+|---|---|
+| `@Body()` | Full request body |
+| `@Param(name)` | Single URL parameter |
+| `@Params()` | All URL parameters as object |
+| `@Query(name)` | Single query string value |
+| `@Queries()` | All query parameters as object |
+| `@Header(name)` | Single request header |
+| `@Headers()` | All request headers as object |
+| `@Cookie(name)` | Single cookie value |
+| `@Cookies()` | All cookies as object |
+| `@Req()` | Raw `HttpRequest` |
+| `@Res()` | Raw `HttpResponse` |
 
 ```typescript
 @Get('/:id')
-getById(@Param('id') id: string) {
-  return { id };
-}
-
-// Multiple params
-@Get('/:userId/posts/:postId')
-getUserPost(
-  @Param('userId') userId: string,
-  @Param('postId') postId: string
-) {
-  return { userId, postId };
-}
+getById(
+  @Param('id') id: string,
+  @Query('lang') lang: string,
+  @Header('authorization') auth: string,
+) { ... }
 ```
 
-#### `@Query(name?)`
-
-Extract query parameters:
+### Response Decorators
 
 ```typescript
+// Override the default HTTP status code
+@Post()
+@HttpStatus(201)
+create(@Body() data: any) { ... }
+
+// Redirect
+@Get('/old-path')
+@Redirect('/new-path', 301)
+redirect() {}
+
+// Set custom response headers
 @Get()
-search(
-  @Query('q') query: string,
-  @Query('page') page: number = 1,
-  @Query('limit') limit: number = 10
-) {
-  return { query, page, limit };
-}
+@HttpHeaders({ 'X-Powered-By': 'My App' })
+getData() { ... }
 ```
 
-#### `@Headers(name?)`
-
-Extract headers:
+### Middleware Decorators
 
 ```typescript
-@Get()
-getData(@Headers('authorization') auth: string) {
-  return { auth };
+import { BeforeMiddleware, AfterMiddleware, Middleware } from '@assemblerjs/rest';
+
+@Controller({ path: '/users' })
+@Assemblage()
+class UserController implements AbstractAssemblage {
+  // Runs before the handler, scoped to this route only
+  @Get('/profile')
+  @BeforeMiddleware(authMiddleware)
+  profile() { ... }
+
+  // Runs after the handler
+  @Get('/log')
+  @AfterMiddleware(loggingMiddleware)
+  getData() { ... }
 }
 ```
 
-#### `@Req()` / `@Res()`
+## DTO Validation
 
-Access Express request/response:
-
-```typescript
-@Get()
-manual(@Req() req: Request, @Res() res: Response) {
-  res.json({ method: req.method });
-}
-```
-
-## Integration with DTO
-
-Use with `@assemblerjs/dto` for validation:
+Use with `@assemblerjs/dto` for automatic request body validation:
 
 ```typescript
 import { DTO } from '@assemblerjs/dto';
@@ -237,241 +287,159 @@ class CreateUserDto {
   email: string;
 }
 
-@Controller('/users')
-class UserController {
-  @Post()
-  async createUser(@Body() data: CreateUserDto) {
-    // data is validated automatically
-    return { id: '123', ...data };
-  }
-}
-```
-
-## Middleware
-
-### Controller-level Middleware
-
-```typescript
-const loggingMiddleware = (req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-};
-
-@Controller('/users', {
-  middleware: [loggingMiddleware]
-})
-class UserController {
-  // All routes use this middleware
-}
-```
-
-### Route-level Middleware
-
-```typescript
-import { UseMiddleware } from '@assemblerjs/rest';
-
-const authMiddleware = (req, res, next) => {
-  // Check authentication
-  if (!req.headers.authorization) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
-};
-
-@Controller('/users')
-class UserController {
-  @Get()
-  public() {
-    return { message: 'Public route' };
-  }
-
-  @Get('/profile')
-  @UseMiddleware(authMiddleware)
-  profile() {
-    return { message: 'Protected route' };
-  }
-}
-```
-
-## Dependency Injection
-
-Use AssemblerJS DI in controllers:
-
-```typescript
+@Controller({ path: '/users' })
 @Assemblage()
-class UserService implements AbstractAssemblage {
-  async findAll() {
-    return []; // fetch from DB
-  }
-
-  async findById(id: string) {
-    return { id }; // fetch from DB
-  }
-
-  async create(data: any) {
-    return { id: '123', ...data }; // save to DB
-  }
-}
-
-@Controller('/users')
-@Assemblage({
-  provide: [[UserService]]
-})
 class UserController implements AbstractAssemblage {
-  constructor(private userService: UserService) {}
-
-  @Get()
-  async getUsers() {
-    return this.userService.findAll();
-  }
-
-  @Get('/:id')
-  async getUser(@Param('id') id: string) {
-    return this.userService.findById(id);
-  }
-
   @Post()
+  @HttpStatus(201)
   async createUser(@Body() data: CreateUserDto) {
-    return this.userService.create(data);
+    // data is validated — a 400 is returned automatically on failure
+    return data;
   }
 }
 ```
 
 ## Error Handling
 
-```typescript
-import { HttpException } from '@assemblerjs/rest';
+Throw one of the built-in error classes from any handler — the framework serializes and sends the correct status automatically:
 
-@Controller('/users')
-class UserController {
+```typescript
+import {
+  NotFoundError,
+  BadRequestError,
+  UnauthorizedError,
+  ForbiddenError,
+  InternalServerError,
+} from '@assemblerjs/rest';
+
+@Controller({ path: '/users' })
+@Assemblage()
+class UserController implements AbstractAssemblage {
   @Get('/:id')
-  async getUser(@Param('id') id: string) {
-    const user = await this.userService.findById(id);
-    
-    if (!user) {
-      throw new HttpException('User not found', 404);
-    }
-    
+  getUser(@Param('id') id: string) {
+    const user = this.db.find(id);
+    if (!user) throw new NotFoundError(`User ${id} not found`);
     return user;
   }
 }
+```
 
-// Global error handler
-app.use((err, req, res, next) => {
-  if (err instanceof HttpException) {
-    return res.status(err.status).json({
-      statusCode: err.status,
-      message: err.message
-    });
+All error classes extend `GenericError` which exposes a `status: number` property.
+
+## Custom Response Serializers
+
+Add serializers to handle response types beyond the defaults:
+
+```typescript
+import { ControllerService } from '@assemblerjs/rest';
+import type { ResponseSerializer } from '@assemblerjs/rest';
+
+class XmlSerializer implements ResponseSerializer {
+  canHandle(result: unknown): boolean {
+    return result instanceof XmlDocument;
   }
-  
-  res.status(500).json({
-    statusCode: 500,
-    message: 'Internal server error'
-  });
-});
+  serialize(result: XmlDocument, res: HttpResponse): void {
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(result.toString());
+  }
+}
+
+ControllerService.addSerializer(new XmlSerializer());
 ```
 
 ## Full Application Example
 
 ```typescript
 import 'reflect-metadata';
-import express from 'express';
-import { Assemblage, Assembler, AbstractAssemblage } from 'assemblerjs';
-import { Controller, Get, Post, Put, Delete, Body, Param } from '@assemblerjs/rest';
+import { Assemblage, Assembler, AbstractAssemblage, Dispose } from 'assemblerjs';
+import {
+  AbstractHttpAdapter,
+  ExpressAdapter,
+  Controller,
+  Get, Post, Put, Delete,
+  Body, Param,
+  HttpStatus,
+  NotFoundError,
+} from '@assemblerjs/rest';
 
-// Database service
 @Assemblage()
-class Database implements AbstractAssemblage {
-  private users = new Map();
+class UserService implements AbstractAssemblage {
+  private users: { id: number; name: string }[] = [];
+  private next = 1;
 
-  findAll() {
-    return Array.from(this.users.values());
-  }
-
-  findById(id: string) {
-    return this.users.get(id);
-  }
-
-  create(data: any) {
-    const id = Date.now().toString();
-    const user = { id, ...data };
-    this.users.set(id, user);
+  findAll() { return this.users; }
+  findById(id: number) { return this.users.find((u) => u.id === id) ?? null; }
+  create(data: { name: string }) {
+    const user = { id: this.next++, ...data };
+    this.users.push(user);
     return user;
   }
-
-  update(id: string, data: any) {
-    const user = this.users.get(id);
+  update(id: number, data: Partial<{ name: string }>) {
+    const user = this.findById(id);
     if (!user) return null;
-    const updated = { ...user, ...data };
-    this.users.set(id, updated);
-    return updated;
+    Object.assign(user, data);
+    return user;
   }
-
-  delete(id: string) {
-    return this.users.delete(id);
+  remove(id: number) {
+    const idx = this.users.findIndex((u) => u.id === id);
+    if (idx === -1) return null;
+    return this.users.splice(idx, 1)[0];
   }
 }
 
-// Controller
-@Controller('/api/users')
-@Assemblage({
-  provide: [[Database]]
-})
+@Controller({ path: '/users' })
+@Assemblage({ provide: [[UserService]] })
 class UserController implements AbstractAssemblage {
-  constructor(private db: Database) {}
+  constructor(private service: UserService) {}
 
   @Get()
-  getUsers() {
-    return this.db.findAll();
-  }
+  getAll() { return this.service.findAll(); }
 
   @Get('/:id')
-  getUser(@Param('id') id: string) {
-    const user = this.db.findById(id);
-    if (!user) throw new HttpException('User not found', 404);
+  getOne(@Param('id') id: string) {
+    const user = this.service.findById(Number(id));
+    if (!user) throw new NotFoundError(`User ${id} not found`);
     return user;
   }
 
   @Post()
-  createUser(@Body() data: any) {
-    return this.db.create(data);
+  @HttpStatus(201)
+  create(@Body() data: { name: string }) {
+    return this.service.create(data);
   }
 
   @Put('/:id')
-  updateUser(@Param('id') id: string, @Body() data: any) {
-    const user = this.db.update(id, data);
-    if (!user) throw new HttpException('User not found', 404);
+  update(@Param('id') id: string, @Body() data: { name: string }) {
+    const user = this.service.update(Number(id), data);
+    if (!user) throw new NotFoundError(`User ${id} not found`);
     return user;
   }
 
   @Delete('/:id')
-  deleteUser(@Param('id') id: string) {
-    const deleted = this.db.delete(id);
-    if (!deleted) throw new HttpException('User not found', 404);
-    return { success: true };
+  remove(@Param('id') id: string) {
+    const user = this.service.remove(Number(id));
+    if (!user) throw new NotFoundError(`User ${id} not found`);
+    return user;
   }
 }
 
-// Application
 @Assemblage({
-  provide: [[UserController]]
+  provide: [[AbstractHttpAdapter, ExpressAdapter], [UserController]],
 })
-class RestApp implements AbstractAssemblage {
-  private app = express();
+class App implements AbstractAssemblage {
+  constructor(
+    private server: AbstractHttpAdapter,
+    private users: UserController,
+    @Dispose() private dispose: () => void
+  ) {}
 
-  constructor(private controller: UserController) {
-    this.app.use(express.json());
-  }
-
-  async onInit() {
-    this.app.listen(3000, () => {
-      console.log('✓ Server running on http://localhost:3000');
-    });
+  public async onInited(): Promise<void> {
+    this.server.listen(3000);
+    console.log('Server running on http://localhost:3000');
   }
 }
 
-const app = Assembler.build(RestApp);
+Assembler.build(App);
 ```
 
 ## Requirements
@@ -497,17 +465,12 @@ const app = Assembler.build(RestApp);
 
 ## For Contributors
 
-### Development
-
 ```bash
 # Build the package
-npx nx build rest
+npx nx build assemblerjs-rest
 
 # Run tests
-npx nx test rest
-
-# E2E tests
-npx nx e2e-basic-controller rest
+npx nx test assemblerjs-rest
 ```
 
 ## License
@@ -517,3 +480,5 @@ MIT
 ---
 
 Part of the [AssemblerJS monorepo](../../README.md)
+
+

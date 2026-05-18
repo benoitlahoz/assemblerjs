@@ -1,6 +1,6 @@
 import { getAssemblageContext } from 'assemblerjs';
 import { DtoValidationError } from '@assemblerjs/dto';
-import { AbstractHttpAdapter } from '@/adapters';
+import { AbstractHttpAdapter, HTTP_ADAPTER_TAG } from '@/adapters';
 import type {
   HttpStatusMetadata,
   RedirectMetadata,
@@ -27,8 +27,6 @@ import type {
 import type { ResponseSerializer } from '@/serializers/response-serializer.interface';
 import { defaultSerializers } from '@/serializers/default-serializers';
 
-export const GlobalAssemblageAdapterIdentifier = '@assemblerjs/rest';
-
 export class ControllerServiceImpl {
   private readonly serializers: ResponseSerializer[] = [...defaultSerializers];
 
@@ -39,21 +37,19 @@ export class ControllerServiceImpl {
   public addSerializer(serializer: ResponseSerializer): void {
     this.serializers.unshift(serializer);
   }
+
   public getAdapter(target: Function): AbstractHttpAdapter {
     const context = this.getContext(target);
+    const adapters = context.tagged(HTTP_ADAPTER_TAG) as AbstractHttpAdapter[];
 
-    const globalAdapterIdentifier =
-      context.global(GlobalAssemblageAdapterIdentifier)?.adapter ||
-      AbstractHttpAdapter;
-
-    if (!context.has(globalAdapterIdentifier)) {
-      throw new Error(`Adapter not found: ${globalAdapterIdentifier}`);
+    if (adapters.length === 0) {
+      throw new Error(
+        '[assemblerjs/rest] No HTTP adapter found. ' +
+          'Add @HttpAdapter() to your adapter class and register it in provide.'
+      );
     }
 
-    const adapter: AbstractHttpAdapter = context.require(
-      globalAdapterIdentifier
-    );
-    return adapter;
+    return adapters[0];
   }
 
   public getRoutes(target: Function): RouteMetadata[] {
