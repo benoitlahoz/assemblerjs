@@ -62,7 +62,20 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['@assemblerjs/core'],
+      external: [
+        '@assemblerjs/core',
+        '@assemblerjs/rest',
+        '@assemblerjs/dto',
+        'assemblerjs',
+        'class-validator',
+        'class-transformer',
+        'reflect-metadata',
+      ],
+      onwarn(warning, warn) {
+        // Suppress broken-sourcemap warnings from class-validator / class-transformer esm5 builds
+        if (warning.code === 'SOURCEMAP_ERROR') return;
+        warn(warning);
+      },
     },
     minify: 'terser' as const,
   },
