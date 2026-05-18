@@ -19,6 +19,9 @@
       "path": "./packages/mongo"
     },
     {
+      "path": "./packages/openapi"
+    },
+    {
       "path": "./packages/dto"
     },
     {

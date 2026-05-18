@@ -60,6 +60,12 @@ export class ControllerServiceImpl {
     const routes: RouteMetadata[] = MetadataStorage.getRoutes(target);
     const adapter = this.getAdapter(target);
 
+    // Store the final (post-propagation) base path for OpenAPI generation.
+    MetadataStorage.setControllerPath(
+      (target as any).constructor,
+      (target as any).path || '/'
+    );
+
     for (const route of routes) {
       const { method, path, handlerName } = route;
 

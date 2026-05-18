@@ -6,3 +6,5 @@ export * from './errors';
 export * from './http.types';
 export * from './serializers/response-serializer.interface';
 export { ControllerService, ControllerServiceImpl } from './controller/controller.service';
+export { MetadataStorage, MetadataStorageImpl } from './metadata/metadata-storage';
+export type { RouteMetadata } from './metadata/metadata.types';

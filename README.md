@@ -211,7 +211,56 @@ class CreateUserDto {
 }
 ```
 
+#### [**@assemblerjs/dto**](./packages/dto)
+DTO validation and transformation using class-validator and class-transformer.
+
+**Use case:** Validate and transform data transfer objects
+
+```typescript
+import { DTO } from '@assemblerjs/dto';
+import { IsString, IsEmail } from 'class-validator';
+
+@DTO()
+class CreateUserDto {
+  @IsString()
+  name: string;
+
+  @IsEmail()
+  email: string;
+}
+```
+
 [README](./packages/dto/README.md)
+
+---
+
+#### [**@assemblerjs/openapi**](./packages/openapi)
+Automatic OpenAPI 3.1 spec generation from your AssemblerJS REST controllers — zero config, runtime-based, fully integrated with `@assemblerjs/rest` and `@assemblerjs/dto`.
+
+**Use case:** Generate a live OpenAPI spec and serve it at `GET /openapi/json`.
+
+```typescript
+import { Returns, Throws, Hidden, Operation } from '@assemblerjs/openapi';
+
+@Controller({ path: '/users' })
+@Assemblage()
+class UsersController implements AbstractAssemblage {
+  @Returns(200, UserDto, 'Array of users')
+  @Get('/')
+  getAll() { ... }
+
+  @Returns(200, UserDto)
+  @Throws(404, 'User not found')
+  @Get('/:id')
+  getOne(@Param('id') id: string) { ... }
+
+  @Hidden()
+  @Get('/internal')
+  internal() { ... }
+}
+```
+
+[README](./packages/openapi/README.md)
 
 ---
 

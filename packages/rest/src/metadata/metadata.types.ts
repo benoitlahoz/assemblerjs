@@ -10,7 +10,7 @@ interface Metadata {
 export interface RouteMetadata extends Metadata {
   method: string;
   path: string;
-  info: string;
+  summary: string;
 }
 
 export interface MiddlewareMetadata extends Metadata {

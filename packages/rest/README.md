@@ -556,9 +556,35 @@ class App implements AbstractAssemblage {
 }
 ```
 
-## Requirements
+## OpenAPI Integration
 
-- **Node.js:** ≥ 18.12.0
+Install `@assemblerjs/openapi` to generate an OpenAPI 3.1 spec from your controllers. The decorators `@Returns`, `@Throws`, `@Hidden`, and `@Operation` are pure metadata annotations — they do not affect routing or runtime behaviour.
+
+```typescript
+import { Returns, Throws, Hidden, Operation } from '@assemblerjs/openapi';
+
+@Controller({ path: '/users' })
+@Assemblage()
+class UsersController implements AbstractAssemblage {
+  @Returns(200, UserDto, 'Array of users')
+  @Operation({ summary: 'List all users' })
+  @Get('/')
+  getAll() { ... }
+
+  @Returns(200, UserDto)
+  @Throws(404, 'User not found')
+  @Get('/:id')
+  getOne(@Param('id') id: string) { ... }
+
+  @Hidden()
+  @Get('/internal')
+  internal() { ... }
+}
+```
+
+See [`@assemblerjs/openapi`](../openapi/README.md) for full configuration.
+
+## Requirements
 - **Express:** ≥ 5.0 (if using `ExpressAdapter`)
 - **Fastify:** ≥ 5.0 (if using `FastifyAdapter`)
 - **TypeScript:** ≥ 5.0

@@ -15,6 +15,34 @@ import type {
 export class MetadataStorageImpl {
   ////////////////////////////////////////////////////////////////////////////
   //
+  // Controllers registry
+  //
+  ////////////////////////////////////////////////////////////////////////////
+
+  private readonly _controllers: Set<Function> = new Set();
+  private readonly _controllerPaths: Map<Function, string> = new Map();
+
+  public getAllControllers(): Function[] {
+    return [...this._controllers];
+  }
+
+  public setControllerPath(controllerClass: Function, path: string): void {
+    this._controllers.add(controllerClass);
+    this._controllerPaths.set(controllerClass, path);
+  }
+
+  public getControllerPath(controllerClass: Function): string | undefined {
+    return this._controllerPaths.get(controllerClass);
+  }
+
+  public getRoutesForClass(controllerClass: Function): RouteMetadata[] {
+    return (
+      Reflect.getMetadata(ControllerPrivateKeys.Routes, controllerClass) || []
+    );
+  }
+
+  ////////////////////////////////////////////////////////////////////////////
+  //
   // Routes
   //
   ////////////////////////////////////////////////////////////////////////////
@@ -24,7 +52,7 @@ export class MetadataStorageImpl {
     method: string,
     path: string,
     handlerName: string | symbol,
-    info: string
+    summary: string
   ): void {
     const controllerClass = controller.constructor;
     const routes: RouteMetadata[] =
@@ -33,7 +61,7 @@ export class MetadataStorageImpl {
       method,
       path,
       handlerName,
-      info,
+      summary,
     });
     Reflect.defineMetadata(
       ControllerPrivateKeys.Routes,
