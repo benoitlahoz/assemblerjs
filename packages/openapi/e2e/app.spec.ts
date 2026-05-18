@@ -1,4 +1,6 @@
 import 'reflect-metadata';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { AbstractAssemblage, Assemblage, Assembler, Dispose } from 'assemblerjs';
 import { AbstractHttpAdapter } from '@assemblerjs/rest';
@@ -50,6 +52,11 @@ describe('OpenAPI e2e', () => {
         expect(res.headers.get('content-type')).toContain('application/json');
 
         const spec = await res.json() as any;
+
+        // ── Save spec to e2e/logs/openapi.json ───────────────────────────
+        const logsDir = join(__dirname, 'logs');
+        mkdirSync(logsDir, { recursive: true });
+        writeFileSync(join(logsDir, 'openapi.json'), JSON.stringify(spec, null, 2));
 
         // ── 2. Envelope ───────────────────────────────────────────────────
         expect(spec.openapi).toBe('3.0.3');
