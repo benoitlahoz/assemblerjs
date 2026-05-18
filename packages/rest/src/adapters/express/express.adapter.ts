@@ -1,7 +1,9 @@
-import { createServer, type Server } from 'node:http';
+import { createServer } from 'node:http';
+import { createServer as createHttpsServer } from 'node:https';
+import type { Server } from 'node:http';
 import type { Application } from 'express';
 import express from 'express';
-import { Assemblage } from 'assemblerjs';
+import { Assemblage, Configuration } from 'assemblerjs';
 import type {
   HttpMiddleware,
   HttpRequest,
@@ -10,6 +12,7 @@ import type {
 } from '@/http.types';
 import { AbstractHttpAdapter } from '../adapter.abstract';
 import { HttpAdapter } from '../http-adapter.decorator';
+import type { HttpAdapterConfiguration } from '../http-adapter-configuration';
 
 @HttpAdapter()
 @Assemblage()
@@ -19,12 +22,14 @@ export class ExpressAdapter implements AbstractHttpAdapter {
 
   public use: Application['use'];
 
-  constructor() {
+  constructor(@Configuration() config?: HttpAdapterConfiguration) {
     this.app = express();
     // Created in the constructor so Socket.IO (and other consumers) can attach
     // to the http.Server before listen() is called. Routes are registered on
     // this.app, not on httpServer, so order doesn't matter.
-    this.httpServer = createServer(this.app);
+    this.httpServer = config?.tls
+      ? createHttpsServer(config.tls, this.app)
+      : createServer(this.app);
 
     this.use = this.app.use.bind(this.app);
 

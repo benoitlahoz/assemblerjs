@@ -1,7 +1,7 @@
 import type { FastifyInstance, HTTPMethods } from 'fastify';
 import Fastify from 'fastify';
 import type { Server } from 'node:http';
-import { Assemblage } from 'assemblerjs';
+import { Assemblage, Configuration } from 'assemblerjs';
 import type {
   HttpMiddleware,
   HttpRequest,
@@ -10,6 +10,7 @@ import type {
 } from '@/http.types';
 import { AbstractHttpAdapter } from '../adapter.abstract';
 import { HttpAdapter } from '../http-adapter.decorator';
+import type { HttpAdapterConfiguration } from '../http-adapter-configuration';
 import { FastifyRequestShim } from './fastify-request.shim';
 import { FastifyResponseShim } from './fastify-response.shim';
 
@@ -23,8 +24,8 @@ export class FastifyAdapter implements AbstractHttpAdapter {
    */
   public readonly httpServer: Server;
 
-  constructor() {
-    this.app = Fastify({ logger: false });
+  constructor(@Configuration() config?: HttpAdapterConfiguration) {
+    this.app = Fastify({ logger: false, https: config?.tls ?? null });
     // Fastify creates its http.Server lazily but exposes it as `.server` immediately.
     this.httpServer = this.app.server as unknown as Server;
   }
