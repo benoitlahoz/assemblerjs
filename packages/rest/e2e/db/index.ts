@@ -1,4 +1,4 @@
-export const Users = [
+export const Users: Array<{ id: number; name: string; gender: string }> = [
   {
     id: 1,
     name: 'John Doe',
@@ -22,7 +22,12 @@ export const Users = [
   },
 ];
 
-export const Posts = [
+export const Posts: Array<{
+  id: number;
+  sender: number;
+  receiver: number;
+  content: string;
+}> = [
   {
     id: 1,
     sender: 1,

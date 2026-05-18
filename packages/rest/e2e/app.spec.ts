@@ -16,8 +16,6 @@ describe('API Server Application', () => {
       provide: [[WebFrameworkAdapter, ExpressAdapter], [ApiController]],
       global: {
         '@assemblerjs/rest': {
-          // This is the default adapter, so it can be omitted.
-          // If you want to use a different adapter, you can specify it here.
           adapter: WebFrameworkAdapter,
         },
       },
@@ -30,12 +28,12 @@ describe('API Server Application', () => {
       ) {}
 
       public async onInited(): Promise<void> {
-        this.server.listen(9999);
+        this.server.listen(10000);
       }
 
       public async fetchUsers(): Promise<void> {
-        //  Get allowed methods.
-        let res = await fetch('http://localhost:9999/api/user', {
+        // Get allowed methods.
+        let res = await fetch('http://localhost:10000/api/user', {
           method: 'OPTIONS',
         });
         expect(res.ok).toBeTruthy();
@@ -47,13 +45,13 @@ describe('API Server Application', () => {
         ).toBeTruthy();
 
         // Fetch users.
-        res = await fetch('http://localhost:9999/api/user');
+        res = await fetch('http://localhost:10000/api/user');
         expect(res.ok).toBeTruthy();
         const users = await res.json();
         expect(users).toStrictEqual(Users);
 
-        // Try 'HEAD' method for a path that only set headers.
-        res = await fetch('http://localhost:9999/api/user/headers', {
+        // Try 'HEAD' method for a path that sets custom headers.
+        res = await fetch('http://localhost:10000/api/user/headers', {
           method: 'HEAD',
         });
         expect(res.ok).toBeTruthy();
@@ -61,27 +59,27 @@ describe('API Server Application', () => {
         expect(headers.get('x-powered-by')).toBe('My Super Application');
 
         // Fetch user with non-existent id.
-        res = await fetch('http://localhost:9999/api/user/0');
+        res = await fetch('http://localhost:10000/api/user/id/0');
         expect(res.ok).toBeFalsy();
         expect(res.status).toBe(404);
 
         // Fetch existing user by its id.
-        res = await fetch('http://localhost:9999/api/user/id/1');
+        res = await fetch('http://localhost:10000/api/user/id/1');
         expect(res.ok).toBeTruthy();
         const john = await res.json();
         expect(john).toStrictEqual(Users[0]);
 
-        // Fetch all users for given gender (@Middleware decorator is used and adds a 'test' property to the result).
-        res = await fetch('http://localhost:9999/api/user/gender/non-binary');
+        // Fetch all users for given gender.
+        res = await fetch('http://localhost:10000/api/user/gender/non-binary');
         expect(res.ok).toBeTruthy();
         const usersForGender = await res.json();
-        expect(usersForGender).toStrictEqual({
-          ...Users.filter((u: any) => u.gender === 'non-binary'),
-        });
+        expect(usersForGender).toStrictEqual(
+          Users.filter((u) => u.gender === 'non-binary')
+        );
       }
 
       public async createUsers(): Promise<void> {
-        const lastId = Math.max(...Users.map((user: any) => user.id));
+        const lastId = Math.max(...Users.map((user) => user.id));
         const nextId = lastId + 1;
 
         const newUser = {
@@ -89,9 +87,8 @@ describe('API Server Application', () => {
           gender: 'male',
         };
 
-        let res = await fetch('http://localhost:9999/api/user', {
+        let res = await fetch('http://localhost:10000/api/user', {
           method: 'POST',
-          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -99,14 +96,12 @@ describe('API Server Application', () => {
           body: JSON.stringify(newUser),
         });
         expect(res.ok).toBeTruthy();
+        expect(res.status).toBe(201);
 
         const user = await res.json();
-        expect(user).toStrictEqual({
-          id: nextId,
-          ...newUser,
-        });
+        expect(user).toStrictEqual({ id: nextId, ...newUser });
 
-        res = await fetch('http://localhost:9999/api/user');
+        res = await fetch('http://localhost:10000/api/user');
         expect(res.ok).toBeTruthy();
         const users = await res.json();
         expect(users).toStrictEqual(Users);
@@ -114,18 +109,19 @@ describe('API Server Application', () => {
 
       public async modifyUsers(): Promise<void> {
         const id = 1;
-        const modifiedUser = {
-          gender: 'non-binary',
-        };
 
-        let res = await fetch(`http://localhost:9999/api/user/modify/${id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(modifiedUser),
-        });
+        const modifiedUser = { gender: 'non-binary' };
+        let res = await fetch(
+          `http://localhost:10000/api/user/modify/${id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(modifiedUser),
+          }
+        );
         expect(res.ok).toBeTruthy();
 
         let user = await res.json();
@@ -133,19 +129,18 @@ describe('API Server Application', () => {
         expect(user.name).toBe('John Doe');
         expect(user.gender).toBe('non-binary');
 
-        const replacingUser = {
-          name: 'John Jane Doe',
-          gender: 'non-binary',
-        };
-
-        res = await fetch(`http://localhost:9999/api/user/replace/${id}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(replacingUser),
-        });
+        const replacingUser = { name: 'John Jane Doe', gender: 'non-binary' };
+        res = await fetch(
+          `http://localhost:10000/api/user/replace/${id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+            },
+            body: JSON.stringify(replacingUser),
+          }
+        );
         expect(res.ok).toBeTruthy();
 
         user = await res.json();
@@ -155,24 +150,24 @@ describe('API Server Application', () => {
       }
 
       public async fetchPosts(): Promise<void> {
-        let res = await fetch('http://localhost:9999/api/post');
+        let res = await fetch('http://localhost:10000/api/post');
         expect(res.ok).toBeTruthy();
         let posts = await res.json();
         expect(posts).toStrictEqual(Posts);
 
-        res = await fetch('http://localhost:9999/api/post/sender/1');
+        res = await fetch('http://localhost:10000/api/post/sender/1');
         expect(res.ok).toBeTruthy();
         posts = await res.json();
         expect(posts).toStrictEqual([Posts[0]]);
 
-        res = await fetch('http://localhost:9999/api/post/receiver/1');
+        res = await fetch('http://localhost:10000/api/post/receiver/1');
         expect(res.ok).toBeTruthy();
         posts = await res.json();
         expect(posts).toStrictEqual([Posts[1]]);
       }
 
       public async createPosts(): Promise<void> {
-        const lastId = Math.max(...Posts.map((post: any) => post.id));
+        const lastId = Math.max(...Posts.map((post) => post.id));
         const nextId = lastId + 1;
 
         const newPost = {
@@ -181,9 +176,8 @@ describe('API Server Application', () => {
           content: 'Alea jacta est',
         };
 
-        let res = await fetch('http://localhost:9999/api/post', {
+        let res = await fetch('http://localhost:10000/api/post', {
           method: 'POST',
-          mode: 'no-cors',
           headers: {
             'Content-Type': 'application/json',
             Accept: 'application/json',
@@ -191,24 +185,21 @@ describe('API Server Application', () => {
           body: JSON.stringify(newPost),
         });
         expect(res.ok).toBeTruthy();
+        expect(res.status).toBe(201);
 
         const post = await res.json();
-        expect(post).toStrictEqual({
-          id: nextId,
-          ...newPost,
-        });
+        expect(post).toStrictEqual({ id: nextId, ...newPost });
 
-        res = await fetch('http://localhost:9999/api/post');
+        res = await fetch('http://localhost:10000/api/post');
         expect(res.ok).toBeTruthy();
         const posts = await res.json();
         expect(posts).toStrictEqual(Posts);
 
         // Delete post.
         const initialLength = Posts.length;
-        res = await fetch('http://localhost:9999/api/post/delete/1', {
+        res = await fetch('http://localhost:10000/api/post/delete/1', {
           method: 'DELETE',
         });
-
         expect(res.ok).toBeTruthy();
 
         const deleted = await res.json();
@@ -227,6 +218,10 @@ describe('API Server Application', () => {
       setTimeout(async () => {
         expect(app.server.listening).toBeTruthy();
 
+        // Verify path propagation.
+        expect(app.api.users.path).toBe('/api/user');
+        expect(app.api.posts.path).toBe('/api/post');
+
         await app.fetchUsers();
         await app.createUsers();
         await app.modifyUsers();
@@ -234,7 +229,7 @@ describe('API Server Application', () => {
         await app.fetchPosts();
         await app.createPosts();
 
-        app.dispose();
+        await app.dispose();
         expect(app.server).toBeUndefined();
 
         resolve();

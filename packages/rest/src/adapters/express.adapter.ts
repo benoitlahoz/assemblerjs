@@ -2,6 +2,12 @@ import { Server } from 'node:http';
 import type { Application } from 'express';
 import express from 'express';
 import { Assemblage } from 'assemblerjs';
+import type {
+  HttpMiddleware,
+  HttpRequest,
+  HttpResponse,
+  HttpNextFunction,
+} from '@/http.types';
 import { WebFrameworkAdapter } from './adapter.abstract';
 
 @Assemblage()
@@ -18,6 +24,22 @@ export class ExpressAdapter implements WebFrameworkAdapter {
 
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(express.json());
+  }
+
+  /**
+   * Register a route with Express, scoping before-middlewares to the route path.
+   */
+  public registerRoute(
+    method: string,
+    path: string,
+    middlewares: HttpMiddleware[],
+    handler: (
+      req: HttpRequest,
+      res: HttpResponse,
+      next: HttpNextFunction
+    ) => Promise<void>
+  ): void {
+    (this.app as any)[method](path, ...middlewares, handler);
   }
 
   onDispose(): void {
