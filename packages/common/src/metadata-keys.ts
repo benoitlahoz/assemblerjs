@@ -17,29 +17,3 @@ export const buildMetadataKey = (scope: string, name: string): string => {
 
 export const buildDecoratorParameterKey = (name: string): string =>
   buildMetadataKey('param', name);
-
-export const DecoratorParameterMetadataKeys = {
-  body: buildDecoratorParameterKey('body'),
-  query: buildDecoratorParameterKey('query'),
-  param: buildDecoratorParameterKey('param'),
-  header: buildDecoratorParameterKey('header'),
-  placeholder: buildDecoratorParameterKey('placeholder'),
-} as const;
-
-/**
- * Legacy keys currently found in packages.
- * Kept here to support staged migrations.
- */
-export const LegacyDecoratorMetadataKeys = {
-  fetchBody: 'fetch:body.decorator',
-  fetchQuery: 'fetch:query.decorator',
-  fetchParam: 'fetch:param.decorator',
-  fetchHeader: 'fetch:header.decorator',
-  fetchPlaceholder: 'fetch:placeholder.decorator',
-
-  restParametersContainer: 'parameters',
-  restBodyProperty: 'body',
-  restQueryProperty: 'query',
-  restParamProperty: 'param',
-  restHeaderProperty: 'header',
-} as const;

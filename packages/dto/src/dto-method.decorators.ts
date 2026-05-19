@@ -1,16 +1,8 @@
 import { ClassConstructor } from 'class-transformer';
-import {
-  DecoratorParameterMetadataKeys,
-  LegacyDecoratorMetadataKeys,
-} from '@assemblerjs/common';
+import { buildDecoratorParameterKey } from '@assemblerjs/common';
 import { createDto, DtoValidationOptions } from './dto-factory';
 
-const FETCH_BODY_METADATA_KEYS = [
-  DecoratorParameterMetadataKeys.body,
-  LegacyDecoratorMetadataKeys.fetchBody,
-];
-const REST_PARAMETERS_METADATA_KEY = LegacyDecoratorMetadataKeys.restParametersContainer;
-const REST_BODY_METADATA_KEY = LegacyDecoratorMetadataKeys.restBodyProperty;
+const BODY_METADATA_KEY = buildDecoratorParameterKey('body');
 
 const firstIndexFromRecord = (record?: Record<string, unknown>): number | undefined => {
   if (!record) return undefined;
@@ -35,32 +27,17 @@ const resolveBodyIndex = (
   // fetch metadata is stored on the method function itself.
   const methodFn = (target as any)[String(propertyKey)];
   if (methodFn) {
-    for (const key of FETCH_BODY_METADATA_KEYS) {
-      const fetchMetadata = Reflect.getMetadata(
-        key,
-        methodFn
-      ) as Record<string, unknown> | undefined;
-      const fetchIndex = firstIndexFromRecord(fetchMetadata);
-      if (typeof fetchIndex === 'number') {
-        return fetchIndex;
-      }
+    const bodyMetadata = Reflect.getMetadata(
+      BODY_METADATA_KEY,
+      methodFn
+    ) as Record<string, unknown> | undefined;
+    const bodyIndex = firstIndexFromRecord(bodyMetadata);
+    if (typeof bodyIndex === 'number') {
+      return bodyIndex;
     }
   }
 
-  // rest metadata is stored in controller-level "parameters" metadata.
-  const restMetadata = Reflect.getMetadata(
-    REST_PARAMETERS_METADATA_KEY,
-    target
-  ) as Record<string, Record<string, Record<string, unknown>>> | undefined;
-
-  const handlerName = String(propertyKey);
-  const restBodyMetadata = restMetadata?.[REST_BODY_METADATA_KEY]?.[handlerName];
-  const restIndex = firstIndexFromRecord(restBodyMetadata);
-  if (typeof restIndex === 'number') {
-    return restIndex;
-  }
-
-  // Backward-compatible fallback.
+  // Default fallback.
   return 0;
 };
 

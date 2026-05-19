@@ -4,6 +4,8 @@ import { IsInt, IsString } from 'class-validator';
 import { ValidateArg, ValidateBody } from './dto-method.decorators';
 import { DtoValidationError } from './dto-validation-error';
 
+const BODY_METADATA_KEY = 'assemblerjs:param:body';
+
 class CreateUserDto {
   @IsString()
   name: string;
@@ -35,23 +37,11 @@ class UserService {
 }
 
 describe('dto method decorators', () => {
-  // Simulate metadata produced by @Body in fetch and rest packages.
+  // Simulate metadata produced by @Body decorators.
   Reflect.defineMetadata(
-    'fetch:body.decorator',
+    BODY_METADATA_KEY,
     { '1': 'body' },
     UserService.prototype.createFromBodyAtIndexOne
-  );
-
-  Reflect.defineMetadata(
-    'parameters',
-    {
-      body: {
-        createFromBodyAtIndexOne: {
-          '1': undefined,
-        },
-      },
-    },
-    UserService.prototype
   );
 
   it('ValidateArg should validate and transform argument before method call', async () => {
@@ -83,7 +73,7 @@ describe('dto method decorators', () => {
     expect(result.traceId).toBe('trace-1');
   });
 
-  it('ValidateBody should resolve body index from fetch/rest @Body metadata', async () => {
+  it('ValidateBody should resolve body index from @Body metadata', async () => {
     const service = new UserService();
     const result = await service.createFromBodyAtIndexOne(
       'trace-2',

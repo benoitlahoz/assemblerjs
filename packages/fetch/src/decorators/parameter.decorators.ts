@@ -1,14 +1,17 @@
-import {
-  DecoratorParameterMetadataKeys,
-  LegacyDecoratorMetadataKeys,
-} from '@assemblerjs/common';
+import { buildDecoratorParameterKey } from '@assemblerjs/common';
+
+const PARAM_KEY = buildDecoratorParameterKey('param');
+const QUERY_KEY = buildDecoratorParameterKey('query');
+const PLACEHOLDER_KEY = buildDecoratorParameterKey('placeholder');
+const BODY_KEY = buildDecoratorParameterKey('body');
+const HEADER_KEY = buildDecoratorParameterKey('header');
 
 export const ReflectParameters = {
-  Param: LegacyDecoratorMetadataKeys.fetchParam,
-  Query: LegacyDecoratorMetadataKeys.fetchQuery,
-  Placeholder: LegacyDecoratorMetadataKeys.fetchPlaceholder,
-  Body: LegacyDecoratorMetadataKeys.fetchBody,
-  Header: LegacyDecoratorMetadataKeys.fetchHeader,
+  Param: PARAM_KEY,
+  Query: QUERY_KEY,
+  Placeholder: PLACEHOLDER_KEY,
+  Body: BODY_KEY,
+  Header: HEADER_KEY,
 } as const;
 
 export interface ReflectParametersValues {
@@ -79,15 +82,7 @@ export const Body = (): ParameterDecorator => {
     propertyKey: string | symbol | undefined,
     index: number
   ) => {
-    // Keep legacy key for backward compatibility.
     decoratorFactory(ReflectParameters.Body)('body')(
-      target,
-      propertyKey,
-      index
-    );
-
-    // Write the monorepo convention key for forward compatibility.
-    decoratorFactory(DecoratorParameterMetadataKeys.body)('body')(
       target,
       propertyKey,
       index

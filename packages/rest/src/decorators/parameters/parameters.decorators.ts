@@ -1,5 +1,25 @@
 import { DecoratedParameterPrivateKeys } from './parameters-decorators.keys';
 import { MetadataStorage } from '@/metadata/metadata-storage';
+import { buildDecoratorParameterKey } from '@assemblerjs/common';
+
+const writeCommonParameterMetadata = (
+  type: 'body' | 'param' | 'query' | 'header',
+  identifier: string | symbol,
+  target: any,
+  propertyKey: string | symbol | undefined,
+  index: number
+) => {
+  if (typeof propertyKey === 'undefined') return;
+
+  const key = buildDecoratorParameterKey(type);
+  const method = target[String(propertyKey)];
+  if (!method) return;
+
+  const metadata =
+    (Reflect.getMetadata(key, method) as Record<string, string | symbol> | undefined) || {};
+  metadata[String(index)] = identifier;
+  Reflect.defineMetadata(key, metadata, method);
+};
 
 export const Param = (identifier: string | symbol): ParameterDecorator => {
   return (
@@ -14,6 +34,7 @@ export const Param = (identifier: string | symbol): ParameterDecorator => {
       index,
       identifier
     );
+    writeCommonParameterMetadata('param', identifier, target, propertyKey, index);
   };
 };
 
@@ -30,6 +51,7 @@ export const Query = (identifier: string | symbol): ParameterDecorator => {
       index,
       identifier
     );
+    writeCommonParameterMetadata('query', identifier, target, propertyKey, index);
   };
 };
 
@@ -75,6 +97,7 @@ export const Body = (): ParameterDecorator => {
       propertyKey,
       index
     );
+    writeCommonParameterMetadata('body', 'body', target, propertyKey, index);
   };
 };
 
@@ -106,6 +129,7 @@ export const Header = (identifier: string | symbol): ParameterDecorator => {
       index,
       identifier
     );
+    writeCommonParameterMetadata('header', identifier, target, propertyKey, index);
   };
 };
 
