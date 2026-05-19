@@ -1,63 +1,5 @@
 # @assemblerjs/fetch
 
-Lightweight TypeScript decorator to attach HTTP request behavior to class methods for AssemblerJS.
-
-This package exposes a Fetch method-decorator that builds and executes HTTP requests based on method arguments and parameter decorators (placeholders, params, queries). It resolves dynamic headers/body, runs a fetch, parses the response according to an optional parse decorator, and finally calls the original method with the network result.
-
-## Exported decorator
-
-Fetch(method: string, path: string, options?: Omit<RequestInit, 'headers' | 'body'> & { headers?: HeadersInit | ((target: any) => HeadersInit | Promise<HeadersInit>); body?: any | ((target: any) => any | Promise<any>) }, debug?: boolean): MethodDecorator
-
-- method: HTTP method (e.g. 'GET', 'POST', 'PUT', 'PATCH', 'DELETE' ...). The decorator uppercases it internally.
-- path: request path or URL. Path supports placeholders that will be replaced before the request (see placeholder/param/query below).
-- options: partial RequestInit but with custom `headers` and `body` typing:
-  - headers can be a HeadersInit object or a function (target => HeadersInit | Promise<HeadersInit>) evaluated at call time.
-  - body can be a value or a function (target => body | Promise<body>) evaluated at call time.
-  - other RequestInit keys (mode, credentials, cache...) are forwarded.
-- debug: when true the decorator logs internal steps to console.
-
-## Parameter decorators (used by Fetch)
-
-The fetch decorator relies on parameter-level metadata collected by parameter decorators. The implementation reads three categories:
-
-- Placeholder: transforms an initial path using placeholder decorators (used before param substitution).
-- Param: replaces named path segments (e.g. `:id`) with parameter values.
-- Query: serializes arguments into query string parts appended to the path.
-
-(See your package's parameter.decorator implementations for the exact decorator names; the fetch decorator expects metadata under three groups: placeholder, param, query.)
-
-## Response parsing
-
-If a parse decorator is applied (metadata read via ReflectParse.ExpectedType), the Fetch pipeline will call parsing helpers:
-- parseResponseWithType(response, type) when an expected ResponseMethod is set.
-- parseResponseWithUnknownType(response) when no expected type is present.
-
-These helpers are used to populate the `data` value passed to the original method.
-
-## Body selection rules
-
-- If options.body is provided to Fetch and is a function, it will be invoked with the target to resolve the body; if it's a plain value it is used as-is.
-- Otherwise, for body methods (POST, UPDATE, PATCH, PUT), the decorator picks the body value from the arguments at index `decoratedParametersLength` (i.e., after all decorated parameters).
-
-Asynchronous bodies (Promise or async value) are awaited before calling fetch.
-
-## Headers resolution
-
-If options.headers is a function it will be awaited with the target to produce final headers; otherwise options.headers is used.
-
-## Error handling & result
-
-- If fetch returns a non-OK response, an Error is attached to the `error` field.
-- The decorator builds a result object containing: body, response, status (code + text), data, and error.
-- After parsing, the original method is invoked with the final argument list: all original args (with undefined inserted for missing optional decorated parameters), then `data`, `error`, `status`, `finalPath`.
-  - Example final call: original.apply(this, [...resolvedArgs, data, error, status, finalPath])
-
-## Debugging
-
-When the `debug` flag is true, the decorator logs internal pipeline steps (argument listing, placeholder/param/query transformations, resolved options, errors, final path).
-
-# @assemblerjs/fetch
-
 Lightweight TypeScript decorators to attach HTTP request behavior to class methods for AssemblerJS.
 
 This package provides a single method decorator `Fetch` plus a few parameter decorators and a `Parse` method decorator. The `Fetch` decorator builds a request URL using parameter decorators, resolves dynamic headers and body (functions are supported), performs a `fetch` call, parses the response (using an optional `@Parse` hint), and finally calls the original method with the network result appended to the arguments.
@@ -80,6 +22,7 @@ All exports are re-exported from `src/decorators/index.ts`.
 - `Query(name: string | symbol): ParameterDecorator`
 - `Param(name: string | symbol): ParameterDecorator`
 - `Placeholder(token: string | symbol): ParameterDecorator`
+- `Body(): ParameterDecorator`
 - `Parse(type: ResponseMethod): MethodDecorator`
 
 Types (high level):
@@ -107,7 +50,8 @@ See the source types in `src/decorators/fetch.decorator.ts` for full definitions
 
 Important notes derived from the implementation and tests:
 
-- There is no `@Body` parameter decorator. The body is either:
+- `@Body` can be used to explicitly select which method argument becomes the request body.
+- If `@Body` is not used, the body is either:
   - Provided via `options.body` when applying `@Fetch` (value or function), or
   - Inferred from the method arguments: the first non-decorated argument after all decorated parameters is used as the body for methods that typically carry a body (POST, UPDATE, PATCH, PUT).
 - `@Param` values are replaced into the path; if you pass a parameter name without a leading `:`, the decorator ensures it matches `:name` in the path.
@@ -119,7 +63,7 @@ Important notes derived from the implementation and tests:
 ## Examples (taken from tests)
 
 ```ts
-import { Fetch, Query, Param, Placeholder, Parse } from '@assemblerjs/fetch';
+import { Body, Fetch, Query, Param, Placeholder, Parse } from '@assemblerjs/fetch';
 
 const apiHost = 'https://dummyjson.com';
 
@@ -157,6 +101,11 @@ class MyDummyUsersService {
     if (data) return data;
   }
 
+  @Fetch('post', `${apiHost}/users/add`, { headers: { Accept: 'application/json', 'Content-Type': 'application/json' } })
+  public addUserWithBodyDecorator(@Body() body: string, data?: any) {
+    if (data) return data;
+  }
+
   @Fetch('post', `${apiHost}/users/add`, {
     headers: (target) => ({
       Accept: 'application/json',
@@ -174,6 +123,7 @@ const svc = new MyDummyUsersService();
 await svc.getUsers(10, 0); // query params appended
 await svc.getUserCart(6); // path param replaced
 await svc.addUser(JSON.stringify({ firstName: 'Owen' })); // body inferred
+await svc.addUserWithBodyDecorator(JSON.stringify({ firstName: 'Body' })); // body selected with @Body
 ```
 
 ## Return/invocation shape

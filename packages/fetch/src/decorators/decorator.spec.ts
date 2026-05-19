@@ -1,9 +1,7 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
-import type { FetchStatus } from './fetch.decorator';
-import { Fetch } from './fetch.decorator';
-import { Query, Param, Placeholder } from './parameter.decorators';
-import { Parse } from './parse.decorator';
+import { Body, Fetch, Query, Param, Placeholder, Parse } from '@/index';
+import type { FetchStatus } from '@/index';
 import {
   methodNameForType,
   registerMethodName,
@@ -98,6 +96,20 @@ class MyDummyUsersService {
   })
   public addUser(
     body: string,
+    data?: any,
+    err?: Error,
+    status?: FetchStatus,
+    path?: string
+  ) {
+    if (data && !err) return data;
+    throw err;
+  }
+
+  @Fetch('post', `${apiHost}/users/add`, {
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+  })
+  public addUserWithBodyDecorator(
+    @Body() body: string,
     data?: any,
     err?: Error,
     status?: FetchStatus,
@@ -209,6 +221,19 @@ describe('Fetch decorator', () => {
     expect(data.firstName).toBeDefined();
     expect(data.firstName).toBe(user.firstName);
     expect(data.lastName).toBeDefined();
+    expect(data.lastName).toBe(user.lastName);
+  });
+
+  it('should add an user with @Body decorator', async () => {
+    const user = {
+      firstName: 'Body',
+      lastName: 'Decorator',
+      age: 30,
+    };
+    const data = await usersService.addUserWithBodyDecorator(JSON.stringify(user));
+
+    expect(data).toBeDefined();
+    expect(data.firstName).toBe(user.firstName);
     expect(data.lastName).toBe(user.lastName);
   });
 

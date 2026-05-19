@@ -2,6 +2,7 @@ export enum ReflectParameters {
   Param = 'fetch:param.decorator',
   Query = 'fetch:query.decorator',
   Placeholder = 'fetch:placeholder.decorator',
+  Body = 'fetch:body.decorator',
 }
 
 export interface ReflectParametersValues {
@@ -64,6 +65,7 @@ export const getParameterDecoratorValues = (
 export const Query = decoratorFactory(ReflectParameters.Query);
 export const Param = decoratorFactory(ReflectParameters.Param);
 export const Placeholder = decoratorFactory(ReflectParameters.Placeholder);
+export const Body = () => decoratorFactory(ReflectParameters.Body)('body');
 
 // Path transformers.
 

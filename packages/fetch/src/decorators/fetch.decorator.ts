@@ -26,11 +26,18 @@ type PathOrFunction<T = any> = string | ((target: T) => string);
 type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
 type BodyOrFunction<T = any> = FetchResult['body'] | ((target: T) => FetchResult['body'] | Promise<FetchResult['body']>);
 
+export interface FetchOptions
+  extends Omit<RequestInit, 'headers' | 'body'> {
+  headers?: HeadersOrFunction;
+  body?: BodyOrFunction;
+}
+
 interface TaskInit {
   decoratedParametersValues: {
     param: ReflectParametersValues;
     placeholder: ReflectParametersValues;
     query: ReflectParametersValues;
+    body: ReflectParametersValues;
   };
   decoratedParametersLength: number;
   responseType: Maybe<ResponseMethod>;
@@ -48,10 +55,7 @@ interface TaskInit {
       )
     | string;
   path: PathOrFunction;
-  options?: Omit<RequestInit, 'headers' | 'body'> & { 
-    headers?: HeadersOrFunction; 
-    body?: BodyOrFunction; 
-  },
+  options?: FetchOptions;
   target: any;
   propertyKey: string | symbol;
   args: any[];
@@ -111,14 +115,21 @@ const buildParametersObject = (target: any, propertyKey: string | symbol) => {
     target,
     propertyKey
   );
+  const body = getParameterDecoratorValues(
+    ReflectParameters.Body,
+    target,
+    propertyKey
+  );
 
   return {
     decoratedParametersValues: {
       param,
       placeholder,
       query,
+      body,
     },
-    decoratedParametersLength: param.length + placeholder.length + query.length,
+    decoratedParametersLength:
+      param.length + placeholder.length + query.length + body.length,
   };
 };
 
@@ -137,7 +148,8 @@ const getParseDecoratorResponseType = (
 const getBodyInArgs = (
   method: string,
   decoratedLength: number,
-  args: any[]
+  args: any[],
+  bodyValues: ReflectParametersValues
 ) => {
   const isBodyMethod =
     method === 'POST' ||
@@ -145,16 +157,23 @@ const getBodyInArgs = (
     method === 'PATCH' ||
     method === 'PUT';
 
-  return isBodyMethod ? args[decoratedLength] : undefined;
+  if (!isBodyMethod) return undefined;
+
+  // Explicit @Body takes precedence over positional fallback.
+  if (bodyValues.length > 0) {
+    const [firstBodyIndex] = Object.keys(bodyValues.metadata)
+      .map(Number)
+      .sort((a, b) => a - b);
+    return args[firstBodyIndex];
+  }
+
+  return args[decoratedLength];
 };
 
 export const Fetch = (
   method: string,
   path: PathOrFunction,
-  options?: Omit<RequestInit, 'headers' | 'body'> & { 
-    headers?: HeadersOrFunction; 
-    body?: BodyOrFunction; 
-  },
+  options?: FetchOptions,
   debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
 ): MethodDecorator => {
   return (
@@ -204,7 +223,8 @@ export const Fetch = (
             res.body = getBodyInArgs(
               init.method,
               init.decoratedParametersLength,
-              init.args
+              init.args,
+              init.decoratedParametersValues.body
             );
           }
 
