@@ -7,6 +7,12 @@
       "path": "../core"
     },
     {
+      "path": "../common"
+    },
+    {
+      "path": "../assemblerjs"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {

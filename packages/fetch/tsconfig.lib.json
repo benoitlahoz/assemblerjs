@@ -7,7 +7,9 @@
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@assemblerjs/common": ["../common/src/index.ts"],
+      "@assemblerjs/common/*": ["../common/src/*"]
     },
     "types": ["node", "vite/client", "reflect-metadata"]
   },
@@ -15,6 +17,12 @@
   "references": [
     {
       "path": "../core/tsconfig.lib.json"
+    },
+    {
+      "path": "../common/tsconfig.lib.json"
+    },
+    {
+      "path": "../assemblerjs/tsconfig.lib.json"
     }
   ],
   "exclude": [

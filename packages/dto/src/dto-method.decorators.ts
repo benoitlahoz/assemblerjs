@@ -1,9 +1,16 @@
 import { ClassConstructor } from 'class-transformer';
+import {
+  DecoratorParameterMetadataKeys,
+  LegacyDecoratorMetadataKeys,
+} from '@assemblerjs/common';
 import { createDto, DtoValidationOptions } from './dto-factory';
 
-const FETCH_BODY_METADATA_KEY = 'fetch:body.decorator';
-const REST_PARAMETERS_METADATA_KEY = 'parameters';
-const REST_BODY_METADATA_KEY = 'body';
+const FETCH_BODY_METADATA_KEYS = [
+  DecoratorParameterMetadataKeys.body,
+  LegacyDecoratorMetadataKeys.fetchBody,
+];
+const REST_PARAMETERS_METADATA_KEY = LegacyDecoratorMetadataKeys.restParametersContainer;
+const REST_BODY_METADATA_KEY = LegacyDecoratorMetadataKeys.restBodyProperty;
 
 const firstIndexFromRecord = (record?: Record<string, unknown>): number | undefined => {
   if (!record) return undefined;
@@ -28,13 +35,15 @@ const resolveBodyIndex = (
   // fetch metadata is stored on the method function itself.
   const methodFn = (target as any)[String(propertyKey)];
   if (methodFn) {
-    const fetchMetadata = Reflect.getMetadata(
-      FETCH_BODY_METADATA_KEY,
-      methodFn
-    ) as Record<string, unknown> | undefined;
-    const fetchIndex = firstIndexFromRecord(fetchMetadata);
-    if (typeof fetchIndex === 'number') {
-      return fetchIndex;
+    for (const key of FETCH_BODY_METADATA_KEYS) {
+      const fetchMetadata = Reflect.getMetadata(
+        key,
+        methodFn
+      ) as Record<string, unknown> | undefined;
+      const fetchIndex = firstIndexFromRecord(fetchMetadata);
+      if (typeof fetchIndex === 'number') {
+        return fetchIndex;
+      }
     }
   }
 

@@ -1,10 +1,15 @@
-export enum ReflectParameters {
-  Param = 'fetch:param.decorator',
-  Query = 'fetch:query.decorator',
-  Placeholder = 'fetch:placeholder.decorator',
-  Body = 'fetch:body.decorator',
-  Header = 'fetch:header.decorator',
-}
+import {
+  DecoratorParameterMetadataKeys,
+  LegacyDecoratorMetadataKeys,
+} from '@assemblerjs/common';
+
+export const ReflectParameters = {
+  Param: LegacyDecoratorMetadataKeys.fetchParam,
+  Query: LegacyDecoratorMetadataKeys.fetchQuery,
+  Placeholder: LegacyDecoratorMetadataKeys.fetchPlaceholder,
+  Body: LegacyDecoratorMetadataKeys.fetchBody,
+  Header: LegacyDecoratorMetadataKeys.fetchHeader,
+} as const;
 
 export interface ReflectParametersValues {
   metadata: Record<string, string | symbol>;
@@ -66,8 +71,29 @@ export const getParameterDecoratorValues = (
 export const Query = decoratorFactory(ReflectParameters.Query);
 export const Param = decoratorFactory(ReflectParameters.Param);
 export const Placeholder = decoratorFactory(ReflectParameters.Placeholder);
-export const Body = () => decoratorFactory(ReflectParameters.Body)('body');
 export const Header = decoratorFactory(ReflectParameters.Header);
+
+export const Body = (): ParameterDecorator => {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    index: number
+  ) => {
+    // Keep legacy key for backward compatibility.
+    decoratorFactory(ReflectParameters.Body)('body')(
+      target,
+      propertyKey,
+      index
+    );
+
+    // Write the monorepo convention key for forward compatibility.
+    decoratorFactory(DecoratorParameterMetadataKeys.body)('body')(
+      target,
+      propertyKey,
+      index
+    );
+  };
+};
 
 // Path transformers.
 

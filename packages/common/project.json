@@ -1,0 +1,9 @@
+{
+  "name": "assemblerjs-common",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "packages/common/src",
+  "projectType": "library",
+  "tags": ["type:shared", "node"],
+  "// targets": "workspace-only internal package: no build/publish targets",
+  "targets": {}
+}

@@ -8,12 +8,18 @@
     "forceConsistentCasingInFileNames": true,
     "strictPropertyInitialization": false,
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@assemblerjs/common": ["../common/src/index.ts"],
+      "@assemblerjs/common/*": ["../common/src/*"]
     },
     "types": ["node", "vite/client", "reflect-metadata"]
   },
   "include": ["src/**/*.ts"],
-  "references": [],
+  "references": [
+    {
+      "path": "../common/tsconfig.lib.json"
+    }
+  ],
   "exclude": [
     "vite.config.ts",
     "vite.config.mts",
