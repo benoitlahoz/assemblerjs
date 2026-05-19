@@ -6,6 +6,9 @@
   "tags": ["type:feature", "node"],
   "// targets": "to see all targets run: nx show project assemblerjs-dto --web",
   "targets": {
+    "build": {
+      "dependsOn": []
+    },
     "test": {
       "dependsOn": []
     }

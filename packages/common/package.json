@@ -1,6 +1,6 @@
 {
   "name": "@assemblerjs/common",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared internal conventions and constants for the AssemblerJS monorepo.",
   "type": "module",
   "main": "./dist/index.js",
