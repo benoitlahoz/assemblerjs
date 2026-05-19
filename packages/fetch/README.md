@@ -4,7 +4,7 @@ Lightweight TypeScript decorators to attach HTTP request behavior to class metho
 
 This package provides a single method decorator `Fetch` plus a few parameter decorators and a `Parse` method decorator. The `Fetch` decorator builds a request URL using parameter decorators, resolves dynamic headers and body (functions are supported), performs a `fetch` call, parses the response (using an optional `@Parse` hint), and finally calls the original method with the network result appended to the arguments.
 
-This README documents the public behaviour implemented in `src/decorators/*` and illustrated by the tests in `src/decorators/decorator.spec.ts`.
+This README documents the public behaviour implemented in `src/decorators/*` and illustrated by tests in `e2e/app.spec.ts` and `src/decorators/parameter.decorators.spec.ts`.
 
 ## Install
 
@@ -18,7 +18,7 @@ yarn add @assemblerjs/fetch
 
 All exports are re-exported from `src/decorators/index.ts`.
 
-- `Fetch(method: string, path: string, options?: FetchOptions, debug?: boolean): MethodDecorator`
+- `Fetch(method: string, path: string, options?: FetchOptions, debug?: boolean | FetchDebugFn): MethodDecorator`
 - `Query(name: string | symbol): ParameterDecorator`
 - `Param(name: string | symbol): ParameterDecorator`
 - `Placeholder(token: string | symbol): ParameterDecorator`
@@ -34,6 +34,7 @@ Types (high level):
   - `timeout?: number` (in milliseconds)
   - `retry?: number` (number of retry attempts when response is not `ok`)
   - `retryDelay?: number` (delay in milliseconds between retries)
+- `FetchDebugFn` — `(reason: string, ...values: any[]) => void`
 - `ResponseMethod` — string union for response parsers: `'text' | 'json' | 'blob' | 'arrayBuffer' | 'bytes' | 'formData'` (see `Parse` decorator)
 - `FetchStatus` — { code: number; text: string }
 
@@ -62,7 +63,7 @@ Other notes:
 - Headers and body may be synchronous values or functions that receive the class instance; functions may return a Promise.
 - The decorator uses the global `fetch` available at runtime. There is no built-in dependency injection for an alternate fetch implementation in the code — for Node you should polyfill `global.fetch` (e.g. `node-fetch` or `undici`) before using the decorator.
 
-## Examples (taken from tests)
+## Examples
 
 Notes for body handling in these examples:
 
@@ -168,7 +169,8 @@ So if your original method signature is `(...args)`, the decorator will call `or
 
 ## Tests & utilities
 
-- The tests under `src/decorators/decorator.spec.ts` illustrate expected behaviour and provide usage examples against `https://dummyjson.com`.
+- End-to-end tests under `e2e/app.spec.ts` validate real HTTP flows with a local test server, a real Assemblage, and transversals used as interceptors.
+- Unit tests under `src/decorators/parameter.decorators.spec.ts` validate path/query/header transformers in isolation.
 - Utility functions used by the decorator (response parsers and method registration) are in `src/utils` and are referenced by the tests (e.g. registering response method names for mime types).
 
 
@@ -211,7 +213,7 @@ For more, see the AssemblerJS documentation on transversals (`core-concepts/tran
 
 ## Contributing
 
-- Open a PR with tests for new behaviour in `src/decorators/decorator.spec.ts`.
+- Open a PR with tests for new behaviour in `e2e/app.spec.ts` and/or `src/decorators/parameter.decorators.spec.ts`.
 - Keep the parameter decorators and `Fetch` behaviour consistent: parameter decorators (`Query`, `Param`, `Placeholder`) must continue to populate the parameter metadata used by `Fetch`.
 
 ## License
