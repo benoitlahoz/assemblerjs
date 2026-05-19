@@ -21,8 +21,14 @@ const wait = async (ms: number) =>
     setTimeout(resolve, ms);
   });
 
+type HookFetchResult = {
+  data?: unknown;
+  error?: Error;
+  status?: { code?: number };
+};
+
 const readHookTypesEventually = async (
-  app: { client: { hooks: () => Promise<{ data?: unknown }> } },
+  app: { client: { hooks: () => Promise<HookFetchResult> } },
   retries = 4
 ) => {
   for (let attempt = 0; attempt < retries; attempt += 1) {
@@ -38,7 +44,7 @@ const readHookTypesEventually = async (
     await wait(25);
   }
 
-  return { hooks: { data: [] }, hookTypes: [] as string[] };
+  return { hooks: { data: [] } as HookFetchResult, hookTypes: [] as string[] };
 };
 
 const prepareLogsDir = async () => {
