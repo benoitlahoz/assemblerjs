@@ -1,8 +1,60 @@
 import { ClassConstructor } from 'class-transformer';
 import { buildDecoratorParameterKey } from '@assemblerjs/common';
-import { createDto, DtoValidationOptions } from './dto-factory';
+import {
+  createDto,
+  DtoValidationHooks,
+  DtoValidationOptions,
+} from './dto-factory';
 
 const BODY_METADATA_KEY = buildDecoratorParameterKey('body');
+
+export type DtoAdaptHookBaseContext = {
+  methodName: string;
+  index: number;
+  sourceDtoName: string;
+  targetDtoName: string;
+};
+
+export type DtoAdaptStartHookContext = DtoAdaptHookBaseContext & {
+  input: unknown;
+};
+
+export type DtoAdaptSuccessHookContext = DtoAdaptHookBaseContext & {
+  output: unknown;
+};
+
+export type DtoAdaptFailureHookContext = DtoAdaptHookBaseContext & {
+  error: unknown;
+};
+
+export interface DtoAdaptationHooks {
+  onAdaptStart?: (context: DtoAdaptStartHookContext) => void;
+  onAdaptSuccess?: (context: DtoAdaptSuccessHookContext) => void;
+  onAdaptFailure?: (context: DtoAdaptFailureHookContext) => void;
+}
+
+export interface DtoDecoratorHooks extends DtoValidationHooks, DtoAdaptationHooks {}
+
+export interface DtoDecoratorOptions {
+  validation?: DtoValidationOptions;
+  hooks?: DtoDecoratorHooks;
+}
+
+const resolveDecoratorOptions = (
+  options?: DtoValidationOptions | DtoDecoratorOptions
+): DtoDecoratorOptions => {
+  if (!options) {
+    return {};
+  }
+
+  if ('validation' in options || 'hooks' in options) {
+    return options as DtoDecoratorOptions;
+  }
+
+  return {
+    validation: options as DtoValidationOptions,
+  };
+};
 
 const firstIndexFromRecord = (record?: Record<string, unknown>): number | undefined => {
   if (!record) return undefined;
@@ -44,7 +96,7 @@ const resolveBodyIndex = (
 export const ValidateArg = <T extends object>(
   index: number,
   dtoClass: ClassConstructor<T>,
-  options?: DtoValidationOptions
+  options?: DtoValidationOptions | DtoDecoratorOptions
 ): MethodDecorator => {
   return (
     _target: object,
@@ -52,9 +104,14 @@ export const ValidateArg = <T extends object>(
     descriptor: TypedPropertyDescriptor<any>
   ) => {
     const original = descriptor.value;
+    const resolvedOptions = resolveDecoratorOptions(options);
 
     descriptor.value = async function (...args: any[]) {
-      args[index] = await createDto(dtoClass, args[index] as object, true, options);
+      args[index] = await createDto(dtoClass, args[index] as object, {
+        parseErrors: true,
+        validation: resolvedOptions.validation,
+        hooks: resolvedOptions.hooks,
+      });
       return original.apply(this, args);
     };
 
@@ -64,7 +121,7 @@ export const ValidateArg = <T extends object>(
 
 export const ValidateBody = <T extends object>(
   dtoClass: ClassConstructor<T>,
-  options?: DtoValidationOptions,
+  options?: DtoValidationOptions | DtoDecoratorOptions,
   index?: number
 ): MethodDecorator => {
   return (
@@ -73,14 +130,18 @@ export const ValidateBody = <T extends object>(
     descriptor: TypedPropertyDescriptor<any>
   ) => {
     const original = descriptor.value;
+    const resolvedOptions = resolveDecoratorOptions(options);
 
     descriptor.value = async function (...args: any[]) {
       const resolvedIndex = resolveBodyIndex(target, propertyKey, index);
       args[resolvedIndex] = await createDto(
         dtoClass,
         args[resolvedIndex] as object,
-        true,
-        options
+        {
+          parseErrors: true,
+          validation: resolvedOptions.validation,
+          hooks: resolvedOptions.hooks,
+        }
       );
 
       return original.apply(this, args);
@@ -95,7 +156,7 @@ export const AdaptArg = <S extends object, T extends object>(
   sourceDto: ClassConstructor<S>,
   targetDto: ClassConstructor<T>,
   mapper: (source: S) => T | Promise<T>,
-  options?: DtoValidationOptions
+  options?: DtoValidationOptions | DtoDecoratorOptions
 ): MethodDecorator => {
   return (
     _target: object,
@@ -103,20 +164,58 @@ export const AdaptArg = <S extends object, T extends object>(
     descriptor: TypedPropertyDescriptor<any>
   ) => {
     const original = descriptor.value;
+    const resolvedOptions = resolveDecoratorOptions(options);
 
     descriptor.value = async function (...args: any[]) {
-      const source = await createDto(sourceDto, args[index] as object, true, options);
+      const methodName = String(_propertyKey);
+      resolvedOptions.hooks?.onAdaptStart?.({
+        methodName,
+        index,
+        sourceDtoName: sourceDto.name || 'AnonymousDto',
+        targetDtoName: targetDto.name || 'AnonymousDto',
+        input: args[index],
+      });
 
-      let mapped: T;
       try {
-        mapped = await mapper(source);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        throw new Error(`AdaptArg mapper failed at index ${index}: ${reason}`);
-      }
+        const source = await createDto(sourceDto, args[index] as object, {
+          parseErrors: true,
+          validation: resolvedOptions.validation,
+          hooks: resolvedOptions.hooks,
+        });
 
-      args[index] = await createDto(targetDto, mapped as object, true, options);
-      return original.apply(this, args);
+        let mapped: T;
+        try {
+          mapped = await mapper(source);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          throw new Error(`AdaptArg mapper failed at index ${index}: ${reason}`);
+        }
+
+        args[index] = await createDto(targetDto, mapped as object, {
+          parseErrors: true,
+          validation: resolvedOptions.validation,
+          hooks: resolvedOptions.hooks,
+        });
+
+        resolvedOptions.hooks?.onAdaptSuccess?.({
+          methodName,
+          index,
+          sourceDtoName: sourceDto.name || 'AnonymousDto',
+          targetDtoName: targetDto.name || 'AnonymousDto',
+          output: args[index],
+        });
+
+        return original.apply(this, args);
+      } catch (error) {
+        resolvedOptions.hooks?.onAdaptFailure?.({
+          methodName,
+          index,
+          sourceDtoName: sourceDto.name || 'AnonymousDto',
+          targetDtoName: targetDto.name || 'AnonymousDto',
+          error,
+        });
+        throw error;
+      }
     };
 
     return descriptor;
@@ -127,7 +226,7 @@ export const AdaptBody = <S extends object, T extends object>(
   sourceDto: ClassConstructor<S>,
   targetDto: ClassConstructor<T>,
   mapper: (source: S) => T | Promise<T>,
-  options?: DtoValidationOptions,
+  options?: DtoValidationOptions | DtoDecoratorOptions,
   index?: number
 ): MethodDecorator => {
   return (
@@ -136,34 +235,69 @@ export const AdaptBody = <S extends object, T extends object>(
     descriptor: TypedPropertyDescriptor<any>
   ) => {
     const original = descriptor.value;
+    const resolvedOptions = resolveDecoratorOptions(options);
 
     descriptor.value = async function (...args: any[]) {
       const resolvedIndex = resolveBodyIndex(target, propertyKey, index);
-      const source = await createDto(
-        sourceDto,
-        args[resolvedIndex] as object,
-        true,
-        options
-      );
+      const methodName = String(propertyKey);
+      resolvedOptions.hooks?.onAdaptStart?.({
+        methodName,
+        index: resolvedIndex,
+        sourceDtoName: sourceDto.name || 'AnonymousDto',
+        targetDtoName: targetDto.name || 'AnonymousDto',
+        input: args[resolvedIndex],
+      });
 
-      let mapped: T;
       try {
-        mapped = await mapper(source);
-      } catch (error) {
-        const reason = error instanceof Error ? error.message : String(error);
-        throw new Error(
-          `AdaptBody mapper failed at index ${resolvedIndex}: ${reason}`
+        const source = await createDto(
+          sourceDto,
+          args[resolvedIndex] as object,
+          {
+            parseErrors: true,
+            validation: resolvedOptions.validation,
+            hooks: resolvedOptions.hooks,
+          }
         );
+
+        let mapped: T;
+        try {
+          mapped = await mapper(source);
+        } catch (error) {
+          const reason = error instanceof Error ? error.message : String(error);
+          throw new Error(
+            `AdaptBody mapper failed at index ${resolvedIndex}: ${reason}`
+          );
+        }
+
+        args[resolvedIndex] = await createDto(
+          targetDto,
+          mapped as object,
+          {
+            parseErrors: true,
+            validation: resolvedOptions.validation,
+            hooks: resolvedOptions.hooks,
+          }
+        );
+
+        resolvedOptions.hooks?.onAdaptSuccess?.({
+          methodName,
+          index: resolvedIndex,
+          sourceDtoName: sourceDto.name || 'AnonymousDto',
+          targetDtoName: targetDto.name || 'AnonymousDto',
+          output: args[resolvedIndex],
+        });
+
+        return original.apply(this, args);
+      } catch (error) {
+        resolvedOptions.hooks?.onAdaptFailure?.({
+          methodName,
+          index: resolvedIndex,
+          sourceDtoName: sourceDto.name || 'AnonymousDto',
+          targetDtoName: targetDto.name || 'AnonymousDto',
+          error,
+        });
+        throw error;
       }
-
-      args[resolvedIndex] = await createDto(
-        targetDto,
-        mapped as object,
-        true,
-        options
-      );
-
-      return original.apply(this, args);
     };
 
     return descriptor;

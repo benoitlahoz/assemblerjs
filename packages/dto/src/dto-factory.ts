@@ -10,11 +10,39 @@ export interface DtoValidationOptions {
   groups?: string[];
 }
 
+export type DtoValidationHookContext = {
+  dtoName: string;
+  input: object;
+  options: DtoValidationOptions;
+};
+
+export type DtoValidationSuccessHookContext = DtoValidationHookContext & {
+  output: object;
+};
+
+export type DtoValidationFailureHookContext = DtoValidationHookContext & {
+  error: unknown;
+  issues?: ValidationIssue[];
+};
+
+export interface DtoValidationHooks {
+  onValidateStart?: (context: DtoValidationHookContext) => void;
+  onValidateSuccess?: (context: DtoValidationSuccessHookContext) => void;
+  onValidateFailure?: (context: DtoValidationFailureHookContext) => void;
+}
+
+export interface DtoCreateOptions {
+  parseErrors?: boolean;
+  validation?: DtoValidationOptions;
+  hooks?: DtoValidationHooks;
+}
+
 export interface ValidationIssue {
   path: string;
   code: string;
   message: string;
   value?: unknown;
+  context?: Record<string, unknown>;
 }
 
 export type DtoSafeResult<T> =
@@ -25,6 +53,25 @@ export type DtoSafeResult<T> =
  * A helper class to create and validate DTOs generically.
  */
 export class DtoFactory {
+  private static resolveCreateOptions(
+    parseErrorsOrOptions?: boolean | DtoCreateOptions,
+    validationOptions?: DtoValidationOptions
+  ): Required<DtoCreateOptions> {
+    if (typeof parseErrorsOrOptions === 'boolean') {
+      return {
+        parseErrors: parseErrorsOrOptions,
+        validation: validationOptions ?? {},
+        hooks: {},
+      };
+    }
+
+    return {
+      parseErrors: parseErrorsOrOptions?.parseErrors ?? true,
+      validation: parseErrorsOrOptions?.validation ?? validationOptions ?? {},
+      hooks: parseErrorsOrOptions?.hooks ?? {},
+    };
+  }
+
   /**
    * Create a validated instance of the given DTO class from plain input.
    * @param dtoClass The DTO class (with validation decorators)
@@ -34,18 +81,67 @@ export class DtoFactory {
   public static async create<T extends object>(
     dtoClass: ClassConstructor<T>,
     input: object,
-    parseErrors = true,
+    options?: DtoCreateOptions
+  ): Promise<T>;
+
+  public static async create<T extends object>(
+    dtoClass: ClassConstructor<T>,
+    input: object,
+    parseErrors?: boolean,
+    options?: DtoValidationOptions
+  ): Promise<T>;
+
+  public static async create<T extends object>(
+    dtoClass: ClassConstructor<T>,
+    input: object,
+    parseErrorsOrOptions: boolean | DtoCreateOptions = true,
     options?: DtoValidationOptions
   ): Promise<T> {
+    const resolved = DtoFactory.resolveCreateOptions(
+      parseErrorsOrOptions,
+      options
+    );
+
+    const dtoName = dtoClass.name || 'AnonymousDto';
+    resolved.hooks.onValidateStart?.({
+      dtoName,
+      input,
+      options: resolved.validation,
+    });
+
     const dto = plainToInstance(dtoClass, input);
-    const errors: ValidationError[] = await validate(dto, options);
+    const errors: ValidationError[] = await validate(dto, resolved.validation);
     if (errors.length > 0) {
-      if (parseErrors) {
-        throw new DtoValidationError(DtoFactory.parseValidationErrors(errors));
+      const issues = DtoFactory.parseValidationIssues(errors);
+
+      if (resolved.parseErrors) {
+        const error = new DtoValidationError(DtoFactory.parseValidationErrors(errors));
+        resolved.hooks.onValidateFailure?.({
+          dtoName,
+          input,
+          options: resolved.validation,
+          error,
+          issues,
+        });
+        throw error;
       }
 
+      resolved.hooks.onValidateFailure?.({
+        dtoName,
+        input,
+        options: resolved.validation,
+        error: errors,
+        issues,
+      });
       throw errors;
     }
+
+    resolved.hooks.onValidateSuccess?.({
+      dtoName,
+      input,
+      options: resolved.validation,
+      output: dto,
+    });
 
     return dto;
   }
@@ -94,6 +190,11 @@ export class DtoFactory {
               code,
               message,
               value: error.value,
+              context:
+                error.contexts && typeof error.contexts === 'object'
+                  ? ((error.contexts[code] as Record<string, unknown> | undefined) ??
+                    undefined)
+                  : undefined,
             }))
           : [];
 
@@ -110,14 +211,31 @@ export class DtoFactory {
   }
 }
 
-export const createDto = async <T extends object>(
+export async function createDto<T extends object>(
   dtoClass: ClassConstructor<T>,
   input: object,
-  parseErrors = true,
+  options?: DtoCreateOptions
+): Promise<T>;
+
+export async function createDto<T extends object>(
+  dtoClass: ClassConstructor<T>,
+  input: object,
+  parseErrors?: boolean,
   options?: DtoValidationOptions
-): Promise<T> => {
-  return DtoFactory.create(dtoClass, input, parseErrors, options);
-};
+): Promise<T>;
+
+export async function createDto<T extends object>(
+  dtoClass: ClassConstructor<T>,
+  input: object,
+  parseErrorsOrOptions: boolean | DtoCreateOptions = true,
+  options?: DtoValidationOptions
+): Promise<T> {
+  if (typeof parseErrorsOrOptions === 'boolean') {
+    return DtoFactory.create(dtoClass, input, parseErrorsOrOptions, options);
+  }
+
+  return DtoFactory.create(dtoClass, input, parseErrorsOrOptions);
+}
 
 export const createDtoSafe = async <T extends object>(
   dtoClass: ClassConstructor<T>,
@@ -128,8 +246,10 @@ export const createDtoSafe = async <T extends object>(
     const data = await DtoFactory.create(
       dtoClass,
       (input ?? {}) as object,
-      false,
-      options
+      {
+        parseErrors: false,
+        validation: options,
+      }
     );
 
     return { ok: true, data };

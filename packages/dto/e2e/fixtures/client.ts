@@ -69,4 +69,10 @@ export class DtoE2EClient implements AbstractAssemblage {
   async schema(data?: any, error?: Error, status?: FetchStatus) {
     return { data, error, status };
   }
+
+  @Fetch('get', (target: DtoE2EClient) => `${target.baseUrl}/dto-e2e/hooks`)
+  @Parse('json')
+  async hooks(data?: any, error?: Error, status?: FetchStatus) {
+    return { data, error, status };
+  }
 }

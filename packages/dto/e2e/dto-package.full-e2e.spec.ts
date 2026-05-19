@@ -16,6 +16,31 @@ type LogEntry = {
 
 const logEntries: LogEntry[] = [];
 
+const wait = async (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const readHookTypesEventually = async (
+  app: { client: { hooks: () => Promise<{ data?: unknown }> } },
+  retries = 4
+) => {
+  for (let attempt = 0; attempt < retries; attempt += 1) {
+    const hooks = await app.client.hooks();
+    const hookTypes = Array.isArray(hooks.data)
+      ? hooks.data.map((entry: { type: string }) => entry.type)
+      : [];
+
+    if (hookTypes.length > 0 || attempt === retries - 1) {
+      return { hooks, hookTypes };
+    }
+
+    await wait(25);
+  }
+
+  return { hooks: { data: [] }, hookTypes: [] as string[] };
+};
+
 const prepareLogsDir = async () => {
   await mkdir(LOGS_DIR, { recursive: true });
   const files = await readdir(LOGS_DIR);
@@ -94,65 +119,93 @@ describe('@assemblerjs/dto full e2e with rest + fetch', () => {
   it('should validate request body with ValidateBody', async () => {
     const payload = { name: 'Alice', age: 30 };
     const result = await app.client.validate(JSON.stringify(payload));
+    const { hooks, hookTypes } = await readHookTypesEventually(app);
 
     recordStep(1, 'ValidateBody success', {
       request: payload,
       responseStatus: result.status?.code,
       responseData: result.data,
       hasError: Boolean(result.error),
+      hookTypes,
     });
 
     expect(result.error).toBeUndefined();
     expect(result.status?.code).toBe(201);
     expect(result.data).toStrictEqual({ name: 'Alice', age: 30 });
+    expect(hooks.error).toBeUndefined();
+    expect(hooks.status?.code).toBe(200);
+    expect(hookTypes).toContain('validate:onValidateStart');
+    expect(hookTypes).toContain('validate:onValidateSuccess');
+    expect(hookTypes).not.toContain('validate:onValidateFailure');
   });
 
   it('should fail with 400 when ValidateBody receives invalid payload', async () => {
     const payload = { name: 'Alice', age: 'invalid' };
     const result = await app.client.validate(JSON.stringify(payload));
+    const { hooks, hookTypes } = await readHookTypesEventually(app);
 
     recordStep(2, 'ValidateBody failure', {
       request: payload,
       responseStatus: result.status?.code,
       errorMessage: result.error?.message,
       responseData: result.data,
+      hookTypes,
     });
 
     expect(result.data).toBeUndefined();
     expect(result.error).toBeInstanceOf(Error);
     expect(result.status?.code).toBe(400);
+    expect(hooks.error).toBeUndefined();
+    expect(hooks.status?.code).toBe(200);
+    expect(hookTypes).not.toContain('validate:onValidateSuccess');
   });
 
   it('should adapt request body with AdaptBody', async () => {
     const payload = { firstName: 'John', lastName: 'Doe', age: 28 };
     const result = await app.client.adapt(JSON.stringify(payload));
+    const { hooks, hookTypes } = await readHookTypesEventually(app);
 
     recordStep(3, 'AdaptBody success', {
       request: payload,
       responseStatus: result.status?.code,
       responseData: result.data,
       hasError: Boolean(result.error),
+      hookTypes,
     });
 
     expect(result.error).toBeUndefined();
     expect(result.status?.code).toBe(201);
     expect(result.data).toStrictEqual({ fullName: 'John Doe', age: 28 });
+    expect(hooks.error).toBeUndefined();
+    expect(hooks.status?.code).toBe(200);
+    expect(hookTypes).toContain('adapt:onAdaptStart');
+    expect(hookTypes).toContain('adapt:onAdaptSuccess');
+    expect(hookTypes).not.toContain('adapt:onAdaptFailure');
+    expect(hookTypes).toContain('adapt:onValidateStart');
+    expect(hookTypes.filter((type: string) => type === 'adapt:onValidateSuccess').length).toBe(2);
+    expect(hookTypes).not.toContain('adapt:onValidateFailure');
   });
 
   it('should fail with 400 when AdaptBody source DTO is invalid', async () => {
     const payload = { firstName: 'John', age: 28 };
     const result = await app.client.adapt(JSON.stringify(payload));
+    const { hooks, hookTypes } = await readHookTypesEventually(app);
 
     recordStep(4, 'AdaptBody failure', {
       request: payload,
       responseStatus: result.status?.code,
       errorMessage: result.error?.message,
       responseData: result.data,
+      hookTypes,
     });
 
     expect(result.data).toBeUndefined();
     expect(result.error).toBeInstanceOf(Error);
     expect(result.status?.code).toBe(400);
+    expect(hooks.error).toBeUndefined();
+    expect(hooks.status?.code).toBe(200);
+    expect(hookTypes).not.toContain('adapt:onAdaptSuccess');
+    expect(hookTypes).not.toContain('adapt:onValidateSuccess');
   });
 
   it('should expose createDtoSafe result over REST + fetch', async () => {

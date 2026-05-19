@@ -177,6 +177,44 @@ describe('DtoFactory', () => {
     expect(dto.age).toBe(28);
   });
 
+  it('should support normalized createDto options object', async () => {
+    const input = { name: 'Mark', age: 34 };
+    const dto = await createDto(UserDto, input, {
+      parseErrors: true,
+      validation: {
+        whitelist: true,
+      },
+    });
+
+    expect(dto).toBeInstanceOf(UserDto);
+    expect(dto.name).toBe('Mark');
+    expect(dto.age).toBe(34);
+  });
+
+  it('should expose validation issue context when class-validator context is defined', async () => {
+    class ContextDto {
+      @IsString({
+        context: {
+          rule: 'name-string',
+          severity: 'error',
+        },
+      })
+      name: string;
+    }
+
+    const result = await createDtoSafe(ContextDto, { name: 123 });
+    expect(result.ok).toBe(false);
+
+    if (!result.ok) {
+      const issue = result.issues.find((entry) => entry.code === 'isString');
+      expect(issue).toBeDefined();
+      expect(issue?.context).toEqual({
+        rule: 'name-string',
+        severity: 'error',
+      });
+    }
+  });
+
   it('should return ok=true with data for createDtoSafe on valid input', async () => {
     const input = { name: 'John', age: 31 };
     const result = await createDtoSafe(UserDto, input);
@@ -200,5 +238,41 @@ describe('DtoFactory', () => {
       expect(result.issues.some((issue) => issue.path.includes('age'))).toBe(true);
       expect(result.issues.some((issue) => issue.code === 'isInt')).toBe(true);
     }
+  });
+
+  it('should call validation hooks on success', async () => {
+    const calls: string[] = [];
+    const dto = await createDto(UserDto, { name: 'Hooks', age: 40 }, {
+      parseErrors: true,
+      hooks: {
+        onValidateStart: () => calls.push('start'),
+        onValidateSuccess: () => calls.push('success'),
+        onValidateFailure: () => calls.push('failure'),
+      },
+    });
+
+    expect(dto).toBeInstanceOf(UserDto);
+    expect(calls).toEqual(['start', 'success']);
+  });
+
+  it('should call validation failure hook on invalid input', async () => {
+    const calls: string[] = [];
+
+    await expect(
+      createDto(UserDto, { name: 'Hooks', age: 'bad' } as any, {
+        parseErrors: true,
+        hooks: {
+          onValidateStart: () => calls.push('start'),
+          onValidateSuccess: () => calls.push('success'),
+          onValidateFailure: (context) => {
+            calls.push('failure');
+            expect(context.dtoName).toBe('UserDto');
+            expect(context.issues?.some((issue) => issue.code === 'isInt')).toBe(true);
+          },
+        },
+      })
+    ).rejects.toThrow();
+
+    expect(calls).toEqual(['start', 'failure']);
   });
 });

@@ -26,9 +26,69 @@ All exports are re-exported from `src/index.ts`.
 - `ValidateBody(DtoClass, options?, index?)` - resolve and validate the body argument
 - `AdaptArg(index, SourceDto, TargetDto, mapper, options?)` - validate, adapt, then validate again
 - `AdaptBody(SourceDto, TargetDto, mapper, options?, index?)` - body-oriented alias for `AdaptArg`
+- `DtoValidationHooks` - optional lifecycle hooks for validation (`start/success/failure`)
+- `DtoDecoratorHooks` - optional lifecycle hooks for decorator adaptation (`start/success/failure`)
 - `DtoValidationError` - validation error with a status code
 - `DtoMetadataKeys` - DTO metadata keys used by `@Dto()`
 - `DtoSchemaExtractor` - derive JSON schema from class-validator metadata
+
+## Validation Options (Normalized)
+
+`createDto` supports a normalized options object:
+
+```typescript
+await createDto(CreateUserDto, payload, {
+  parseErrors: true,
+  validation: {
+    whitelist: true,
+    forbidNonWhitelisted: true,
+    groups: ['create'],
+  },
+});
+```
+
+Decorator helpers (`ValidateArg`, `ValidateBody`, `AdaptArg`, `AdaptBody`) internally use the same normalized flow with `parseErrors: true`.
+
+You can plug optional hooks for observability:
+
+```typescript
+await createDto(CreateUserDto, payload, {
+  parseErrors: true,
+  hooks: {
+    onValidateStart: ({ dtoName }) => console.log('start', dtoName),
+    onValidateSuccess: ({ dtoName }) => console.log('success', dtoName),
+    onValidateFailure: ({ dtoName, issues }) => console.log('failure', dtoName, issues),
+  },
+});
+```
+
+Decorator-level adaptation hooks are also supported through decorator options:
+
+```typescript
+@AdaptArg(0, ExternalDto, DomainDto, mapper, {
+  hooks: {
+    onAdaptStart: ({ methodName }) => console.log('adapt start', methodName),
+    onAdaptSuccess: ({ methodName }) => console.log('adapt success', methodName),
+    onAdaptFailure: ({ methodName, error }) => console.log('adapt failure', methodName, error),
+  },
+})
+```
+
+## ValidationIssue Contract
+
+`createDtoSafe` returns issues with a stable shape:
+
+```typescript
+type ValidationIssue = {
+  path: string;
+  code: string;
+  message: string;
+  value?: unknown;
+  context?: Record<string, unknown>;
+};
+```
+
+`context` is populated from `class-validator` decorator `context` metadata when available.
 
 ## Decorator Metadata Convention
 
@@ -50,10 +110,10 @@ yarn add @assemblerjs/dto class-validator class-transformer reflect-metadata
 
 ```typescript
 import 'reflect-metadata';
-import { DTO } from '@assemblerjs/dto';
+import { Dto } from '@assemblerjs/dto';
 import { IsString, IsEmail, IsInt, Min, Max } from 'class-validator';
 
-@DTO()
+@Dto()
 class CreateUserDto {
   @IsString()
   name: string;
@@ -82,12 +142,12 @@ invalidDto.age = 15; // Below minimum
 
 ## API
 
-### `@DTO()` Decorator
+### `@Dto()` Decorator
 
 Marks a class as a DTO and enables validation.
 
 ```typescript
-@DTO()
+@Dto()
 class MyDto {
   @IsString()
   field: string;
@@ -151,7 +211,7 @@ enum Role {
   ADMIN = 'admin'
 }
 
-@DTO()
+@Dto()
 class AddressDto {
   @IsString()
   street: string;
@@ -164,7 +224,7 @@ class AddressDto {
   zipCode?: string;
 }
 
-@DTO()
+@Dto()
 class CreateUserDto {
   @IsString()
   name: string;
@@ -197,9 +257,9 @@ Integrate DTOs with AssemblerJS dependency injection:
 
 ```typescript
 import { Assemblage, AbstractAssemblage } from 'assemblerjs';
-import { DTO } from '@assemblerjs/dto';
+import { Dto } from '@assemblerjs/dto';
 
-@DTO()
+@Dto()
 class UpdateUserDto {
   @IsString()
   @IsOptional()

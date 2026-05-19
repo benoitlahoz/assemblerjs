@@ -1,6 +1,6 @@
 # DTO E2E Log
 
-Generated: 2026-05-19T14:51:42.819Z
+Generated: 2026-05-19T16:03:26.833Z
 
 ## Summary
 
@@ -39,7 +39,11 @@ Generated: 2026-05-19T14:51:42.819Z
     "name": "Alice",
     "age": 30
   },
-  "hasError": false
+  "hasError": false,
+  "hookTypes": [
+    "validate:onValidateStart",
+    "validate:onValidateSuccess"
+  ]
 }
 ```
 
@@ -52,7 +56,8 @@ Generated: 2026-05-19T14:51:42.819Z
     "age": "invalid"
   },
   "responseStatus": 400,
-  "errorMessage": "400: Bad Request"
+  "errorMessage": "400: Bad Request",
+  "hookTypes": []
 }
 ```
 
@@ -70,7 +75,15 @@ Generated: 2026-05-19T14:51:42.819Z
     "fullName": "John Doe",
     "age": 28
   },
-  "hasError": false
+  "hasError": false,
+  "hookTypes": [
+    "adapt:onAdaptStart",
+    "adapt:onValidateStart",
+    "adapt:onValidateSuccess",
+    "adapt:onValidateStart",
+    "adapt:onValidateSuccess",
+    "adapt:onAdaptSuccess"
+  ]
 }
 ```
 
@@ -83,7 +96,8 @@ Generated: 2026-05-19T14:51:42.819Z
     "age": 28
   },
   "responseStatus": 400,
-  "errorMessage": "400: Bad Request"
+  "errorMessage": "400: Bad Request",
+  "hookTypes": []
 }
 ```
 

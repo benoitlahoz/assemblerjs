@@ -289,4 +289,92 @@ describe('dto method decorators', () => {
       )
     ).rejects.toThrow('AdaptBody mapper failed at index 0: body mapping exploded');
   });
+
+  it('ValidateArg should trigger validate hooks in order', async () => {
+    const calls: string[] = [];
+
+    class LocalHookedUserService {
+      @ValidateArg(0, CreateUserDto, {
+        hooks: {
+          onValidateStart: () => calls.push('start'),
+          onValidateSuccess: () => calls.push('success'),
+          onValidateFailure: () => calls.push('failure'),
+        },
+      })
+      async create(input: CreateUserDto) {
+        return input;
+      }
+    }
+
+    const service = new LocalHookedUserService();
+    const result = await service.create({ name: 'Hook', age: 20 } as any);
+    expect(result).toBeInstanceOf(CreateUserDto);
+    expect(calls).toEqual(['start', 'success']);
+  });
+
+  it('AdaptArg should trigger adapt hooks on success', async () => {
+    const calls: string[] = [];
+
+    class LocalHookedUserService {
+      @AdaptArg(
+        0,
+        ExternalUserDto,
+        DomainUserDto,
+        (source) => ({
+          fullName: `${source.firstName} ${source.lastName}`,
+          age: source.age,
+        }),
+        {
+          hooks: {
+            onAdaptStart: () => calls.push('adapt-start'),
+            onAdaptSuccess: () => calls.push('adapt-success'),
+            onAdaptFailure: () => calls.push('adapt-failure'),
+          },
+        }
+      )
+      async create(input: DomainUserDto) {
+        return input;
+      }
+    }
+
+    const service = new LocalHookedUserService();
+    const result = await service.create(
+      { firstName: 'A', lastName: 'B', age: 23 } as any
+    );
+
+    expect(result).toBeInstanceOf(DomainUserDto);
+    expect(calls).toEqual(['adapt-start', 'adapt-success']);
+  });
+
+  it('AdaptArg should trigger adapt failure hook on mapper error', async () => {
+    const calls: string[] = [];
+
+    class LocalHookedUserService {
+      @AdaptArg(
+        0,
+        ExternalUserDto,
+        DomainUserDto,
+        () => {
+          throw new Error('mapper boom');
+        },
+        {
+          hooks: {
+            onAdaptStart: () => calls.push('adapt-start'),
+            onAdaptSuccess: () => calls.push('adapt-success'),
+            onAdaptFailure: () => calls.push('adapt-failure'),
+          },
+        }
+      )
+      async create(input: DomainUserDto) {
+        return input;
+      }
+    }
+
+    const service = new LocalHookedUserService();
+    await expect(
+      service.create({ firstName: 'A', lastName: 'B', age: 23 } as any)
+    ).rejects.toThrow('AdaptArg mapper failed at index 0: mapper boom');
+
+    expect(calls).toEqual(['adapt-start', 'adapt-failure']);
+  });
 });
