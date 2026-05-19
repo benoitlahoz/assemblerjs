@@ -1,6 +1,6 @@
 import 'reflect-metadata';
-import { describe, it, expect } from 'vitest';
-import { Body, Fetch, Query, Param, Placeholder, Parse } from '@/index';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { Body, Fetch, Header, Query, Param, Placeholder, Parse } from '@/index';
 import type { FetchStatus } from '@/index';
 import {
   methodNameForType,
@@ -40,8 +40,7 @@ class MyDummyUsersService {
     @Query('limit') limit: number,
     @Query('skip') skip: number,
 
-    // Query can be optional. FIXME: Strange bug.
-
+    // If the query is optional, it will be added only if a value is passed.
     @Query('select') select?: string[],
 
     data?: any,
@@ -244,5 +243,118 @@ describe('Fetch decorator', () => {
     expect(data).toBeDefined();
     expect(data.firstName).toBe(dynamicUser.firstName);
     expect(data.lastName).toBe(dynamicUser.lastName);
+  });
+});
+
+class AdvancedFetchOptionsService {
+  @Fetch('get', 'https://example.test/users')
+  async getUsersWithHeader(
+    @Header('x-trace-id') traceId: string,
+    data?: any,
+    err?: Error
+  ) {
+    if (data && !err) return data;
+    throw err;
+  }
+
+  @Fetch('get', 'https://example.test/retry', {
+    retry: 1,
+  })
+  async getWithRetry(data?: any, err?: Error) {
+    if (data && !err) return data;
+    throw err;
+  }
+
+  @Fetch('get', 'https://example.test/timeout', {
+    timeout: 10,
+  })
+  async getWithTimeout(data?: any, err?: Error) {
+    if (data && !err) return data;
+    throw err;
+  }
+}
+
+describe('Fetch decorator advanced options', () => {
+  const service = new AdvancedFetchOptionsService();
+
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('should inject header values from @Header decorators', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      })
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const data = await service.getUsersWithHeader('trace-123');
+
+    expect(data.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+
+    const calledInit = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    const headers = new Headers(calledInit?.headers);
+    expect(headers.get('x-trace-id')).toBe('trace-123');
+  });
+
+  it('should retry once when first response is not ok', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ message: 'temporary failure' }), {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'content-type': 'application/json' },
+        })
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ ok: true }), {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        })
+      );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const data = await service.getWithRetry();
+
+    expect(data.ok).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('should fail with timeout when response takes too long', async () => {
+    const fetchMock = vi.fn().mockImplementation((_: string, init?: RequestInit) => {
+      return new Promise<Response>((resolve, reject) => {
+        const signal = init?.signal;
+        const onAbort = () => reject(new DOMException('The operation was aborted.', 'AbortError'));
+
+        if (signal?.aborted) {
+          onAbort();
+          return;
+        }
+
+        signal?.addEventListener('abort', onAbort, { once: true });
+
+        setTimeout(() => {
+          signal?.removeEventListener('abort', onAbort);
+          resolve(
+            new Response(JSON.stringify({ ok: true }), {
+              status: 200,
+              headers: { 'content-type': 'application/json' },
+            })
+          );
+        }, 50);
+      });
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await expect(service.getWithTimeout()).rejects.toBeTruthy();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
