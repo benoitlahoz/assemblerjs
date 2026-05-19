@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { describe, it, expect } from 'vitest';
 import { IsString, IsInt } from 'class-validator';
-import { DtoFactory } from './dto-factory';
+import { createDto, createDtoSafe, DtoFactory } from './dto-factory';
 
 class UserDto {
   @IsString()
@@ -165,6 +165,40 @@ describe('DtoFactory', () => {
       await DtoFactory.create(dtoClass, input, false);
     } catch (error) {
       expect(error).toBeInstanceOf(Array);
+    }
+  });
+
+  it('should expose createDto alias with same behavior as DtoFactory.create', async () => {
+    const input = { name: 'Jane', age: 28 };
+    const dto = await createDto(UserDto, input);
+
+    expect(dto).toBeInstanceOf(UserDto);
+    expect(dto.name).toBe('Jane');
+    expect(dto.age).toBe(28);
+  });
+
+  it('should return ok=true with data for createDtoSafe on valid input', async () => {
+    const input = { name: 'John', age: 31 };
+    const result = await createDtoSafe(UserDto, input);
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toBeInstanceOf(UserDto);
+      expect(result.data.name).toBe('John');
+      expect(result.data.age).toBe(31);
+    }
+  });
+
+  it('should return ok=false with issues for createDtoSafe on invalid input', async () => {
+    const input = { name: 'John', age: 'thirty' };
+    const result = await createDtoSafe(UserDto, input);
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.name).toBe('DtoValidationError');
+      expect(result.issues.length).toBeGreaterThan(0);
+      expect(result.issues.some((issue) => issue.path.includes('age'))).toBe(true);
+      expect(result.issues.some((issue) => issue.code === 'isInt')).toBe(true);
     }
   });
 });

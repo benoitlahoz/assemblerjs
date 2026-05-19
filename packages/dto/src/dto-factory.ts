@@ -3,6 +3,24 @@ import { validate, ValidationError } from 'class-validator';
 import { plainToInstance, ClassConstructor } from 'class-transformer';
 import { DtoValidationError } from './dto-validation-error';
 
+export interface DtoValidationOptions {
+  whitelist?: boolean;
+  forbidNonWhitelisted?: boolean;
+  skipMissingProperties?: boolean;
+  groups?: string[];
+}
+
+export interface ValidationIssue {
+  path: string;
+  code: string;
+  message: string;
+  value?: unknown;
+}
+
+export type DtoSafeResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: DtoValidationError; issues: ValidationIssue[] };
+
 /**
  * A helper class to create and validate DTOs generically.
  */
@@ -16,10 +34,11 @@ export class DtoFactory {
   public static async create<T extends object>(
     dtoClass: ClassConstructor<T>,
     input: object,
-    parseErrors = true
+    parseErrors = true,
+    options?: DtoValidationOptions
   ): Promise<T> {
     const dto = plainToInstance(dtoClass, input);
-    const errors: ValidationError[] = await validate(dto);
+    const errors: ValidationError[] = await validate(dto, options);
     if (errors.length > 0) {
       if (parseErrors) {
         throw new DtoValidationError(DtoFactory.parseValidationErrors(errors));
@@ -58,4 +77,74 @@ export class DtoFactory {
 
     return flattenErrors(errors).join('; ');
   }
+
+  public static parseValidationIssues(errors: ValidationError[]): ValidationIssue[] {
+    const flattenIssues = (
+      errs: ValidationError[],
+      parentPath?: string
+    ): ValidationIssue[] => {
+      return errs.flatMap((error) => {
+        const currentPath = parentPath
+          ? `${parentPath}.${error.property}`
+          : error.property;
+
+        const constraintIssues = error.constraints
+          ? Object.entries(error.constraints).map(([code, message]) => ({
+              path: currentPath,
+              code,
+              message,
+              value: error.value,
+            }))
+          : [];
+
+        const childIssues =
+          error.children && error.children.length > 0
+            ? flattenIssues(error.children, currentPath)
+            : [];
+
+        return [...constraintIssues, ...childIssues];
+      });
+    };
+
+    return flattenIssues(errors);
+  }
 }
+
+export const createDto = async <T extends object>(
+  dtoClass: ClassConstructor<T>,
+  input: object,
+  parseErrors = true,
+  options?: DtoValidationOptions
+): Promise<T> => {
+  return DtoFactory.create(dtoClass, input, parseErrors, options);
+};
+
+export const createDtoSafe = async <T extends object>(
+  dtoClass: ClassConstructor<T>,
+  input: unknown,
+  options?: DtoValidationOptions
+): Promise<DtoSafeResult<T>> => {
+  try {
+    const data = await DtoFactory.create(
+      dtoClass,
+      (input ?? {}) as object,
+      false,
+      options
+    );
+
+    return { ok: true, data };
+  } catch (error) {
+    if (Array.isArray(error)) {
+      const issues = DtoFactory.parseValidationIssues(error as ValidationError[]);
+      const parsedMessage = DtoFactory.parseValidationErrors(error as ValidationError[]);
+
+      return {
+        ok: false,
+        error: new DtoValidationError(parsedMessage),
+        issues,
+      };
+    }
+
+    throw error;
+  }
+};
