@@ -23,6 +23,8 @@ export interface FetchStatus {
   text: string;
 }
 
+export type FetchDebugFn = (reason: string, ...values: any[]) => void;
+
 type PathOrFunction<T = any> = string | ((target: T) => string);
 type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
 type BodyOrFunction<T = any> = FetchResult['body'] | ((target: T) => FetchResult['body'] | Promise<FetchResult['body']>);
@@ -255,7 +257,7 @@ export const Fetch = (
   method: string,
   path: PathOrFunction,
   options?: FetchOptions,
-  debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
+  debug?: boolean | FetchDebugFn
 ): MethodDecorator => {
   return (
     target: object,
@@ -264,17 +266,19 @@ export const Fetch = (
   ) => {
     const original = descriptor.value;
 
-    let debugFn = NoOp;
-    if (debug) {
-      debugFn = (reason: string, ...values: any[]) => {
-        console.log(
-          `%c[@assemblerjs/fetch]`,
-          'color: blue;',
-          reason,
-          ...values
-        );
-      };
-    }
+    const debugFn: FetchDebugFn =
+      typeof debug === 'function'
+        ? debug
+        : debug
+          ? (reason: string, ...values: any[]) => {
+              console.log(
+                `%c[@assemblerjs/fetch]`,
+                'color: blue;',
+                reason,
+                ...values
+              );
+            }
+          : NoOp;
 
     const parametersObject = buildParametersObject(target, propertyKey);
     const expectedResponseType: Maybe<ResponseMethod> =
