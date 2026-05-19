@@ -1,11 +1,10 @@
 /// <reference types='vitest' />
 import { join } from 'node:path';
-import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import dts from 'vite-plugin-dts';
 import swc from '@rollup/plugin-swc';
 
-export default defineConfig(() => ({
+export default {
   root: __dirname,
   cacheDir: '../../node_modules/.vite/packages/common',
   plugins: [
@@ -67,4 +66,4 @@ export default defineConfig(() => ({
       provider: 'istanbul' as const,
     },
   },
-}));
+};

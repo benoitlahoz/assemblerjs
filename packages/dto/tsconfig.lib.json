@@ -18,6 +18,15 @@
   "references": [
     {
       "path": "../common/tsconfig.lib.json"
+    },
+    {
+      "path": "../fetch/tsconfig.lib.json"
+    },
+    {
+      "path": "../rest/tsconfig.lib.json"
+    },
+    {
+      "path": "../assemblerjs/tsconfig.lib.json"
     }
   ],
   "exclude": [

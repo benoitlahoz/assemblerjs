@@ -13,14 +13,30 @@ TypeScript decorators for Data Transfer Object (DTO) validation and transformati
 - ✅ **Class-validator integration** - Use all class-validator decorators
 - 🏭 **Factory pattern** - Create and validate DTOs easily
 - 🚨 **Detailed errors** - Custom error class with validation details
+- 🔁 **Pre-call method decorators** - Validate or adapt arguments before the method executes
+
+## Public API
+
+All exports are re-exported from `src/index.ts`.
+
+- `Dto()` - marks a class as a DTO
+- `createDto()` - validate and transform a plain object into a DTO instance
+- `createDtoSafe()` - non-throwing DTO creation helper that returns structured issues
+- `ValidateArg(index, DtoClass, options?)` - validate and replace a method argument
+- `ValidateBody(DtoClass, options?, index?)` - resolve and validate the body argument
+- `AdaptArg(index, SourceDto, TargetDto, mapper, options?)` - validate, adapt, then validate again
+- `AdaptBody(SourceDto, TargetDto, mapper, options?, index?)` - body-oriented alias for `AdaptArg`
+- `DtoValidationError` - validation error with a status code
+- `DtoMetadataKeys` - DTO metadata keys used by `@Dto()`
+- `DtoSchemaExtractor` - derive JSON schema from class-validator metadata
 
 ## Decorator Metadata Convention
 
-`@assemblerjs/dto` method decorators (for example `ValidateBody`) resolve body arguments using the shared parameter-metadata convention key:
+`@assemblerjs/dto` uses the shared metadata key convention from `@assemblerjs/common` when resolving bodies for method decorators:
 
 - `assemblerjs:param:body`
 
-This convention is produced by other packages through `@assemblerjs/common` key builders, allowing `dto` to work consistently across transports/decorator packages.
+This keeps DTO method decorators interoperable with `@assemblerjs/fetch` and `@assemblerjs/rest`.
 
 ## Installation
 
@@ -273,6 +289,14 @@ npx nx test dto
 # Lint
 npx nx lint dto
 ```
+
+### E2E coverage
+
+The package includes a full end-to-end scenario under `e2e/` that uses both `@assemblerjs/rest` and `@assemblerjs/fetch`.
+
+- Main scenario: `e2e/dto-package.full-e2e.spec.ts`
+- Fixtures: `e2e/fixtures/`
+- Generated logs: `e2e/logs/dto-e2e.md`
 
 ## License
 
