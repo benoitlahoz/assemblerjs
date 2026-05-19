@@ -62,7 +62,7 @@ export default defineConfig(() => ({
     },
     rollupOptions: {
       // External packages that should not be bundled into your library.
-      external: ['@assemblerjs/core'],
+      external: ['@assemblerjs/core', 'reflect-metadata'],
     },
     minify: 'terser' as const,
   },

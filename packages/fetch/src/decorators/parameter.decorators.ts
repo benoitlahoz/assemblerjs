@@ -2,6 +2,8 @@ export enum ReflectParameters {
   Param = 'fetch:param.decorator',
   Query = 'fetch:query.decorator',
   Placeholder = 'fetch:placeholder.decorator',
+  Body = 'fetch:body.decorator',
+  Header = 'fetch:header.decorator',
 }
 
 export interface ReflectParametersValues {
@@ -64,6 +66,8 @@ export const getParameterDecoratorValues = (
 export const Query = decoratorFactory(ReflectParameters.Query);
 export const Param = decoratorFactory(ReflectParameters.Param);
 export const Placeholder = decoratorFactory(ReflectParameters.Placeholder);
+export const Body = () => decoratorFactory(ReflectParameters.Body)('body');
+export const Header = decoratorFactory(ReflectParameters.Header);
 
 // Path transformers.
 
@@ -104,6 +108,7 @@ export const transformQuery = transformPath(
       const key = decoratorValues.metadata[String(index)];
       if (key) {
         let value: any = args[index];
+        if (typeof value === 'undefined') continue; // B1: skip undefined
         if (Array.isArray(value)) {
           value = value.join(',');
         } else {
@@ -120,3 +125,23 @@ export const transformQuery = transformPath(
     }${questionMark}${urlParameters.toString()}`;
   }
 );
+
+export const transformHeader = (
+  headers: HeadersInit | undefined,
+  decoratorValues: ReflectParametersValues,
+  ...args: any[]
+): Headers => {
+  const nextHeaders = new Headers(headers || {});
+
+  for (let index = 0; index < args.length; index++) {
+    const key = decoratorValues.metadata[String(index)];
+    if (!key) continue;
+
+    const value = args[index];
+    if (typeof value === 'undefined') continue;
+
+    nextHeaders.set(String(key), String(value));
+  }
+
+  return nextHeaders;
+};

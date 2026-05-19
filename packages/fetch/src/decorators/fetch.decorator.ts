@@ -12,6 +12,7 @@ import {
   ReflectParameters,
   ReflectParametersValues,
   getParameterDecoratorValues,
+  transformHeader,
   transformParam,
   transformPlaceholder,
   transformQuery,
@@ -22,15 +23,28 @@ export interface FetchStatus {
   text: string;
 }
 
+export type FetchDebugFn = (reason: string, ...values: any[]) => void;
+
 type PathOrFunction<T = any> = string | ((target: T) => string);
 type HeadersOrFunction<T = any> = HeadersInit | ((target: T) => HeadersInit | Promise<HeadersInit>);
 type BodyOrFunction<T = any> = FetchResult['body'] | ((target: T) => FetchResult['body'] | Promise<FetchResult['body']>);
+
+export interface FetchOptions
+  extends Omit<RequestInit, 'headers' | 'body'> {
+  headers?: HeadersOrFunction;
+  body?: BodyOrFunction;
+  timeout?: number;
+  retry?: number;
+  retryDelay?: number;
+}
 
 interface TaskInit {
   decoratedParametersValues: {
     param: ReflectParametersValues;
     placeholder: ReflectParametersValues;
     query: ReflectParametersValues;
+    body: ReflectParametersValues;
+    header: ReflectParametersValues;
   };
   decoratedParametersLength: number;
   responseType: Maybe<ResponseMethod>;
@@ -48,10 +62,7 @@ interface TaskInit {
       )
     | string;
   path: PathOrFunction;
-  options?: Omit<RequestInit, 'headers' | 'body'> & { 
-    headers?: HeadersOrFunction; 
-    body?: BodyOrFunction; 
-  },
+  options?: FetchOptions;
   target: any;
   propertyKey: string | symbol;
   args: any[];
@@ -95,6 +106,76 @@ const resolvePathValue = async (pathOrFn: PathOrFunction, target: any) => {
   return String(value);
 };
 
+const wait = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const fetchWithTimeout = async (
+  path: string,
+  init: RequestInit,
+  timeout?: number
+) => {
+  const timeoutValue = Number(timeout || 0);
+  if (!timeoutValue || timeoutValue <= 0) {
+    return fetch(path, init);
+  }
+
+  const controller = new AbortController();
+  const cleanup: Array<() => void> = [];
+  const timeoutId = setTimeout(() => controller.abort(), timeoutValue);
+
+  if (init.signal) {
+    if (init.signal.aborted) {
+      controller.abort();
+    } else {
+      const onAbort = () => controller.abort();
+      init.signal.addEventListener('abort', onAbort, { once: true });
+      cleanup.push(() => init.signal?.removeEventListener('abort', onAbort));
+    }
+  }
+
+  try {
+    return await fetch(path, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+    cleanup.forEach((fn) => fn());
+  }
+};
+
+const fetchWithRetry = async (
+  path: string,
+  init: RequestInit,
+  retry?: number,
+  retryDelay?: number,
+  timeout?: number
+) => {
+  const retryCount = Math.max(0, Number(retry || 0));
+  const delayMs = Math.max(0, Number(retryDelay || 0));
+
+  let attempt = 0;
+  let response: Response | undefined;
+
+  while (attempt <= retryCount) {
+    response = await fetchWithTimeout(path, init, timeout);
+
+    if (response.ok || attempt === retryCount) {
+      return response;
+    }
+
+    if (delayMs > 0) {
+      await wait(delayMs);
+    }
+
+    attempt += 1;
+  }
+
+  return response as Response;
+};
+
 const buildParametersObject = (target: any, propertyKey: string | symbol) => {
   const param = getParameterDecoratorValues(
     ReflectParameters.Param,
@@ -111,14 +192,27 @@ const buildParametersObject = (target: any, propertyKey: string | symbol) => {
     target,
     propertyKey
   );
+  const body = getParameterDecoratorValues(
+    ReflectParameters.Body,
+    target,
+    propertyKey
+  );
+  const header = getParameterDecoratorValues(
+    ReflectParameters.Header,
+    target,
+    propertyKey
+  );
 
   return {
     decoratedParametersValues: {
       param,
       placeholder,
       query,
+      body,
+      header,
     },
-    decoratedParametersLength: param.length + placeholder.length + query.length,
+    decoratedParametersLength:
+      param.length + placeholder.length + query.length + body.length + header.length,
   };
 };
 
@@ -137,25 +231,33 @@ const getParseDecoratorResponseType = (
 const getBodyInArgs = (
   method: string,
   decoratedLength: number,
-  args: any[]
+  args: any[],
+  bodyValues: ReflectParametersValues
 ) => {
+
   const isBodyMethod =
     method === 'POST' ||
-    method === 'UPDATE' ||
     method === 'PATCH' ||
     method === 'PUT';
 
-  return isBodyMethod ? args[decoratedLength] : undefined;
+  if (!isBodyMethod) return undefined;
+
+  // Explicit @Body takes precedence over positional fallback.
+  if (bodyValues.length > 0) {
+    const [firstBodyIndex] = Object.keys(bodyValues.metadata)
+      .map(Number)
+      .sort((a, b) => a - b);
+    return args[firstBodyIndex];
+  }
+
+  return args[decoratedLength];
 };
 
 export const Fetch = (
   method: string,
   path: PathOrFunction,
-  options?: Omit<RequestInit, 'headers' | 'body'> & { 
-    headers?: HeadersOrFunction; 
-    body?: BodyOrFunction; 
-  },
-  debug?: boolean // TODO: we could pass a function there (and do it for every assemblerjs package).
+  options?: FetchOptions,
+  debug?: boolean | FetchDebugFn
 ): MethodDecorator => {
   return (
     target: object,
@@ -164,17 +266,19 @@ export const Fetch = (
   ) => {
     const original = descriptor.value;
 
-    let debugFn = NoOp;
-    if (debug) {
-      debugFn = (reason: string, ...values: any[]) => {
-        console.log(
-          `%c[@assemblerjs/fetch]`,
-          'color: blue;',
-          reason,
-          ...values
-        );
-      };
-    }
+    const debugFn: FetchDebugFn =
+      typeof debug === 'function'
+        ? debug
+        : debug
+          ? (reason: string, ...values: any[]) => {
+              console.log(
+                `%c[@assemblerjs/fetch]`,
+                'color: blue;',
+                reason,
+                ...values
+              );
+            }
+          : NoOp;
 
     const parametersObject = buildParametersObject(target, propertyKey);
     const expectedResponseType: Maybe<ResponseMethod> =
@@ -204,7 +308,8 @@ export const Fetch = (
             res.body = getBodyInArgs(
               init.method,
               init.decoratedParametersLength,
-              init.args
+              init.args,
+              init.decoratedParametersValues.body
             );
           }
 
@@ -285,9 +390,25 @@ export const Fetch = (
           .map(async (result: FetchResult) => {
             const res = { ...result };
 
-            if (options?.headers && typeof options.headers === 'function') {
-              const resolvedHeaders = await options.headers(result.target);
-              res.options = { ...options, headers: resolvedHeaders };
+            let resolvedHeaders: HeadersInit | undefined;
+            const optionHeaders = options?.headers;
+
+            if (typeof optionHeaders === 'function') {
+              resolvedHeaders = await optionHeaders(result.target);
+            } else {
+              resolvedHeaders = optionHeaders;
+            }
+
+            const hasHeaderDecorator =
+              result.decoratedParametersValues.header.length > 0;
+
+            if (resolvedHeaders || hasHeaderDecorator) {
+              const mergedHeaders = transformHeader(
+                resolvedHeaders,
+                result.decoratedParametersValues.header,
+                ...result.args
+              );
+              res.options = { ...(options || {}), headers: mergedHeaders };
             } else {
               res.options = options;
             }
@@ -301,12 +422,27 @@ export const Fetch = (
               res.body = await res.body;
             }
 
-            const fetchRes = await fetch(res.path as string, {
-              ...(res.options as RequestInit) || {},
+            const currentOptions = (res.options || {}) as FetchOptions;
+            const {
+              timeout,
+              retry,
+              retryDelay,
+              body: _ignoredBody,
+              headers: resolvedOrMergedHeaders,
+              ...requestInit
+            } = currentOptions;
+
+            const normalizedRequestInit: RequestInit = {
+              ...requestInit,
+              headers: resolvedOrMergedHeaders as HeadersInit | undefined,
+            };
+
+            const fetchRes = await fetchWithRetry(res.path as string, {
+              ...normalizedRequestInit,
               method: res.method,
               // TODO: Type body properly.
               body: res.body as any,
-            });
+            }, retry, retryDelay, timeout);
 
             if (!fetchRes.ok) {
               res.error = new Error(
@@ -325,6 +461,12 @@ export const Fetch = (
           })
           .map(async (result: FetchResult) => {
             const res = { ...result };
+
+            // B3 : court-circuiter le parsing si erreur HTTP
+            if (res.error) {
+              debugFn('Skip parsing: HTTP error present', res.error);
+              return res;
+            }
 
             const getData = async () =>
               res.responseType.toEither().fold(
