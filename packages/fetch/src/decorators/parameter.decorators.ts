@@ -106,6 +106,7 @@ export const transformQuery = transformPath(
       const key = decoratorValues.metadata[String(index)];
       if (key) {
         let value: any = args[index];
+        if (typeof value === 'undefined') continue; // B1: skip undefined
         if (Array.isArray(value)) {
           value = value.join(',');
         } else {

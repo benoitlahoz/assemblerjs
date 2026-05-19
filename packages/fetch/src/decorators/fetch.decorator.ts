@@ -151,9 +151,9 @@ const getBodyInArgs = (
   args: any[],
   bodyValues: ReflectParametersValues
 ) => {
+
   const isBodyMethod =
     method === 'POST' ||
-    method === 'UPDATE' ||
     method === 'PATCH' ||
     method === 'PUT';
 
