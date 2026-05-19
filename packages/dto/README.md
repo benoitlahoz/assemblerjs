@@ -14,6 +14,14 @@ TypeScript decorators for Data Transfer Object (DTO) validation and transformati
 - 🏭 **Factory pattern** - Create and validate DTOs easily
 - 🚨 **Detailed errors** - Custom error class with validation details
 
+## Decorator Metadata Convention
+
+`@assemblerjs/dto` method decorators (for example `ValidateBody`) resolve body arguments using the shared parameter-metadata convention key:
+
+- `assemblerjs:param:body`
+
+This convention is produced by other packages through `@assemblerjs/common` key builders, allowing `dto` to work consistently across transports/decorator packages.
+
 ## Installation
 
 ```bash

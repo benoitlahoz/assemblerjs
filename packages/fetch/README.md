@@ -14,6 +14,14 @@ npm install @assemblerjs/fetch
 yarn add @assemblerjs/fetch
 ```
 
+## Decorator Metadata Convention
+
+`@assemblerjs/fetch` stores parameter-decorator metadata using the shared convention key format from `@assemblerjs/common`.
+
+- The key format is `assemblerjs:param:<name>`.
+- `@Body`, `@Param`, `@Query`, `@Header`, and `@Placeholder` all use this convention.
+- This enables cross-package interoperability (for example with `@assemblerjs/dto` method decorators) without package-specific fallback keys.
+
 ## Public API
 
 All exports are re-exported from `src/decorators/index.ts`.
