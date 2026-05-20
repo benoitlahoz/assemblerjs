@@ -1,7 +1,17 @@
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { useIpc } from '@renderer/composables/useIpc';
+import { onMounted, ref } from 'vue';
 
-const versions = reactive({ ...window.electron.process.versions });
+const { debug } = useIpc();
+const versions = ref({
+  electron: '',
+  chrome: '',
+  node: '',
+});
+
+onMounted(async () => {
+  versions.value = await debug.getVersions();
+});
 </script>
 
 <template>
