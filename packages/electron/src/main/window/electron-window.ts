@@ -1,8 +1,4 @@
-import type {
-  BrowserWindowConstructorOptions,
-  Display,
-  IpcMainInvokeEvent,
-} from 'electron';
+import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
 import { WindowIpcChannel, type IpcReturnType } from '@/universal';
 import { IpcHandle, IpcListener, WindowListener, WindowOn } from '@/main';
@@ -84,7 +80,7 @@ export class ElectronWindow extends BrowserWindow {
    */
   public onResize(): void {
     const bounds = this.getBounds();
-    this.webContents.send(WindowIpcChannel.OnResize, bounds);
+    this.webContents.send(WindowIpcChannel.OnBoundsChanged, bounds);
   }
 
   @WindowOn('move')
@@ -94,31 +90,26 @@ export class ElectronWindow extends BrowserWindow {
    */
   public onMove(): void {
     const bounds = this.getBounds();
-    this.webContents.send(WindowIpcChannel.OnResize, bounds);
+    this.webContents.send(WindowIpcChannel.OnBoundsChanged, bounds);
   }
 
   @IpcHandle(WindowIpcChannel.GetBounds)
   /**
    * Get the window's bounds.
    *
-   * @param { IpcMainInvokeEvent } _event The IPC event (unused).
    * @param { string } name The window's name.
    * @returns { IpcReturnType } The return value.
    */
-  public async onGetBounds(
-    _event: IpcMainInvokeEvent,
-    name: string
-  ): Promise<IpcReturnType> {
-    if (name !== this.name) {
+  public async onGetBounds(name: string): Promise<IpcReturnType> {
+    const window = ElectronWindow.getByName(name);
+    if (!window) {
       return {
         data: null,
-        err: new Error(
-          `Window name mismatch: ${name} !== ${this.name} in 'onGetBounds'`
-        ),
+        err: new Error(`Window not found: ${name} in 'onGetBounds'`),
       };
     }
 
-    return { data: this.getBounds(), err: null };
+    return { data: window.getBounds(), err: null };
   }
 
   @WindowOn('enter-full-screen')

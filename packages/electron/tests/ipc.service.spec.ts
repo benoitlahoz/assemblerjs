@@ -10,7 +10,8 @@ describe('IpcService', () => {
   const removeAllListeners = vi.fn();
   const send = vi.fn();
   const invoke = vi.fn();
-  const emit = vi.fn();
+  const unsubscribeOn = vi.fn();
+  const unsubscribeOnce = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -18,28 +19,28 @@ describe('IpcService', () => {
     (globalThis as any).window = {
       ipc: {
         versions: { electron: 'test' },
-        channels: ['window:bounds.get', 'window:resize'],
+        channels: ['window:bounds.get', 'window:bounds.changed'],
         ipc: {
-          on,
-          once,
+          on: vi.fn(() => unsubscribeOn),
+          once: vi.fn(() => unsubscribeOnce),
           off,
           removeAllListeners,
           send,
           invoke,
-          emit,
         },
       },
     };
   });
 
-  it('is buildable as an assemblage and disposes listeners by whitelisted channel', () => {
+  it('is buildable as an assemblage and disposes only tracked subscriptions', () => {
     const service = Assembler.build(IpcService);
 
+    service.on('window:bounds.get', vi.fn());
+    service.once('window:bounds.changed', vi.fn());
     service.onDispose();
 
-    expect(removeAllListeners).toHaveBeenCalledTimes(2);
-    expect(removeAllListeners).toHaveBeenNthCalledWith(1, 'window:bounds.get');
-    expect(removeAllListeners).toHaveBeenNthCalledWith(2, 'window:resize');
-    expect(removeAllListeners).not.toHaveBeenCalledWith('*');
+    expect(unsubscribeOn).toHaveBeenCalledTimes(1);
+    expect(unsubscribeOnce).toHaveBeenCalledTimes(1);
+    expect(removeAllListeners).not.toHaveBeenCalled();
   });
 });

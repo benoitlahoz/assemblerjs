@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { WindowIpcChannel } from './universal/channels';
+import { MenuIpcChannel, WindowIpcChannel } from './universal/channels';
 import type {
 	DefaultIpcContractMap,
 	IpcContractMap,
@@ -10,7 +10,10 @@ import type {
 type RendererListener = (...args: any[]) => void;
 type ElectronListener = (_event: unknown, ...args: any[]) => void;
 
-const defaultChannels = Object.values(WindowIpcChannel) as ReadonlyArray<KnownIpcChannel>;
+const defaultChannels = [
+	...Object.values(WindowIpcChannel),
+	...Object.values(MenuIpcChannel),
+] as ReadonlyArray<KnownIpcChannel>;
 
 function getListenerEntries(
 	registry: WeakMap<RendererListener, Map<string, Set<ElectronListener>>>,
@@ -138,10 +141,6 @@ export function createIpcBridge<
 			async invoke(channel: string, ...args: any[]): Promise<any> {
 				validateChannel(channel, allowedChannels, strict);
 				return await ipcRenderer.invoke(channel, ...args);
-			},
-			async emit(channel: string, ...args: any[]): Promise<void> {
-				validateChannel(channel, allowedChannels, strict);
-				ipcRenderer.emit(channel, ...args);
 			},
 		},
 	};

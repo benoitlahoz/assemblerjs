@@ -23,7 +23,7 @@ describe('ipc contract types', () => {
 
   it('types known event channels', () => {
     expectTypeOf<
-      IpcArgsFor<DefaultIpcContractMap, WindowIpcChannel.OnResize>
+      IpcArgsFor<DefaultIpcContractMap, WindowIpcChannel.OnBoundsChanged>
     >().toEqualTypeOf<[bounds: WindowBounds]>();
   });
 });

@@ -15,6 +15,20 @@ export class IpcService<
   Contracts extends IpcContractMap = DefaultIpcContractMap
 > implements AbstractIpcService<Contracts> {
   private bridge = window.ipc as TypedIpcBridge<Contracts>;
+  private readonly subscriptions = new Set<() => void>();
+
+  private registerSubscription(unsubscribe: () => void): () => void {
+    this.subscriptions.add(unsubscribe);
+
+    return () => {
+      if (!this.subscriptions.has(unsubscribe)) {
+        return;
+      }
+
+      unsubscribe();
+      this.subscriptions.delete(unsubscribe);
+    };
+  }
 
   public get channels(): ReadonlyArray<KnownIpcChannel<Contracts>> {
     return this.bridge.channels;
@@ -31,7 +45,8 @@ export class IpcService<
   public on(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
   public on(channel: string, listener: (...args: any[]) => void): () => void {
-    return this.bridge.ipc.on(channel, listener);
+    const unsubscribe = this.bridge.ipc.on(channel, listener);
+    return this.registerSubscription(unsubscribe);
   }
 
   public once<Channel extends KnownIpcChannel<Contracts>>(
@@ -41,7 +56,8 @@ export class IpcService<
   public once(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
   public once(channel: string, listener: (...args: any[]) => void): () => void {
-    return this.bridge.ipc.once(channel, listener);
+    const unsubscribe = this.bridge.ipc.once(channel, listener);
+    return this.registerSubscription(unsubscribe);
   }
 
   public off<Channel extends KnownIpcChannel<Contracts>>(
@@ -80,20 +96,12 @@ export class IpcService<
     return await this.bridge.ipc.invoke(channel, ...args);
   }
 
-  public async emit<Channel extends KnownIpcChannel<Contracts>>(
-    channel: Channel,
-    ...args: IpcArgsFor<Contracts, Channel>
-  ): Promise<void>;
-  public async emit(channel: string, ...args: any[]): Promise<void>;
-  @BindThis()
-  public async emit(channel: string, ...args: any[]): Promise<void> {
-    await this.bridge.ipc.emit(channel, ...args);
-  }
-
   @BindThis()
   public onDispose(): void | Promise<void> {
-    for (const channel of this.channels) {
-      this.bridge.ipc.removeAllListeners(channel);
+    for (const unsubscribe of this.subscriptions) {
+      unsubscribe();
     }
+
+    this.subscriptions.clear();
   }
 }

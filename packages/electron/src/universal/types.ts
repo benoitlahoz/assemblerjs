@@ -64,7 +64,7 @@ export interface DefaultIpcContractMap extends IpcContractMap {
     IpcReturnType<void>
   >;
   // Events
-  [WindowIpcChannel.OnResize]: IpcChannelDefinition<[bounds: WindowBounds], void>;
+  [WindowIpcChannel.OnBoundsChanged]: IpcChannelDefinition<[bounds: WindowBounds], void>;
   [WindowIpcChannel.OnStateChanged]: IpcChannelDefinition<[state: WindowState], void>;
   [WindowIpcChannel.OnEnterFullscreen]: IpcChannelDefinition<[], void>;
   [WindowIpcChannel.OnLeaveFullscreen]: IpcChannelDefinition<[], void>;
@@ -127,11 +127,5 @@ export interface TypedIpcBridge<
       ...args: IpcArgsFor<Contracts, Channel>
     ): Promise<IpcResponseFor<Contracts, Channel>>;
     invoke(channel: string, ...args: any[]): Promise<any>;
-
-    emit<Channel extends KnownIpcChannel<Contracts>>(
-      channel: Channel,
-      ...args: IpcArgsFor<Contracts, Channel>
-    ): Promise<void>;
-    emit(channel: string, ...args: any[]): Promise<void>;
   };
 }

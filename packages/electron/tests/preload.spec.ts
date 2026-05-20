@@ -7,7 +7,6 @@ const off = vi.fn();
 const removeAllListeners = vi.fn();
 const send = vi.fn();
 const invoke = vi.fn();
-const emit = vi.fn();
 
 vi.mock('electron', () => ({
   contextBridge: {
@@ -20,7 +19,6 @@ vi.mock('electron', () => ({
     removeAllListeners,
     send,
     invoke,
-    emit,
   },
 }));
 
@@ -50,7 +48,7 @@ describe('preload bridge', () => {
       'ipc',
       expect.objectContaining({
         versions: process.versions,
-        channels: expect.arrayContaining(['window:bounds.get']),
+        channels: expect.arrayContaining(['window:bounds.get', 'menu:item.clicked']),
         ipc: expect.objectContaining({
           on: expect.any(Function),
           once: expect.any(Function),
@@ -58,7 +56,6 @@ describe('preload bridge', () => {
           removeAllListeners: expect.any(Function),
           send: expect.any(Function),
           invoke: expect.any(Function),
-          emit: expect.any(Function),
         }),
       })
     );

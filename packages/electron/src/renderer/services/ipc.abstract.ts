@@ -93,17 +93,5 @@ export abstract class AbstractIpcService<
   ): Promise<IpcResponseFor<Contracts, Channel>>;
   public abstract invoke(channel: string, ...args: any[]): Promise<any>;
 
-  /**
-   * Emits an event to the main process via the specified channel.
-   * @param channel - The IPC channel name
-   * @param data - The data to emit
-   * @returns Promise that resolves when the event is emitted
-   */
-  public abstract emit<Channel extends KnownIpcChannel<Contracts>>(
-    channel: Channel,
-    ...args: IpcArgsFor<Contracts, Channel>
-  ): Promise<void>;
-  public abstract emit(channel: string, ...args: any[]): Promise<void>;
-
   public abstract onDispose(context: AssemblerContext, configuration?: Record<string, any>): void | Promise<void>;
 }

@@ -10,7 +10,7 @@ export enum WindowIpcChannel {
   Restore = 'window:restore',
   Focus = 'window:focus',
   // Events
-  OnResize = 'window:resize',
+  OnBoundsChanged = 'window:bounds.changed',
   OnStateChanged = 'window:state.changed',
   OnEnterFullscreen = 'window:fullscreen.enter',
   OnLeaveFullscreen = 'window:fullscreen.leave',
