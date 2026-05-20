@@ -16,9 +16,6 @@
   "include": ["src/**/*.ts", "index.d.ts"],
   "references": [
     {
-      "path": "../common/tsconfig.lib.json"
-    },
-    {
       "path": "../assemblerjs/tsconfig.lib.json"
     },
     {

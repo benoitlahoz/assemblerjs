@@ -70,7 +70,7 @@ export function IpcSend<C extends string = string>(
         throw new Error('IpcRenderer is not available in the current context.');
       }
 
-      const result = bridge.ipc.send(
+      const result = bridge.send(
         resolvedChannel,
         ...args.filter((_, i) => !excludedParameters.has(i))
       );

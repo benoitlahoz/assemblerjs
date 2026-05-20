@@ -116,11 +116,11 @@ declare global {
 @Assemblage()
 class AppService implements AbstractAssemblage {
   sendMessage(message: string) {
-    window.ipc.ipc.send('message', message);
+    window.ipc.send('message', message);
   }
 
   onInit() {
-    window.ipc.ipc.on('response', (data: any) => {
+    window.ipc.on('response', (data: any) => {
       console.log('Received:', data);
     });
   }
@@ -174,7 +174,7 @@ class IpcService implements AbstractAssemblage {
 @Assemblage()
 class DataService implements AbstractAssemblage {
   async getData() {
-    const result = await window.ipc.ipc.invoke('get-data');
+    const result = await window.ipc.invoke('get-data');
     return result;
   }
 }

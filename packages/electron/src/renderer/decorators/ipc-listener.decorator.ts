@@ -37,9 +37,15 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
             return result;
           };
 
-          bridge.ipc[handler.type](handler.channel as any, newMethod);
+          if (handler.type === 'handle') {
+            throw new Error(
+              '@IpcListener does not support @IpcHandle decorated methods. Please use @IpcListener in the main process for that.'
+            );
+          }
+
+          bridge[handler.type](handler.channel as any, newMethod);
           registerCleanup(this, () => {
-            bridge.ipc.off(handler.channel as any, newMethod);
+            bridge.off(handler.channel as any, newMethod);
           });
         }
       );

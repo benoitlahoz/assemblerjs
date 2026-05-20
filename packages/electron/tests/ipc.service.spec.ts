@@ -18,16 +18,13 @@ describe('IpcService', () => {
 
     (globalThis as any).window = {
       ipc: {
-        versions: { electron: 'test' },
         channels: ['window:bounds.get', 'window:bounds.changed'],
-        ipc: {
-          on: vi.fn(() => unsubscribeOn),
-          once: vi.fn(() => unsubscribeOnce),
-          off,
-          removeAllListeners,
-          send,
-          invoke,
-        },
+        on: vi.fn(() => unsubscribeOn),
+        once: vi.fn(() => unsubscribeOnce),
+        off,
+        removeAllListeners,
+        send,
+        invoke,
       },
     };
   });

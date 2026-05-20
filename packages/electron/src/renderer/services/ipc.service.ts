@@ -34,10 +34,6 @@ export class IpcService<
     return this.bridge.channels;
   }
 
-  public get versions(): Record<string, string> {
-    return this.bridge.versions as Record<string, string>;
-  }
-
   public on<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
     listener: (...args: IpcArgsFor<Contracts, Channel>) => void
@@ -45,7 +41,7 @@ export class IpcService<
   public on(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
   public on(channel: string, listener: (...args: any[]) => void): () => void {
-    const unsubscribe = this.bridge.ipc.on(channel, listener);
+    const unsubscribe = this.bridge.on(channel, listener);
     return this.registerSubscription(unsubscribe);
   }
 
@@ -56,7 +52,7 @@ export class IpcService<
   public once(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
   public once(channel: string, listener: (...args: any[]) => void): () => void {
-    const unsubscribe = this.bridge.ipc.once(channel, listener);
+    const unsubscribe = this.bridge.once(channel, listener);
     return this.registerSubscription(unsubscribe);
   }
 
@@ -67,13 +63,13 @@ export class IpcService<
   public off(channel: string, listener: (...args: any[]) => void): void;
   @BindThis()
   public off(channel: string, listener: (...args: any[]) => void): void {
-    this.bridge.ipc.off(channel, listener);
+    this.bridge.off(channel, listener);
   }
 
   public removeAllListeners(channel: KnownIpcChannel<Contracts>): void;
   @BindThis()
   public removeAllListeners(channel: string): void {
-    this.bridge.ipc.removeAllListeners(channel);
+    this.bridge.removeAllListeners(channel);
   }
 
   public send<Channel extends KnownIpcChannel<Contracts>>(
@@ -83,7 +79,7 @@ export class IpcService<
   public send(channel: string, ...args: any[]): void;
   @BindThis()
   public send(channel: string, ...args: any[]): void {
-    this.bridge.ipc.send(channel, ...args);
+    this.bridge.send(channel, ...args);
   }
 
   public async invoke<Channel extends KnownIpcChannel<Contracts>>(
@@ -93,7 +89,7 @@ export class IpcService<
   public async invoke(channel: string, ...args: any[]): Promise<any>;
   @BindThis()
   public async invoke(channel: string, ...args: any[]): Promise<any> {
-    return await this.bridge.ipc.invoke(channel, ...args);
+    return await this.bridge.invoke(channel, ...args);
   }
 
   @BindThis()

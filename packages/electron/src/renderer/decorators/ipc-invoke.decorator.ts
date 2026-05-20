@@ -71,7 +71,7 @@ export function IpcInvoke<C extends string = string>(
         throw new Error('IpcRenderer is not available in the current context.');
       }
 
-      const result = await bridge.ipc.invoke(
+      const result = await bridge.invoke(
         resolvedChannel,
         ...args.filter((_, i) => !excludedParameters.has(i))
       );

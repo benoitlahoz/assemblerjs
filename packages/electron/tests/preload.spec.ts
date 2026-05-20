@@ -47,16 +47,16 @@ describe('preload bridge', () => {
     expect(exposeInMainWorld).toHaveBeenCalledWith(
       'ipc',
       expect.objectContaining({
-        versions: process.versions,
-        channels: expect.arrayContaining(['window:bounds.get', 'menu:item.clicked']),
-        ipc: expect.objectContaining({
-          on: expect.any(Function),
-          once: expect.any(Function),
-          off: expect.any(Function),
-          removeAllListeners: expect.any(Function),
-          send: expect.any(Function),
-          invoke: expect.any(Function),
-        }),
+        channels: expect.arrayContaining([
+          'window:bounds.get',
+          'menu:item.clicked',
+        ]),
+        on: expect.any(Function),
+        once: expect.any(Function),
+        off: expect.any(Function),
+        removeAllListeners: expect.any(Function),
+        send: expect.any(Function),
+        invoke: expect.any(Function),
       })
     );
   });
@@ -66,14 +66,14 @@ describe('preload bridge', () => {
     const bridge = createIpcBridge(['custom:channel']);
     const listener = vi.fn();
 
-    bridge.ipc.on('custom:channel', listener);
+    bridge.on('custom:channel', listener);
 
     const wrappedListener = on.mock.calls[0][1];
     wrappedListener({ sender: 'ipcRenderer' }, 'payload', 42);
 
     expect(listener).toHaveBeenCalledWith('payload', 42);
 
-    bridge.ipc.off('custom:channel', listener);
+    bridge.off('custom:channel', listener);
 
     expect(off).toHaveBeenCalledWith('custom:channel', wrappedListener);
   });

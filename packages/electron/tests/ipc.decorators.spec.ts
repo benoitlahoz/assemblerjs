@@ -25,20 +25,17 @@ describe('dynamic IPC channel decorators', () => {
     vi.clearAllMocks();
     (globalThis as any).window = {
       ipc: {
-        versions: {},
         channels: [],
-        ipc: {
-          send: vi.fn(),
-          invoke: vi.fn(async (channel: string, payload: string) => ({
-            channel,
-            payload,
-          })),
-          on: vi.fn(),
-          once: vi.fn(),
-          off: vi.fn(),
-          removeAllListeners: vi.fn(),
-          emit: vi.fn(),
-        },
+        send: vi.fn(),
+        invoke: vi.fn(async (channel: string, payload: string) => ({
+          channel,
+          payload,
+        })),
+        on: vi.fn(),
+        once: vi.fn(),
+        off: vi.fn(),
+        removeAllListeners: vi.fn(),
+        emit: vi.fn(),
       },
     };
   });
@@ -60,7 +57,7 @@ describe('dynamic IPC channel decorators', () => {
     service.notify('first:channel', 'alpha');
     service.notify('second:channel', 'beta');
 
-    const sendMock = window.ipc.ipc.send as ReturnType<typeof vi.fn>;
+    const sendMock = window.ipc.send as ReturnType<typeof vi.fn>;
 
     expect(sendMock).toHaveBeenNthCalledWith(1, 'first:channel', 'alpha');
     expect(sendMock).toHaveBeenNthCalledWith(2, 'second:channel', 'beta');
@@ -83,7 +80,7 @@ describe('dynamic IPC channel decorators', () => {
     await service.fetch('first:invoke', 'alpha');
     await service.fetch('second:invoke', 'beta');
 
-    const invokeMock = window.ipc.ipc.invoke as ReturnType<typeof vi.fn>;
+    const invokeMock = window.ipc.invoke as ReturnType<typeof vi.fn>;
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, 'first:invoke', 'alpha');
     expect(invokeMock).toHaveBeenNthCalledWith(2, 'second:invoke', 'beta');

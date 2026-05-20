@@ -1,4 +1,3 @@
-import { ElectronAPI } from '@electron-toolkit/preload';
 import type {
   DefaultIpcContractMap,
   IpcArgsFor,
@@ -30,7 +29,6 @@ declare global {
   > = IpcResponseFor<Contracts, Channel>;
 
   interface Window {
-    electron: ElectronAPI;
     ipc: Readonly<IpcBridge>;
   }
 }

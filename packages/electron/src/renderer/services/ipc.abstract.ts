@@ -20,11 +20,6 @@ export abstract class AbstractIpcService<
   public abstract readonly channels: ReadonlyArray<KnownIpcChannel<Contracts>>;
 
   /**
-   * Version information for various components.
-   */
-  public abstract readonly versions: Record<string, string>;
-
-  /**
    * Registers a listener for the specified channel.
    * @param channel - The IPC channel name
    * @param listener - The callback function to handle received data
