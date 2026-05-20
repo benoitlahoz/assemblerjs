@@ -1,20 +1,21 @@
 import { app } from 'electron';
-import { AbstractAssemblage, Assemblage } from 'assemblerjs';
+import { AbstractAssemblage, Assemblage, Dispose } from 'assemblerjs';
 import { AppListener, AppOn } from '@assemblerjs/electron';
 import { optimizer } from '@electron-toolkit/utils';
 
 enum ElectronAppEvent {
-  BrowserWindowCreated = 'browser-window-created',
   Activate = 'activate',
+  WillQuit = 'will-quit',
+  WindowCreated = 'browser-window-created',
   WindowAllClosed = 'window-all-closed',
 }
 
 @AppListener()
 @Assemblage()
 export class AppEventsListener implements AbstractAssemblage {
-  constructor() {}
+  constructor(@Dispose() public dispose: () => void) {}
 
-  @AppOn(ElectronAppEvent.BrowserWindowCreated, true)
+  @AppOn(ElectronAppEvent.WindowCreated, true)
   public onBrowserWindowCreated(_, window): void {
     // TODO: We want to get rid of this dependency to electron-toolkit/utils and implement our own solution for devtools and reload shortcuts
     optimizer.watchWindowShortcuts(window);
@@ -31,5 +32,12 @@ export class AppEventsListener implements AbstractAssemblage {
     if (process.platform !== 'darwin') {
       app.quit();
     }
+  }
+
+  @AppOn(ElectronAppEvent.WillQuit)
+  protected onWillQuit(): void {
+    console.log('App is quitting');
+    // Use with caution as it will dispose all the services and listeners registered in MainApp
+    this.dispose();
   }
 }
