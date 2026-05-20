@@ -10,11 +10,17 @@ export default defineConfig({
         '@common': resolve('src/common'),
         '@features': resolve('src/features'),
         '@windows': resolve('src/windows'),
+        '@preload': resolve('src/preload'),
       },
     },
     plugins: [swcPlugin()],
   },
   preload: {
+    resolve: {
+      alias: {
+        '@preload': resolve('src/preload'),
+      },
+    },
     plugins: [swcPlugin()],
   },
   renderer: {
@@ -24,6 +30,7 @@ export default defineConfig({
         '@common': resolve('src/common'),
         '@features': resolve('src/features'),
         '@windows': resolve('src/windows'),
+        '@preload': resolve('src/preload'),
       },
     },
     plugins: [vue(), swcPlugin()],

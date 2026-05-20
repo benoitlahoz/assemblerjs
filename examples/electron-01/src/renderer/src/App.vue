@@ -2,7 +2,7 @@
 import Versions from './components/Versions.vue';
 import { useIpc } from './composables/useIpc';
 
-const ipc = useIpc();
+const { debug}  = useIpc();
 </script>
 
 <template>
@@ -20,7 +20,7 @@ const ipc = useIpc();
       <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
     </div>
     <div class="action">
-      <a href="#" @click="ipc.debug.sendPing">Send Ping</a>
+      <a href="#" @click="debug.sendPing">Send Ping</a>
     </div>
   </div>
   <Versions />

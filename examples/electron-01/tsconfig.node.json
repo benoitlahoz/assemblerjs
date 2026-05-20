@@ -11,7 +11,8 @@
     "paths": {
       "@common/*": ["src/common/*"],
       "@features/*": ["src/features/*"],
-      "@windows/*": ["src/windows/*"]
+      "@windows/*": ["src/windows/*"],
+      "@preload/*": ["src/preload/*"]
     }
   }
 }

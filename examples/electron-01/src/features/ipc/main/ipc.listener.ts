@@ -1,4 +1,5 @@
 import { IpcListener, IpcOn, IpcSend } from '@assemblerjs/electron';
+import { IpcChannels } from '@preload/ipc.channels';
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 
 @IpcListener()
@@ -6,8 +7,8 @@ import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 export class IpcListenerService implements AbstractAssemblage {
   constructor() {}
 
-  @IpcOn('ping')
-  @IpcSend('pong')
+  @IpcOn(IpcChannels.Ping)
+  @IpcSend(IpcChannels.Pong)
   public onPing(): void {
     console.log('Received ping from renderer process');
   }
