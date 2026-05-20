@@ -1,29 +1,49 @@
-import { BrowserWindow, webContents } from 'electron';
+import { BrowserWindow } from 'electron';
 import { type ElectronWindow } from '@/main';
 
 /**
- * Method decorator to send an IPC message from the main process.
- * Usage:
- *   @IpcSend('my-channel')
- *   sendSomething(...args) { ... }
+ * Sends an IPC message from the main process to renderer process(es).
+ * 
+ * @template C The channel name for type-safe channel resolution
+ * @param channel Optional channel name. If not provided, must be resolved via @IpcChannel parameter.
+ * @param name Optional target window name. If not provided, broadcasts to all windows.
+ * @returns A MethodDecorator that wraps the method to send IPC messages.
+ * 
+ * @example
+ * ```typescript
+ * // Broadcast to all windows
+ * @IpcSend('my:channel')
+ * async publishData(payload: string): Promise<void> { }
+ * 
+ * // Send to specific window
+ * @IpcSend('my:channel', 'mainWindow')
+ * async publishData(payload: string): Promise<void> { }
+ * 
+ * // With dynamic channel
+ * @IpcSend(undefined, 'mainWindow')
+ * async publishData(@IpcChannel() channel: string, payload: string): Promise<void> { }
+ * ```
  */
-export const IpcSend = (channel?: string, name?: string): MethodDecorator => {
+export function IpcSend<C extends string = string>(
+  channel?: C,
+  name?: string
+): MethodDecorator {
   return function (
     target: any,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value as Function;
     if (typeof originalMethod !== 'function') {
       throw new Error('@IpcSend can only be applied to methods.');
     }
 
-    descriptor.value = async function (...args: any[]) {
-      if (!channel) {
-        const channelParameters: number[] =
-          Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) ||
-          [];
+    descriptor.value = async function (...args: any[]): Promise<any> {
+      const channelParameters: number[] =
+        Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
 
+      let resolvedChannel: string | undefined = channel;
+      if (!resolvedChannel) {
         if (channelParameters.length === 0) {
           throw new Error(
             `@IpcSend on method '${String(
@@ -40,35 +60,31 @@ export const IpcSend = (channel?: string, name?: string): MethodDecorator => {
           );
         }
 
-        channel = args[channelParameters[0]];
+        resolvedChannel = args[channelParameters[0]];
       }
 
-      if (!channel || typeof channel !== 'string') {
+      if (!resolvedChannel || typeof resolvedChannel !== 'string') {
         throw new Error(
           `@IpcSend on method '${String(
             propertyKey
-          )}' requires a valid channel name. Got: ${channel}`
+          )}' requires a valid channel name. Got: ${resolvedChannel}`
         );
       }
 
       const result = await originalMethod.apply(this, args);
+      const windows = BrowserWindow.getAllWindows().filter(
+        (window) => !window.isDestroyed()
+      ) as ElectronWindow[];
 
       if (name) {
-        const contents = webContents.getAllWebContents();
-
-        const win = contents.find((content) => {
-          const win = BrowserWindow.fromWebContents(content);
-          return win && (win as ElectronWindow).name === name;
-        }) as ElectronWindow | undefined;
+        const win = windows.find((window) => window.name === name);
 
         if (win) {
-          win.webContents.send(channel, result);
+          win.webContents.send(resolvedChannel, result);
         }
       } else {
-        // Send to all windows if no name is specified
-        const webContentsList = webContents.getAllWebContents();
-        for (const wc of webContentsList) {
-          wc.send(channel, result);
+        for (const window of windows) {
+          window.webContents.send(resolvedChannel, result);
         }
       }
 
@@ -76,4 +92,4 @@ export const IpcSend = (channel?: string, name?: string): MethodDecorator => {
     };
     return descriptor;
   };
-};
+}

@@ -1,17 +1,36 @@
-export const IpcSend = (channel?: string): MethodDecorator => {
+/**
+ * Sends an IPC message from the renderer process to the main process.
+ * 
+ * @template Contracts The IPC contract map for type-safe channel resolution
+ * @param channel Optional channel name. If not provided, must be resolved via @IpcChannel parameter.
+ * @returns A MethodDecorator that wraps the method to send IPC messages.
+ * 
+ * @example
+ * ```typescript
+ * @IpcSend('my:channel')
+ * sendMessage(payload: string): void { }
+ * 
+ * // Or with dynamic channel:
+ * @IpcSend()
+ * sendMessage(@IpcChannel() channel: string, payload: string): void { }
+ * ```
+ */
+export function IpcSend<C extends string = string>(
+  channel?: C
+): MethodDecorator {
   return (
     target: object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) => {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value as Function;
 
-    descriptor.value = function (...args: any[]) {
-      if (!channel) {
-        const channelParameters: number[] =
-          Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) ||
-          [];
+    descriptor.value = function (...args: any[]): void {
+      const channelParameters: number[] =
+        Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
 
+      let resolvedChannel: string | undefined = channel;
+      if (!resolvedChannel) {
         if (channelParameters.length === 0) {
           throw new Error(
             `@IpcSend on method '${String(
@@ -28,19 +47,23 @@ export const IpcSend = (channel?: string): MethodDecorator => {
           );
         }
 
-        channel = args[channelParameters[0]];
+        resolvedChannel = args[channelParameters[0]];
       }
 
-      if (!channel || typeof channel !== 'string') {
+      if (!resolvedChannel || typeof resolvedChannel !== 'string') {
         throw new Error(
           `@IpcSend on method '${String(
             propertyKey
-          )}' requires a valid channel name. Got: ${channel}`
+          )}' requires a valid channel name. Got: ${resolvedChannel}`
         );
       }
 
       const ipcResultParameters: number[] =
         Reflect.getMetadata('ipc-result:parameters', target, propertyKey) || [];
+      const excludedParameters = new Set([
+        ...channelParameters,
+        ...ipcResultParameters,
+      ]);
 
       const bridge = window.ipc;
       if (!bridge) {
@@ -48,8 +71,8 @@ export const IpcSend = (channel?: string): MethodDecorator => {
       }
 
       const result = bridge.ipc.send(
-        channel,
-        ...args.filter((_, i) => !ipcResultParameters.includes(i))
+        resolvedChannel,
+        ...args.filter((_, i) => !excludedParameters.has(i))
       );
 
       ipcResultParameters.forEach((index) => {
@@ -61,4 +84,4 @@ export const IpcSend = (channel?: string): MethodDecorator => {
 
     return descriptor;
   };
-};
+}

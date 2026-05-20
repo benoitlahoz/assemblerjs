@@ -1,24 +1,33 @@
 import { ElectronAPI } from '@electron-toolkit/preload';
+import type {
+  DefaultIpcContractMap,
+  IpcArgsFor,
+  IpcContractMap,
+  IpcResponseFor,
+  KnownIpcChannel,
+  TypedIpcBridge,
+} from './src/universal/types';
 
 declare global {
-  type ElectronListener = (event: any, ...args: any[]) => void;
+  type ElectronListener = (...args: any[]) => void;
 
-  interface IpcBridge {
-    readonly versions: Readonly<NodeJS.ProcessVersions>;
-    readonly channels: Array<string>;
-    /**
-     * IPC functions.
-     */
-    readonly ipc: {
-      on: (channel: string, listener: ElectronListener) => void;
-      once: (channel: string, listener: ElectronListener) => void;
-      off: (channel: string, listener: ElectronListener) => void;
-      removeAllListeners: (channel: string) => void;
-      send: (channel: string, ...args: any[]) => void;
-      invoke: (channel: string, ...args: any[]) => Promise<any>;
-      emit: (channel: string, ...args: any[]) => Promise<void>;
-    };
-  }
+  type IpcBridge<
+    Contracts extends IpcContractMap = DefaultIpcContractMap
+  > = TypedIpcBridge<Contracts>;
+
+  type IpcChannel<
+    Contracts extends IpcContractMap = DefaultIpcContractMap
+  > = KnownIpcChannel<Contracts>;
+
+  type IpcChannelArgs<
+    Contracts extends IpcContractMap,
+    Channel extends KnownIpcChannel<Contracts>
+  > = IpcArgsFor<Contracts, Channel>;
+
+  type IpcChannelResponse<
+    Contracts extends IpcContractMap,
+    Channel extends KnownIpcChannel<Contracts>
+  > = IpcResponseFor<Contracts, Channel>;
 
   interface Window {
     electron: ElectronAPI;

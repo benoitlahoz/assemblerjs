@@ -1,5 +1,6 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { IpcType, IpcSubMethods } from '@/universal/decorators';
+import { registerCleanup } from '@/universal/lifecycle';
 
 /**
  * Class decorator to allow using preload scripts IPC API decorators.
@@ -37,6 +38,9 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
           };
 
           bridge.ipc[handler.type](handler.channel as any, newMethod);
+          registerCleanup(this, () => {
+            bridge.ipc.off(handler.channel as any, newMethod);
+          });
         }
       );
     } catch (error) {

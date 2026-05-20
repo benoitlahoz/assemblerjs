@@ -1,6 +1,9 @@
 import { ipcMain } from 'electron';
 import { createConstructorDecorator } from 'assemblerjs';
 import { type IpcType, IpcSubMethods } from '@/universal/decorators';
+import { registerCleanup } from '@/universal/lifecycle';
+
+const activeHandleListeners = new Map<string, (...args: any[]) => any>();
 
 /**
  * Class decorator to allow using 'ipcMain' decorators.
@@ -15,18 +18,33 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
         handler: { channel: string; type: IpcType; withEvent: boolean },
         method: string
       ) => {
-        if (handler.type === ('handle' as IpcType)) {
+        if (handler.type === 'handle') {
           ipcMain.removeHandler(handler.channel as any);
         }
 
-        if (!handler.withEvent) {
-          ipcMain[handler.type](handler.channel as any, (...args: any[]) =>
-            this[method](...args.slice(1))
-          );
+        const listener = (...args: any[]) => {
+          if (!handler.withEvent) {
+            return this[method](...args.slice(1));
+          }
+
+          return this[method](...args);
+        };
+
+        if (handler.type === 'handle') {
+          activeHandleListeners.set(handler.channel, listener);
+          ipcMain.handle(handler.channel as any, listener);
+
+          registerCleanup(this, () => {
+            if (activeHandleListeners.get(handler.channel) === listener) {
+              ipcMain.removeHandler(handler.channel as any);
+              activeHandleListeners.delete(handler.channel);
+            }
+          });
         } else {
-          ipcMain[handler.type](handler.channel as any, (...args: any[]) =>
-            this[method](...args)
-          );
+          ipcMain[handler.type](handler.channel as any, listener);
+          registerCleanup(this, () => {
+            ipcMain.off(handler.channel as any, listener);
+          });
         }
       }
     );

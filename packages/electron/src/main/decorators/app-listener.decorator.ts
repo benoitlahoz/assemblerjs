@@ -1,5 +1,6 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { app } from 'electron';
+import { registerCleanup } from '@/universal/lifecycle';
 
 export const AppSubMethods = Symbol('__AppListenerSubMethods__');
 
@@ -13,16 +14,28 @@ export const AppListener = createConstructorDecorator(function (this: any) {
   if (subMethods) {
     subMethods.forEach(
       (config: { channel: string; wait: boolean }, method: string) => {
+        let disposed = false;
+        let listener: ((...args: any[]) => any) | null = null;
+
+        registerCleanup(this, () => {
+          disposed = true;
+          if (listener) {
+            app.off(config.channel as any, listener);
+          }
+        });
+
         if (config.wait) {
           app.whenReady().then(() => {
-            app.on(config.channel as any, (...args: any[]) =>
-              this[method](...args)
-            );
+            if (disposed) {
+              return;
+            }
+
+            listener = (...args: any[]) => this[method](...args);
+            app.on(config.channel as any, listener);
           });
         } else {
-          app.on(config.channel as any, (...args: any[]) =>
-            this[method](...args)
-          );
+          listener = (...args: any[]) => this[method](...args);
+          app.on(config.channel as any, listener);
         }
       }
     );

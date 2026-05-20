@@ -1,5 +1,6 @@
 import { Event, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
 import { ElectronWindow } from '../window';
+import { MenuIpcChannel } from '@/universal';
 
 export class ElectronMenuItem {
   private _id = 'ElectronMenuItem';
@@ -295,6 +296,99 @@ export class ElectronMenuItem {
     if (this.submenu) {
       this.submenu.forEach((item) => item.disableAll());
     }
+    return this;
+  }
+
+  /**
+   * Configures a handler to process click events in the main process.
+   * Can be chained with forwardClickToRenderer() for dual handling.
+   * 
+   * @param callback Handler function receiving itemId and windowName.
+   * @returns {this} The current instance.
+   * 
+   * @example
+   * ```ts
+   * menuItem
+   *   .handleInMain((id, win) => console.log('Main:', id))
+   *   .forwardClickToRenderer();
+   * ```
+   */
+  public handleInMain(
+    callback: (itemId: string, windowName: string) => void
+  ): this {
+    const previousClick = this._click;
+    this.click = (
+      menuItem: MenuItem,
+      browserWindow: ElectronWindow | undefined,
+      event: Event
+    ) => {
+      if (!browserWindow) return;
+
+      const itemId = this.id;
+      const windowName = browserWindow.name;
+
+      // Execute the main handler
+      callback(itemId, windowName);
+
+      // Call any previously configured click handler
+      if (previousClick) {
+        previousClick(menuItem, browserWindow, event);
+      }
+    };
+    return this;
+  }
+
+  /**
+   * Configures this menu item to forward click events to the renderer via IPC.
+   * Uses the standard menu:item.clicked channel with [itemId, windowName] payload.
+   * Can be chained with handleInMain() for dual handling.
+   * 
+   * @param payloadFactory Optional factory function to customize payload. 
+   *                       Receives (itemId, windowName) and returns [itemId, windowName] or custom tuple.
+   * @returns {this} The current instance.
+   * 
+   * @example
+   * ```ts
+   * menuItem.forwardClickToRenderer();
+   * // Sends: ['myItemId', 'myWindow']
+   * 
+   * menuItem
+   *   .handleInMain((id, win) => console.log('Main:', id))
+   *   .forwardClickToRenderer((id, win) => [`custom-${id}`, win]);
+   * ```
+   */
+  public forwardClickToRenderer(
+    payloadFactory?: (
+      itemId: string,
+      windowName: string
+    ) => [itemId: string, windowName: string]
+  ): this {
+    const previousClick = this._click;
+    this.click = (
+      menuItem: MenuItem,
+      browserWindow: ElectronWindow | undefined,
+      event: Event
+    ) => {
+      if (!browserWindow) return;
+
+      const itemId = this.id;
+      const windowName = browserWindow.name;
+
+      // Call any previously configured click handler (e.g., from handleInMain)
+      if (previousClick) {
+        previousClick(menuItem, browserWindow, event);
+      }
+
+      // Forward to renderer
+      const payload = payloadFactory
+        ? payloadFactory(itemId, windowName)
+        : [itemId, windowName];
+
+      browserWindow.webContents.send(
+        MenuIpcChannel.OnItemClicked,
+        ...payload
+      );
+    };
     return this;
   }
 

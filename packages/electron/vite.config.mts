@@ -84,9 +84,6 @@ export default defineConfig(() => ({
         'electron/main',
         'electron/renderer',
         'electron/common',
-        // Common external dependencies that might be used
-        '@electron-toolkit/preload',
-        '@electron-toolkit/utils',
       ],
     },
     minify: 'terser' as const,
@@ -100,7 +97,7 @@ export default defineConfig(() => ({
     watch: true,
     globals: true,
     environment: 'node',
-    include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,e2e,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage',
