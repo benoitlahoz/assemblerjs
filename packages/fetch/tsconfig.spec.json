@@ -11,7 +11,9 @@
     ],
     "forceConsistentCasingInFileNames": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@assemblerjs/common": ["../common/src/index.ts"],
+      "@assemblerjs/common/*": ["../common/src/*"]
     }
   },
   "include": [

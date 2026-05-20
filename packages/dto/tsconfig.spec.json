@@ -10,9 +10,13 @@
       "vitest"
     ],
     "forceConsistentCasingInFileNames": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@assemblerjs/common": ["../common/src/index.ts"],
+      "@assemblerjs/common/*": ["../common/src/*"]
     }
   },
   "include": [
@@ -28,7 +32,17 @@
     "src/**/*.spec.js",
     "src/**/*.test.jsx",
     "src/**/*.spec.jsx",
-    "src/**/*.d.ts"
+    "src/**/*.d.ts",
+    "e2e/**/*.ts",
+    "e2e/fixtures/**/*.ts",
+    "e2e/**/*.test.ts",
+    "e2e/**/*.spec.ts",
+    "e2e/**/*.test.tsx",
+    "e2e/**/*.spec.tsx",
+    "e2e/**/*.test.js",
+    "e2e/**/*.spec.js",
+    "e2e/**/*.test.jsx",
+    "e2e/**/*.spec.jsx"
   ],
   "references": [
     {

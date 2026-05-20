@@ -1,10 +1,18 @@
-export enum ReflectParameters {
-  Param = 'fetch:param.decorator',
-  Query = 'fetch:query.decorator',
-  Placeholder = 'fetch:placeholder.decorator',
-  Body = 'fetch:body.decorator',
-  Header = 'fetch:header.decorator',
-}
+import { buildDecoratorParameterKey } from '@assemblerjs/common';
+
+const PARAM_KEY = buildDecoratorParameterKey('param');
+const QUERY_KEY = buildDecoratorParameterKey('query');
+const PLACEHOLDER_KEY = buildDecoratorParameterKey('placeholder');
+const BODY_KEY = buildDecoratorParameterKey('body');
+const HEADER_KEY = buildDecoratorParameterKey('header');
+
+export const ReflectParameters = {
+  Param: PARAM_KEY,
+  Query: QUERY_KEY,
+  Placeholder: PLACEHOLDER_KEY,
+  Body: BODY_KEY,
+  Header: HEADER_KEY,
+} as const;
 
 export interface ReflectParametersValues {
   metadata: Record<string, string | symbol>;
@@ -66,8 +74,21 @@ export const getParameterDecoratorValues = (
 export const Query = decoratorFactory(ReflectParameters.Query);
 export const Param = decoratorFactory(ReflectParameters.Param);
 export const Placeholder = decoratorFactory(ReflectParameters.Placeholder);
-export const Body = () => decoratorFactory(ReflectParameters.Body)('body');
 export const Header = decoratorFactory(ReflectParameters.Header);
+
+export const Body = (): ParameterDecorator => {
+  return (
+    target: any,
+    propertyKey: string | symbol | undefined,
+    index: number
+  ) => {
+    decoratorFactory(ReflectParameters.Body)('body')(
+      target,
+      propertyKey,
+      index
+    );
+  };
+};
 
 // Path transformers.
 

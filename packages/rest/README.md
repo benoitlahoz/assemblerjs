@@ -23,6 +23,15 @@ Controllers, middleware, parameter extraction, and serialization are all framewo
 - 🏗️ **AssemblerJS DI** — Full dependency injection support
 - 🔒 **Type-Safe** — Complete TypeScript support
 
+## Decorator Metadata Convention
+
+`@assemblerjs/rest` keeps its internal parameter metadata container for runtime route parsing, and also writes shared parameter-decorator metadata keys using the `@assemblerjs/common` convention:
+
+- key format: `assemblerjs:param:<name>`
+- currently written for `@Body`, `@Param`, `@Query`, and `@Header`
+
+This makes rest decorators interoperable with cross-package tools (for example DTO pre-call validation decorators).
+
 ## Installation
 
 ```bash

@@ -1,5 +1,9 @@
 import 'reflect-metadata';
 import { getMetadataStorage } from 'class-validator';
+import {
+  getDtoSchemaHints,
+  CustomSchemaBuilder,
+} from './custom-validator.helper';
 
 type JsonSchema = {
   type: string;
@@ -29,6 +33,7 @@ export class DtoSchemaExtractor {
       );
 
     const grouped = this.groupByProperty(metadatas);
+    const schemaHintsByProperty = getDtoSchemaHints(dtoClass);
 
     for (const [property, validators] of Object.entries(grouped)) {
       const propertySchema: any = {};
@@ -36,6 +41,12 @@ export class DtoSchemaExtractor {
       for (const validator of validators) {
         this.applyValidator(propertySchema, validator);
       }
+
+      this.applyCustomHints(
+        propertySchema,
+        validators,
+        schemaHintsByProperty[property] ?? []
+      );
 
       schema.properties[property] = propertySchema;
 
@@ -134,5 +145,33 @@ export class DtoSchemaExtractor {
   private static getNestedRef(meta: any): string {
     const target = meta?.target?.name;
     return `#/components/schemas/${target}`;
+  }
+
+  private static applyCustomHints(
+    schema: any,
+    validators: any[],
+    hintEntries: Array<{ validatorName: string; schema: CustomSchemaBuilder }>
+  ) {
+    if (hintEntries.length === 0) {
+      return;
+    }
+
+    for (const validator of validators) {
+      const candidateNames = [validator?.name, validator?.type, validator?.constraintCls?.name]
+        .filter((value): value is string => Boolean(value));
+
+      for (const hintEntry of hintEntries) {
+        if (!candidateNames.includes(hintEntry.validatorName)) {
+          continue;
+        }
+
+        const patch =
+          typeof hintEntry.schema === 'function'
+            ? hintEntry.schema({ constraints: validator?.constraints ?? [] })
+            : hintEntry.schema;
+
+        Object.assign(schema, patch);
+      }
+    }
   }
 }

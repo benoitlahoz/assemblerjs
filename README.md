@@ -15,6 +15,7 @@
 - 🎯 **assemblerjs** - A modern dependency injection system with lifecycle hooks and events
 - 🌐 **@assemblerjs/rest** - REST framework with Express.js decorators
 - 📦 **@assemblerjs/dto** - DTO validation and transformation with class-validator
+- 🧩 **@assemblerjs/common** - Shared metadata keys and cross-package conventions
 - 🔌 **@assemblerjs/electron** - Electron integration with type-safe IPC
 - 🌐 **@assemblerjs/fetch** - HTTP decorators for fetch requests
 - 🗄️ **@assemblerjs/mongo** - MongoDB integration with Mongoose
@@ -210,27 +211,16 @@ class CreateUserDto {
   email: string;
 }
 ```
-
-#### [**@assemblerjs/dto**](./packages/dto)
-DTO validation and transformation using class-validator and class-transformer.
-
-**Use case:** Validate and transform data transfer objects
-
-```typescript
-import { DTO } from '@assemblerjs/dto';
-import { IsString, IsEmail } from 'class-validator';
-
-@DTO()
-class CreateUserDto {
-  @IsString()
-  name: string;
-
-  @IsEmail()
-  email: string;
-}
-```
-
 [README](./packages/dto/README.md)
+
+---
+
+#### [**@assemblerjs/common**](./packages/common)
+Shared metadata key builders and cross-package conventions used by `@assemblerjs/fetch`, `@assemblerjs/rest`, and `@assemblerjs/dto`.
+
+**Use case:** Keep shared conventions in one place across the monorepo
+
+[README](./packages/common/README.md)
 
 ---
 

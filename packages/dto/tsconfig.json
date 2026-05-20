@@ -4,6 +4,18 @@
   "include": [],
   "references": [
     {
+      "path": "../common"
+    },
+    {
+      "path": "../fetch"
+    },
+    {
+      "path": "../rest"
+    },
+    {
+      "path": "../assemblerjs"
+    },
+    {
       "path": "./tsconfig.lib.json"
     },
     {
