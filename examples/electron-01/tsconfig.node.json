@@ -1,10 +1,17 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*"],
+  "include": ["electron.vite.config.*", "src/main/**/*", "src/preload/**/*", "src/features/**/*", "src/windows/**/*"],
   "compilerOptions": {
     "composite": true,
-     "experimentalDecorators": true,
-     "emitDecoratorMetadata": true,
-    "types": ["electron-vite/node"]
+    "baseUrl": ".",
+    "noImplicitAny": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "types": ["electron-vite/node"],
+    "paths": {
+      "@common/*": ["src/common/*"],
+      "@features/*": ["src/features/*"],
+      "@windows/*": ["src/windows/*"]
+    }
   }
 }

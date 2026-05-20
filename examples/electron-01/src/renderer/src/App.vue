@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import Versions from './components/Versions.vue';
+import { useIpc } from './composables/useIpc';
 
-const ipcHandle = (): void => window.ipc.send('ping');
+const ipc = useIpc();
 </script>
 
 <template>
@@ -19,7 +20,7 @@ const ipcHandle = (): void => window.ipc.send('ping');
       <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
     </div>
     <div class="action">
-      <a target="_blank" rel="noreferrer" @click="ipcHandle">Send IPC</a>
+      <a href="#" @click="ipc.debug.sendPing">Send Ping</a>
     </div>
   </div>
   <Versions />

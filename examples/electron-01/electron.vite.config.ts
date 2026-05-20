@@ -4,6 +4,14 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   main: {
+    resolve: {
+      alias: {
+        '@main': resolve('src/main'),
+        '@common': resolve('src/common'),
+        '@features': resolve('src/features'),
+        '@windows': resolve('src/windows'),
+      },
+    },
     plugins: [swcPlugin()],
   },
   preload: {
@@ -13,6 +21,9 @@ export default defineConfig({
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src'),
+        '@common': resolve('src/common'),
+        '@features': resolve('src/features'),
+        '@windows': resolve('src/windows'),
       },
     },
     plugins: [vue(), swcPlugin()],

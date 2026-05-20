@@ -5,6 +5,7 @@ const defaultChannels = [
   ...Object.values(WindowIpcChannel),
   ...Object.values(MenuIpcChannel),
   'ping',
+  'pong',
 ] as ReadonlyArray<KnownIpcChannel>;
 
 exposeIpcBridge(defaultChannels, { strict: true });
