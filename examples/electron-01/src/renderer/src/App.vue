@@ -2,7 +2,7 @@
 import Versions from './components/Versions.vue';
 import { useIpc } from './composables/useIpc';
 
-const { debug}  = useIpc();
+const { debug }  = useIpc();
 </script>
 
 <template>
@@ -10,11 +10,10 @@ const { debug}  = useIpc();
   <div class="creator">Powered by electron-vite</div>
   <div class="text">
     Build an Electron app with
-    <span class="vue">Vue</span>
+    <span class="vue">assemblerjs</span>
     and
-    <span class="ts">TypeScript</span>
+    <span class="ts">electron-vite</span>
   </div>
-  <p class="tip">Please try pressing <code>F12</code> to open the devTool</p>
   <div class="actions">
     <div class="action">
       <a href="https://electron-vite.org/" target="_blank" rel="noreferrer">Documentation</a>
