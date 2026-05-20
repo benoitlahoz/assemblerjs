@@ -1,4 +1,4 @@
-import { BrowserWindow, webContents } from 'electron';
+import { BrowserWindow } from 'electron';
 import { type ElectronWindow } from '@/main';
 
 /**
@@ -19,11 +19,11 @@ export const IpcSend = (channel?: string, name?: string): MethodDecorator => {
     }
 
     descriptor.value = async function (...args: any[]) {
-      if (!channel) {
-        const channelParameters: number[] =
-          Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) ||
-          [];
+      const channelParameters: number[] =
+        Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
 
+      let resolvedChannel = channel;
+      if (!resolvedChannel) {
         if (channelParameters.length === 0) {
           throw new Error(
             `@IpcSend on method '${String(
@@ -40,35 +40,31 @@ export const IpcSend = (channel?: string, name?: string): MethodDecorator => {
           );
         }
 
-        channel = args[channelParameters[0]];
+        resolvedChannel = args[channelParameters[0]];
       }
 
-      if (!channel || typeof channel !== 'string') {
+      if (!resolvedChannel || typeof resolvedChannel !== 'string') {
         throw new Error(
           `@IpcSend on method '${String(
             propertyKey
-          )}' requires a valid channel name. Got: ${channel}`
+          )}' requires a valid channel name. Got: ${resolvedChannel}`
         );
       }
 
       const result = await originalMethod.apply(this, args);
+      const windows = BrowserWindow.getAllWindows().filter(
+        (window) => !window.isDestroyed()
+      ) as ElectronWindow[];
 
       if (name) {
-        const contents = webContents.getAllWebContents();
-
-        const win = contents.find((content) => {
-          const win = BrowserWindow.fromWebContents(content);
-          return win && (win as ElectronWindow).name === name;
-        }) as ElectronWindow | undefined;
+        const win = windows.find((window) => window.name === name);
 
         if (win) {
-          win.webContents.send(channel, result);
+          win.webContents.send(resolvedChannel, result);
         }
       } else {
-        // Send to all windows if no name is specified
-        const webContentsList = webContents.getAllWebContents();
-        for (const wc of webContentsList) {
-          wc.send(channel, result);
+        for (const window of windows) {
+          window.webContents.send(resolvedChannel, result);
         }
       }
 

@@ -1,3 +1,3 @@
 export const IpcSubMethods = Symbol('__IpcListenerSubMethods__');
 
-export type IpcType = string & ('on' | 'once');
+export type IpcType = 'on' | 'once' | 'handle';

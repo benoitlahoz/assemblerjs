@@ -93,18 +93,13 @@ const electronApp = Assembler.build(ElectronApp);
 ### Preload Script
 
 ```typescript
-import { contextBridge, ipcRenderer } from 'electron';
-
-// Expose safe APIs to renderer
-contextBridge.exposeInMainWorld('electronAPI', {
-  send: (channel: string, data: any) => {
-    ipcRenderer.send(channel, data);
-  },
-  on: (channel: string, callback: Function) => {
-    ipcRenderer.on(channel, (_, ...args) => callback(...args));
-  }
-});
+import '@assemblerjs/electron/preload';
 ```
+
+Importing the preload entry point exposes two globals in the renderer:
+
+- `window.electron` for the Electron Toolkit helpers
+- `window.ipc` for the AssemblerJS IPC bridge
 
 ### Renderer Process
 
@@ -114,21 +109,18 @@ import { Assemblage, Assembler, AbstractAssemblage } from 'assemblerjs';
 
 declare global {
   interface Window {
-    electronAPI: {
-      send: (channel: string, data: any) => void;
-      on: (channel: string, callback: Function) => void;
-    };
+    ipc: IpcBridge;
   }
 }
 
 @Assemblage()
 class AppService implements AbstractAssemblage {
   sendMessage(message: string) {
-    window.electronAPI.send('message', message);
+    window.ipc.ipc.send('message', message);
   }
 
   onInit() {
-    window.electronAPI.on('response', (data: any) => {
+    window.ipc.ipc.on('response', (data: any) => {
       console.log('Received:', data);
     });
   }
@@ -182,7 +174,7 @@ class IpcService implements AbstractAssemblage {
 @Assemblage()
 class DataService implements AbstractAssemblage {
   async getData() {
-    const result = await window.electronAPI.invoke('get-data');
+    const result = await window.ipc.ipc.invoke('get-data');
     return result;
   }
 }

@@ -7,11 +7,11 @@ export const IpcInvoke = (channel?: string): MethodDecorator => {
     const originalMethod = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
-      if (!channel) {
-        const channelParameters: number[] =
-          Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) ||
-          [];
+      const channelParameters: number[] =
+        Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
 
+      let resolvedChannel = channel;
+      if (!resolvedChannel) {
         if (channelParameters.length === 0) {
           throw new Error(
             `@IpcInvoke on method '${String(
@@ -28,19 +28,23 @@ export const IpcInvoke = (channel?: string): MethodDecorator => {
           );
         }
 
-        channel = args[channelParameters[0]];
+        resolvedChannel = args[channelParameters[0]];
       }
 
-      if (!channel || typeof channel !== 'string') {
+      if (!resolvedChannel || typeof resolvedChannel !== 'string') {
         throw new Error(
           `@IpcInvoke on method '${String(
             propertyKey
-          )}' requires a valid channel name. Got: ${channel}`
+          )}' requires a valid channel name. Got: ${resolvedChannel}`
         );
       }
 
       const ipcResultParameters: number[] =
         Reflect.getMetadata('ipc-result:parameters', target, propertyKey) || [];
+      const excludedParameters = new Set([
+        ...channelParameters,
+        ...ipcResultParameters,
+      ]);
 
       const bridge = window.ipc;
       if (!bridge) {
@@ -48,8 +52,8 @@ export const IpcInvoke = (channel?: string): MethodDecorator => {
       }
 
       const result = await bridge.ipc.invoke(
-        channel,
-        ...args.filter((_, i) => !ipcResultParameters.includes(i))
+        resolvedChannel,
+        ...args.filter((_, i) => !excludedParameters.has(i))
       );
 
       ipcResultParameters.forEach((index) => {

@@ -100,7 +100,7 @@ export default defineConfig(() => ({
     watch: true,
     globals: true,
     environment: 'node',
-    include: ['{src,e2e}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    include: ['{src,e2e,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
     reporters: ['default'],
     coverage: {
       reportsDirectory: './coverage',

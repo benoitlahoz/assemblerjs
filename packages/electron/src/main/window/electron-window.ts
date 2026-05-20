@@ -3,7 +3,7 @@ import type {
   Display,
   IpcMainInvokeEvent,
 } from 'electron';
-import { BrowserWindow, screen, webContents } from 'electron';
+import { BrowserWindow, screen } from 'electron';
 import { WindowIpcChannel, type IpcReturnType } from '@/universal';
 import { IpcHandle, IpcListener, WindowListener, WindowOn } from '@/main';
 
@@ -16,6 +16,12 @@ export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
 @WindowListener()
 @IpcListener()
 export abstract class ElectronWindow extends BrowserWindow {
+  private static getOpenWindows(): ElectronWindow[] {
+    return BrowserWindow.getAllWindows().filter(
+      (window) => !window.isDestroyed()
+    ) as ElectronWindow[];
+  }
+
   /**
    * Send data to all windows listening to a specific channel.
    *
@@ -23,20 +29,13 @@ export abstract class ElectronWindow extends BrowserWindow {
    * @param { any[] } args The data to send.
    */
   public static sendAll(channel: string, ...args: any[]): void {
-    const contents = webContents.getAllWebContents();
-    for (const webContent of contents) {
-      webContent.send(channel, ...args);
+    for (const window of this.getOpenWindows()) {
+      window.webContents.send(channel, ...args);
     }
   }
 
   public static getByName(name: string): ElectronWindow | undefined {
-    const contents = webContents.getAllWebContents();
-    const win = contents
-      .map((content) => BrowserWindow.fromWebContents(content))
-      .find((win) => win && (win as ElectronWindow).name === name) as
-      | ElectronWindow
-      | undefined;
-    return win;
+    return this.getOpenWindows().find((window) => window.name === name);
   }
 
   constructor(private options: ElectronWindowOptions) {
