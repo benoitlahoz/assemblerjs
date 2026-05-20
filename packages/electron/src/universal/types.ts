@@ -1,4 +1,4 @@
-import { WindowIpcChannel } from './channels';
+import { WindowIpcChannel, MenuIpcChannel } from './channels';
 
 export interface IpcReturnType<T = any> {
   data: T | null;
@@ -10,6 +10,13 @@ export interface WindowBounds {
   y: number;
   width: number;
   height: number;
+}
+
+export interface WindowState {
+  isVisible: boolean;
+  isMinimized: boolean;
+  isMaximized: boolean;
+  isFullscreen: boolean;
 }
 
 export interface IpcChannelDefinition<
@@ -25,18 +32,47 @@ export interface IpcContractMap {
 }
 
 export interface DefaultIpcContractMap extends IpcContractMap {
+  // Queries
   [WindowIpcChannel.GetName]: IpcChannelDefinition<[name: string], IpcReturnType<string>>;
   [WindowIpcChannel.GetBounds]: IpcChannelDefinition<
     [name: string],
     IpcReturnType<WindowBounds>
   >;
+  // Window control
   [WindowIpcChannel.Pin]: IpcChannelDefinition<
     [name: string, pinned: boolean],
     IpcReturnType<boolean>
   >;
+  [WindowIpcChannel.SetVisible]: IpcChannelDefinition<
+    [name: string, visible: boolean],
+    IpcReturnType<void>
+  >;
+  [WindowIpcChannel.SetMinimized]: IpcChannelDefinition<
+    [name: string, minimized: boolean],
+    IpcReturnType<void>
+  >;
+  [WindowIpcChannel.SetMaximized]: IpcChannelDefinition<
+    [name: string, maximized: boolean],
+    IpcReturnType<void>
+  >;
+  [WindowIpcChannel.Restore]: IpcChannelDefinition<
+    [name: string],
+    IpcReturnType<void>
+  >;
+  [WindowIpcChannel.Focus]: IpcChannelDefinition<
+    [name: string],
+    IpcReturnType<void>
+  >;
+  // Events
   [WindowIpcChannel.OnResize]: IpcChannelDefinition<[bounds: WindowBounds], void>;
+  [WindowIpcChannel.OnStateChanged]: IpcChannelDefinition<[state: WindowState], void>;
   [WindowIpcChannel.OnEnterFullscreen]: IpcChannelDefinition<[], void>;
   [WindowIpcChannel.OnLeaveFullscreen]: IpcChannelDefinition<[], void>;
+  // Menu
+  [MenuIpcChannel.ItemClicked]: IpcChannelDefinition<
+    [itemId: string, windowName: string],
+    void
+  >;
 }
 
 export type KnownIpcChannel<

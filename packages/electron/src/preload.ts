@@ -32,22 +32,38 @@ function getListenerEntries(
 	return entries;
 }
 
+function validateChannel(
+	channel: string,
+	allowedChannels: ReadonlyArray<string>,
+	strict = true
+): void {
+	if (strict && !allowedChannels.includes(channel)) {
+		throw new Error(
+			`IPC channel "${channel}" is not whitelisted. Allowed: [${allowedChannels.join(', ')}]`
+		);
+	}
+}
+
 export function createIpcBridge<
 	Contracts extends IpcContractMap = DefaultIpcContractMap
 >(
 	channels: ReadonlyArray<KnownIpcChannel<Contracts>> =
-		defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>
+		defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
+	options: { strict?: boolean } = {}
 ): Readonly<TypedIpcBridge<Contracts>> {
 	const listenerRegistry = new WeakMap<
 		RendererListener,
 		Map<string, Set<ElectronListener>>
 	>();
+	const allowedChannels = [...channels];
+	const strict = options.strict !== false; // Default to strict mode
 
 	return {
 		versions: process.versions,
 		channels: [...channels],
 		ipc: {
 			on(channel: string, listener: RendererListener): void {
+				validateChannel(channel, allowedChannels, strict);
 				const wrappedListener: ElectronListener = (_event, ...args) => {
 					listener(...args);
 				};
@@ -58,6 +74,7 @@ export function createIpcBridge<
 				ipcRenderer.on(channel, wrappedListener);
 			},
 			once(channel: string, listener: RendererListener): void {
+				validateChannel(channel, allowedChannels, strict);
 				const entries = getListenerEntries(listenerRegistry, listener, channel);
 				const wrappedListener: ElectronListener = (_event, ...args) => {
 					entries.delete(wrappedListener);
@@ -68,6 +85,7 @@ export function createIpcBridge<
 				ipcRenderer.once(channel, wrappedListener);
 			},
 			off(channel: string, listener: RendererListener): void {
+				validateChannel(channel, allowedChannels, strict);
 				const channelsByListener = listenerRegistry.get(listener);
 				const wrappedListeners = channelsByListener?.get(channel);
 				if (!wrappedListeners) {
@@ -82,15 +100,19 @@ export function createIpcBridge<
 				channelsByListener?.delete(channel);
 			},
 			removeAllListeners(channel: string): void {
+				validateChannel(channel, allowedChannels, strict);
 				ipcRenderer.removeAllListeners(channel);
 			},
 			send(channel: string, ...args: any[]): void {
+				validateChannel(channel, allowedChannels, strict);
 				ipcRenderer.send(channel, ...args);
 			},
 			async invoke(channel: string, ...args: any[]): Promise<any> {
+				validateChannel(channel, allowedChannels, strict);
 				return await ipcRenderer.invoke(channel, ...args);
 			},
 			async emit(channel: string, ...args: any[]): Promise<void> {
+				validateChannel(channel, allowedChannels, strict);
 				ipcRenderer.emit(channel, ...args);
 			},
 		},
@@ -103,13 +125,14 @@ export function exposeIpcBridge<
 	Contracts extends IpcContractMap = DefaultIpcContractMap
 >(
 	channels: ReadonlyArray<KnownIpcChannel<Contracts>> =
-		defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>
+		defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
+	options: { strict?: boolean } = {}
 ): Readonly<TypedIpcBridge<Contracts>> {
 	if (exposedBridge) {
 		return exposedBridge as Readonly<TypedIpcBridge<Contracts>>;
 	}
 
-	const bridge = createIpcBridge(channels);
+	const bridge = createIpcBridge(channels, options);
 
 	if (process.contextIsolated) {
 		contextBridge.exposeInMainWorld('ipc', bridge);
