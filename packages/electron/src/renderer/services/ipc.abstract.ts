@@ -1,4 +1,4 @@
-import { AbstractAssemblage } from 'assemblerjs';
+import { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
 import type {
   DefaultIpcContractMap,
   IpcArgsFor,
@@ -32,8 +32,11 @@ export abstract class AbstractIpcService<
   public abstract on<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
     listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-  ): void;
-  public abstract on(channel: string, listener: (...args: any[]) => void): void;
+  ): () => void;
+  public abstract on(
+    channel: string,
+    listener: (...args: any[]) => void
+  ): () => void;
 
   /**
    * Registers a one-time listener for the specified channel.
@@ -43,11 +46,11 @@ export abstract class AbstractIpcService<
   public abstract once<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
     listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-  ): void;
+  ): () => void;
   public abstract once(
     channel: string,
     listener: (...args: any[]) => void
-  ): void;
+  ): () => void;
 
   /**
    * Removes a specific listener from the specified channel.
@@ -101,4 +104,6 @@ export abstract class AbstractIpcService<
     ...args: IpcArgsFor<Contracts, Channel>
   ): Promise<void>;
   public abstract emit(channel: string, ...args: any[]): Promise<void>;
+
+  public abstract onDispose(context: AssemblerContext, configuration?: Record<string, any>): void | Promise<void>;
 }

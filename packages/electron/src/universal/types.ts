@@ -69,7 +69,7 @@ export interface DefaultIpcContractMap extends IpcContractMap {
   [WindowIpcChannel.OnEnterFullscreen]: IpcChannelDefinition<[], void>;
   [WindowIpcChannel.OnLeaveFullscreen]: IpcChannelDefinition<[], void>;
   // Menu
-  [MenuIpcChannel.ItemClicked]: IpcChannelDefinition<
+  [MenuIpcChannel.OnItemClicked]: IpcChannelDefinition<
     [itemId: string, windowName: string],
     void
   >;
@@ -98,14 +98,14 @@ export interface TypedIpcBridge<
     on<Channel extends KnownIpcChannel<Contracts>>(
       channel: Channel,
       listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-    ): void;
-    on(channel: string, listener: (...args: any[]) => void): void;
+    ): () => void;
+    on(channel: string, listener: (...args: any[]) => void): () => void;
 
     once<Channel extends KnownIpcChannel<Contracts>>(
       channel: Channel,
       listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-    ): void;
-    once(channel: string, listener: (...args: any[]) => void): void;
+    ): () => void;
+    once(channel: string, listener: (...args: any[]) => void): () => void;
 
     off<Channel extends KnownIpcChannel<Contracts>>(
       channel: Channel,

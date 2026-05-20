@@ -17,5 +17,5 @@ export enum WindowIpcChannel {
 }
 
 export enum MenuIpcChannel {
-  ItemClicked = 'menu:item.clicked',
+  OnItemClicked = 'menu:item.clicked',
 }

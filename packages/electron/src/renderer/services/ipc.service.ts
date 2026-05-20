@@ -27,21 +27,21 @@ export class IpcService<
   public on<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
     listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-  ): void;
-  public on(channel: string, listener: (...args: any[]) => void): void;
+  ): () => void;
+  public on(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
-  public on(channel: string, listener: (...args: any[]) => void): void {
-    this.bridge.ipc.on(channel, listener);
+  public on(channel: string, listener: (...args: any[]) => void): () => void {
+    return this.bridge.ipc.on(channel, listener);
   }
 
   public once<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
     listener: (...args: IpcArgsFor<Contracts, Channel>) => void
-  ): void;
-  public once(channel: string, listener: (...args: any[]) => void): void;
+  ): () => void;
+  public once(channel: string, listener: (...args: any[]) => void): () => void;
   @BindThis()
-  public once(channel: string, listener: (...args: any[]) => void): void {
-    this.bridge.ipc.once(channel, listener);
+  public once(channel: string, listener: (...args: any[]) => void): () => void {
+    return this.bridge.ipc.once(channel, listener);
   }
 
   public off<Channel extends KnownIpcChannel<Contracts>>(
@@ -88,5 +88,12 @@ export class IpcService<
   @BindThis()
   public async emit(channel: string, ...args: any[]): Promise<void> {
     await this.bridge.ipc.emit(channel, ...args);
+  }
+
+  @BindThis()
+  public onDispose(): void | Promise<void> {
+    for (const channel of this.channels) {
+      this.bridge.ipc.removeAllListeners(channel);
+    }
   }
 }

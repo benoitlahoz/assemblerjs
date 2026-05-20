@@ -62,7 +62,7 @@ export function createIpcBridge<
 		versions: process.versions,
 		channels: [...channels],
 		ipc: {
-			on(channel: string, listener: RendererListener): void {
+			on(channel: string, listener: RendererListener): () => void {
 				validateChannel(channel, allowedChannels, strict);
 				const wrappedListener: ElectronListener = (_event, ...args) => {
 					listener(...args);
@@ -72,17 +72,45 @@ export function createIpcBridge<
 					wrappedListener
 				);
 				ipcRenderer.on(channel, wrappedListener);
+
+				return () => {
+					const channelsByListener = listenerRegistry.get(listener);
+					const wrappedListeners = channelsByListener?.get(channel);
+					if (!wrappedListeners?.has(wrappedListener)) {
+						return;
+					}
+
+					ipcRenderer.off(channel, wrappedListener);
+					wrappedListeners.delete(wrappedListener);
+					if (wrappedListeners.size === 0) {
+						channelsByListener?.delete(channel);
+					}
+				};
 			},
-			once(channel: string, listener: RendererListener): void {
+			once(channel: string, listener: RendererListener): () => void {
 				validateChannel(channel, allowedChannels, strict);
 				const entries = getListenerEntries(listenerRegistry, listener, channel);
+				let active = true;
 				const wrappedListener: ElectronListener = (_event, ...args) => {
+					if (!active) {
+						return;
+					}
+					active = false;
 					entries.delete(wrappedListener);
 					listener(...args);
 				};
 
 				entries.add(wrappedListener);
 				ipcRenderer.once(channel, wrappedListener);
+
+				return () => {
+					if (!active) {
+						return;
+					}
+					active = false;
+					ipcRenderer.off(channel, wrappedListener);
+					entries.delete(wrappedListener);
+				};
 			},
 			off(channel: string, listener: RendererListener): void {
 				validateChannel(channel, allowedChannels, strict);
