@@ -3,14 +3,18 @@ import { useIpc } from '@renderer/composables/useIpc';
 import { onMounted, ref } from 'vue';
 
 const { debug } = useIpc();
-const versions = ref({
-  electron: '',
-  chrome: '',
-  node: '',
-});
+
+const defaultVersions = {
+  electron: 'unknown',
+  chrome: 'unknown',
+  node: 'unknown',
+};
+const versions = ref({ ...defaultVersions });
+
 
 onMounted(async () => {
-  versions.value = await debug.getVersions();
+  versions.value = await debug.getVersions() ?? { ...defaultVersions };
+  console.log('Platform:', await debug.getPlatform());
 });
 </script>
 

@@ -14,12 +14,16 @@ export class DebugIpcGateway implements AbstractAssemblage {
   }
 
   @IpcInvoke(IpcChannels.GetVersions)
-  public async getVersions(@IpcResult() versions?: any): Promise<NodeJS.ProcessVersions> {
+  public async getVersions(
+    @IpcResult() versions?: NodeJS.ProcessVersions,
+  ): Promise<NodeJS.ProcessVersions | undefined> {
     return versions;
   }
 
   @IpcInvoke(IpcChannels.GetPlatform)
-  public async getPlatform(@IpcResult() platform: NodeJS.Platform): Promise<NodeJS.Platform> {
+  public async getPlatform(
+    @IpcResult() platform?: NodeJS.Platform,
+  ): Promise<NodeJS.Platform | undefined> {
     return platform;
   }
 }
