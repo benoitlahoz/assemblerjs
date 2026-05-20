@@ -19,10 +19,6 @@
     "skipLibCheck": true,
     "strict": true,
     "target": "es2022",
-    "customConditions": ["development"],
-    "paths": {
-      "@assemblerjs/common": ["packages/common/src/index.ts"],
-      "@assemblerjs/common/*": ["packages/common/src/*"]
-    }
+    "customConditions": ["development"]
   }
 }

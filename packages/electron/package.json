@@ -27,11 +27,13 @@
   ],
   "dependencies": {
     "@assemblerjs/core": "0.9.8",
-    "assemblerjs": "1.2.1",
-    "electron": "38.4.0",
-    "@electron-toolkit/preload": "^3.0.2"
+    "assemblerjs": "1.2.1"
+  },
+  "peerDependencies": {
+    "electron": "^30.0.0 || ^38.0.0"
   },
   "devDependencies": {
+    "electron": "38.4.0",
     "reflect-metadata": "^0.2.2"
   }
 }

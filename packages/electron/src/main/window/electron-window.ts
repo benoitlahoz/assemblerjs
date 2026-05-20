@@ -15,7 +15,7 @@ export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
 
 @WindowListener()
 @IpcListener()
-export abstract class ElectronWindow extends BrowserWindow {
+export class ElectronWindow extends BrowserWindow {
   private static getOpenWindows(): ElectronWindow[] {
     return BrowserWindow.getAllWindows().filter(
       (window) => !window.isDestroyed()

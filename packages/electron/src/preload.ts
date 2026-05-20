@@ -1,4 +1,3 @@
-import { electronAPI } from '@electron-toolkit/preload';
 import { contextBridge, ipcRenderer } from 'electron';
 import { WindowIpcChannel } from './universal/channels';
 import type {
@@ -113,10 +112,8 @@ export function exposeIpcBridge<
 	const bridge = createIpcBridge(channels);
 
 	if (process.contextIsolated) {
-		contextBridge.exposeInMainWorld('electron', electronAPI);
 		contextBridge.exposeInMainWorld('ipc', bridge);
 	} else if (typeof window !== 'undefined') {
-		(window as any).electron = electronAPI;
 		(window as any).ipc = bridge;
 	}
 

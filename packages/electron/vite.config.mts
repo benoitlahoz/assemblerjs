@@ -84,9 +84,6 @@ export default defineConfig(() => ({
         'electron/main',
         'electron/renderer',
         'electron/common',
-        // Common external dependencies that might be used
-        '@electron-toolkit/preload',
-        '@electron-toolkit/utils',
       ],
     },
     minify: 'terser' as const,

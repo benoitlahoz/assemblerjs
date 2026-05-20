@@ -8,7 +8,6 @@ const removeAllListeners = vi.fn();
 const send = vi.fn();
 const invoke = vi.fn();
 const emit = vi.fn();
-const electronApi = { platform: 'test' };
 
 vi.mock('electron', () => ({
   contextBridge: {
@@ -23,10 +22,6 @@ vi.mock('electron', () => ({
     invoke,
     emit,
   },
-}));
-
-vi.mock('@electron-toolkit/preload', () => ({
-  electronAPI: electronApi,
 }));
 
 describe('preload bridge', () => {
@@ -51,7 +46,6 @@ describe('preload bridge', () => {
   it('exposes the official electron and ipc globals on import', async () => {
     await import('../src/preload');
 
-    expect(exposeInMainWorld).toHaveBeenCalledWith('electron', electronApi);
     expect(exposeInMainWorld).toHaveBeenCalledWith(
       'ipc',
       expect.objectContaining({

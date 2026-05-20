@@ -1,16 +1,36 @@
-export const IpcInvoke = (channel?: string): MethodDecorator => {
+/**
+ * Invokes an IPC handler from the renderer process and waits for the response.
+ * 
+ * @template Contracts The IPC contract map for type-safe channel resolution
+ * @template Response The expected response type from the handler
+ * @param channel Optional channel name. If not provided, must be resolved via @IpcChannel parameter.
+ * @returns A MethodDecorator that wraps the method to invoke IPC handlers.
+ * 
+ * @example
+ * ```typescript
+ * @IpcInvoke('my:handler')
+ * async fetchData(payload: string): Promise<Data> { }
+ * 
+ * // Or with dynamic channel:
+ * @IpcInvoke()
+ * async fetchData(@IpcChannel() channel: string, payload: string): Promise<Data> { }
+ * ```
+ */
+export function IpcInvoke<C extends string = string>(
+  channel?: C
+): MethodDecorator {
   return (
     target: object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor
   ) => {
-    const originalMethod = descriptor.value;
+    const originalMethod = descriptor.value as Function;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: any[]): Promise<any> {
       const channelParameters: number[] =
         Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
 
-      let resolvedChannel = channel;
+      let resolvedChannel: string | undefined = channel;
       if (!resolvedChannel) {
         if (channelParameters.length === 0) {
           throw new Error(
@@ -65,4 +85,4 @@ export const IpcInvoke = (channel?: string): MethodDecorator => {
 
     return descriptor;
   };
-};
+}
