@@ -173,6 +173,7 @@ export function exposeIpcBridge<
   return bridge;
 }
 
-exposeIpcBridge();
+// exposeIpcBridge();
+// TODO: Check tests without this call (we DO NOT want to call it)
 
 export * from './universal/channels';

@@ -1,0 +1,16 @@
+{
+  "name": "electron-01",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "examples/electron-01/src",
+  "projectType": "application",
+  "tags": ["type:example", "electron"],
+  "// targets": "to see all targets run: nx show project electron-01 --web",
+  "targets": {
+    "build": {
+      "dependsOn": []
+    },
+    "test": {
+      "dependsOn": []
+    }
+  }
+}
