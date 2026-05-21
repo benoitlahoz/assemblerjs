@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onBeforeUnmount, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useIpc } from '@renderer/composables/useIpc';
 import AppHero from './components/AppHero.vue';
 import IpcCard from './components/IpcCard.vue';
@@ -16,11 +16,9 @@ interface RectBounds {
 const { mainWindow, debug } = useIpc();
 
 const bounds = computed(() => mainWindow.bounds.value as RectBounds | undefined);
-const lastPongAt = ref<number | undefined>(undefined);
-const lastPingSentAt = ref<number | undefined>(undefined);
-const lastLatencyMs = ref<number | undefined>(undefined);
-const latencyHistory = ref<number[]>([]);
-const ipcFeedback = ref('Idle');
+const lastLatencyMs = computed(() => debug.lastLatencyMs.value);
+const averageLatencyMs = computed(() => debug.averageLatencyMs.value);
+const ipcFeedback = computed(() => debug.ipcFeedback.value);
 const telemetryValidation = ref('Drag to move, drag bottom-right handle to resize.');
 const screenWorkArea = ref<{ x: number; y: number; width: number; height: number }>({
   x: 0,
@@ -35,29 +33,16 @@ const runtime = ref({
   platform: 'unknown',
 });
 
-let stopPongListener: (() => void) | undefined;
-
 const syncStatus = computed(() => {
   return bounds.value ? 'Live' : 'Awaiting first event';
 });
 
-const averageLatencyMs = computed(() => {
-  if (latencyHistory.value.length === 0) {
-    return undefined;
-  }
-
-  const total = latencyHistory.value.reduce((sum, value) => sum + value, 0);
-  return Math.round(total / latencyHistory.value.length);
-});
-
 const sendPing = (): void => {
-  lastPingSentAt.value = performance.now();
-  ipcFeedback.value = 'Ping sent...';
   debug.sendPing();
 };
 
 const clearIpcFeedback = (): void => {
-  ipcFeedback.value = 'Idle';
+  debug.clearFeedback();
 };
 
 const syncDisplayWorkArea = async (): Promise<void> => {
@@ -126,19 +111,6 @@ const applyBoundsFromCanvas = async (nextBounds: RectBounds): Promise<RectBounds
 };
 
 onMounted(async () => {
-  stopPongListener = window.ipc.on('pong', () => {
-    if (lastPingSentAt.value !== undefined) {
-      const latency = Math.max(0, Math.round(performance.now() - lastPingSentAt.value));
-      lastLatencyMs.value = latency;
-      latencyHistory.value = [latency, ...latencyHistory.value].slice(0, 5);
-      lastPingSentAt.value = undefined;
-    }
-
-    lastPongAt.value = Date.now();
-    ipcFeedback.value =
-      `Pong ${lastLatencyMs.value !== undefined ? `${lastLatencyMs.value} ms` : ''}`.trim();
-  });
-
   const [versions, platform] = await Promise.all([
     debug.getVersions(),
     debug.getPlatform(),
@@ -153,10 +125,6 @@ onMounted(async () => {
   };
 
   await syncDisplayWorkArea();
-});
-
-onBeforeUnmount(() => {
-  stopPongListener?.();
 });
 </script>
 

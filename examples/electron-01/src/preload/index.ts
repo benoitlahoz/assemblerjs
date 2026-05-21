@@ -1,10 +1,10 @@
-import type { KnownIpcChannel } from '@assemblerjs/electron';
-import { exposeIpcBridge } from '@assemblerjs/electron/preload';
-import { IpcChannels } from './ipc.channels';
+import { getIpcContractChannels, setupIpcBridge } from '@assemblerjs/electron/preload';
+import { ipcContracts } from './ipc.channels';
 
-const defaultChannels = [...Object.values(IpcChannels)] as ReadonlyArray<KnownIpcChannel>;
+const defaultChannels = getIpcContractChannels(ipcContracts);
 
-exposeIpcBridge(defaultChannels, {
+setupIpcBridge({
+  channels: defaultChannels,
   strict: true,
   autoWhitelist: [/^window:[A-Za-z0-9_-]+\.[A-Za-z0-9:_-]+$/],
 });

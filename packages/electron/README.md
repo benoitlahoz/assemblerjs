@@ -29,13 +29,13 @@ The package provides three entry points for different Electron contexts:
 
 ```typescript
 // Main process
-import { /* ... */ } from '@assemblerjs/electron';
+import {} from /* ... */ '@assemblerjs/electron';
 
 // Renderer process
-import { /* ... */ } from '@assemblerjs/electron/renderer';
+import {} from /* ... */ '@assemblerjs/electron/renderer';
 
 // Preload script
-import { /* ... */ } from '@assemblerjs/electron/preload';
+import {} from /* ... */ '@assemblerjs/electron/preload';
 ```
 
 ## Quick Start
@@ -63,8 +63,8 @@ class WindowManager implements AbstractAssemblage {
       webPreferences: {
         nodeIntegration: false,
         contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js')
-      }
+        preload: path.join(__dirname, 'preload.js'),
+      },
     });
 
     this.mainWindow.loadFile('index.html');
@@ -76,7 +76,7 @@ class WindowManager implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[WindowManager]]
+  provide: [[WindowManager]],
 })
 class ElectronApp implements AbstractAssemblage {
   constructor(private windowManager: WindowManager) {}
@@ -93,12 +93,34 @@ const electronApp = Assembler.build(ElectronApp);
 ### Preload Script
 
 ```typescript
-import '@assemblerjs/electron/preload';
+import { setupIpcBridge } from '@assemblerjs/electron/preload';
+
+setupIpcBridge({
+  channels: ['ping', 'pong', 'get-versions', 'get-platform'],
+  strict: true,
+});
 ```
 
-Importing the preload entry point exposes two globals in the renderer:
+This exposes `window.ipc` in the renderer process.
 
-- `window.electron` for the Electron Toolkit helpers
+For diagnostics during integration, enable debug mode:
+
+```typescript
+setupIpcBridge({
+  channels: ['ping', 'pong'],
+  strict: true,
+  debug: true,
+});
+```
+
+Debug mode logs:
+
+- merged allowed channels
+- active auto-whitelist rules
+- rejected channels in strict mode
+
+Importing the preload entry point exposes the following global in the renderer:
+
 - `window.ipc` for the AssemblerJS IPC bridge
 
 ### Renderer Process
@@ -127,7 +149,7 @@ class AppService implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[AppService]]
+  provide: [[AppService]],
 })
 class RendererApp implements AbstractAssemblage {
   constructor(private appService: AppService) {}
@@ -204,7 +226,7 @@ class DatabaseService implements AbstractAssemblage {
 }
 
 @Assemblage({
-  provide: [[DatabaseService]]
+  provide: [[DatabaseService]],
 })
 class UserRepository implements AbstractAssemblage {
   constructor(private db: DatabaseService) {}
@@ -257,6 +279,17 @@ Keep main and renderer logic separated. Use IPC for communication:
 // ✅ Good - Separate concerns
 // Main: File system, native APIs
 // Renderer: UI logic
+```
+
+### 1.1 **Integration Simplicity (Recommended)**
+
+Use a renderer service/gateway as the single IPC access point.
+
+```typescript
+// ✅ Recommended
+// UI component -> service/gateway -> window.ipc
+
+// Avoid calling window.ipc directly from UI components.
 ```
 
 ### 2. **Security**

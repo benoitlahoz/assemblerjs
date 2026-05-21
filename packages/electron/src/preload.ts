@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { MenuIpcChannel, WindowIpcChannel } from './universal/channels';
 import type {
   DefaultIpcContractMap,
+  IpcChannelDefinition,
   IpcContractMap,
   KnownIpcChannel,
   TypedIpcBridge,
@@ -19,6 +20,13 @@ export type AutoWhitelistRule =
 export interface IpcBridgeOptions {
   strict?: boolean;
   autoWhitelist?: ReadonlyArray<AutoWhitelistRule>;
+  debug?: boolean;
+}
+
+export interface SetupIpcBridgeOptions<
+  Contracts extends IpcContractMap,
+> extends IpcBridgeOptions {
+  channels?: ReadonlyArray<KnownIpcChannel<Contracts>>;
 }
 
 const defaultChannels = [
@@ -65,12 +73,17 @@ function validateChannel(
   allowedChannels: ReadonlyArray<string>,
   autoWhitelistRules: ReadonlyArray<AutoWhitelistRule>,
   strict = true,
+  debug = false,
 ): void {
   if (
     strict &&
     !allowedChannels.includes(channel) &&
     !isAutoWhitelistedChannel(channel, autoWhitelistRules)
   ) {
+    if (debug) {
+      console.warn('[assemblerjs/electron][ipc] Rejected channel:', channel);
+    }
+
     throw new Error(
       `IPC channel "${channel}" is not whitelisted. Allowed: [${allowedChannels.join(
         ', ',
@@ -101,6 +114,40 @@ function matchesAutoWhitelistRule(
   return rule(channel);
 }
 
+function autoWhitelistRuleToString(rule: AutoWhitelistRule): string {
+  if (typeof rule === 'string') {
+    return rule;
+  }
+
+  if (rule instanceof RegExp) {
+    return rule.toString();
+  }
+
+  return '[Function rule]';
+}
+
+export function ipcContract<
+  Args extends unknown[] = unknown[],
+  Response = unknown,
+>(): IpcChannelDefinition<Args, Response> {
+  return {
+    args: [] as unknown as Args,
+    response: undefined as unknown as Response,
+  };
+}
+
+export function defineIpcContracts<Contracts extends IpcContractMap>(
+  contracts: Contracts,
+): Contracts {
+  return contracts;
+}
+
+export function getIpcContractChannels<Contracts extends IpcContractMap>(
+  contracts: Contracts,
+): ReadonlyArray<KnownIpcChannel<Contracts>> {
+  return Object.keys(contracts) as ReadonlyArray<KnownIpcChannel<Contracts>>;
+}
+
 export function createIpcBridge<
   Contracts extends IpcContractMap = DefaultIpcContractMap,
 >(
@@ -116,12 +163,27 @@ export function createIpcBridge<
   const mergedChannels = mergeWithDefaultChannels(channels);
   const allowedChannels = [...mergedChannels];
   const strict = options.strict !== false; // Default to strict mode
-  const autoWhitelistRules = options.autoWhitelist || defaultAutoWhitelistRules;
+  const autoWhitelistRules = options.autoWhitelist ?? defaultAutoWhitelistRules;
+  const debug = options.debug === true;
+
+  if (debug) {
+    console.info('[assemblerjs/electron][ipc] Bridge initialized', {
+      strict,
+      channels: allowedChannels,
+      autoWhitelist: autoWhitelistRules.map(autoWhitelistRuleToString),
+    });
+  }
 
   return {
     channels: [...mergedChannels],
     on(channel: string, listener: RendererListener): () => void {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       const wrappedListener: ElectronListener = (_event, ...args) => {
         listener(...args);
       };
@@ -146,7 +208,13 @@ export function createIpcBridge<
       };
     },
     once(channel: string, listener: RendererListener): () => void {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       const entries = getListenerEntries(listenerRegistry, listener, channel);
       let active = true;
       const wrappedListener: ElectronListener = (_event, ...args) => {
@@ -171,7 +239,13 @@ export function createIpcBridge<
       };
     },
     off(channel: string, listener: RendererListener): void {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       const channelsByListener = listenerRegistry.get(listener);
       const wrappedListeners = channelsByListener?.get(channel);
       if (!wrappedListeners) {
@@ -186,15 +260,33 @@ export function createIpcBridge<
       channelsByListener?.delete(channel);
     },
     removeAllListeners(channel: string): void {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       ipcRenderer.removeAllListeners(channel);
     },
     send(channel: string, ...args: any[]): void {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       ipcRenderer.send(channel, ...args);
     },
     async invoke(channel: string, ...args: any[]): Promise<any> {
-      validateChannel(channel, allowedChannels, autoWhitelistRules, strict);
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
       return await ipcRenderer.invoke(channel, ...args);
     },
   };
@@ -229,4 +321,18 @@ export function exposeIpcBridge<
   return bridge;
 }
 
+export function setupIpcBridge<
+  Contracts extends IpcContractMap = DefaultIpcContractMap,
+>(
+  options: SetupIpcBridgeOptions<Contracts> = {},
+): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
+  const {
+    channels = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
+    ...bridgeOptions
+  } = options;
+
+  return exposeIpcBridge(channels, bridgeOptions);
+}
+
 export * from './universal/channels';
+export type { IpcChannelDefinition, IpcContractMap } from './universal/types';
