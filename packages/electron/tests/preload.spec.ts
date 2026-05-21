@@ -41,8 +41,9 @@ describe('preload bridge', () => {
     });
   });
 
-  it('exposes the official electron and ipc globals on import', async () => {
-    await import('../src/preload');
+  it('exposes the ipc global when initialized', async () => {
+    const { exposeIpcBridge } = await import('../src/preload');
+    exposeIpcBridge();
 
     expect(exposeInMainWorld).toHaveBeenCalledWith(
       'ipc',
@@ -57,7 +58,7 @@ describe('preload bridge', () => {
         removeAllListeners: expect.any(Function),
         send: expect.any(Function),
         invoke: expect.any(Function),
-      })
+      }),
     );
   });
 

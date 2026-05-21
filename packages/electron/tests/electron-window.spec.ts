@@ -39,7 +39,8 @@ describe('ElectronWindow.getBounds IPC handler', () => {
       },
     ]);
 
-    const { ElectronWindow } = await import('../src/main/window/electron-window');
+    const { ElectronWindow } =
+      await import('../src/main/window/classes/electron-window');
 
     const result = await ElectronWindow.prototype.onGetBounds.call({}, 'beta');
 
@@ -49,12 +50,18 @@ describe('ElectronWindow.getBounds IPC handler', () => {
   it('returns an error when the named window does not exist', async () => {
     getAllWindows.mockReturnValue([]);
 
-    const { ElectronWindow } = await import('../src/main/window/electron-window');
+    const { ElectronWindow } =
+      await import('../src/main/window/classes/electron-window');
 
-    const result = await ElectronWindow.prototype.onGetBounds.call({}, 'missing');
+    const result = await ElectronWindow.prototype.onGetBounds.call(
+      {},
+      'missing',
+    );
 
     expect(result.data).toBeNull();
     expect(result.err).toBeInstanceOf(Error);
-    expect(result.err?.message).toContain("Window not found: missing in 'onGetBounds'");
+    expect(result.err?.message).toContain(
+      "Window not found: missing in 'onGetBounds'",
+    );
   });
 });

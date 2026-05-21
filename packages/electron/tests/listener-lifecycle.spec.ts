@@ -7,7 +7,7 @@ import {
   Dispose,
 } from 'assemblerjs';
 import { IpcOn } from '../src/universal/decorators';
-import { WindowOn } from '../src/main/decorators/window-on.decorator';
+import { WindowOn } from '../src/main/window/decorators';
 
 const ipcMainOn = vi.fn();
 const ipcMainOff = vi.fn();
@@ -41,9 +41,8 @@ describe('listener lifecycle', () => {
   });
 
   it('removes main ipc listeners on dispose', async () => {
-    const { IpcListener } = await import(
-      '../src/main/decorators/ipc-listener.decorator'
-    );
+    const { IpcListener } =
+      await import('../src/main/ipc/ipc-listener.decorator');
 
     @IpcListener()
     @Assemblage()
@@ -79,9 +78,8 @@ describe('listener lifecycle', () => {
   });
 
   it('removes renderer ipc listeners on dispose', async () => {
-    const { IpcListener } = await import(
-      '../src/renderer/decorators/ipc-listener.decorator'
-    );
+    const { IpcListener } =
+      await import('../src/renderer/ipc/decorators/ipc-listener.decorator');
 
     @IpcListener()
     @Assemblage()
@@ -119,9 +117,7 @@ describe('listener lifecycle', () => {
   });
 
   it('removes window listeners on dispose', async () => {
-    const { WindowListener } = await import(
-      '../src/main/decorators/window-listener.decorator'
-    );
+    const { WindowListener } = await import('../src/main/window/decorators');
 
     const onMock = vi.fn();
     const onceMock = vi.fn();
@@ -163,7 +159,7 @@ describe('listener lifecycle', () => {
 
     expect(removeListenerMock).toHaveBeenCalledWith(
       'resize',
-      registeredListener
+      registeredListener,
     );
   });
 });

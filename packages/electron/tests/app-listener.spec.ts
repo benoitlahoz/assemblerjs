@@ -1,6 +1,11 @@
 import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { AbstractAssemblage, Assemblage, Assembler, Dispose } from 'assemblerjs';
+import {
+  AbstractAssemblage,
+  Assemblage,
+  Assembler,
+  Dispose,
+} from 'assemblerjs';
 
 const appOn = vi.fn();
 const appOff = vi.fn();
@@ -20,8 +25,9 @@ describe('AppListener lifecycle', () => {
   });
 
   it('removes registered app listeners on dispose', async () => {
-    const { AppListener } = await import('../src/main/decorators/app-listener.decorator');
-    const { AppOn } = await import('../src/main/decorators/app-on.decorator');
+    const { AppListener } =
+      await import('../src/main/app/app-listener.decorator');
+    const { AppOn } = await import('../src/main/app/app-on.decorator');
 
     @AppListener()
     @Assemblage()
