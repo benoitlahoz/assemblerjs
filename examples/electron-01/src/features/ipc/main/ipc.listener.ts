@@ -7,8 +7,8 @@ import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 export class IpcListenerService implements AbstractAssemblage {
   constructor() {}
 
-  @IpcOn(IpcChannels.Ping)
   @IpcSend(IpcChannels.Pong)
+  @IpcOn(IpcChannels.Ping)
   public onPing(): void {
     console.log('Received ping from renderer process');
   }

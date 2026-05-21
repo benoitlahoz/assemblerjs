@@ -9,11 +9,21 @@ import type {
 
 type RendererListener = (...args: any[]) => void;
 type ElectronListener = (_event: unknown, ...args: any[]) => void;
+type BridgeContracts<Contracts extends IpcContractMap> = Contracts &
+  DefaultIpcContractMap;
 
 const defaultChannels = [
   ...Object.values(WindowIpcChannel),
   ...Object.values(MenuIpcChannel),
 ] as ReadonlyArray<KnownIpcChannel>;
+
+function mergeWithDefaultChannels<Contracts extends IpcContractMap>(
+  channels: ReadonlyArray<KnownIpcChannel<Contracts>>,
+): ReadonlyArray<KnownIpcChannel<BridgeContracts<Contracts>>> {
+  return [...new Set([...defaultChannels, ...channels])] as ReadonlyArray<
+    KnownIpcChannel<BridgeContracts<Contracts>>
+  >;
+}
 
 function getListenerEntries(
   registry: WeakMap<RendererListener, Map<string, Set<ElectronListener>>>,
@@ -56,16 +66,17 @@ export function createIpcBridge<
     KnownIpcChannel<Contracts>
   > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
   options: { strict?: boolean } = {},
-): Readonly<TypedIpcBridge<Contracts>> {
+): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
   const listenerRegistry = new WeakMap<
     RendererListener,
     Map<string, Set<ElectronListener>>
   >();
-  const allowedChannels = [...channels];
+  const mergedChannels = mergeWithDefaultChannels(channels);
+  const allowedChannels = [...mergedChannels];
   const strict = options.strict !== false; // Default to strict mode
 
   return {
-    channels: [...channels],
+    channels: [...mergedChannels],
     on(channel: string, listener: RendererListener): () => void {
       validateChannel(channel, allowedChannels, strict);
       const wrappedListener: ElectronListener = (_event, ...args) => {
@@ -155,9 +166,11 @@ export function exposeIpcBridge<
     KnownIpcChannel<Contracts>
   > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
   options: { strict?: boolean } = {},
-): Readonly<TypedIpcBridge<Contracts>> {
+): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
   if (exposedBridge) {
-    return exposedBridge as Readonly<TypedIpcBridge<Contracts>>;
+    return exposedBridge as Readonly<
+      TypedIpcBridge<BridgeContracts<Contracts>>
+    >;
   }
 
   const bridge = createIpcBridge(channels, options);

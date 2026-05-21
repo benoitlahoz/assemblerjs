@@ -78,4 +78,19 @@ describe('preload bridge', () => {
 
     expect(off).toHaveBeenCalledWith('custom:channel', wrappedListener);
   });
+
+  it('always includes package default channels when custom channels are provided', async () => {
+    const { createIpcBridge } = await import('../src/preload');
+    const bridge = createIpcBridge(['custom:channel']);
+
+    expect(bridge.channels).toEqual(
+      expect.arrayContaining([
+        'custom:channel',
+        'window:bounds.get',
+        'menu:item.clicked',
+      ]),
+    );
+
+    expect(() => bridge.send('window:bounds.get')).not.toThrow();
+  });
 });
