@@ -3,7 +3,10 @@ import { getAssemblageContext, getAssemblageDefinition } from 'assemblerjs';
 import type { Identifier } from 'assemblerjs';
 import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
-import { loadWindowContent } from '@/main/window/load-window-content';
+import {
+  loadWindowContent,
+  type WindowContentTarget,
+} from '@/main/window/load-window-content';
 import { registerCleanup } from '@/universal/lifecycle';
 import {
   getWindowDefinition,
@@ -44,6 +47,8 @@ interface WindowControllerState {
   registeredHandlers: Set<string>;
 }
 
+const openingWindowByName = new Map<string, Promise<any>>();
+
 interface WindowRuntimeHandle {
   loadURL?: (url: string) => Promise<unknown>;
   loadFile?: (
@@ -56,6 +61,15 @@ interface WindowRuntimeHandle {
   close?: () => void;
   isDestroyed?: () => boolean;
   [key: string]: unknown;
+}
+
+function isWindowContentTarget(
+  instance: WindowRuntimeHandle,
+): instance is WindowRuntimeHandle & WindowContentTarget {
+  return (
+    typeof instance.loadURL === 'function' &&
+    typeof instance.loadFile === 'function'
+  );
 }
 
 const stateSymbol = Symbol('__WindowControllerState__');
@@ -197,9 +211,22 @@ function getActiveWindowInstance(
   managed: ManagedWindowDefinition,
 ): any | undefined {
   const openedSet = getOpenedSet(controller, managed.definition.name);
-  return [...openedSet].find(
+  const existing = [...openedSet].find(
     (window) => !window?.isDestroyed || !window.isDestroyed(),
   );
+
+  if (existing) {
+    return existing;
+  }
+
+  // Fallback: if controller-local state was lost/desynced, reuse the globally opened window.
+  const globalWindow = ElectronWindow.getByName(managed.definition.name);
+  if (globalWindow) {
+    openedSet.add(globalWindow);
+    return globalWindow;
+  }
+
+  return undefined;
 }
 
 function registerManagedCommandHandlers(controller: any): void {
@@ -294,6 +321,12 @@ async function loadManagedWindowContent(
 
   const devUrl = resolveRouterValue(context, router.dev);
 
+  if (!isWindowContentTarget(instance)) {
+    throw new Error(
+      `Window '${managed.definition.name}' does not implement loadURL/loadFile required for router-based content loading.`,
+    );
+  }
+
   await loadWindowContent(instance, {
     devUrl,
     file,
@@ -377,27 +410,63 @@ export const WindowController = createConstructorDecorator(function (
         (window) => !window?.isDestroyed || !window.isDestroyed(),
       );
 
-      if (!managed.definition.multiple && openedInstances.length > 0) {
-        return openedInstances[0];
+      if (!managed.definition.multiple) {
+        if (openedInstances.length > 0) {
+          return openedInstances[0];
+        }
+
+        // HMR-safe reuse: state can be reset while BrowserWindow is still alive.
+        const globalWindow = ElectronWindow.getByName(managed.definition.name);
+        if (globalWindow) {
+          openedSet.add(globalWindow);
+          return globalWindow;
+        }
+
+        const pending = openingWindowByName.get(managed.definition.name);
+        if (pending) {
+          const pendingWindow = (await pending) as WindowRuntimeHandle;
+          openedSet.add(pendingWindow);
+          return pendingWindow;
+        }
       }
 
       const context = getAssemblageContext(this.constructor);
-      const instance = context.require(
-        managed.token as any,
-        configuration,
-      ) as WindowRuntimeHandle;
+      const createWindow = async (): Promise<WindowRuntimeHandle> => {
+        const instance = context.require(
+          managed.token as any,
+          configuration,
+        ) as WindowRuntimeHandle;
 
-      await loadManagedWindowContent(context, managed, instance);
+        await loadManagedWindowContent(context, managed, instance);
 
-      openedSet.add(instance);
+        openedSet.add(instance);
 
-      if (typeof instance?.once === 'function') {
-        instance.once('closed', () => {
-          removeOpenedInstance(this, managed.definition.name, instance);
-        });
+        if (typeof instance?.once === 'function') {
+          instance.once('closed', () => {
+            removeOpenedInstance(this, managed.definition.name, instance);
+          });
+        }
+
+        return instance;
+      };
+
+      if (!managed.definition.multiple) {
+        const pending = createWindow();
+        openingWindowByName.set(managed.definition.name, pending);
+
+        try {
+          return await pending;
+        } finally {
+          const activePending = openingWindowByName.get(
+            managed.definition.name,
+          );
+          if (activePending === pending) {
+            openingWindowByName.delete(managed.definition.name);
+          }
+        }
       }
 
-      return instance;
+      return await createWindow();
     };
   }
 

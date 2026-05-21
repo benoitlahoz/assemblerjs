@@ -4,6 +4,7 @@ import { App as VueApp, createApp } from 'vue';
 import { IpcModule } from '@features/ipc/renderer/ipc.module';
 import { ContextInjectionKey } from './common/keys';
 import App from './App.vue';
+import { router } from './router';
 
 import './assets/main.css';
 
@@ -15,6 +16,7 @@ class MainApp implements AbstractAssemblage {
 
   constructor(public ipc: IpcModule) {
     this.app = createApp(App);
+    this.app.use(router);
   }
 
   public async onInit(context: AssemblerContext): Promise<void> {
