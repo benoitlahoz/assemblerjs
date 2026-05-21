@@ -1,5 +1,5 @@
 import { Event, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
-import { ElectronWindow } from '../window';
+import { ElectronWindow } from '@/main';
 import { MenuIpcChannel } from '@/universal';
 
 export class ElectronMenuItem {
@@ -21,7 +21,7 @@ export class ElectronMenuItem {
   protected _click?: (
     menuItem: MenuItem,
     browserWindow: ElectronWindow | undefined,
-    event: Event
+    event: Event,
   ) => void;
 
   /**
@@ -176,7 +176,7 @@ export class ElectronMenuItem {
       | 'radio'
       | 'header'
       | 'palette'
-      | undefined
+      | undefined,
   ) {
     const item = this.getItem();
     if (item) {
@@ -243,7 +243,7 @@ export class ElectronMenuItem {
     const item = this.getItem();
     if (item) {
       item.submenu = Menu.buildFromTemplate(
-        value.map((i) => i.toMenuItemConstructorOptions())
+        value.map((i) => i.toMenuItemConstructorOptions()),
       );
       this._submenu = value;
       return;
@@ -264,7 +264,7 @@ export class ElectronMenuItem {
    * @param value The click handler function.
    */
   public set click(
-    value: (menuItem: MenuItem, browserWindow: any, event: any) => void
+    value: (menuItem: MenuItem, browserWindow: any, event: any) => void,
   ) {
     const item = this.getItem();
     if (item) {
@@ -302,10 +302,10 @@ export class ElectronMenuItem {
   /**
    * Configures a handler to process click events in the main process.
    * Can be chained with forwardClickToRenderer() for dual handling.
-   * 
+   *
    * @param callback Handler function receiving itemId and windowName.
    * @returns {this} The current instance.
-   * 
+   *
    * @example
    * ```ts
    * menuItem
@@ -314,13 +314,13 @@ export class ElectronMenuItem {
    * ```
    */
   public handleInMain(
-    callback: (itemId: string, windowName: string) => void
+    callback: (itemId: string, windowName: string) => void,
   ): this {
     const previousClick = this._click;
     this.click = (
       menuItem: MenuItem,
       browserWindow: ElectronWindow | undefined,
-      event: Event
+      event: Event,
     ) => {
       if (!browserWindow) return;
 
@@ -342,16 +342,16 @@ export class ElectronMenuItem {
    * Configures this menu item to forward click events to the renderer via IPC.
    * Uses the standard menu:item.clicked channel with [itemId, windowName] payload.
    * Can be chained with handleInMain() for dual handling.
-   * 
-   * @param payloadFactory Optional factory function to customize payload. 
+   *
+   * @param payloadFactory Optional factory function to customize payload.
    *                       Receives (itemId, windowName) and returns [itemId, windowName] or custom tuple.
    * @returns {this} The current instance.
-   * 
+   *
    * @example
    * ```ts
    * menuItem.forwardClickToRenderer();
    * // Sends: ['myItemId', 'myWindow']
-   * 
+   *
    * menuItem
    *   .handleInMain((id, win) => console.log('Main:', id))
    *   .forwardClickToRenderer((id, win) => [`custom-${id}`, win]);
@@ -360,14 +360,14 @@ export class ElectronMenuItem {
   public forwardClickToRenderer(
     payloadFactory?: (
       itemId: string,
-      windowName: string
-    ) => [itemId: string, windowName: string]
+      windowName: string,
+    ) => [itemId: string, windowName: string],
   ): this {
     const previousClick = this._click;
     this.click = (
       menuItem: MenuItem,
       browserWindow: ElectronWindow | undefined,
-      event: Event
+      event: Event,
     ) => {
       if (!browserWindow) return;
 
@@ -384,10 +384,7 @@ export class ElectronMenuItem {
         ? payloadFactory(itemId, windowName)
         : [itemId, windowName];
 
-      browserWindow.webContents.send(
-        MenuIpcChannel.OnItemClicked,
-        ...payload
-      );
+      browserWindow.webContents.send(MenuIpcChannel.OnItemClicked, ...payload);
     };
     return this;
   }

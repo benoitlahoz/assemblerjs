@@ -18,7 +18,7 @@ const defaultChannels = [
 function getListenerEntries(
   registry: WeakMap<RendererListener, Map<string, Set<ElectronListener>>>,
   listener: RendererListener,
-  channel: string
+  channel: string,
 ): Set<ElectronListener> {
   let channels = registry.get(listener);
   if (!channels) {
@@ -38,24 +38,24 @@ function getListenerEntries(
 function validateChannel(
   channel: string,
   allowedChannels: ReadonlyArray<string>,
-  strict = true
+  strict = true,
 ): void {
   if (strict && !allowedChannels.includes(channel)) {
     throw new Error(
       `IPC channel "${channel}" is not whitelisted. Allowed: [${allowedChannels.join(
-        ', '
-      )}]`
+        ', ',
+      )}]`,
     );
   }
 }
 
 export function createIpcBridge<
-  Contracts extends IpcContractMap = DefaultIpcContractMap
+  Contracts extends IpcContractMap = DefaultIpcContractMap,
 >(
   channels: ReadonlyArray<
     KnownIpcChannel<Contracts>
   > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
-  options: { strict?: boolean } = {}
+  options: { strict?: boolean } = {},
 ): Readonly<TypedIpcBridge<Contracts>> {
   const listenerRegistry = new WeakMap<
     RendererListener,
@@ -73,7 +73,7 @@ export function createIpcBridge<
       };
 
       getListenerEntries(listenerRegistry, listener, channel).add(
-        wrappedListener
+        wrappedListener,
       );
       ipcRenderer.on(channel, wrappedListener);
 
@@ -149,12 +149,12 @@ export function createIpcBridge<
 let exposedBridge: Readonly<TypedIpcBridge<any>> | undefined;
 
 export function exposeIpcBridge<
-  Contracts extends IpcContractMap = DefaultIpcContractMap
+  Contracts extends IpcContractMap = DefaultIpcContractMap,
 >(
   channels: ReadonlyArray<
     KnownIpcChannel<Contracts>
   > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
-  options: { strict?: boolean } = {}
+  options: { strict?: boolean } = {},
 ): Readonly<TypedIpcBridge<Contracts>> {
   if (exposedBridge) {
     return exposedBridge as Readonly<TypedIpcBridge<Contracts>>;
@@ -172,8 +172,5 @@ export function exposeIpcBridge<
 
   return bridge;
 }
-
-// exposeIpcBridge();
-// TODO: Check tests without this call (we DO NOT want to call it)
 
 export * from './universal/channels';

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Assembler } from 'assemblerjs';
-import { IpcService } from '../src/renderer/services/ipc.service';
+import { IpcService } from '../src/renderer/ipc/services/ipc.service';
 
 describe('IpcService', () => {
   const on = vi.fn();

@@ -41,9 +41,8 @@ describe('dynamic IPC channel decorators', () => {
   });
 
   it('renderer IpcSend resolves the channel for each call', async () => {
-    const { IpcSend: RendererIpcSend } = await import(
-      '../src/renderer/decorators/ipc-send.decorator'
-    );
+    const { IpcSend: RendererIpcSend } =
+      await import('../src/renderer/ipc/decorators/ipc-send.decorator');
 
     class RendererService {
       @RendererIpcSend()
@@ -64,9 +63,8 @@ describe('dynamic IPC channel decorators', () => {
   });
 
   it('renderer IpcInvoke resolves the channel for each call', async () => {
-    const { IpcInvoke } = await import(
-      '../src/renderer/decorators/ipc-invoke.decorator'
-    );
+    const { IpcInvoke } =
+      await import('../src/renderer/ipc/decorators/ipc-invoke.decorator');
 
     class RendererService {
       @IpcInvoke()
@@ -87,15 +85,14 @@ describe('dynamic IPC channel decorators', () => {
   });
 
   it('main IpcSend resolves the channel for each call', async () => {
-    const { IpcSend: MainIpcSend } = await import(
-      '../src/main/decorators/ipc-send.decorator'
-    );
+    const { IpcSend: MainIpcSend } =
+      await import('../src/main/ipc/ipc-send.decorator');
 
     class MainService {
       @MainIpcSend()
       public async publish(
         @IpcChannel() channel: string,
-        payload: string
+        payload: string,
       ): Promise<string> {
         return payload;
       }
