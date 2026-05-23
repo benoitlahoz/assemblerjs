@@ -19,7 +19,6 @@ const bounds = computed(() => mainWindow.bounds.value as RectBounds | undefined)
 const lastLatencyMs = computed(() => debug.lastLatencyMs.value);
 const averageLatencyMs = computed(() => debug.averageLatencyMs.value);
 const latencyHistory = computed(() => debug.latencyHistory.value);
-const ipcFeedback = computed(() => debug.ipcFeedback.value);
 const screenWorkArea = ref<{ x: number; y: number; width: number; height: number }>({
   x: 0,
   y: 0,
@@ -135,7 +134,6 @@ onMounted(async () => {
         :last-latency-ms="lastLatencyMs"
         :average-latency-ms="averageLatencyMs"
         :latency-history="latencyHistory"
-        :ipc-feedback="ipcFeedback"
         @send-ping="sendPing"
         @clear="clearIpcFeedback"
       />

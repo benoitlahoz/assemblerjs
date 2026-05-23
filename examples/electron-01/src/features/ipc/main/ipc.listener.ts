@@ -18,8 +18,6 @@ export class IpcListenerService implements AbstractAssemblage {
   @IpcSend(IpcChannels.Pong)
   @IpcOn(IpcChannels.Ping)
   public onPing(): void {
-    console.log('Received ping from renderer process');
-
     const hasRendererWindow = BrowserWindow.getAllWindows().some((window) => !window.isDestroyed());
     if (!hasRendererWindow) {
       return;

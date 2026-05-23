@@ -532,7 +532,10 @@ watch(
 <template>
   <article class="card card--telemetry" aria-live="polite">
     <header class="card__header">
-      <h2>Live Window Telemetry</h2>
+      <div class="card__title-row">
+        <h2>Window Geometry</h2>
+        <span class="telemetry-duplex">Full-duplex</span>
+      </div>
       <button
         type="button"
         class="telemetry-refresh"
@@ -597,11 +600,32 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: 32px;
+}
+
+.card__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.telemetry-duplex {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #58a6ff 45%, transparent);
+  background: color-mix(in srgb, #58a6ff 15%, transparent);
+  color: #9bc8ff;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .card__header h2 {
   margin: 0;
   font-size: 14px;
+  line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ev-c-text-1);

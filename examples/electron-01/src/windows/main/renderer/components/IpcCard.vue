@@ -5,7 +5,6 @@ const props = defineProps<{
   lastLatencyMs?: number;
   averageLatencyMs?: number;
   latencyHistory: number[];
-  ipcFeedback: string;
 }>();
 
 const emit = defineEmits<{
@@ -96,20 +95,32 @@ function drawLatencyChart(): void {
   const max = Math.max(...data);
   const range = Math.max(1, max - min);
 
-  context.beginPath();
-  data.forEach((value, index) => {
+  const points = data.map((value, index) => {
     const x =
       padding + (data.length === 1 ? 0 : (chartWidth * index) / Math.max(1, data.length - 1));
     const normalized = (value - min) / range;
     const y = padding + chartHeight - normalized * chartHeight;
+    return { x, y };
+  });
 
-    if (index === 0) {
-      context.moveTo(x, y);
-      return;
+  context.beginPath();
+  context.moveTo(points[0].x, points[0].y);
+
+  if (points.length === 1) {
+    context.lineTo(points[0].x + 0.001, points[0].y);
+  } else {
+    for (let index = 0; index < points.length - 1; index += 1) {
+      const current = points[index];
+      const next = points[index + 1];
+      const controlX = (current.x + next.x) / 2;
+
+      context.quadraticCurveTo(current.x, current.y, controlX, (current.y + next.y) / 2);
     }
 
-    context.lineTo(x, y);
-  });
+    const beforeLast = points[points.length - 2];
+    const last = points[points.length - 1];
+    context.quadraticCurveTo(beforeLast.x, beforeLast.y, last.x, last.y);
+  }
 
   context.strokeStyle = 'rgba(66, 211, 146, 0.95)';
   context.lineWidth = 1.6;
@@ -195,25 +206,17 @@ onBeforeUnmount(() => {
 <template>
   <article class="card" aria-live="polite">
     <header class="card__header">
-      <h2>IPC</h2>
+      <div class="card__title-row">
+        <h2>IPC</h2>
+        <span class="ipc-duplex">Full-duplex</span>
+      </div>
       <span class="ipc-status" :class="{ 'ipc-status--running': isHeartbeatRunning }">
         {{ isHeartbeatRunning ? 'Running' : 'Stopped' }}
       </span>
     </header>
     <p class="card__description">
-      Live renderer &lt;-&gt; main health panel with heartbeat and latency time-series.
+      Bidirectional renderer &lt;-&gt; main health panel with heartbeat and latency time-series.
     </p>
-
-    <dl class="ipc-health-grid ipc-health-grid--top">
-      <div class="metric">
-        <dt>Last RTT</dt>
-        <dd>{{ props.lastLatencyMs !== undefined ? `${props.lastLatencyMs} ms` : '—' }}</dd>
-      </div>
-      <div class="metric">
-        <dt>Average</dt>
-        <dd>{{ props.averageLatencyMs !== undefined ? `${props.averageLatencyMs} ms` : '—' }}</dd>
-      </div>
-    </dl>
 
     <div class="ipc-controls">
       <label for="ipc-heartbeat-interval">Heartbeat</label>
@@ -226,17 +229,6 @@ onBeforeUnmount(() => {
     </div>
 
     <canvas ref="chartRef" class="ipc-chart" aria-label="Latency chart" />
-
-    <dl class="ipc-health-grid ipc-health-grid--bottom">
-      <div class="metric">
-        <dt>P95</dt>
-        <dd>{{ p95LatencyMs !== undefined ? `${p95LatencyMs} ms` : '—' }}</dd>
-      </div>
-      <div class="metric">
-        <dt>Max</dt>
-        <dd>{{ maxLatencyMs !== undefined ? `${maxLatencyMs} ms` : '—' }}</dd>
-      </div>
-    </dl>
 
     <div class="ipc-actions-grid">
       <button type="button" class="ipc-action-card" @click="triggerPing">Ping Once</button>
@@ -254,7 +246,24 @@ onBeforeUnmount(() => {
       <button type="button" class="ipc-action-card" @click="resetMetrics">Reset</button>
     </div>
 
-    <p class="ipc-feedback" aria-live="polite">{{ props.ipcFeedback }}</p>
+    <dl class="ipc-health-grid">
+      <div class="metric">
+        <dt>Last RTT</dt>
+        <dd>{{ props.lastLatencyMs !== undefined ? `${props.lastLatencyMs} ms` : '—' }}</dd>
+      </div>
+      <div class="metric">
+        <dt>Average</dt>
+        <dd>{{ props.averageLatencyMs !== undefined ? `${props.averageLatencyMs} ms` : '—' }}</dd>
+      </div>
+      <div class="metric">
+        <dt>P95</dt>
+        <dd>{{ p95LatencyMs !== undefined ? `${p95LatencyMs} ms` : '—' }}</dd>
+      </div>
+      <div class="metric">
+        <dt>Max</dt>
+        <dd>{{ maxLatencyMs !== undefined ? `${maxLatencyMs} ms` : '—' }}</dd>
+      </div>
+    </dl>
   </article>
 </template>
 
@@ -277,6 +286,26 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: 32px;
+}
+
+.card__title-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ipc-duplex {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, #58a6ff 45%, transparent);
+  background: color-mix(in srgb, #58a6ff 15%, transparent);
+  color: #9bc8ff;
+  padding: 2px 8px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .ipc-status {
@@ -298,6 +327,7 @@ onBeforeUnmount(() => {
 .card__header h2 {
   margin: 0;
   font-size: 14px;
+  line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ev-c-text-1);
@@ -311,18 +341,10 @@ onBeforeUnmount(() => {
 }
 
 .ipc-health-grid {
-  margin: 0;
+  margin: 8px 0 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-}
-
-.ipc-health-grid--top {
-  margin-bottom: 10px;
-}
-
-.ipc-health-grid--bottom {
-  margin-top: 10px;
 }
 
 .ipc-controls {
@@ -358,7 +380,9 @@ onBeforeUnmount(() => {
 .ipc-chart {
   margin-top: 10px;
   width: 100%;
-  height: 170px;
+  height: auto;
+  min-height: 170px;
+  flex: 1 1 auto;
   border-radius: 10px;
   border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
   background: color-mix(in srgb, var(--ev-c-black-soft) 74%, transparent);
@@ -414,18 +438,6 @@ onBeforeUnmount(() => {
   color: #42d392;
 }
 
-.ipc-feedback {
-  margin: 12px 0 0;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
-  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
-  color: var(--ev-c-text-2);
-  font-size: 13px;
-  line-height: 1.35;
-  min-height: 38px;
-}
-
 .metric {
   border-radius: 10px;
   background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
@@ -454,6 +466,10 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 620px) {
+  .ipc-health-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .ipc-controls {
     grid-template-columns: 1fr;
     gap: 8px;

@@ -13,7 +13,7 @@ const props = defineProps<{
 <template>
   <article class="card" :class="{ 'card--compact': props.compact }">
     <header class="card__header">
-      <h2>System Fingerprint</h2>
+      <h2>Runtime Stack</h2>
     </header>
     <p v-if="!props.compact" class="card__description">
       Electron, Chromium, Node, and platform values reported by the running app.
@@ -64,11 +64,13 @@ const props = defineProps<{
   align-items: center;
   justify-content: space-between;
   gap: 10px;
+  min-height: 32px;
 }
 
 .card__header h2 {
   margin: 0;
   font-size: 14px;
+  line-height: 1.2;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ev-c-text-1);
@@ -76,6 +78,7 @@ const props = defineProps<{
 
 .card--compact .card__header h2 {
   font-size: 11px;
+  line-height: 1.2;
   letter-spacing: 0.06em;
   color: var(--ev-c-text-2);
 }
