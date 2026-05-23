@@ -1,5 +1,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { MenuIpcChannel, WindowIpcChannel } from './universal/channels';
+import {
+  MenuIpcChannel,
+  RpcIpcChannel,
+  WindowIpcChannel,
+} from './universal/channels';
 import type {
   DefaultIpcContractMap,
   IpcChannelDefinition,
@@ -10,6 +14,7 @@ import type {
 
 type RendererListener = (...args: any[]) => void;
 type ElectronListener = (_event: unknown, ...args: any[]) => void;
+type RendererRpcHandler = (...args: any[]) => any;
 type BridgeContracts<Contracts extends IpcContractMap> = Contracts &
   DefaultIpcContractMap;
 export type AutoWhitelistRule =
@@ -126,6 +131,54 @@ function autoWhitelistRuleToString(rule: AutoWhitelistRule): string {
   return '[Function rule]';
 }
 
+interface RendererRpcRequestEnvelope {
+  requestId: string;
+  channel: string;
+  args: unknown[];
+}
+
+interface RendererRpcResponseEnvelope {
+  requestId: string;
+  ok: boolean;
+  data?: unknown;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+}
+
+function toErrorPayload(error: unknown): {
+  name: string;
+  message: string;
+  stack?: string;
+} {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    name: 'Error',
+    message: typeof error === 'string' ? error : String(error),
+  };
+}
+
+function isRendererRpcRequestEnvelope(
+  value: unknown,
+): value is RendererRpcRequestEnvelope {
+  return Boolean(
+    value &&
+    typeof value === 'object' &&
+    typeof (value as RendererRpcRequestEnvelope).requestId === 'string' &&
+    typeof (value as RendererRpcRequestEnvelope).channel === 'string' &&
+    Array.isArray((value as RendererRpcRequestEnvelope).args),
+  );
+}
+
 export function ipcContract<
   Args extends unknown[] = unknown[],
   Response = unknown,
@@ -142,29 +195,76 @@ export function defineIpcContracts<Contracts extends IpcContractMap>(
   return contracts;
 }
 
-export function getIpcContractChannels<Contracts extends IpcContractMap>(
-  contracts: Contracts,
-): ReadonlyArray<KnownIpcChannel<Contracts>> {
-  return Object.keys(contracts) as ReadonlyArray<KnownIpcChannel<Contracts>>;
+export function getIpcContractChannels(
+  contracts: IpcContractMap,
+): ReadonlyArray<string> {
+  return Object.keys(contracts);
 }
 
 export function createIpcBridge<
   Contracts extends IpcContractMap = DefaultIpcContractMap,
 >(
-  channels: ReadonlyArray<
-    KnownIpcChannel<Contracts>
-  > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
+  channels?: ReadonlyArray<KnownIpcChannel<Contracts>>,
   options: IpcBridgeOptions = {},
 ): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
   const listenerRegistry = new WeakMap<
     RendererListener,
     Map<string, Set<ElectronListener>>
   >();
-  const mergedChannels = mergeWithDefaultChannels(channels);
+  const resolvedChannels =
+    channels ??
+    (defaultChannels as unknown as ReadonlyArray<KnownIpcChannel<Contracts>>);
+  const mergedChannels = mergeWithDefaultChannels(resolvedChannels);
   const allowedChannels = [...mergedChannels];
   const strict = options.strict !== false; // Default to strict mode
   const autoWhitelistRules = options.autoWhitelist ?? defaultAutoWhitelistRules;
   const debug = options.debug === true;
+  const rpcHandlers = new Map<string, RendererRpcHandler>();
+  let rpcRequestListenerRegistered = false;
+
+  const onRpcRequest = async (_event: unknown, payload: unknown) => {
+    if (!isRendererRpcRequestEnvelope(payload)) {
+      return;
+    }
+
+    const { requestId, channel, args } = payload;
+    const response: RendererRpcResponseEnvelope = {
+      requestId,
+      ok: true,
+    };
+
+    try {
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
+      const handler = rpcHandlers.get(channel);
+      if (!handler) {
+        throw new Error(
+          `No renderer handler registered for channel "${channel}".`,
+        );
+      }
+
+      response.data = await handler(...args);
+    } catch (error) {
+      response.ok = false;
+      response.error = toErrorPayload(error);
+    }
+
+    ipcRenderer.send(RpcIpcChannel.Response, response);
+  };
+
+  const ensureRpcRequestListener = () => {
+    if (rpcRequestListenerRegistered) {
+      return;
+    }
+
+    ipcRenderer.on(RpcIpcChannel.Request, onRpcRequest);
+    rpcRequestListenerRegistered = true;
+  };
 
   if (debug) {
     console.info('[assemblerjs/electron][ipc] Bridge initialized', {
@@ -289,6 +389,41 @@ export function createIpcBridge<
       );
       return await ipcRenderer.invoke(channel, ...args);
     },
+    handle(channel: string, handler: RendererRpcHandler): () => void {
+      ensureRpcRequestListener();
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
+
+      if (typeof handler !== 'function') {
+        throw new Error(
+          `IPC handler for channel "${channel}" must be a function.`,
+        );
+      }
+
+      rpcHandlers.set(channel, handler);
+
+      return () => {
+        if (rpcHandlers.get(channel) === handler) {
+          rpcHandlers.delete(channel);
+        }
+      };
+    },
+    removeHandler(channel: string): void {
+      validateChannel(
+        channel,
+        allowedChannels,
+        autoWhitelistRules,
+        strict,
+        debug,
+      );
+
+      rpcHandlers.delete(channel);
+    },
   };
 }
 
@@ -297,9 +432,7 @@ let exposedBridge: Readonly<TypedIpcBridge<any>> | undefined;
 export function exposeIpcBridge<
   Contracts extends IpcContractMap = DefaultIpcContractMap,
 >(
-  channels: ReadonlyArray<
-    KnownIpcChannel<Contracts>
-  > = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
+  channels?: ReadonlyArray<KnownIpcChannel<Contracts>>,
   options: IpcBridgeOptions = {},
 ): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
   if (exposedBridge) {
@@ -326,10 +459,7 @@ export function setupIpcBridge<
 >(
   options: SetupIpcBridgeOptions<Contracts> = {},
 ): Readonly<TypedIpcBridge<BridgeContracts<Contracts>>> {
-  const {
-    channels = defaultChannels as ReadonlyArray<KnownIpcChannel<Contracts>>,
-    ...bridgeOptions
-  } = options;
+  const { channels, ...bridgeOptions } = options;
 
   return exposeIpcBridge(channels, bridgeOptions);
 }

@@ -69,7 +69,7 @@ describe('preload bridge', () => {
 
     bridge.on('custom:channel', listener);
 
-    const wrappedListener = on.mock.calls[0][1];
+    const wrappedListener = on.mock.calls[on.mock.calls.length - 1][1];
     wrappedListener({ sender: 'ipcRenderer' }, 'payload', 42);
 
     expect(listener).toHaveBeenCalledWith('payload', 42);

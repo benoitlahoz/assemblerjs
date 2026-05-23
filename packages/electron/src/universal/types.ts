@@ -21,7 +21,7 @@ export interface WindowState {
 
 export interface IpcChannelDefinition<
   Args extends unknown[] = unknown[],
-  Response = unknown
+  Response = unknown,
 > {
   args: Args;
   response: Response;
@@ -85,38 +85,47 @@ export interface DefaultIpcContractMap extends IpcContractMap {
 }
 
 export type KnownIpcChannel<
-  Contracts extends IpcContractMap = DefaultIpcContractMap
+  Contracts extends IpcContractMap = DefaultIpcContractMap,
 > = Extract<keyof Contracts, string>;
 
 export type IpcArgsFor<
   Contracts extends IpcContractMap,
-  Channel extends KnownIpcChannel<Contracts>
+  Channel extends KnownIpcChannel<Contracts>,
 > = Contracts[Channel]['args'];
 
 export type IpcResponseFor<
   Contracts extends IpcContractMap,
-  Channel extends KnownIpcChannel<Contracts>
+  Channel extends KnownIpcChannel<Contracts>,
 > = Contracts[Channel]['response'];
 
+export type IpcRendererHandler<
+  Contracts extends IpcContractMap,
+  Channel extends KnownIpcChannel<Contracts>,
+> = (
+  ...args: IpcArgsFor<Contracts, Channel>
+) =>
+  | IpcResponseFor<Contracts, Channel>
+  | Promise<IpcResponseFor<Contracts, Channel>>;
+
 export interface TypedIpcBridge<
-  Contracts extends IpcContractMap = DefaultIpcContractMap
+  Contracts extends IpcContractMap = DefaultIpcContractMap,
 > {
   readonly channels: ReadonlyArray<KnownIpcChannel<Contracts>>;
   on<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
-    listener: (...args: IpcArgsFor<Contracts, Channel>) => void
+    listener: (...args: IpcArgsFor<Contracts, Channel>) => void,
   ): () => void;
   on(channel: string, listener: (...args: any[]) => void): () => void;
 
   once<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
-    listener: (...args: IpcArgsFor<Contracts, Channel>) => void
+    listener: (...args: IpcArgsFor<Contracts, Channel>) => void,
   ): () => void;
   once(channel: string, listener: (...args: any[]) => void): () => void;
 
   off<Channel extends KnownIpcChannel<Contracts>>(
     channel: Channel,
-    listener: (...args: IpcArgsFor<Contracts, Channel>) => void
+    listener: (...args: IpcArgsFor<Contracts, Channel>) => void,
   ): void;
   off(channel: string, listener: (...args: any[]) => void): void;
 
@@ -134,4 +143,15 @@ export interface TypedIpcBridge<
     ...args: IpcArgsFor<Contracts, Channel>
   ): Promise<IpcResponseFor<Contracts, Channel>>;
   invoke(channel: string, ...args: any[]): Promise<any>;
+
+  handle<Channel extends KnownIpcChannel<Contracts>>(
+    channel: Channel,
+    handler: IpcRendererHandler<Contracts, Channel>,
+  ): () => void;
+  handle(channel: string, handler: (...args: any[]) => any): () => void;
+
+  removeHandler<Channel extends KnownIpcChannel<Contracts>>(
+    channel: Channel,
+  ): void;
+  removeHandler(channel: string): void;
 }

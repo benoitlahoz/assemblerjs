@@ -202,6 +202,57 @@ class DataService implements AbstractAssemblage {
 }
 ```
 
+## Symmetric RPC (Main <-> Renderer)
+
+`renderer -> main` uses native `invoke/handle`.
+
+`main -> renderer` is supported through the package RPC bridge using the same decorators:
+
+- main side: `@IpcInvoke(...)`
+- renderer side: `@IpcHandle(...)`
+
+### Main invokes renderer
+
+```typescript
+import { Assemblage, AbstractAssemblage } from 'assemblerjs';
+import { IpcInvoke, IpcResult } from '@assemblerjs/electron';
+
+@Assemblage()
+class MainDiagnostics implements AbstractAssemblage {
+  @IpcInvoke('renderer:get-metrics', { name: 'main', timeoutMs: 3000 })
+  async pullRendererMetrics(
+    @IpcResult() metrics?: { feedback: string; averageLatencyMs?: number },
+  ): Promise<void> {
+    console.log('Renderer metrics:', metrics);
+  }
+}
+```
+
+### Renderer handles main invocation
+
+```typescript
+import { Assemblage, AbstractAssemblage } from 'assemblerjs';
+import { IpcHandle, IpcListener } from '@assemblerjs/electron/renderer';
+
+@IpcListener()
+@Assemblage()
+class RendererDiagnostics implements AbstractAssemblage {
+  @IpcHandle('renderer:get-metrics')
+  async getMetrics(): Promise<{ feedback: string; averageLatencyMs?: number }> {
+    return {
+      feedback: 'ok',
+      averageLatencyMs: 12,
+    };
+  }
+}
+```
+
+Notes:
+
+- this flow is opt-in and backward compatible with existing event and invoke patterns
+- `setupIpcBridge` strict mode and channel whitelist still apply
+- for maintainability, keep IPC calls inside services/gateways rather than UI components
+
 ## Architecture Patterns
 
 ### Service Layer

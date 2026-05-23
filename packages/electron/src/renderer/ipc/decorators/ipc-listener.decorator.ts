@@ -22,7 +22,7 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
           const originalMethod = this[method];
           if (typeof originalMethod !== 'function') {
             throw new Error(
-              `Method ${method} is not a function on the target class.`
+              `Method ${method} is not a function on the target class.`,
             );
           }
           const ipcResultParameters: number[] =
@@ -30,7 +30,7 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
 
           const newMethod = async (...args: any[]) => {
             const newArgs = args.filter(
-              (_, i) => !ipcResultParameters.includes(i)
+              (_, i) => !ipcResultParameters.includes(i),
             );
             const result = await originalMethod.apply(this, newArgs);
 
@@ -38,16 +38,22 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
           };
 
           if (handler.type === 'handle') {
-            throw new Error(
-              '@IpcListener does not support @IpcHandle decorated methods. Please use @IpcListener in the main process for that.'
+            const unsubscribe = bridge.handle(
+              handler.channel as any,
+              newMethod,
             );
+            registerCleanup(this, () => {
+              unsubscribe();
+              bridge.removeHandler(handler.channel as any);
+            });
+            return;
           }
 
           bridge[handler.type](handler.channel as any, newMethod);
           registerCleanup(this, () => {
             bridge.off(handler.channel as any, newMethod);
           });
-        }
+        },
       );
     } catch (error) {
       console.error('Error while setting up IPC listeners:', error);

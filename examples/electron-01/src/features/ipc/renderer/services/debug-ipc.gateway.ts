@@ -1,5 +1,12 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import { IpcListener, IpcInvoke, IpcSend, IpcOn, IpcResult } from '@assemblerjs/electron/renderer';
+import {
+  IpcHandle,
+  IpcListener,
+  IpcInvoke,
+  IpcOn,
+  IpcResult,
+  IpcSend,
+} from '@assemblerjs/electron/renderer';
 import { IpcChannels } from '@preload/ipc.channels';
 import { computed, ref } from 'vue';
 
@@ -29,6 +36,17 @@ export class DebugIpcGateway implements AbstractAssemblage {
 
   public clearFeedback(): void {
     this.ipcFeedback.value = 'Idle';
+  }
+
+  @IpcHandle(IpcChannels.GetRendererMetrics)
+  public async getRendererMetrics(): Promise<{
+    feedback: string;
+    averageLatencyMs?: number;
+  }> {
+    return {
+      feedback: this.ipcFeedback.value,
+      averageLatencyMs: this.averageLatencyMs.value,
+    };
   }
 
   @IpcOn(IpcChannels.Pong)

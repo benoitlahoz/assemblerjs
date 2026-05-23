@@ -19,3 +19,8 @@ export enum WindowIpcChannel {
 export enum MenuIpcChannel {
   OnItemClicked = 'menu:item.clicked',
 }
+
+export enum RpcIpcChannel {
+  Request = 'asm:rpc:request',
+  Response = 'asm:rpc:response',
+}

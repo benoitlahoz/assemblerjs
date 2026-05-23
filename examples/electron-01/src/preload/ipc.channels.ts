@@ -23,6 +23,8 @@ export enum IpcChannels {
   // Handshake
   Ping = 'ping',
   Pong = 'pong',
+  // Main -> renderer RPC
+  GetRendererMetrics = 'get-renderer-metrics',
   // Process
   GetVersions = 'get-versions',
   GetPlatform = 'get-platform',
@@ -31,6 +33,13 @@ export enum IpcChannels {
 export const ipcContracts = defineIpcContracts({
   [IpcChannels.Ping]: ipcContract<[], void>(),
   [IpcChannels.Pong]: ipcContract<[], void>(),
+  [IpcChannels.GetRendererMetrics]: ipcContract<
+    [],
+    {
+      feedback: string;
+      averageLatencyMs?: number;
+    }
+  >(),
   [IpcChannels.GetVersions]: ipcContract<[], NodeJS.ProcessVersions>(),
   [IpcChannels.GetPlatform]: ipcContract<[], NodeJS.Platform>(),
 });

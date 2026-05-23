@@ -1,13 +1,13 @@
-import { IpcSubMethods } from '@/universal/decorators';
+import { IpcSubMethods } from './ipc-decorators.types';
 
 export const IpcHandle = (
   channel: string,
-  withEvent = false
+  withEvent = false,
 ): MethodDecorator => {
   return function (
     target: any,
     propertyKey: string,
-    _descriptor: PropertyDescriptor
+    _descriptor: PropertyDescriptor,
   ) {
     target[IpcSubMethods] = target[IpcSubMethods] || new Map();
     target[IpcSubMethods].set(propertyKey, {

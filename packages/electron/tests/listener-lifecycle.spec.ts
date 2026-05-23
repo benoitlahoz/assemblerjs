@@ -6,7 +6,7 @@ import {
   Assembler,
   Dispose,
 } from 'assemblerjs';
-import { IpcOn } from '../src/universal/decorators';
+import { IpcHandle, IpcOn } from '../src/universal/decorators';
 import { WindowOn } from '../src/main/window/decorators';
 
 const ipcMainOn = vi.fn();
@@ -30,8 +30,10 @@ describe('listener lifecycle', () => {
       ipc: {
         channels: [],
         on: vi.fn(),
+        handle: vi.fn(() => vi.fn()),
         once: vi.fn(),
         off: vi.fn(),
+        removeHandler: vi.fn(),
         removeAllListeners: vi.fn(),
         send: vi.fn(),
         invoke: vi.fn(),
@@ -114,6 +116,45 @@ describe('listener lifecycle', () => {
     await module.dispose();
 
     expect(offMock).toHaveBeenCalledWith('renderer:ping', registeredListener);
+  });
+
+  it('removes renderer ipc handlers on dispose', async () => {
+    const { IpcListener } =
+      await import('../src/renderer/ipc/decorators/ipc-listener.decorator');
+
+    @IpcListener()
+    @Assemblage()
+    class RendererRpcModule implements AbstractAssemblage {
+      private disposeFunction!: () => Promise<void>;
+
+      constructor(@Dispose() dispose: () => Promise<void>) {
+        this.disposeFunction = dispose;
+      }
+
+      @IpcHandle('renderer:rpc')
+      public async onRequest(payload: string): Promise<string> {
+        return payload;
+      }
+
+      public async dispose(): Promise<void> {
+        await this.disposeFunction();
+      }
+    }
+
+    const module = Assembler.build(RendererRpcModule);
+    const handleMock = window.ipc.handle as ReturnType<typeof vi.fn>;
+    const removeHandlerMock = window.ipc.removeHandler as ReturnType<
+      typeof vi.fn
+    >;
+
+    expect(handleMock).toHaveBeenCalledWith(
+      'renderer:rpc',
+      expect.any(Function),
+    );
+
+    await module.dispose();
+
+    expect(removeHandlerMock).toHaveBeenCalledWith('renderer:rpc');
   });
 
   it('removes window listeners on dispose', async () => {
