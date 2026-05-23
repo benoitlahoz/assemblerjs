@@ -5,6 +5,7 @@
     "src/main/**/*",
     "src/preload/**/*",
     "src/features/**/*",
+    "src/windows/**/*",
     "src/windows/**/*"
   ],
   "compilerOptions": {
