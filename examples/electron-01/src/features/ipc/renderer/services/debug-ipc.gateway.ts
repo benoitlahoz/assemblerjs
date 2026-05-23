@@ -36,6 +36,10 @@ export class DebugIpcGateway implements AbstractAssemblage {
 
   public clearFeedback(): void {
     this.ipcFeedback.value = 'Idle';
+    this.lastPingSentAt.value = undefined;
+    this.lastPongAt.value = undefined;
+    this.lastLatencyMs.value = undefined;
+    this.latencyHistory.value = [];
   }
 
   @IpcHandle(IpcChannels.GetRendererMetrics)
@@ -54,7 +58,7 @@ export class DebugIpcGateway implements AbstractAssemblage {
     if (this.lastPingSentAt.value !== undefined) {
       const latency = Math.max(0, Math.round(performance.now() - this.lastPingSentAt.value));
       this.lastLatencyMs.value = latency;
-      this.latencyHistory.value = [latency, ...this.latencyHistory.value].slice(0, 5);
+      this.latencyHistory.value = [latency, ...this.latencyHistory.value].slice(0, 120);
       this.lastPingSentAt.value = undefined;
     }
 

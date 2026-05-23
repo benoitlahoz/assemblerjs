@@ -100,8 +100,8 @@ describe('WindowController decorator', () => {
 
     const controller = Assembler.build(AppWindowController) as any;
 
-    const first = controller.openWindow(MainWindow);
-    const second = controller.openWindow(MainWindow);
+    const first = await controller.openWindow(MainWindow);
+    const second = await controller.openWindow(MainWindow);
 
     expect(first).toBe(second);
     expect(controller.listManagedWindows()).toEqual([

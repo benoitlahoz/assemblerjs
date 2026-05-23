@@ -5,17 +5,17 @@ import {
   IpcResult,
   WindowCommand,
   WindowListener,
-  WindowOn,
 } from '@assemblerjs/electron/renderer';
 import type { WindowBounds } from '@assemblerjs/electron/renderer';
 import { shallowRef, type ShallowRef } from 'vue';
-import { MAIN_WINDOW_NAME } from '../universal/main.window.constants';
+import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 @WindowListener()
 @Assemblage()
 export class MainWindowRendererService extends AbstractScopedWindowRendererService {
-  protected readonly windowName = MAIN_WINDOW_NAME;
+  protected readonly windowName = MAIN_WINDOW_CONFIG.name;
   public readonly bounds: ShallowRef<WindowBounds | undefined> = shallowRef<WindowBounds>();
+  private unsubscribeBoundsChanged?: () => void;
 
   constructor(windows: AbstractWindowRendererService) {
     super(windows);
@@ -23,6 +23,18 @@ export class MainWindowRendererService extends AbstractScopedWindowRendererServi
 
   public async onInit(): Promise<void> {
     this.bounds.value = await this.getBounds();
+    this.unsubscribeBoundsChanged = this.onBoundsChanged((bounds) => {
+      this.bounds.value = bounds;
+    });
+  }
+
+  public onDispose(): void {
+    this.unsubscribeBoundsChanged?.();
+    this.unsubscribeBoundsChanged = undefined;
+  }
+
+  public override onBoundsChanged(callback: (bounds: WindowBounds) => void): () => void {
+    return super.onBoundsChanged(callback);
   }
 
   public async refreshBounds(): Promise<WindowBounds | undefined> {
@@ -47,6 +59,10 @@ export class MainWindowRendererService extends AbstractScopedWindowRendererServi
 
   public async getDisplayWorkArea(): Promise<WindowBounds | undefined> {
     return await this.requestDisplayWorkArea();
+  }
+
+  public async getDisplayBounds(): Promise<WindowBounds | undefined> {
+    return await this.requestDisplayBounds();
   }
 
   @WindowCommand('randomBounds')
@@ -85,8 +101,10 @@ export class MainWindowRendererService extends AbstractScopedWindowRendererServi
     return workArea;
   }
 
-  @WindowOn('boundsChanged')
-  private onBoundsChanged(bounds: WindowBounds): void {
-    this.bounds.value = bounds;
+  @WindowCommand('getDisplayBounds')
+  private async requestDisplayBounds(
+    @IpcResult() bounds?: WindowBounds,
+  ): Promise<WindowBounds | undefined> {
+    return bounds;
   }
 }

@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+
 const props = defineProps<{
   lastLatencyMs?: number;
   averageLatencyMs?: number;
+  latencyHistory: number[];
   ipcFeedback: string;
 }>();
 
@@ -9,18 +12,199 @@ const emit = defineEmits<{
   sendPing: [];
   clear: [];
 }>();
+
+const INTERVAL_OPTIONS = [150, 250, 500, 1000, 1500] as const;
+
+const chartRef = ref<HTMLCanvasElement | null>(null);
+const heartbeatIntervalMs = ref<number>(500);
+const isHeartbeatRunning = ref(false);
+const totalPings = ref(0);
+
+let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
+let chartResizeObserver: ResizeObserver | undefined;
+
+const p95LatencyMs = computed<number | undefined>(() => {
+  if (props.latencyHistory.length === 0) {
+    return undefined;
+  }
+
+  const sorted = [...props.latencyHistory].sort((a, b) => a - b);
+  const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1);
+  return sorted[index];
+});
+
+const maxLatencyMs = computed<number | undefined>(() => {
+  if (props.latencyHistory.length === 0) {
+    return undefined;
+  }
+
+  return Math.max(...props.latencyHistory);
+});
+
+function drawLatencyChart(): void {
+  const canvas = chartRef.value;
+  if (!canvas) {
+    return;
+  }
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    return;
+  }
+
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (width <= 0 || height <= 0) {
+    return;
+  }
+
+  canvas.width = width;
+  canvas.height = height;
+
+  const data = [...props.latencyHistory].reverse();
+  context.clearRect(0, 0, width, height);
+
+  const gradient = context.createLinearGradient(0, 0, 0, height);
+  gradient.addColorStop(0, 'rgba(66, 211, 146, 0.25)');
+  gradient.addColorStop(1, 'rgba(66, 211, 146, 0.02)');
+  context.fillStyle = gradient;
+  context.strokeStyle = 'rgba(66, 211, 146, 0.9)';
+  context.lineWidth = 1.6;
+
+  const padding = 12;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+
+  context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  context.lineWidth = 1;
+  for (let i = 0; i < 4; i += 1) {
+    const y = padding + Math.round((chartHeight / 3) * i);
+    context.beginPath();
+    context.moveTo(padding, y);
+    context.lineTo(width - padding, y);
+    context.stroke();
+  }
+
+  if (data.length === 0) {
+    context.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    context.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    context.fillText('No latency samples yet', padding, Math.floor(height / 2));
+    return;
+  }
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = Math.max(1, max - min);
+
+  context.beginPath();
+  data.forEach((value, index) => {
+    const x =
+      padding + (data.length === 1 ? 0 : (chartWidth * index) / Math.max(1, data.length - 1));
+    const normalized = (value - min) / range;
+    const y = padding + chartHeight - normalized * chartHeight;
+
+    if (index === 0) {
+      context.moveTo(x, y);
+      return;
+    }
+
+    context.lineTo(x, y);
+  });
+
+  context.strokeStyle = 'rgba(66, 211, 146, 0.95)';
+  context.lineWidth = 1.6;
+  context.stroke();
+
+  context.save();
+  context.lineTo(width - padding, height - padding);
+  context.lineTo(padding, height - padding);
+  context.closePath();
+  context.fillStyle = gradient;
+  context.fill();
+  context.restore();
+}
+
+function triggerPing(): void {
+  totalPings.value += 1;
+  emit('sendPing');
+}
+
+function startHeartbeat(): void {
+  if (isHeartbeatRunning.value) {
+    return;
+  }
+
+  isHeartbeatRunning.value = true;
+  triggerPing();
+  heartbeatTimer = setInterval(() => {
+    triggerPing();
+  }, heartbeatIntervalMs.value);
+}
+
+function stopHeartbeat(): void {
+  isHeartbeatRunning.value = false;
+  if (heartbeatTimer) {
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = undefined;
+  }
+}
+
+function resetMetrics(): void {
+  stopHeartbeat();
+  totalPings.value = 0;
+  emit('clear');
+}
+
+watch(heartbeatIntervalMs, () => {
+  if (!isHeartbeatRunning.value) {
+    return;
+  }
+
+  stopHeartbeat();
+  startHeartbeat();
+});
+
+watch(
+  () => props.latencyHistory,
+  () => {
+    drawLatencyChart();
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  drawLatencyChart();
+
+  if (!chartRef.value || typeof ResizeObserver === 'undefined') {
+    return;
+  }
+
+  chartResizeObserver = new ResizeObserver(() => {
+    drawLatencyChart();
+  });
+  chartResizeObserver.observe(chartRef.value);
+});
+
+onBeforeUnmount(() => {
+  stopHeartbeat();
+  chartResizeObserver?.disconnect();
+  chartResizeObserver = undefined;
+});
 </script>
 
 <template>
   <article class="card" aria-live="polite">
     <header class="card__header">
       <h2>IPC</h2>
+      <span class="ipc-status" :class="{ 'ipc-status--running': isHeartbeatRunning }">
+        {{ isHeartbeatRunning ? 'Running' : 'Stopped' }}
+      </span>
     </header>
     <p class="card__description">
-      Lightweight health check for renderer &lt;-&gt; main process communication.
+      Live renderer &lt;-&gt; main health panel with heartbeat and latency time-series.
     </p>
 
-    <dl class="ipc-health-grid">
+    <dl class="ipc-health-grid ipc-health-grid--top">
       <div class="metric">
         <dt>Last RTT</dt>
         <dd>{{ props.lastLatencyMs !== undefined ? `${props.lastLatencyMs} ms` : '—' }}</dd>
@@ -31,9 +215,43 @@ const emit = defineEmits<{
       </div>
     </dl>
 
+    <div class="ipc-controls">
+      <label for="ipc-heartbeat-interval">Heartbeat</label>
+      <select id="ipc-heartbeat-interval" v-model.number="heartbeatIntervalMs">
+        <option v-for="option in INTERVAL_OPTIONS" :key="option" :value="option">
+          {{ option }} ms
+        </option>
+      </select>
+      <span class="ipc-controls__count">Sent: {{ totalPings }}</span>
+    </div>
+
+    <canvas ref="chartRef" class="ipc-chart" aria-label="Latency chart" />
+
+    <dl class="ipc-health-grid ipc-health-grid--bottom">
+      <div class="metric">
+        <dt>P95</dt>
+        <dd>{{ p95LatencyMs !== undefined ? `${p95LatencyMs} ms` : '—' }}</dd>
+      </div>
+      <div class="metric">
+        <dt>Max</dt>
+        <dd>{{ maxLatencyMs !== undefined ? `${maxLatencyMs} ms` : '—' }}</dd>
+      </div>
+    </dl>
+
     <div class="ipc-actions-grid">
-      <button type="button" class="ipc-action-card" @click="emit('sendPing')">Send Ping</button>
-      <button type="button" class="ipc-action-card" @click="emit('clear')">Clear</button>
+      <button type="button" class="ipc-action-card" @click="triggerPing">Ping Once</button>
+      <button
+        v-if="!isHeartbeatRunning"
+        type="button"
+        class="ipc-action-card ipc-action-card--accent"
+        @click="startHeartbeat"
+      >
+        Start Heartbeat
+      </button>
+      <button v-else type="button" class="ipc-action-card" @click="stopHeartbeat">
+        Stop Heartbeat
+      </button>
+      <button type="button" class="ipc-action-card" @click="resetMetrics">Reset</button>
     </div>
 
     <p class="ipc-feedback" aria-live="polite">{{ props.ipcFeedback }}</p>
@@ -61,6 +279,22 @@ const emit = defineEmits<{
   gap: 10px;
 }
 
+.ipc-status {
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
+  background: color-mix(in srgb, var(--ev-c-black-soft) 76%, transparent);
+  color: var(--ev-c-text-2);
+  padding: 4px 10px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ipc-status--running {
+  color: #42d392;
+  border-color: color-mix(in srgb, #42d392 45%, transparent);
+}
+
 .card__header h2 {
   margin: 0;
   font-size: 14px;
@@ -77,19 +311,65 @@ const emit = defineEmits<{
 }
 
 .ipc-health-grid {
-  margin: 0 0 10px;
+  margin: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
-.ipc-actions-grid {
+.ipc-health-grid--top {
+  margin-bottom: 10px;
+}
+
+.ipc-health-grid--bottom {
+  margin-top: 10px;
+}
+
+.ipc-controls {
+  margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  grid-auto-rows: minmax(0, 1fr);
-  align-content: stretch;
+  grid-template-columns: auto 120px 1fr;
+  align-items: center;
   gap: 10px;
-  flex: 1;
+}
+
+.ipc-controls label {
+  font-size: 12px;
+  color: var(--ev-c-text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ipc-controls select {
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
+  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
+  color: var(--ev-c-text-1);
+  padding: 0 8px;
+}
+
+.ipc-controls__count {
+  justify-self: end;
+  font-size: 12px;
+  color: var(--ev-c-text-2);
+}
+
+.ipc-chart {
+  margin-top: 10px;
+  width: 100%;
+  height: 170px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
+  background: color-mix(in srgb, var(--ev-c-black-soft) 74%, transparent);
+  display: block;
+}
+
+.ipc-actions-grid {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .ipc-action-card {
@@ -101,12 +381,13 @@ const emit = defineEmits<{
   color: var(--ev-c-text-1);
   font-size: 13px;
   font-weight: 600;
-  text-align: left;
-  padding: 12px;
-  height: 100%;
+  text-align: center;
+  padding: 0 12px;
+  height: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: center;
   transition:
     transform 120ms ease,
     border-color 120ms ease,
@@ -126,6 +407,11 @@ const emit = defineEmits<{
 .ipc-action-card:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--ev-c-text-1) 70%, transparent);
   outline-offset: 2px;
+}
+
+.ipc-action-card--accent {
+  border-color: color-mix(in srgb, #42d392 45%, transparent);
+  color: #42d392;
 }
 
 .ipc-feedback {
@@ -168,8 +454,17 @@ const emit = defineEmits<{
 }
 
 @media (max-width: 620px) {
+  .ipc-controls {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .ipc-controls__count {
+    justify-self: start;
+  }
+
   .ipc-actions-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 }
 </style>

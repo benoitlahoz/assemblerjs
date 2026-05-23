@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 
 interface RectBounds {
   x: number;
@@ -27,8 +27,12 @@ const props = defineProps<{
     width: number;
     height: number;
   };
-  syncStatus: string;
-  telemetryValidation: string;
+  screenDisplayBounds?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
   applyBounds: (nextBounds: RectBounds) => Promise<RectBounds | undefined>;
 }>();
 
@@ -36,7 +40,6 @@ const emit = defineEmits<{
   refresh: [];
   randomize: [];
   center: [];
-  validation: [message: string];
 }>();
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -56,6 +59,21 @@ let dragState:
 
 let frameRequestId: number | undefined;
 
+const telemetryCanvasStyle = computed(() => {
+  const ratioWidth = Math.max(
+    1,
+    props.screenDisplayBounds?.width || props.screenWorkArea.width || 1920,
+  );
+  const ratioHeight = Math.max(
+    1,
+    props.screenDisplayBounds?.height || props.screenWorkArea.height || 1080,
+  );
+
+  return {
+    aspectRatio: `${ratioWidth} / ${ratioHeight}`,
+  };
+});
+
 function scheduleDraw(): void {
   if (frameRequestId !== undefined) {
     return;
@@ -71,6 +89,25 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
 }
 
+function clampBoundsToWorkArea(input: RectBounds): RectBounds {
+  const workAreaX = Math.round(props.screenWorkArea.x || 0);
+  const workAreaY = Math.round(props.screenWorkArea.y || 0);
+  const workAreaWidth = Math.max(1, Math.round(props.screenWorkArea.width || 1920));
+  const workAreaHeight = Math.max(1, Math.round(props.screenWorkArea.height || 1080));
+
+  const width = clamp(Math.round(input.width), 1, workAreaWidth);
+  const height = clamp(Math.round(input.height), 1, workAreaHeight);
+  const maxX = workAreaX + workAreaWidth - width;
+  const maxY = workAreaY + workAreaHeight - height;
+
+  return {
+    x: clamp(Math.round(input.x), workAreaX, Math.max(workAreaX, maxX)),
+    y: clamp(Math.round(input.y), workAreaY, Math.max(workAreaY, maxY)),
+    width,
+    height,
+  };
+}
+
 function projectBounds(
   toProject: RectBounds,
   canvasWidth: number,
@@ -81,24 +118,38 @@ function projectBounds(
   const visualZoneWidth = canvasWidth - 36;
   const visualZoneHeight = canvasHeight - 36;
 
-  const maxReferenceWidth = Math.max(1, props.screenWorkArea.width || 1920);
-  const maxReferenceHeight = Math.max(1, props.screenWorkArea.height || 1080);
-  const scale = Math.min(
-    visualZoneWidth / maxReferenceWidth,
-    visualZoneHeight / maxReferenceHeight,
+  const displayX = props.screenDisplayBounds?.x ?? props.screenWorkArea.x;
+  const displayY = props.screenDisplayBounds?.y ?? props.screenWorkArea.y;
+  const displayWidth = Math.max(
+    1,
+    props.screenDisplayBounds?.width || props.screenWorkArea.width || 1920,
+  );
+  const displayHeight = Math.max(
+    1,
+    props.screenDisplayBounds?.height || props.screenWorkArea.height || 1080,
   );
 
-  const projectedAreaWidth = Math.floor(maxReferenceWidth * scale);
-  const projectedAreaHeight = Math.floor(maxReferenceHeight * scale);
-  const offsetX = visualZoneX + Math.floor((visualZoneWidth - projectedAreaWidth) / 2);
-  const offsetY = visualZoneY + Math.floor((visualZoneHeight - projectedAreaHeight) / 2);
+  const workAreaWidth = Math.max(1, props.screenWorkArea.width || 1920);
+  const workAreaHeight = Math.max(1, props.screenWorkArea.height || 1080);
 
-  const projectedWidth = clamp(Math.floor(toProject.width * scale), 24, projectedAreaWidth);
-  const projectedHeight = clamp(Math.floor(toProject.height * scale), 16, projectedAreaHeight);
-  const absoluteX = offsetX + Math.round((toProject.x - props.screenWorkArea.x) * scale);
-  const absoluteY = offsetY + Math.round((toProject.y - props.screenWorkArea.y) * scale);
-  const maxX = offsetX + projectedAreaWidth - projectedWidth;
-  const maxY = offsetY + projectedAreaHeight - projectedHeight;
+  const scale = Math.min(visualZoneWidth / displayWidth, visualZoneHeight / displayHeight);
+
+  const projectedDisplayWidth = Math.floor(displayWidth * scale);
+  const projectedDisplayHeight = Math.floor(displayHeight * scale);
+  const offsetX = visualZoneX + Math.floor((visualZoneWidth - projectedDisplayWidth) / 2);
+  const offsetY = visualZoneY + Math.floor((visualZoneHeight - projectedDisplayHeight) / 2);
+
+  const projectedWorkAreaX = offsetX + Math.round((props.screenWorkArea.x - displayX) * scale);
+  const projectedWorkAreaY = offsetY + Math.round((props.screenWorkArea.y - displayY) * scale);
+  const projectedWorkAreaWidth = Math.floor(workAreaWidth * scale);
+  const projectedWorkAreaHeight = Math.floor(workAreaHeight * scale);
+
+  const projectedWidth = clamp(Math.floor(toProject.width * scale), 24, projectedDisplayWidth);
+  const projectedHeight = clamp(Math.floor(toProject.height * scale), 16, projectedDisplayHeight);
+  const absoluteX = projectedWorkAreaX + Math.round((toProject.x - props.screenWorkArea.x) * scale);
+  const absoluteY = projectedWorkAreaY + Math.round((toProject.y - props.screenWorkArea.y) * scale);
+  const maxX = offsetX + projectedDisplayWidth - projectedWidth;
+  const maxY = offsetY + projectedDisplayHeight - projectedHeight;
 
   return {
     x: clamp(absoluteX, offsetX, Math.max(offsetX, maxX)),
@@ -272,13 +323,6 @@ function onCanvasPointerDown(event: PointerEvent): void {
   };
 
   canvas.style.cursor = handle ? cursorForHandle(handle) : 'grabbing';
-
-  emit(
-    'validation',
-    dragState.mode === 'resize'
-      ? 'Resizing preview... release to apply.'
-      : 'Moving preview... release to apply.',
-  );
 }
 
 function onCanvasPointerMove(event: PointerEvent): void {
@@ -300,11 +344,11 @@ function onCanvasPointerMove(event: PointerEvent): void {
   const deltaRealY = Math.round(deltaY / Math.max(dragState.scale, 0.001));
 
   if (dragState.mode === 'move') {
-    draftBounds.value = {
+    draftBounds.value = clampBoundsToWorkArea({
       ...dragState.startBounds,
       x: dragState.startBounds.x + deltaRealX,
       y: dragState.startBounds.y + deltaRealY,
-    };
+    });
   } else {
     const next: RectBounds = { ...dragState.startBounds };
 
@@ -346,7 +390,7 @@ function onCanvasPointerMove(event: PointerEvent): void {
       next.height = minHeight;
     }
 
-    draftBounds.value = next;
+    draftBounds.value = clampBoundsToWorkArea(next);
   }
 
   if (dragState.mode === 'resize') {
@@ -376,24 +420,10 @@ async function validateCanvasMove(): Promise<void> {
   try {
     const applied = await props.applyBounds(requested);
     if (!applied) {
-      emit('validation', 'Apply failed: no bounds returned.');
       return;
     }
-
-    const exact =
-      applied.x === requested.x &&
-      applied.y === requested.y &&
-      applied.width === requested.width &&
-      applied.height === requested.height;
-
-    emit(
-      'validation',
-      exact
-        ? `Validated: x=${applied.x}, y=${applied.y}, w=${applied.width}, h=${applied.height}`
-        : `Validated with adjustment: requested ${requested.width}x${requested.height} -> applied ${applied.width}x${applied.height}`,
-    );
   } catch (error) {
-    emit('validation', `Apply failed: ${(error as Error).message}`);
+    console.error('Apply failed', error);
   } finally {
     draftBounds.value = undefined;
     isApplyingCanvasMove.value = false;
@@ -429,7 +459,6 @@ function onCanvasPointerCancel(event: PointerEvent): void {
   if (canvas) {
     canvas.style.cursor = 'grab';
   }
-  emit('validation', 'Movement canceled.');
   drawBoundsCanvas();
 }
 
@@ -482,6 +511,22 @@ watch(
   },
   { deep: true },
 );
+
+watch(
+  () => props.screenWorkArea,
+  () => {
+    scheduleDraw();
+  },
+  { deep: true },
+);
+
+watch(
+  () => props.screenDisplayBounds,
+  () => {
+    scheduleDraw();
+  },
+  { deep: true },
+);
 </script>
 
 <template>
@@ -511,13 +556,11 @@ watch(
     <p class="card__description">
       Real-time geometry stream from the main process, synchronized through decorators.
     </p>
-    <p class="telemetry-sync">{{ props.syncStatus }}</p>
-
-    <p class="telemetry-validation" aria-live="polite">{{ props.telemetryValidation }}</p>
 
     <canvas
       ref="canvasRef"
       class="telemetry-canvas"
+      :style="telemetryCanvasStyle"
       @pointerdown="onCanvasPointerDown"
       @pointermove="onCanvasPointerMove"
       @pointerup="onCanvasPointerUp"
@@ -549,10 +592,6 @@ watch(
   flex-direction: column;
 }
 
-.card--telemetry {
-  grid-column: span 2;
-}
-
 .card__header {
   display: flex;
   align-items: center;
@@ -573,13 +612,6 @@ watch(
   color: var(--ev-c-text-2);
   font-size: 13px;
   line-height: 1.45;
-}
-
-.telemetry-sync {
-  margin: 0 0 12px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #42d392;
 }
 
 .telemetry-refresh {
@@ -621,12 +653,6 @@ watch(
   outline-offset: 2px;
 }
 
-.telemetry-validation {
-  margin: 10px 0 0;
-  font-size: 12px;
-  color: var(--ev-c-text-2);
-}
-
 .telemetry-canvas {
   margin-top: 10px;
   border-radius: 12px;
@@ -634,7 +660,7 @@ watch(
   background: color-mix(in srgb, var(--ev-c-black-soft) 74%, transparent);
   overflow: clip;
   flex: 1 1 auto;
-  min-height: 210px;
+  min-height: 170px;
   width: 100%;
   height: auto;
   display: block;
@@ -681,17 +707,7 @@ watch(
   outline-offset: 2px;
 }
 
-@media (max-width: 980px) {
-  .card--telemetry {
-    grid-column: 1 / -1;
-  }
-}
-
 @media (max-width: 620px) {
-  .card--telemetry {
-    grid-column: auto;
-  }
-
   .telemetry-actions {
     grid-template-columns: 1fr;
   }

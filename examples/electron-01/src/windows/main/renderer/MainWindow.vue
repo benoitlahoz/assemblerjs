@@ -18,9 +18,15 @@ const { mainWindow, debug } = useIpc();
 const bounds = computed(() => mainWindow.bounds.value as RectBounds | undefined);
 const lastLatencyMs = computed(() => debug.lastLatencyMs.value);
 const averageLatencyMs = computed(() => debug.averageLatencyMs.value);
+const latencyHistory = computed(() => debug.latencyHistory.value);
 const ipcFeedback = computed(() => debug.ipcFeedback.value);
-const telemetryValidation = ref('Drag to move, drag bottom-right handle to resize.');
 const screenWorkArea = ref<{ x: number; y: number; width: number; height: number }>({
+  x: 0,
+  y: 0,
+  width: 1920,
+  height: 1080,
+});
+const screenDisplayBounds = ref<{ x: number; y: number; width: number; height: number }>({
   x: 0,
   y: 0,
   width: 1920,
@@ -33,10 +39,6 @@ const runtime = ref({
   platform: 'unknown',
 });
 
-const syncStatus = computed(() => {
-  return bounds.value ? 'Live' : 'Awaiting first event';
-});
-
 const sendPing = (): void => {
   debug.sendPing();
 };
@@ -46,7 +48,11 @@ const clearIpcFeedback = (): void => {
 };
 
 const syncDisplayWorkArea = async (): Promise<void> => {
-  const workArea = await mainWindow.getDisplayWorkArea();
+  const [workArea, displayBounds] = await Promise.all([
+    mainWindow.getDisplayWorkArea(),
+    mainWindow.getDisplayBounds(),
+  ]);
+
   if (!workArea?.width || !workArea?.height) {
     return;
   }
@@ -57,57 +63,36 @@ const syncDisplayWorkArea = async (): Promise<void> => {
     width: Math.max(1, Math.round(workArea.width)),
     height: Math.max(1, Math.round(workArea.height)),
   };
+
+  if (displayBounds?.width && displayBounds?.height) {
+    screenDisplayBounds.value = {
+      x: Math.round(displayBounds.x || 0),
+      y: Math.round(displayBounds.y || 0),
+      width: Math.max(1, Math.round(displayBounds.width)),
+      height: Math.max(1, Math.round(displayBounds.height)),
+    };
+  }
 };
 
 const randomizeBounds = async (): Promise<void> => {
-  try {
-    const nextBounds = await mainWindow.randomBounds();
-    if (!nextBounds) {
-      telemetryValidation.value = 'Random bounds failed.';
-      return;
-    }
-
-    telemetryValidation.value = `Randomized: x=${nextBounds.x}, y=${nextBounds.y}, w=${nextBounds.width}, h=${nextBounds.height}`;
-    await syncDisplayWorkArea();
-  } catch (error) {
-    telemetryValidation.value = `Random bounds error: ${(error as Error).message}`;
-  }
+  await mainWindow.randomBounds();
+  await syncDisplayWorkArea();
 };
 
 const refreshBounds = async (): Promise<void> => {
-  try {
-    await mainWindow.refreshBounds();
-    telemetryValidation.value = 'Bounds refreshed.';
-    await syncDisplayWorkArea();
-  } catch (error) {
-    console.error('Refresh bounds error', error);
-  }
+  await mainWindow.refreshBounds();
+  await syncDisplayWorkArea();
 };
 
 const centerWindow = async (): Promise<void> => {
-  try {
-    const centered = await mainWindow.centerWindow();
-    if (!centered) {
-      telemetryValidation.value = 'Center window failed.';
-      return;
-    }
-
-    telemetryValidation.value = `Centered: x=${centered.x}, y=${centered.y}`;
-    await syncDisplayWorkArea();
-  } catch (error) {
-    telemetryValidation.value = `Center window error: ${(error as Error).message}`;
-  }
+  await mainWindow.centerWindow();
+  await syncDisplayWorkArea();
 };
 
 const applyBoundsFromCanvas = async (nextBounds: RectBounds): Promise<RectBounds | undefined> => {
-  try {
-    const applied = (await mainWindow.setBounds(nextBounds)) as RectBounds | undefined;
-    await syncDisplayWorkArea();
-    return applied;
-  } catch (error) {
-    telemetryValidation.value = `Apply failed: ${(error as Error).message}`;
-    return undefined;
-  }
+  const applied = (await mainWindow.setBounds(nextBounds)) as RectBounds | undefined;
+  await syncDisplayWorkArea();
+  return applied;
 };
 
 onMounted(async () => {
@@ -139,18 +124,17 @@ onMounted(async () => {
       <TelemetryCard
         :bounds="bounds"
         :screen-work-area="screenWorkArea"
-        :sync-status="syncStatus"
-        :telemetry-validation="telemetryValidation"
+        :screen-display-bounds="screenDisplayBounds"
         :apply-bounds="applyBoundsFromCanvas"
         @refresh="refreshBounds"
         @randomize="randomizeBounds"
         @center="centerWindow"
-        @validation="(message) => (telemetryValidation.value = message)"
       />
 
       <IpcCard
         :last-latency-ms="lastLatencyMs"
         :average-latency-ms="averageLatencyMs"
+        :latency-history="latencyHistory"
         :ipc-feedback="ipcFeedback"
         @send-ping="sendPing"
         @clear="clearIpcFeedback"
@@ -161,13 +145,15 @@ onMounted(async () => {
 
 <style scoped>
 .docs-shell {
-  width: min(1080px, calc(100vw - 32px));
+  width: calc(100vw - 32px);
+  max-width: none;
   display: flex;
   flex-direction: column;
   gap: 20px;
   max-height: calc(100vh - 32px);
   overflow: auto;
   padding-right: 2px;
+  box-sizing: border-box;
 }
 
 .hero-row {

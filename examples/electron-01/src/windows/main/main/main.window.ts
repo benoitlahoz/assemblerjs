@@ -2,10 +2,10 @@ import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
 import { join } from 'path';
 import { ElectronWindow, Window, WindowCommand } from '@assemblerjs/electron';
-import { MAIN_WINDOW_NAME } from '../universal/main.window.constants';
+import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 const MAIN_WINDOW_INITIAL_WIDTH = 1280;
-const MAIN_WINDOW_INITIAL_HEIGHT = 720;
+const MAIN_WINDOW_INITIAL_HEIGHT = 900;
 const MAIN_WINDOW_MIN_WIDTH = 520;
 const MAIN_WINDOW_MIN_HEIGHT = 360;
 
@@ -23,7 +23,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
 }
 
 @Window({
-  name: MAIN_WINDOW_NAME,
+  name: MAIN_WINDOW_CONFIG.name,
   width: MAIN_WINDOW_INITIAL_WIDTH,
   height: MAIN_WINDOW_INITIAL_HEIGHT,
   show: false,
@@ -62,6 +62,11 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   @WindowCommand('getDisplayWorkArea')
   public getDisplayWorkAreaCommand(): Rectangle {
     return this.currentDisplay.workArea;
+  }
+
+  @WindowCommand('getDisplayBounds')
+  public getDisplayBoundsCommand(): Rectangle {
+    return this.currentDisplay.bounds;
   }
 
   @WindowCommand('randomBounds')

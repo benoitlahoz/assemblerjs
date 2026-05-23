@@ -355,6 +355,44 @@ export interface WindowControllerRegistry {
   requireWindow(name: string): ElectronWindow;
 }
 
+export type TypedWindowControllerRegistry<
+  Windows extends Record<string, ElectronWindow>,
+> = Omit<
+  WindowControllerRegistry,
+  | 'openWindow'
+  | 'closeWindow'
+  | 'closeAllWindows'
+  | 'getWindow'
+  | 'hasWindow'
+  | 'requireWindow'
+> & {
+  openWindow<Name extends keyof Windows & string>(
+    name: Name,
+    configuration?: Record<string, any>,
+  ): Promise<Windows[Name]>;
+  openWindow(
+    tokenOrName: WindowToken | string,
+    configuration?: Record<string, any>,
+  ): Promise<any>;
+
+  closeWindow<Name extends keyof Windows & string>(name: Name): boolean;
+  closeWindow(tokenOrName: WindowToken | string): boolean;
+
+  closeAllWindows<Name extends keyof Windows & string>(name?: Name): number;
+  closeAllWindows(tokenOrName?: WindowToken | string): number;
+
+  getWindow<Name extends keyof Windows & string>(
+    name: Name,
+  ): Windows[Name] | undefined;
+  getWindow(name: string): ElectronWindow | undefined;
+
+  hasWindow<Name extends keyof Windows & string>(name: Name): boolean;
+  hasWindow(name: string): boolean;
+
+  requireWindow<Name extends keyof Windows & string>(name: Name): Windows[Name];
+  requireWindow(name: string): ElectronWindow;
+};
+
 export const WindowController = createConstructorDecorator(function (
   this: any,
 ) {

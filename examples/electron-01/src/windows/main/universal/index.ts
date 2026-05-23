@@ -1,1 +1,1 @@
-export * from './main.window.constants';
+export * from './window.config';

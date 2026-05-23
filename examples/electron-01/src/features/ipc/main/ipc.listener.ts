@@ -6,6 +6,7 @@ import {
   IpcResult,
   IpcSend,
 } from '@assemblerjs/electron';
+import { BrowserWindow } from 'electron';
 import { IpcChannels } from '@preload/ipc.channels';
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 
@@ -18,8 +19,14 @@ export class IpcListenerService implements AbstractAssemblage {
   @IpcOn(IpcChannels.Ping)
   public onPing(): void {
     console.log('Received ping from renderer process');
-    this.logRendererMetrics().catch((error) => {
-      console.warn('Renderer metrics unavailable:', (error as Error).message);
+
+    const hasRendererWindow = BrowserWindow.getAllWindows().some((window) => !window.isDestroyed());
+    if (!hasRendererWindow) {
+      return;
+    }
+
+    this.logRendererMetrics().catch(() => {
+      // Renderer-side handler may be unavailable during startup/teardown.
     });
   }
 
