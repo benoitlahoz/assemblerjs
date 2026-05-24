@@ -54,7 +54,7 @@ let dragState:
 
 let frameRequestId: number | undefined;
 
-const telemetryCanvasStyle = computed(() => {
+const windowBoundsCanvasStyle = computed(() => {
   const ratioWidth = Math.max(
     1,
     screenDisplayBounds.value?.width || screenWorkArea.value.width || 1920,
@@ -550,15 +550,15 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
 </script>
 
 <template>
-  <article class="card card--telemetry" aria-live="polite">
+  <article class="card card--window-bounds" aria-live="polite">
     <header class="card__header">
       <div class="card__title-row">
         <h2>Window Geometry</h2>
-        <span class="telemetry-duplex">Full-duplex</span>
+        <span class="window-bounds-duplex">Full-duplex</span>
       </div>
       <button
         type="button"
-        class="telemetry-refresh"
+        class="window-bounds-refresh"
         aria-label="Refresh window bounds"
         title="Refresh bounds"
         @click="refreshBounds"
@@ -582,8 +582,8 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
 
     <canvas
       ref="canvasRef"
-      class="telemetry-canvas"
-      :style="telemetryCanvasStyle"
+      class="window-bounds-canvas"
+      :style="windowBoundsCanvasStyle"
       @pointerdown="onCanvasPointerDown"
       @pointermove="onCanvasPointerMove"
       @pointerup="onCanvasPointerUp"
@@ -592,9 +592,13 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
       @pointerenter="onCanvasHover"
     />
 
-    <div class="telemetry-actions">
-      <button type="button" class="telemetry-action" @click="randomizeBounds">Random Bounds</button>
-      <button type="button" class="telemetry-action" @click="centerWindow">Center Window</button>
+    <div class="window-bounds-actions">
+      <button type="button" class="window-bounds-action" @click="randomizeBounds">
+        Random Bounds
+      </button>
+      <button type="button" class="window-bounds-action" @click="centerWindow">
+        Center Window
+      </button>
     </div>
   </article>
 </template>
@@ -628,7 +632,7 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
   min-width: 0;
 }
 
-.telemetry-duplex {
+.window-bounds-duplex {
   border-radius: 999px;
   border: 1px solid color-mix(in srgb, #58a6ff 45%, transparent);
   background: color-mix(in srgb, #58a6ff 15%, transparent);
@@ -656,7 +660,7 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
   line-height: 1.45;
 }
 
-.telemetry-refresh {
+.window-bounds-refresh {
   cursor: pointer;
   appearance: none;
   width: 30px;
@@ -675,27 +679,27 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
     background-color 120ms ease;
 }
 
-.telemetry-refresh svg {
+.window-bounds-refresh svg {
   width: 15px;
   height: 15px;
 }
 
-.telemetry-refresh:hover {
+.window-bounds-refresh:hover {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--ev-c-text-2) 44%, transparent);
   background: color-mix(in srgb, var(--ev-c-black-soft) 68%, transparent);
 }
 
-.telemetry-refresh:active {
+.window-bounds-refresh:active {
   transform: translateY(0);
 }
 
-.telemetry-refresh:focus-visible {
+.window-bounds-refresh:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--ev-c-text-1) 70%, transparent);
   outline-offset: 2px;
 }
 
-.telemetry-canvas {
+.window-bounds-canvas {
   margin-top: 10px;
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
@@ -710,14 +714,14 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
   touch-action: none;
 }
 
-.telemetry-actions {
+.window-bounds-actions {
   margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
-.telemetry-action {
+.window-bounds-action {
   cursor: pointer;
   appearance: none;
   border-radius: 10px;
@@ -739,23 +743,23 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
     background-color 120ms ease;
 }
 
-.telemetry-action:hover {
+.window-bounds-action:hover {
   transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--ev-c-text-2) 40%, transparent);
   background: color-mix(in srgb, var(--ev-c-black-soft) 66%, transparent);
 }
 
-.telemetry-action:active {
+.window-bounds-action:active {
   transform: translateY(0);
 }
 
-.telemetry-action:focus-visible {
+.window-bounds-action:focus-visible {
   outline: 2px solid color-mix(in srgb, var(--ev-c-text-1) 70%, transparent);
   outline-offset: 2px;
 }
 
 @media (max-width: 620px) {
-  .telemetry-actions {
+  .window-bounds-actions {
     grid-template-columns: 1fr;
   }
 }

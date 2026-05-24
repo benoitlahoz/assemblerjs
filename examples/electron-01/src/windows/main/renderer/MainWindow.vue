@@ -1,31 +1,31 @@
 <script setup lang="ts">
 import AppHero from './components/AppHero.vue';
 import IpcCard from './components/IpcCard.vue';
-import SystemFingerprintCard from './components/SystemFingerprintCard.vue';
+import RuntimeStackCard from './components/RuntimeStackCard.vue';
 import SystemStateCard from './components/SystemStateCard.vue';
-import TelemetryCard from './components/TelemetryCard.vue';
+import WindowBoundsCard from './components/WindowBoundsCard.vue';
 </script>
 
 <template>
-  <main class="docs-shell">
-    <section class="hero-row">
-      <AppHero class="hero-row__main" />
-      <SystemFingerprintCard class="hero-row__fingerprint" compact />
+  <main class="window-shell">
+    <section class="window-shell__hero-row">
+      <AppHero class="window-shell__hero-main" />
+      <RuntimeStackCard class="window-shell__runtime" compact />
     </section>
 
-    <section class="system-row">
+    <section class="window-shell__system-row">
       <SystemStateCard />
     </section>
 
-    <section class="cards-grid">
-      <TelemetryCard />
+    <section class="window-shell__cards-grid">
+      <WindowBoundsCard />
       <IpcCard />
     </section>
   </main>
 </template>
 
 <style scoped>
-.docs-shell {
+.window-shell {
   width: 100vw;
   max-width: 100vw;
   display: flex;
@@ -38,28 +38,28 @@ import TelemetryCard from './components/TelemetryCard.vue';
   box-sizing: border-box;
 }
 
-.hero-row {
+.window-shell__hero-row {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
 }
 
-.hero-row__main {
+.window-shell__hero-main {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.hero-row__fingerprint {
+.window-shell__runtime {
   flex: 0 0 auto;
   opacity: 0.88;
 }
 
-.system-row {
+.window-shell__system-row {
   display: block;
 }
 
-.cards-grid {
+.window-shell__cards-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
@@ -67,26 +67,26 @@ import TelemetryCard from './components/TelemetryCard.vue';
 }
 
 @media (max-width: 980px) {
-  .hero-row {
+  .window-shell__hero-row {
     flex-direction: column;
   }
 
-  .hero-row__fingerprint {
+  .window-shell__runtime {
     align-self: flex-end;
   }
 
-  .cards-grid {
+  .window-shell__cards-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 620px) {
-  .hero-row__fingerprint {
+  .window-shell__runtime {
     width: 100%;
     align-self: stretch;
   }
 
-  .cards-grid {
+  .window-shell__cards-grid {
     grid-template-columns: 1fr;
   }
 }

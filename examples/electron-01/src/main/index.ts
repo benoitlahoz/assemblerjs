@@ -3,9 +3,9 @@ import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
 import { app } from 'electron';
 import { join } from 'path';
 import { Result, Task } from '@assemblerjs/core';
+import { SystemStateHostService } from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
-import { SystemStateHostService } from '@assemblerjs/electron';
 import { WindowControllerService } from '@windows/main';
 
 // In this file you can include the rest of your app's specific main process
