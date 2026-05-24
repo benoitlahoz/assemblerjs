@@ -1,4 +1,4 @@
 export * from './main';
 export * from './window.controller';
-export * from './renderer';
+export { MainWindow as MainWindowRenderer } from './renderer';
 export * from './universal';

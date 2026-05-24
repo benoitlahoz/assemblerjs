@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
 import { useContext } from '@renderer/composables/useContext';
-import { MainWindowRendererService } from '../main-window-renderer.service';
+import { MainWindow } from '../main.window';
 
 interface RectBounds {
   x: number;
@@ -22,7 +22,7 @@ type DragMode = 'move' | 'resize';
 type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
 
 const context = useContext();
-const mainWindow = context.require(MainWindowRendererService);
+const mainWindow = context.require(MainWindow);
 const bounds = mainWindow.bounds;
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -726,8 +726,13 @@ watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
   color: var(--ev-c-text-1);
   font-size: 13px;
   font-weight: 600;
-  text-align: left;
-  padding: 10px 12px;
+  text-align: center;
+  padding: 0 12px;
+  height: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
     transform 120ms ease,
     border-color 120ms ease,

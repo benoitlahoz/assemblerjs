@@ -6,10 +6,10 @@ import {
 import type { WindowBounds, WindowState } from '@/universal/types';
 import { resolveWindowRendererName } from '@/renderer/window/decorators/window-definition';
 import {
-  AbstractWindowRendererService,
+  AbstractWindowControllerService,
   type WindowSnapshot,
-} from './window-renderer.abstract';
-import { WindowRendererService } from './window-renderer.service';
+} from './window-controller.abstract';
+import { WindowControllerService } from './window-controller.service';
 import { IpcService } from '@/renderer/ipc/services';
 
 /**
@@ -17,40 +17,39 @@ import { IpcService } from '@/renderer/ipc/services';
  *
  * The target window can be provided either by:
  * - `@Window({ name: ... })` (preferred), or
- * - an instance `windowName` property (legacy compatibility).
+ * - an instance `windowName` property.
  *
- * The global renderer window service is resolved lazily from the
+ * The global renderer window controller service is resolved lazily from the
  * Assembler context when not explicitly provided via constructor.
  */
-export abstract class AbstractScopedWindowRendererService implements AbstractAssemblage {
-  private static standaloneWindows?: AbstractWindowRendererService;
+export abstract class AbstractWindowService implements AbstractAssemblage {
+  private static standaloneWindows?: AbstractWindowControllerService;
   protected readonly windowName?: string;
-  private resolvedWindows?: AbstractWindowRendererService;
+  private resolvedWindows?: AbstractWindowControllerService;
 
-  constructor(windows?: AbstractWindowRendererService) {
+  constructor(windows?: AbstractWindowControllerService) {
     this.resolvedWindows = windows;
   }
 
   /**
-   * Override this hook to resolve a custom renderer window service token.
+   * Override this hook to resolve a custom renderer window controller token.
    * Return `undefined` to let the base class apply its built-in fallbacks.
    */
   protected resolveWindowsFromContext(
     context: AssemblerContext,
-  ): AbstractWindowRendererService | undefined {
+  ): AbstractWindowControllerService | undefined {
     try {
-      return context.require(AbstractWindowRendererService);
+      return context.require(AbstractWindowControllerService);
     } catch {
       try {
-        // Fallback for apps that do not bind the abstract token explicitly.
-        return context.require(WindowRendererService);
+        return context.require(WindowControllerService);
       } catch {
         return undefined;
       }
     }
   }
 
-  protected get windows(): AbstractWindowRendererService {
+  protected get windows(): AbstractWindowControllerService {
     if (this.resolvedWindows) {
       return this.resolvedWindows;
     }
@@ -58,20 +57,19 @@ export abstract class AbstractScopedWindowRendererService implements AbstractAss
     const context = getAssemblageContext(this.constructor);
     if (!context) {
       throw new Error(
-        'AbstractScopedWindowRendererService could not resolve Assembler context for renderer window service.',
+        'AbstractWindowService could not resolve Assembler context for renderer window controller service.',
       );
     }
 
     this.resolvedWindows = this.resolveWindowsFromContext(context);
     if (!this.resolvedWindows) {
-      // Final fallback when no window renderer service is registered in DI.
-      if (!AbstractScopedWindowRendererService.standaloneWindows) {
-        AbstractScopedWindowRendererService.standaloneWindows =
-          new WindowRendererService(new IpcService());
+      if (!AbstractWindowService.standaloneWindows) {
+        AbstractWindowService.standaloneWindows = new WindowControllerService(
+          new IpcService(),
+        );
       }
 
-      this.resolvedWindows =
-        AbstractScopedWindowRendererService.standaloneWindows;
+      this.resolvedWindows = AbstractWindowService.standaloneWindows;
     }
 
     return this.resolvedWindows;
@@ -81,7 +79,7 @@ export abstract class AbstractScopedWindowRendererService implements AbstractAss
     const windowName = resolveWindowRendererName(this);
     if (!windowName) {
       throw new Error(
-        "AbstractScopedWindowRendererService requires a window name (via instance 'windowName' or @Window).",
+        "AbstractWindowService requires a window name (via instance 'windowName' or @Window).",
       );
     }
 

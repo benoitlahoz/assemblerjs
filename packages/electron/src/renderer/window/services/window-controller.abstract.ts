@@ -13,7 +13,7 @@ export interface WindowSnapshot {
   updatedAt: number;
 }
 
-export abstract class AbstractWindowRendererService implements AbstractAssemblage {
+export abstract class AbstractWindowControllerService implements AbstractAssemblage {
   public abstract listWindowNames(): Promise<string[]>;
 
   public abstract listManagedWindows(): Promise<ManagedWindowDescriptor[]>;

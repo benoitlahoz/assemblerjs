@@ -1,16 +1,15 @@
 import { Assemblage } from 'assemblerjs';
-import { AbstractIpcService } from '@/renderer/ipc/services';
+import { AbstractIpcService, unwrapIpcResult } from '@/renderer/ipc/services';
 import { WindowIpcChannel } from '@/universal/channels';
 import type {
-  IpcReturnType,
   ManagedWindowDescriptor,
   WindowBounds,
   WindowState,
 } from '@/universal/types';
 import {
-  AbstractWindowRendererService,
+  AbstractWindowControllerService,
   type WindowSnapshot,
-} from './window-renderer.abstract';
+} from './window-controller.abstract';
 
 function buildWindowCommandChannel(name: string, command: string): string {
   return `window:${name}.${command}`;
@@ -20,29 +19,8 @@ function buildWindowEventChannel(name: string, event: string): string {
   return `window:${name}.${event}`;
 }
 
-function isIpcReturnType<T>(value: unknown): value is IpcReturnType<T> {
-  return Boolean(
-    value &&
-    typeof value === 'object' &&
-    Object.prototype.hasOwnProperty.call(value, 'data') &&
-    Object.prototype.hasOwnProperty.call(value, 'err'),
-  );
-}
-
-function unwrapIpcResult<T>(channel: string, value: unknown): T | undefined {
-  if (isIpcReturnType<T>(value)) {
-    if (value.err) {
-      throw new Error(`${channel}: ${value.err.message}`);
-    }
-
-    return value.data === null ? undefined : value.data;
-  }
-
-  return value as T | undefined;
-}
-
 @Assemblage()
-export class WindowRendererService extends AbstractWindowRendererService {
+export class WindowControllerService extends AbstractWindowControllerService {
   private readonly snapshots = new Map<string, WindowSnapshot>();
   private readonly subscriptions = new Set<() => void>();
 

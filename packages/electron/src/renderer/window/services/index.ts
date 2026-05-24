@@ -1,3 +1,3 @@
-export * from './window-renderer.abstract';
-export * from './window-renderer-scoped.abstract';
-export * from './window-renderer.service';
+export * from './window-controller.abstract';
+export * from './window.abstract';
+export * from './window-controller.service';

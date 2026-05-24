@@ -1,6 +1,6 @@
 import { Assemblage } from 'assemblerjs';
 import {
-  AbstractScopedWindowRendererService,
+  AbstractWindowService,
   IpcResult,
   WindowCommand,
   Window,
@@ -11,7 +11,7 @@ import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 @Window({ name: MAIN_WINDOW_CONFIG.name })
 @Assemblage()
-export class MainWindowRendererService extends AbstractScopedWindowRendererService {
+export class MainWindow extends AbstractWindowService {
   public readonly bounds: ShallowRef<WindowBounds | undefined> = shallowRef<WindowBounds>();
   private unsubscribeBoundsChanged?: () => void;
   private boundsStreamInitialized = false;

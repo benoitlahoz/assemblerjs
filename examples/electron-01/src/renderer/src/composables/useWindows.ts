@@ -1,6 +1,6 @@
-import { AbstractWindowRendererService } from '@assemblerjs/electron/renderer';
+import { AbstractWindowControllerService } from '@assemblerjs/electron/renderer';
 import { useContext } from './useContext';
 
-export const useWindows = (): AbstractWindowRendererService => {
-  return useContext().require(AbstractWindowRendererService);
+export const useWindows = (): AbstractWindowControllerService => {
+  return useContext().require(AbstractWindowControllerService);
 };

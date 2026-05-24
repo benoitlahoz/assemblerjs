@@ -34,7 +34,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
   router: {
     file: join(__dirname, '../renderer/index.html'),
     dev: process.env['ELECTRON_RENDERER_URL'],
-    route: '/',
+    route: MAIN_WINDOW_CONFIG.route,
   },
 })
 @Assemblage({ singleton: false })

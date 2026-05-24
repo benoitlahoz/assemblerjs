@@ -1,16 +1,16 @@
 import { describe, expect, it, vi } from 'vitest';
 import type {
-  AbstractWindowRendererService,
+  AbstractWindowControllerService,
   WindowSnapshot,
-} from '../src/renderer/window/services/window-renderer.abstract';
-import { AbstractScopedWindowRendererService } from '../src/renderer/window/services/window-renderer-scoped.abstract';
+} from '../src/renderer/window/services/window-controller.abstract';
+import { AbstractWindowService } from '../src/renderer/window/services/window.abstract';
 import { Window } from '../src/renderer/window/decorators/window.decorator';
 import type { WindowBounds, WindowState } from '../src/universal/types';
 
 @Window('main')
-class MainWindowRendererService extends AbstractScopedWindowRendererService {}
+class MainWindowService extends AbstractWindowService {}
 
-describe('AbstractScopedWindowRendererService', () => {
+describe('AbstractWindowService', () => {
   it('delegates commands to the injected window service with fixed window name', async () => {
     const windows = {
       getBounds: vi.fn().mockResolvedValue(undefined),
@@ -25,9 +25,9 @@ describe('AbstractScopedWindowRendererService', () => {
       onBoundsChanged: vi.fn().mockReturnValue(() => undefined),
       onStateChanged: vi.fn().mockReturnValue(() => undefined),
       onFullscreenChanged: vi.fn().mockReturnValue(() => undefined),
-    } as unknown as AbstractWindowRendererService;
+    } as unknown as AbstractWindowControllerService;
 
-    const service = new MainWindowRendererService(windows);
+    const service = new MainWindowService(windows);
 
     await service.getBounds();
     await service.focus();
@@ -64,9 +64,9 @@ describe('AbstractScopedWindowRendererService', () => {
       onBoundsChanged: vi.fn().mockReturnValue(unsub),
       onStateChanged: vi.fn().mockReturnValue(unsub),
       onFullscreenChanged: vi.fn().mockReturnValue(unsub),
-    } as unknown as AbstractWindowRendererService;
+    } as unknown as AbstractWindowControllerService;
 
-    const service = new MainWindowRendererService(windows);
+    const service = new MainWindowService(windows);
 
     const onBounds = (bounds: WindowBounds) => bounds;
     const onState = (state: WindowState) => state;

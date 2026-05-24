@@ -3,7 +3,7 @@ import { Task, Result } from '@assemblerjs/core';
 import { App as VueApp, createApp } from 'vue';
 import { IpcModule } from '@features/ipc/renderer/ipc.module';
 import { SystemStateModule } from '@features/system/renderer/system-state.module';
-import { MainWindowRendererService } from '@windows/main/renderer';
+import { MainWindow } from '@windows/main/renderer';
 import { ContextInjectionKey } from '@common/keys';
 import App from './App.vue';
 import { router } from './router';
@@ -11,7 +11,7 @@ import { router } from './router';
 import './assets/main.css';
 
 @Assemblage({
-  provide: [[MainWindowRendererService], [IpcModule], [SystemStateModule]],
+  provide: [[MainWindow], [IpcModule], [SystemStateModule]],
 })
 class MainApp implements AbstractAssemblage {
   private app: VueApp;

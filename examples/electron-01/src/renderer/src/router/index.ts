@@ -1,13 +1,16 @@
 import { createRouter, createWebHashHistory, type RouteRecordRaw } from 'vue-router';
-import MainWindow from '@windows/main/renderer/MainWindow.vue';
 
-const routes: RouteRecordRaw[] = [
-  {
-    path: '/',
-    name: 'main-window',
-    component: MainWindow,
-  },
-];
+type WindowRouteModule = {
+  route: RouteRecordRaw;
+};
+
+const windowRouteModules = import.meta.glob<WindowRouteModule>('@windows/**/renderer/route.ts', {
+  eager: true,
+});
+
+const routes: RouteRecordRaw[] = Object.values(windowRouteModules).map(
+  (routeModule) => routeModule.route,
+);
 
 export const router = createRouter({
   history: createWebHashHistory(),

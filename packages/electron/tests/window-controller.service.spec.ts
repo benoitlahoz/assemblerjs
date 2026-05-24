@@ -7,7 +7,7 @@ import type {
   KnownIpcChannel,
   WindowBounds,
 } from '../src/universal/types';
-import { WindowRendererService } from '../src/renderer/window/services/window-renderer.service';
+import { WindowControllerService } from '../src/renderer/window/services/window-controller.service';
 
 class FakeIpcService extends AbstractIpcService<IpcContractMap> {
   public readonly channels: ReadonlyArray<KnownIpcChannel<IpcContractMap>> = [];
@@ -70,13 +70,13 @@ class FakeIpcService extends AbstractIpcService<IpcContractMap> {
   ): void {}
 }
 
-describe('WindowRendererService', () => {
+describe('WindowControllerService', () => {
   let ipc: FakeIpcService;
-  let service: WindowRendererService;
+  let service: WindowControllerService;
 
   beforeEach(() => {
     ipc = new FakeIpcService();
-    service = new WindowRendererService(ipc as unknown as AbstractIpcService);
+    service = new WindowControllerService(ipc as unknown as AbstractIpcService);
   });
 
   it('invokes scoped window command for getBounds first', async () => {

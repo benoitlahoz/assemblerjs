@@ -1,7 +1,7 @@
-export const MAIN_WINDOW_NAME = 'main' as const;
-
 export const MAIN_WINDOW_CONFIG = {
-  name: MAIN_WINDOW_NAME,
+  name: 'main',
+  route: '/',
 } as const;
 
-export type MainWindowName = typeof MAIN_WINDOW_NAME;
+export type MainWindowName = (typeof MAIN_WINDOW_CONFIG)['name'];
+export type MainWindowRoute = (typeof MAIN_WINDOW_CONFIG)['route'];

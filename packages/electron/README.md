@@ -40,54 +40,57 @@ import {} from /* ... */ '@assemblerjs/electron/preload';
 
 ## Quick Start
 
-### Main Process
+The recommended usage follows the `examples/electron-01/src/windows` architecture:
+
+- main bootstrap wires a window controller module
+- each real window is a class in `src/windows/*/main`
+- renderer uses one scoped service per window in `src/windows/*/renderer`
+
+### Main Process (`src/main/index.ts` + `src/windows/main`)
 
 ```typescript
 import 'reflect-metadata';
-import { app, BrowserWindow } from 'electron';
-import { Assemblage, Assembler, AbstractAssemblage } from 'assemblerjs';
-
-@Assemblage()
-class WindowManager implements AbstractAssemblage {
-  private mainWindow: BrowserWindow | null = null;
-
-  async onInit() {
-    await app.whenReady();
-    this.createWindow();
-  }
-
-  createWindow() {
-    this.mainWindow = new BrowserWindow({
-      width: 800,
-      height: 600,
-      webPreferences: {
-        nodeIntegration: false,
-        contextIsolation: true,
-        preload: path.join(__dirname, 'preload.js'),
-      },
-    });
-
-    this.mainWindow.loadFile('index.html');
-  }
-
-  async onDispose() {
-    this.mainWindow?.close();
-  }
-}
+import { app } from 'electron';
+import { join } from 'path';
+import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
+import { ElectronAppModule } from '@features/app/main/app.module';
+import { WindowControllerService } from '@windows/main';
 
 @Assemblage({
-  provide: [[WindowManager]],
+  provide: [[ElectronAppModule], [WindowControllerService]],
+  global: {
+    preload: join(__dirname, '../preload/index.js'),
+  },
 })
-class ElectronApp implements AbstractAssemblage {
-  constructor(private windowManager: WindowManager) {}
-
-  async onInit() {
-    console.log('Electron app started');
-  }
+class MainApp implements AbstractAssemblage {
+  constructor(
+    public electron: ElectronAppModule,
+    public windows: WindowControllerService,
+  ) {}
 }
 
 // Bootstrap
-const electronApp = Assembler.build(ElectronApp);
+Assembler.build(MainApp).catch(() => app.quit());
+```
+
+Main window class (from `src/windows/main/main/main.window.ts`):
+
+```typescript
+import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
+import { ElectronWindow, Window } from '@assemblerjs/electron';
+
+@Window({
+  name: 'main',
+  width: 1280,
+  height: 900,
+  show: false,
+})
+@Assemblage({ singleton: false })
+class MainWindow extends ElectronWindow implements AbstractAssemblage {
+  constructor(@Global('preload') preload: string) {
+    super({ webPreferences: { preload } });
+  }
+}
 ```
 
 ### Preload Script
@@ -123,44 +126,42 @@ Importing the preload entry point exposes the following global in the renderer:
 
 - `window.ipc` for the AssemblerJS IPC bridge
 
-### Renderer Process
+### Renderer Process (`src/windows/main/renderer/main.window.ts`)
 
 ```typescript
-import 'reflect-metadata';
-import { Assemblage, Assembler, AbstractAssemblage } from 'assemblerjs';
+import { Assemblage } from 'assemblerjs';
+import {
+  AbstractWindowService,
+  IpcResult,
+  Window,
+  WindowCommand,
+  type WindowBounds,
+} from '@assemblerjs/electron/renderer';
+import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
-declare global {
-  interface Window {
-    ipc: IpcBridge;
-  }
-}
-
+@Window({ name: MAIN_WINDOW_CONFIG.name })
 @Assemblage()
-class AppService implements AbstractAssemblage {
-  sendMessage(message: string) {
-    window.ipc.send('message', message);
-  }
-
-  onInit() {
-    window.ipc.on('response', (data: any) => {
-      console.log('Received:', data);
-    });
+class MainWindow extends AbstractWindowService {
+  @WindowCommand('refreshBounds')
+  async refreshBounds(
+    @IpcResult() bounds?: WindowBounds,
+  ): Promise<WindowBounds | undefined> {
+    return bounds;
   }
 }
-
-@Assemblage({
-  provide: [[AppService]],
-})
-class RendererApp implements AbstractAssemblage {
-  constructor(private appService: AppService) {}
-
-  async onInit() {
-    this.appService.sendMessage('Hello from renderer');
-  }
-}
-
-const app = Assembler.build(RendererApp);
 ```
+
+In Vue components, inject this service instead of calling `window.ipc` directly.
+
+```typescript
+import { useContext } from 'assemblerjs';
+import { MainWindow } from '@windows/main/renderer';
+
+const mainWindow = useContext().require(MainWindow);
+await mainWindow.refreshBounds();
+```
+
+This is the pattern used in `examples/electron-01/src/windows`.
 
 ## IPC Communication Example
 
@@ -254,6 +255,39 @@ Notes:
 - for maintainability, keep IPC calls inside services/gateways rather than UI components
 
 ## Architecture Patterns
+
+### Renderer Window Services
+
+The renderer window layer uses a controller + scoped service split:
+
+- `AbstractWindowControllerService`: global multi-window controller in renderer
+- `WindowControllerService`: default renderer implementation using IPC
+- `AbstractWindowService`: base class for one window service bound to a window name
+- `@Window({ name })`: binds a renderer service to a window and auto-applies listener metadata
+
+```typescript
+import { Assemblage } from 'assemblerjs';
+import {
+  AbstractWindowService,
+  Window,
+  WindowCommand,
+} from '@assemblerjs/electron/renderer';
+
+@Window({ name: 'main' })
+@Assemblage()
+class MainWindowService extends AbstractWindowService {
+  @WindowCommand('refresh-bounds')
+  async refreshBounds() {
+    return await this.getBounds();
+  }
+}
+```
+
+Notes:
+
+- prefer `@Window` on renderer window services
+- keep one service per window for clear ownership
+- inject `AbstractWindowControllerService` when you need to orchestrate multiple windows
 
 ### Service Layer
 
@@ -382,13 +416,13 @@ class ResourceManager implements AbstractAssemblage {
 
 ```bash
 # Build the package
-npx nx build electron
+npx nx build assemblerjs-electron
 
 # Run tests
-npx nx test electron
+npx nx test assemblerjs-electron
 
 # Lint
-npx nx lint electron
+npx nx lint assemblerjs-electron
 ```
 
 ## License

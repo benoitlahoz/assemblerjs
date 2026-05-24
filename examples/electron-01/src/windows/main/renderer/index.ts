@@ -1,1 +1,1 @@
-export * from './main-window-renderer.service';
+export * from './main.window';
