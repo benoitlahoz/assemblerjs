@@ -1,6 +1,10 @@
+import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Assemblage, Assembler } from 'assemblerjs';
+import { Window } from '../src/main/window/decorators';
 
 const getAllWindows = vi.fn();
+const webContentsSend = vi.fn();
 
 vi.mock('electron', () => {
   class BrowserWindow {}
@@ -17,51 +21,105 @@ vi.mock('electron', () => {
   };
 });
 
-describe('ElectronWindow.getBounds IPC handler', () => {
+describe('ElectronWindow helpers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('routes bounds lookup by window name', async () => {
-    const boundsAlpha = { x: 10, y: 20, width: 800, height: 600 };
-    const boundsBeta = { x: 100, y: 200, width: 1024, height: 768 };
+  it('finds an open window by name', async () => {
+    const alpha = {
+      name: 'alpha',
+      isDestroyed: () => false,
+      webContents: { send: webContentsSend },
+    };
+    const beta = {
+      name: 'beta',
+      isDestroyed: () => false,
+      webContents: { send: webContentsSend },
+    };
+
+    getAllWindows.mockReturnValue([alpha, beta]);
+
+    const { ElectronWindow } =
+      await import('../src/main/window/classes/electron-window');
+
+    expect(ElectronWindow.getByName('beta')).toBe(beta);
+    expect(ElectronWindow.getByName('missing')).toBeUndefined();
+  });
+
+  it('broadcasts to all opened windows', async () => {
+    const alphaSend = vi.fn();
+    const betaSend = vi.fn();
 
     getAllWindows.mockReturnValue([
       {
         name: 'alpha',
         isDestroyed: () => false,
-        getBounds: () => boundsAlpha,
+        webContents: { send: alphaSend },
       },
       {
         name: 'beta',
         isDestroyed: () => false,
-        getBounds: () => boundsBeta,
+        webContents: { send: betaSend },
+      },
+      {
+        name: 'closed',
+        isDestroyed: () => true,
+        webContents: { send: vi.fn() },
       },
     ]);
 
     const { ElectronWindow } =
       await import('../src/main/window/classes/electron-window');
 
-    const result = await ElectronWindow.prototype.onGetBounds.call({}, 'beta');
+    ElectronWindow.sendAll('window:main.boundsChanged', { width: 800 });
 
-    expect(result).toEqual({ data: boundsBeta, err: null });
+    expect(alphaSend).toHaveBeenCalledWith('window:main.boundsChanged', {
+      width: 800,
+    });
+    expect(betaSend).toHaveBeenCalledWith('window:main.boundsChanged', {
+      width: 800,
+    });
   });
 
-  it('returns an error when the named window does not exist', async () => {
+  it('binds inherited window listeners on subclasses without auto-showing on ready-to-show', async () => {
+    const onMock = vi.fn();
+    const onceMock = vi.fn();
+    const removeListenerMock = vi.fn();
+    const showMock = vi.fn();
+
     getAllWindows.mockReturnValue([]);
 
     const { ElectronWindow } =
       await import('../src/main/window/classes/electron-window');
 
-    const result = await ElectronWindow.prototype.onGetBounds.call(
-      {},
-      'missing',
-    );
+    @Window({ name: 'main' })
+    @Assemblage()
+    class MainWindow extends ElectronWindow {
+      public on = onMock;
+      public once = onceMock;
+      public removeListener = removeListenerMock;
+      public show = showMock;
+      public getSize = vi.fn(() => [900, 670]);
+      public setPosition = vi.fn();
+      public getBounds = vi.fn(() => ({ x: 0, y: 0, width: 900, height: 670 }));
+      public webContents = { send: vi.fn() };
 
-    expect(result.data).toBeNull();
-    expect(result.err).toBeInstanceOf(Error);
-    expect(result.err?.message).toContain(
-      "Window not found: missing in 'onGetBounds'",
-    );
+      constructor() {
+        super({
+          webPreferences: {},
+        });
+      }
+    }
+
+    Assembler.build(MainWindow as any);
+
+    expect(onMock).toHaveBeenCalledWith('ready-to-show', expect.any(Function));
+
+    const readyToShowListener = onMock.mock.calls[0][1];
+    readyToShowListener();
+
+    expect(showMock).not.toHaveBeenCalled();
+    expect(setPosition).toHaveBeenCalled();
   });
 });

@@ -5,6 +5,7 @@
     "src/renderer/src/**/*",
     "src/renderer/src/**/*.vue",
     "src/preload/*.d.ts",
+    "src/common/**/*",
     "src/features/**/*",
     "src/windows/**/*"
   ],
@@ -14,6 +15,7 @@
     "noImplicitAny": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "noUnusedLocals": false,
     "paths": {
       "@renderer/*": ["src/renderer/src/*"],
       "@common/*": ["src/common/*"],

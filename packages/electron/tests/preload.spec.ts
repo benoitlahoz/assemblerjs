@@ -69,7 +69,7 @@ describe('preload bridge', () => {
 
     bridge.on('custom:channel', listener);
 
-    const wrappedListener = on.mock.calls[0][1];
+    const wrappedListener = on.mock.calls[on.mock.calls.length - 1][1];
     wrappedListener({ sender: 'ipcRenderer' }, 'payload', 42);
 
     expect(listener).toHaveBeenCalledWith('payload', 42);
@@ -77,5 +77,20 @@ describe('preload bridge', () => {
     bridge.off('custom:channel', listener);
 
     expect(off).toHaveBeenCalledWith('custom:channel', wrappedListener);
+  });
+
+  it('always includes package default channels when custom channels are provided', async () => {
+    const { createIpcBridge } = await import('../src/preload');
+    const bridge = createIpcBridge(['custom:channel']);
+
+    expect(bridge.channels).toEqual(
+      expect.arrayContaining([
+        'custom:channel',
+        'window:bounds.get',
+        'menu:item.clicked',
+      ]),
+    );
+
+    expect(() => bridge.send('window:bounds.get')).not.toThrow();
   });
 });

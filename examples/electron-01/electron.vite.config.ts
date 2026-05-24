@@ -33,6 +33,16 @@ export default defineConfig({
         '@preload': resolve('src/preload'),
       },
     },
+    optimizeDeps: {
+      esbuildOptions: {
+        tsconfigRaw: {
+          compilerOptions: {
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+          },
+        },
+      },
+    },
     plugins: [vue(), swcPlugin()],
   },
 });

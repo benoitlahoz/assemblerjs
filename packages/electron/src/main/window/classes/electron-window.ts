@@ -1,7 +1,10 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
-import { WindowIpcChannel, type IpcReturnType } from '@/universal';
-import { IpcHandle, IpcListener, WindowListener, WindowOn } from '@/main';
+import { WindowIpcChannel } from '@/universal/channels';
+import { WindowListener } from '../decorators/window-listener.decorator';
+import { WindowOn } from '../decorators/window-on.decorator';
+import { WindowEmit } from '../decorators/window-emit.decorator';
+import { getWindowDefinition } from '@/main/window/decorators/window.decorator';
 
 export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   definition: {
@@ -9,12 +12,37 @@ export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   };
 }
 
+type ElectronWindowOptionsOverrides = Partial<ElectronWindowOptions>;
+
+const mergeWindowOptions = (
+  base: ElectronWindowOptions,
+  overrides?: ElectronWindowOptionsOverrides,
+): ElectronWindowOptions => {
+  if (!overrides) {
+    return base;
+  }
+
+  return {
+    ...base,
+    ...overrides,
+    definition: {
+      ...base.definition,
+      ...(overrides.definition || {}),
+    },
+    webPreferences: {
+      ...(base.webPreferences || {}),
+      ...(overrides.webPreferences || {}),
+    },
+  };
+};
+
 @WindowListener()
-@IpcListener()
 export class ElectronWindow extends BrowserWindow {
+  private options: ElectronWindowOptions;
+
   private static getOpenWindows(): ElectronWindow[] {
     return BrowserWindow.getAllWindows().filter(
-      (window) => !window.isDestroyed()
+      (window) => !window.isDestroyed(),
     ) as ElectronWindow[];
   }
 
@@ -34,8 +62,41 @@ export class ElectronWindow extends BrowserWindow {
     return this.getOpenWindows().find((window) => window.name === name);
   }
 
-  constructor(private options: ElectronWindowOptions) {
-    super(options);
+  constructor(optionsOverrides?: ElectronWindowOptionsOverrides) {
+    const definition = getWindowDefinition(new.target as Function);
+
+    const optionsFromDecorator: ElectronWindowOptions | undefined = definition
+      ? {
+          definition: {
+            name: definition.name,
+          },
+          ...definition.options,
+        }
+      : undefined;
+
+    const baseOptions =
+      optionsFromDecorator ||
+      (optionsOverrides as ElectronWindowOptions | undefined);
+
+    if (!baseOptions) {
+      throw new Error(
+        'Missing window options. Provide @Window({ name, ... }) metadata or constructor options.',
+      );
+    }
+
+    const resolvedOptions = mergeWindowOptions(
+      baseOptions,
+      optionsFromDecorator ? optionsOverrides : undefined,
+    );
+
+    if (!resolvedOptions?.definition?.name) {
+      throw new Error(
+        'Missing window definition name. Provide it via @Window({ name }) or constructor options.',
+      );
+    }
+
+    super(resolvedOptions);
+    this.options = resolvedOptions;
   }
 
   /**
@@ -68,63 +129,61 @@ export class ElectronWindow extends BrowserWindow {
   }
 
   @WindowOn('ready-to-show')
-  public showWhenReady(): void {
+  public onReadyToShow(): void {
     this.center();
-    this.show();
   }
 
   @WindowOn('resize')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
   /**
    * Called when the window is resized.
-   * This method sends the new bounds to the renderer process.
+   * The returned payload is emitted automatically by WindowListener.
    */
-  public onResize(): void {
-    const bounds = this.getBounds();
-    this.webContents.send(WindowIpcChannel.OnBoundsChanged, bounds);
+  public onResize() {
+    return this.getBounds();
+  }
+
+  @WindowOn('resized')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
+  /**
+   * Called on platforms that expose a post-resize event.
+   * Emits bounds to keep renderer geometry streams in sync.
+   */
+  public onResized() {
+    return this.getBounds();
   }
 
   @WindowOn('move')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
   /**
    * Called when the window is moved.
-   * This method sends the new bounds to the renderer process.
+   * The returned payload is emitted automatically by WindowListener.
    */
-  public onMove(): void {
-    const bounds = this.getBounds();
-    this.webContents.send(WindowIpcChannel.OnBoundsChanged, bounds);
+  public onMove() {
+    return this.getBounds();
   }
 
-  @IpcHandle(WindowIpcChannel.GetBounds)
+  @WindowOn('moved')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
   /**
-   * Get the window's bounds.
-   *
-   * @param { string } name The window's name.
-   * @returns { IpcReturnType } The return value.
+   * Called on platforms that expose a post-move event.
+   * Emits bounds to keep renderer geometry streams in sync.
    */
-  public async onGetBounds(name: string): Promise<IpcReturnType> {
-    const window = ElectronWindow.getByName(name);
-    if (!window) {
-      return {
-        data: null,
-        err: new Error(`Window not found: ${name} in 'onGetBounds'`),
-      };
-    }
-
-    return { data: window.getBounds(), err: null };
+  public onMoved() {
+    return this.getBounds();
   }
 
   @WindowOn('enter-full-screen')
+  @WindowEmit(WindowIpcChannel.OnEnterFullscreen)
   /**
    * Called when the window enters fullscreen.
    */
-  public onEnterFullScreen(): void {
-    this.webContents.send(WindowIpcChannel.OnEnterFullscreen);
-  }
+  public onEnterFullScreen(): void {}
 
   @WindowOn('leave-full-screen')
+  @WindowEmit(WindowIpcChannel.OnLeaveFullscreen)
   /**
    * Called when the window leaves fullscreen.
    */
-  public onLeaveFullScreen(): void {
-    this.webContents.send(WindowIpcChannel.OnLeaveFullscreen);
-  }
+  public onLeaveFullScreen(): void {}
 }

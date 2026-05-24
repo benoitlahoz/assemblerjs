@@ -1,4 +1,4 @@
-export * from './ipc-handle.decorator';
+export * from './ipc-invoke.decorator';
 export * from './ipc-listener.decorator';
 export * from './ipc-send.decorator';
 export * from './ipc-to-ipc-result.decorator';

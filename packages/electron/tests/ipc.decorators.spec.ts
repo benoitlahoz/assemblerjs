@@ -1,8 +1,10 @@
 import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { IpcChannel } from '../src/universal/decorators';
+import { RpcIpcChannel } from '../src/universal/channels';
 
 const webContentsSend = vi.fn();
+const ipcMainOn = vi.fn();
 const getAllWindows = vi.fn(() => [
   {
     name: 'main',
@@ -18,11 +20,16 @@ vi.mock('electron', () => ({
     fromWebContents: vi.fn(),
     getAllWindows,
   },
+  ipcMain: {
+    on: ipcMainOn,
+  },
 }));
 
 describe('dynamic IPC channel decorators', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
+    vi.resetModules();
     (globalThis as any).window = {
       ipc: {
         channels: [],
@@ -105,5 +112,88 @@ describe('dynamic IPC channel decorators', () => {
 
     expect(webContentsSend).toHaveBeenNthCalledWith(1, 'main:first', 'alpha');
     expect(webContentsSend).toHaveBeenNthCalledWith(2, 'main:second', 'beta');
+  });
+
+  it('main IpcInvoke sends request envelope and waits for correlated response', async () => {
+    const { IpcInvoke: MainIpcInvoke } =
+      await import('../src/main/ipc/ipc-invoke.decorator');
+
+    class MainService {
+      @MainIpcInvoke('main:rpc', { name: 'main', timeoutMs: 1000 })
+      public async query(payload: string): Promise<string> {
+        return `done:${payload}`;
+      }
+    }
+
+    const service = new MainService();
+    const promise = service.query('alpha');
+
+    expect(webContentsSend).toHaveBeenCalledWith(
+      RpcIpcChannel.Request,
+      expect.objectContaining({
+        channel: 'main:rpc',
+        args: ['alpha'],
+      }),
+    );
+
+    const responseListener = ipcMainOn.mock.calls[0][1];
+    const envelope = webContentsSend.mock.calls[0][1] as { requestId: string };
+
+    responseListener(undefined, {
+      requestId: envelope.requestId,
+      ok: true,
+      data: 'pong',
+    });
+
+    await expect(promise).resolves.toBe('done:alpha');
+  });
+
+  it('main IpcInvoke rejects when renderer responds with an error', async () => {
+    const { IpcInvoke: MainIpcInvoke } =
+      await import('../src/main/ipc/ipc-invoke.decorator');
+
+    class MainService {
+      @MainIpcInvoke('main:rpc', { name: 'main', timeoutMs: 1000 })
+      public async query(payload: string): Promise<string> {
+        return payload;
+      }
+    }
+
+    const service = new MainService();
+    const promise = service.query('alpha');
+
+    const responseListener = ipcMainOn.mock.calls[0][1];
+    const envelope = webContentsSend.mock.calls[0][1] as { requestId: string };
+
+    responseListener(undefined, {
+      requestId: envelope.requestId,
+      ok: false,
+      error: {
+        name: 'RendererError',
+        message: 'boom',
+      },
+    });
+
+    await expect(promise).rejects.toThrow('boom');
+  });
+
+  it('main IpcInvoke rejects on timeout when renderer does not respond', async () => {
+    vi.useFakeTimers();
+    const { IpcInvoke: MainIpcInvoke } =
+      await import('../src/main/ipc/ipc-invoke.decorator');
+
+    class MainService {
+      @MainIpcInvoke('main:rpc', { name: 'main', timeoutMs: 25 })
+      public async query(payload: string): Promise<string> {
+        return payload;
+      }
+    }
+
+    const service = new MainService();
+    const promise = service.query('alpha');
+
+    await vi.advanceTimersByTimeAsync(30);
+
+    await expect(promise).rejects.toThrow('Renderer RPC timeout');
   });
 });

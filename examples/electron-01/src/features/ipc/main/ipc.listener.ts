@@ -1,4 +1,12 @@
-import { IpcHandle, IpcListener, IpcOn, IpcSend } from '@assemblerjs/electron';
+import {
+  IpcHandle,
+  IpcInvoke,
+  IpcListener,
+  IpcOn,
+  IpcResult,
+  IpcSend,
+} from '@assemblerjs/electron';
+import { BrowserWindow } from 'electron';
 import { IpcChannels } from '@preload/ipc.channels';
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 
@@ -7,10 +15,32 @@ import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 export class IpcListenerService implements AbstractAssemblage {
   constructor() {}
 
-  @IpcOn(IpcChannels.Ping)
   @IpcSend(IpcChannels.Pong)
+  @IpcOn(IpcChannels.Ping)
   public onPing(): void {
-    console.log('Received ping from renderer process');
+    const hasRendererWindow = BrowserWindow.getAllWindows().some((window) => !window.isDestroyed());
+    if (!hasRendererWindow) {
+      return;
+    }
+
+    this.logRendererMetrics().catch(() => {
+      // Renderer-side handler may be unavailable during startup/teardown.
+    });
+  }
+
+  @IpcInvoke(IpcChannels.GetRendererMetrics, { name: 'main' })
+  public async logRendererMetrics(
+    @IpcResult()
+    metrics?: {
+      feedback: string;
+      averageLatencyMs?: number;
+    },
+  ): Promise<void> {
+    if (!metrics) {
+      return;
+    }
+
+    console.log('Renderer metrics', metrics);
   }
 
   @IpcHandle(IpcChannels.GetVersions)

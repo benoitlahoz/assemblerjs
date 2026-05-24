@@ -2,19 +2,23 @@ import { Assemblage, AbstractAssemblage, Assembler, AssemblerContext } from 'ass
 import { Task, Result } from '@assemblerjs/core';
 import { App as VueApp, createApp } from 'vue';
 import { IpcModule } from '@features/ipc/renderer/ipc.module';
-import { ContextInjectionKey } from './common/keys';
+import { SystemStateModule } from '@features/system/renderer/system-state.module';
+import { MainWindow } from '@windows/main/renderer';
+import { ContextInjectionKey } from '@common/keys';
 import App from './App.vue';
+import { router } from './router';
 
 import './assets/main.css';
 
 @Assemblage({
-  provide: [[IpcModule]],
+  provide: [[MainWindow], [IpcModule], [SystemStateModule]],
 })
 class MainApp implements AbstractAssemblage {
   private app: VueApp;
 
-  constructor(public ipc: IpcModule) {
+  constructor() {
     this.app = createApp(App);
+    this.app.use(router);
   }
 
   public async onInit(context: AssemblerContext): Promise<void> {
