@@ -4,11 +4,11 @@ import type {
   WindowSnapshot,
 } from '../src/renderer/window/services/window-renderer.abstract';
 import { AbstractScopedWindowRendererService } from '../src/renderer/window/services/window-renderer-scoped.abstract';
+import { Window } from '../src/renderer/window/decorators/window.decorator';
 import type { WindowBounds, WindowState } from '../src/universal/types';
 
-class MainWindowRendererService extends AbstractScopedWindowRendererService {
-  protected readonly windowName = 'main';
-}
+@Window('main')
+class MainWindowRendererService extends AbstractScopedWindowRendererService {}
 
 describe('AbstractScopedWindowRendererService', () => {
   it('delegates commands to the injected window service with fixed window name', async () => {

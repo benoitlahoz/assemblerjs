@@ -1,9 +1,17 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "files": [
+    "src/renderer/src/composables/useContext.ts",
+    "src/renderer/src/composables/useIpc.ts",
+    "src/renderer/src/composables/useSystem.ts",
+    "src/renderer/src/composables/useWindows.ts"
+  ],
   "include": [
     "electron.vite.config.*",
     "src/main/**/*",
     "src/preload/**/*",
+    "src/renderer/src/composables/**/*",
+    "src/common/**/*",
     "src/features/**/*",
     "src/windows/**/*",
     "src/windows/**/*"
@@ -17,6 +25,7 @@
     "noUnusedLocals": false,
     "types": ["electron-vite/node"],
     "paths": {
+      "@renderer/*": ["src/renderer/src/*"],
       "@common/*": ["src/common/*"],
       "@features/*": ["src/features/*"],
       "@windows/*": ["src/windows/*"],

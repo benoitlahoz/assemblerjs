@@ -1,4 +1,5 @@
 import { buildWindowCommandChannel } from './window-channels';
+import { resolveWindowRendererName } from './window-definition';
 
 export const WindowCommand = (command: string): MethodDecorator => {
   return (
@@ -15,12 +16,12 @@ export const WindowCommand = (command: string): MethodDecorator => {
       const ipcResultParameters: number[] =
         Reflect.getMetadata('ipc-result:parameters', target, propertyKey) || [];
 
-      const windowName = this?.windowName;
+      const windowName = resolveWindowRendererName(this);
       if (!windowName || typeof windowName !== 'string') {
         throw new Error(
           `@WindowCommand on method '${String(
             propertyKey,
-          )}' requires an instance string property 'windowName'.`,
+          )}' requires a window name (via instance 'windowName' or @Window).`,
         );
       }
 

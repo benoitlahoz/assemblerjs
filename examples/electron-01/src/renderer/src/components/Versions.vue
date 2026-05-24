@@ -11,9 +11,8 @@ const defaultVersions = {
 };
 const versions = ref({ ...defaultVersions });
 
-
 onMounted(async () => {
-  versions.value = await debug.getVersions() ?? { ...defaultVersions };
+  versions.value = (await debug.getVersions()) ?? { ...defaultVersions };
   console.log('Platform:', await debug.getPlatform());
 });
 </script>

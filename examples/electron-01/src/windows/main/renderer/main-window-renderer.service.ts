@@ -1,110 +1,109 @@
 import { Assemblage } from 'assemblerjs';
 import {
   AbstractScopedWindowRendererService,
-  AbstractWindowRendererService,
   IpcResult,
   WindowCommand,
-  WindowListener,
+  Window,
 } from '@assemblerjs/electron/renderer';
 import type { WindowBounds } from '@assemblerjs/electron/renderer';
 import { shallowRef, type ShallowRef } from 'vue';
 import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
-@WindowListener()
+@Window({ name: MAIN_WINDOW_CONFIG.name })
 @Assemblage()
 export class MainWindowRendererService extends AbstractScopedWindowRendererService {
-  protected readonly windowName = MAIN_WINDOW_CONFIG.name;
   public readonly bounds: ShallowRef<WindowBounds | undefined> = shallowRef<WindowBounds>();
   private unsubscribeBoundsChanged?: () => void;
+  private boundsStreamInitialized = false;
 
-  constructor(windows: AbstractWindowRendererService) {
-    super(windows);
+  private cloneBounds(bounds?: WindowBounds): WindowBounds | undefined {
+    if (!bounds) {
+      return undefined;
+    }
+
+    return {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    };
+  }
+
+  private async ensureBoundsStream(): Promise<void> {
+    if (this.boundsStreamInitialized) {
+      return;
+    }
+
+    this.boundsStreamInitialized = true;
+    this.bounds.value = this.cloneBounds(await this.getBounds());
+
+    this.unsubscribeBoundsChanged = this.onBoundsChanged((bounds) => {
+      const next = this.cloneBounds(bounds);
+      this.bounds.value = next;
+    });
   }
 
   public async onInit(): Promise<void> {
-    this.bounds.value = await this.getBounds();
-    this.unsubscribeBoundsChanged = this.onBoundsChanged((bounds) => {
-      this.bounds.value = bounds;
-    });
+    await this.ensureBoundsStream();
   }
 
   public onDispose(): void {
     this.unsubscribeBoundsChanged?.();
     this.unsubscribeBoundsChanged = undefined;
+    this.boundsStreamInitialized = false;
   }
 
   public override onBoundsChanged(callback: (bounds: WindowBounds) => void): () => void {
     return super.onBoundsChanged(callback);
   }
 
-  public async refreshBounds(): Promise<WindowBounds | undefined> {
-    this.bounds.value = await this.requestRefreshBounds();
+  @WindowCommand('refreshBounds')
+  public async refreshBounds(
+    @IpcResult() bounds?: WindowBounds,
+  ): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
+    this.bounds.value = this.cloneBounds(bounds);
     return this.bounds.value;
-  }
-
-  public async randomBounds(): Promise<WindowBounds | undefined> {
-    this.bounds.value = await this.requestRandomBounds();
-    return this.bounds.value;
-  }
-
-  public async centerWindow(): Promise<WindowBounds | undefined> {
-    this.bounds.value = await this.requestCenterWindow();
-    return this.bounds.value;
-  }
-
-  public async setBounds(nextBounds: WindowBounds): Promise<WindowBounds | undefined> {
-    this.bounds.value = await this.requestSetBounds(nextBounds);
-    return this.bounds.value;
-  }
-
-  public async getDisplayWorkArea(): Promise<WindowBounds | undefined> {
-    return await this.requestDisplayWorkArea();
-  }
-
-  public async getDisplayBounds(): Promise<WindowBounds | undefined> {
-    return await this.requestDisplayBounds();
   }
 
   @WindowCommand('randomBounds')
-  private async requestRandomBounds(
-    @IpcResult() bounds?: WindowBounds,
-  ): Promise<WindowBounds | undefined> {
-    return bounds;
-  }
-
-  @WindowCommand('refreshBounds')
-  private async requestRefreshBounds(
-    @IpcResult() bounds?: WindowBounds,
-  ): Promise<WindowBounds | undefined> {
-    return bounds;
+  public async randomBounds(@IpcResult() bounds?: WindowBounds): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
+    this.bounds.value = this.cloneBounds(bounds);
+    return this.bounds.value;
   }
 
   @WindowCommand('centerWindow')
-  private async requestCenterWindow(
-    @IpcResult() bounds?: WindowBounds,
-  ): Promise<WindowBounds | undefined> {
-    return bounds;
+  public async centerWindow(@IpcResult() bounds?: WindowBounds): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
+    this.bounds.value = this.cloneBounds(bounds);
+    return this.bounds.value;
   }
 
   @WindowCommand('setBounds')
-  private async requestSetBounds(
-    _nextBounds: WindowBounds,
+  public async setBounds(
+    nextBounds: WindowBounds,
     @IpcResult() bounds?: WindowBounds,
   ): Promise<WindowBounds | undefined> {
-    return bounds;
+    await this.ensureBoundsStream();
+    void nextBounds;
+    this.bounds.value = this.cloneBounds(bounds);
+    return this.bounds.value;
   }
 
   @WindowCommand('getDisplayWorkArea')
-  private async requestDisplayWorkArea(
+  public async getDisplayWorkArea(
     @IpcResult() workArea?: WindowBounds,
   ): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
     return workArea;
   }
 
   @WindowCommand('getDisplayBounds')
-  private async requestDisplayBounds(
+  public async getDisplayBounds(
     @IpcResult() bounds?: WindowBounds,
   ): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
     return bounds;
   }
 }

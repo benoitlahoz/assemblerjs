@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onBeforeUnmount, ref, watch } from 'vue';
+import { useContext } from '@renderer/composables/useContext';
+import { MainWindowRendererService } from '../main-window-renderer.service';
 
 interface RectBounds {
   x: number;
@@ -19,32 +21,25 @@ interface CanvasProjection {
 type DragMode = 'move' | 'resize';
 type ResizeHandle = 'nw' | 'ne' | 'se' | 'sw';
 
-const props = defineProps<{
-  bounds?: RectBounds;
-  screenWorkArea: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  screenDisplayBounds?: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  applyBounds: (nextBounds: RectBounds) => Promise<RectBounds | undefined>;
-}>();
-
-const emit = defineEmits<{
-  refresh: [];
-  randomize: [];
-  center: [];
-}>();
+const context = useContext();
+const mainWindow = context.require(MainWindowRendererService);
+const bounds = mainWindow.bounds;
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const draftBounds = ref<RectBounds | undefined>(undefined);
 const isApplyingCanvasMove = ref(false);
+const screenWorkArea = ref<{ x: number; y: number; width: number; height: number }>({
+  x: 0,
+  y: 0,
+  width: 1920,
+  height: 1080,
+});
+const screenDisplayBounds = ref<{ x: number; y: number; width: number; height: number }>({
+  x: 0,
+  y: 0,
+  width: 1920,
+  height: 1080,
+});
 
 let dragState:
   | {
@@ -62,11 +57,11 @@ let frameRequestId: number | undefined;
 const telemetryCanvasStyle = computed(() => {
   const ratioWidth = Math.max(
     1,
-    props.screenDisplayBounds?.width || props.screenWorkArea.width || 1920,
+    screenDisplayBounds.value?.width || screenWorkArea.value.width || 1920,
   );
   const ratioHeight = Math.max(
     1,
-    props.screenDisplayBounds?.height || props.screenWorkArea.height || 1080,
+    screenDisplayBounds.value?.height || screenWorkArea.value.height || 1080,
   );
 
   return {
@@ -90,10 +85,10 @@ function clamp(value: number, min: number, max: number): number {
 }
 
 function clampBoundsToWorkArea(input: RectBounds): RectBounds {
-  const workAreaX = Math.round(props.screenWorkArea.x || 0);
-  const workAreaY = Math.round(props.screenWorkArea.y || 0);
-  const workAreaWidth = Math.max(1, Math.round(props.screenWorkArea.width || 1920));
-  const workAreaHeight = Math.max(1, Math.round(props.screenWorkArea.height || 1080));
+  const workAreaX = Math.round(screenWorkArea.value.x || 0);
+  const workAreaY = Math.round(screenWorkArea.value.y || 0);
+  const workAreaWidth = Math.max(1, Math.round(screenWorkArea.value.width || 1920));
+  const workAreaHeight = Math.max(1, Math.round(screenWorkArea.value.height || 1080));
 
   const width = clamp(Math.round(input.width), 1, workAreaWidth);
   const height = clamp(Math.round(input.height), 1, workAreaHeight);
@@ -118,19 +113,19 @@ function projectBounds(
   const visualZoneWidth = canvasWidth - 36;
   const visualZoneHeight = canvasHeight - 36;
 
-  const displayX = props.screenDisplayBounds?.x ?? props.screenWorkArea.x;
-  const displayY = props.screenDisplayBounds?.y ?? props.screenWorkArea.y;
+  const displayX = screenDisplayBounds.value?.x ?? screenWorkArea.value.x;
+  const displayY = screenDisplayBounds.value?.y ?? screenWorkArea.value.y;
   const displayWidth = Math.max(
     1,
-    props.screenDisplayBounds?.width || props.screenWorkArea.width || 1920,
+    screenDisplayBounds.value?.width || screenWorkArea.value.width || 1920,
   );
   const displayHeight = Math.max(
     1,
-    props.screenDisplayBounds?.height || props.screenWorkArea.height || 1080,
+    screenDisplayBounds.value?.height || screenWorkArea.value.height || 1080,
   );
 
-  const workAreaWidth = Math.max(1, props.screenWorkArea.width || 1920);
-  const workAreaHeight = Math.max(1, props.screenWorkArea.height || 1080);
+  const workAreaWidth = Math.max(1, screenWorkArea.value.width || 1920);
+  const workAreaHeight = Math.max(1, screenWorkArea.value.height || 1080);
 
   const scale = Math.min(visualZoneWidth / displayWidth, visualZoneHeight / displayHeight);
 
@@ -139,15 +134,17 @@ function projectBounds(
   const offsetX = visualZoneX + Math.floor((visualZoneWidth - projectedDisplayWidth) / 2);
   const offsetY = visualZoneY + Math.floor((visualZoneHeight - projectedDisplayHeight) / 2);
 
-  const projectedWorkAreaX = offsetX + Math.round((props.screenWorkArea.x - displayX) * scale);
-  const projectedWorkAreaY = offsetY + Math.round((props.screenWorkArea.y - displayY) * scale);
-  const projectedWorkAreaWidth = Math.floor(workAreaWidth * scale);
-  const projectedWorkAreaHeight = Math.floor(workAreaHeight * scale);
+  const projectedWorkAreaX = offsetX + Math.round((screenWorkArea.value.x - displayX) * scale);
+  const projectedWorkAreaY = offsetY + Math.round((screenWorkArea.value.y - displayY) * scale);
+
+  // Kept for layout symmetry — used implicitly in coordinate clamping context.
+  void Math.floor(workAreaWidth * scale);
+  void Math.floor(workAreaHeight * scale);
 
   const projectedWidth = clamp(Math.floor(toProject.width * scale), 24, projectedDisplayWidth);
   const projectedHeight = clamp(Math.floor(toProject.height * scale), 16, projectedDisplayHeight);
-  const absoluteX = projectedWorkAreaX + Math.round((toProject.x - props.screenWorkArea.x) * scale);
-  const absoluteY = projectedWorkAreaY + Math.round((toProject.y - props.screenWorkArea.y) * scale);
+  const absoluteX = projectedWorkAreaX + Math.round((toProject.x - screenWorkArea.value.x) * scale);
+  const absoluteY = projectedWorkAreaY + Math.round((toProject.y - screenWorkArea.value.y) * scale);
   const maxX = offsetX + projectedDisplayWidth - projectedWidth;
   const maxY = offsetY + projectedDisplayHeight - projectedHeight;
 
@@ -166,8 +163,8 @@ function drawBoundsCanvas(): void {
     return;
   }
 
-  const context = canvas.getContext('2d');
-  if (!context) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
     return;
   }
 
@@ -180,40 +177,34 @@ function drawBoundsCanvas(): void {
   canvas.width = width;
   canvas.height = height;
 
-  context.clearRect(0, 0, width, height);
+  ctx.clearRect(0, 0, width, height);
 
   const framePadding = 10;
-  context.fillStyle = 'rgba(255, 255, 255, 0.03)';
-  context.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-  context.lineWidth = 1;
-  context.beginPath();
-  context.roundRect(
-    framePadding,
-    framePadding,
-    width - framePadding * 2,
-    height - framePadding * 2,
-    8,
-  );
-  context.fill();
-  context.stroke();
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(framePadding, framePadding, width - framePadding * 2, height - framePadding * 2, 8);
+  ctx.fill();
+  ctx.stroke();
 
-  const renderedBounds = draftBounds.value || props.bounds;
+  const renderedBounds = draftBounds.value || bounds.value;
   if (!renderedBounds) {
-    context.fillStyle = 'rgba(255, 255, 255, 0.55)';
-    context.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-    context.fillText('Awaiting bounds...', 18, Math.floor(height / 2));
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.fillText('Awaiting bounds...', 18, Math.floor(height / 2));
     return;
   }
 
   const projection = projectBounds(renderedBounds, width, height);
 
-  context.fillStyle = 'rgba(66, 211, 146, 0.14)';
-  context.strokeStyle = 'rgba(66, 211, 146, 0.8)';
-  context.lineWidth = 1.5;
-  context.beginPath();
-  context.roundRect(projection.x, projection.y, projection.width, projection.height, 6);
-  context.fill();
-  context.stroke();
+  ctx.fillStyle = 'rgba(66, 211, 146, 0.14)';
+  ctx.strokeStyle = 'rgba(66, 211, 146, 0.8)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.roundRect(projection.x, projection.y, projection.width, projection.height, 6);
+  ctx.fill();
+  ctx.stroke();
 
   const handleRadius = 6;
   const handleStroke = 'rgba(66, 211, 146, 0.95)';
@@ -226,27 +217,23 @@ function drawBoundsCanvas(): void {
   ];
 
   for (const center of handleCenters) {
-    context.beginPath();
-    context.arc(center.x, center.y, handleRadius, 0, Math.PI * 2);
-    context.fillStyle = handleFill;
-    context.fill();
-    context.strokeStyle = handleStroke;
-    context.lineWidth = 1.5;
-    context.stroke();
+    ctx.beginPath();
+    ctx.arc(center.x, center.y, handleRadius, 0, Math.PI * 2);
+    ctx.fillStyle = handleFill;
+    ctx.fill();
+    ctx.strokeStyle = handleStroke;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
   }
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  context.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-  context.fillText(
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.font = '11px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+  ctx.fillText(
     `${renderedBounds.width} x ${renderedBounds.height}`,
     projection.x + 8,
     projection.y + 16,
   );
-  context.fillText(
-    `x:${renderedBounds.x} y:${renderedBounds.y}`,
-    projection.x + 8,
-    projection.y + 30,
-  );
+  ctx.fillText(`x:${renderedBounds.x} y:${renderedBounds.y}`, projection.x + 8, projection.y + 30);
 }
 
 function detectResizeHandle(
@@ -286,7 +273,7 @@ function cursorForHandle(handle: ResizeHandle | undefined): string {
 }
 
 function onCanvasPointerDown(event: PointerEvent): void {
-  if (!props.bounds || isApplyingCanvasMove.value) {
+  if (!bounds.value || isApplyingCanvasMove.value) {
     return;
   }
 
@@ -298,7 +285,7 @@ function onCanvasPointerDown(event: PointerEvent): void {
   const rect = canvas.getBoundingClientRect();
   const pointerX = event.clientX - rect.left;
   const pointerY = event.clientY - rect.top;
-  const activeBounds = draftBounds.value || props.bounds;
+  const activeBounds = draftBounds.value || (bounds.value as RectBounds);
   const projection = projectBounds(activeBounds, canvas.clientWidth, canvas.clientHeight);
 
   const handle = detectResizeHandle(pointerX, pointerY, projection);
@@ -326,7 +313,7 @@ function onCanvasPointerDown(event: PointerEvent): void {
 }
 
 function onCanvasPointerMove(event: PointerEvent): void {
-  if (!dragState || !props.bounds) {
+  if (!dragState || !bounds.value) {
     onCanvasHover(event);
     return;
   }
@@ -418,10 +405,11 @@ async function validateCanvasMove(): Promise<void> {
   isApplyingCanvasMove.value = true;
 
   try {
-    const applied = await props.applyBounds(requested);
+    const applied = (await mainWindow.setBounds(requested)) as RectBounds | undefined;
     if (!applied) {
       return;
     }
+    await syncDisplayWorkArea();
   } catch (error) {
     console.error('Apply failed', error);
   } finally {
@@ -464,14 +452,18 @@ function onCanvasPointerCancel(event: PointerEvent): void {
 
 function onCanvasHover(event: PointerEvent): void {
   const canvas = canvasRef.value;
-  if (!canvas || dragState || !props.bounds) {
+  if (!canvas || dragState || !bounds.value) {
     return;
   }
 
   const rect = canvas.getBoundingClientRect();
   const pointerX = event.clientX - rect.left;
   const pointerY = event.clientY - rect.top;
-  const projection = projectBounds(props.bounds, canvas.clientWidth, canvas.clientHeight);
+  const projection = projectBounds(
+    bounds.value as RectBounds,
+    canvas.clientWidth,
+    canvas.clientHeight,
+  );
   const handle = detectResizeHandle(pointerX, pointerY, projection);
 
   const insideRect =
@@ -489,7 +481,51 @@ function onCanvasHover(event: PointerEvent): void {
   }
 }
 
-onMounted(() => {
+const syncDisplayWorkArea = async (): Promise<void> => {
+  const [workArea, displayBounds] = await Promise.all([
+    mainWindow.getDisplayWorkArea(),
+    mainWindow.getDisplayBounds(),
+  ]);
+
+  if (!workArea?.width || !workArea?.height) {
+    return;
+  }
+
+  screenWorkArea.value = {
+    x: Math.round(workArea.x || 0),
+    y: Math.round(workArea.y || 0),
+    width: Math.max(1, Math.round(workArea.width)),
+    height: Math.max(1, Math.round(workArea.height)),
+  };
+
+  if (displayBounds?.width && displayBounds?.height) {
+    screenDisplayBounds.value = {
+      x: Math.round(displayBounds.x || 0),
+      y: Math.round(displayBounds.y || 0),
+      width: Math.max(1, Math.round(displayBounds.width)),
+      height: Math.max(1, Math.round(displayBounds.height)),
+    };
+  }
+};
+
+const randomizeBounds = async (): Promise<void> => {
+  await mainWindow.randomBounds();
+  await syncDisplayWorkArea();
+};
+
+const refreshBounds = async (): Promise<void> => {
+  await mainWindow.refreshBounds();
+  await syncDisplayWorkArea();
+};
+
+const centerWindow = async (): Promise<void> => {
+  await mainWindow.centerWindow();
+  await syncDisplayWorkArea();
+};
+
+onMounted(async () => {
+  await mainWindow.refreshBounds();
+  await syncDisplayWorkArea();
   drawBoundsCanvas();
 });
 
@@ -501,32 +537,16 @@ onBeforeUnmount(() => {
   }
 });
 
-watch(
-  () => props.bounds,
-  () => {
-    if (!dragState) {
-      draftBounds.value = undefined;
-    }
-    drawBoundsCanvas();
-  },
-  { deep: true },
-);
+// Watch the ShallowRef directly — most reliable way to track bounds changes from IPC events.
+watch(bounds, () => {
+  if (!dragState) {
+    draftBounds.value = undefined;
+  }
+  drawBoundsCanvas();
+});
 
-watch(
-  () => props.screenWorkArea,
-  () => {
-    scheduleDraw();
-  },
-  { deep: true },
-);
-
-watch(
-  () => props.screenDisplayBounds,
-  () => {
-    scheduleDraw();
-  },
-  { deep: true },
-);
+watch(screenWorkArea, () => scheduleDraw(), { deep: true });
+watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
 </script>
 
 <template>
@@ -541,7 +561,7 @@ watch(
         class="telemetry-refresh"
         aria-label="Refresh window bounds"
         title="Refresh bounds"
-        @click="emit('refresh')"
+        @click="refreshBounds"
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
@@ -573,10 +593,8 @@ watch(
     />
 
     <div class="telemetry-actions">
-      <button type="button" class="telemetry-action" @click="emit('randomize')">
-        Random Bounds
-      </button>
-      <button type="button" class="telemetry-action" @click="emit('center')">Center Window</button>
+      <button type="button" class="telemetry-action" @click="randomizeBounds">Random Bounds</button>
+      <button type="button" class="telemetry-action" @click="centerWindow">Center Window</button>
     </div>
   </article>
 </template>

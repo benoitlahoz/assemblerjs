@@ -3,6 +3,7 @@ import { AbstractIpcService } from '@/renderer/ipc/services';
 import { WindowIpcChannel } from '@/universal/channels';
 import type {
   IpcReturnType,
+  ManagedWindowDescriptor,
   WindowBounds,
   WindowState,
 } from '@/universal/types';
@@ -88,9 +89,11 @@ export class WindowRendererService extends AbstractWindowRendererService {
 
   private subscribeChannels<T>(
     channels: ReadonlyArray<string>,
-    callback: (payload: T) => void,
+    callback: (payload: T, channel: string) => void,
   ): () => void {
-    const unsubs = channels.map((channel) => this.ipc.on(channel, callback));
+    const unsubs = channels.map((channel) =>
+      this.ipc.on(channel, (payload: T) => callback(payload, channel)),
+    );
 
     const unsubscribe = () => {
       for (const unsub of unsubs) {
@@ -124,6 +127,61 @@ export class WindowRendererService extends AbstractWindowRendererService {
       );
       return unwrapIpcResult<T>(fallbackChannel, fallbackResult);
     }
+  }
+
+  private async invokeWindowRegistryCommand<T>(
+    channel: WindowIpcChannel,
+    ...args: unknown[]
+  ): Promise<T | undefined> {
+    const result = await this.ipc.invoke(channel, ...args);
+    return unwrapIpcResult<T>(channel, result);
+  }
+
+  public async listWindowNames(): Promise<string[]> {
+    return (
+      (await this.invokeWindowRegistryCommand<string[]>(
+        WindowIpcChannel.ListWindowNames,
+      )) || []
+    );
+  }
+
+  public async listManagedWindows(): Promise<ManagedWindowDescriptor[]> {
+    return (
+      (await this.invokeWindowRegistryCommand<ManagedWindowDescriptor[]>(
+        WindowIpcChannel.ListManagedWindows,
+      )) || []
+    );
+  }
+
+  public async hasWindow(name: string): Promise<boolean> {
+    return Boolean(
+      await this.invokeWindowRegistryCommand<boolean>(
+        WindowIpcChannel.HasWindow,
+        name,
+      ),
+    );
+  }
+
+  public async openWindow(
+    name: string,
+    configuration?: Record<string, any>,
+  ): Promise<boolean> {
+    return Boolean(
+      await this.invokeWindowRegistryCommand<boolean>(
+        WindowIpcChannel.OpenWindow,
+        name,
+        configuration,
+      ),
+    );
+  }
+
+  public async closeWindow(name: string): Promise<boolean> {
+    return Boolean(
+      await this.invokeWindowRegistryCommand<boolean>(
+        WindowIpcChannel.CloseWindow,
+        name,
+      ),
+    );
   }
 
   public async getBounds(name: string): Promise<WindowBounds | undefined> {
@@ -221,7 +279,7 @@ export class WindowRendererService extends AbstractWindowRendererService {
 
     return this.subscribeChannels<WindowBounds>(
       [...new Set(channels)],
-      (bounds) => {
+      (bounds, channel) => {
         this.updateSnapshot(name, (snapshot) => {
           snapshot.bounds = bounds;
         });

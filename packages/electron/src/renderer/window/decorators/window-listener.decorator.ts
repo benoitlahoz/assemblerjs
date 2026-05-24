@@ -2,6 +2,7 @@ import { createConstructorDecorator } from 'assemblerjs';
 import { registerCleanup } from '@/universal/lifecycle';
 import { WindowIpcChannel } from '@/universal/channels';
 import { buildWindowEventChannel } from './window-channels';
+import { resolveWindowRendererName } from './window-definition';
 import {
   WindowRendererSubMethods,
   type WindowRendererSubMethod,
@@ -47,16 +48,20 @@ function getWindowSubMethods(
   return undefined;
 }
 
+/**
+ * Backward-compatible explicit listener decorator.
+ * Prefer `@Window(...)` on renderer scoped services, which already applies this.
+ */
 export const WindowListener = createConstructorDecorator(function (this: any) {
   const bridge = window.ipc;
   if (!bridge) {
     throw new Error('IpcRenderer is not available in the current context.');
   }
 
-  const windowName = this?.windowName;
+  const windowName = resolveWindowRendererName(this);
   if (!windowName || typeof windowName !== 'string') {
     throw new Error(
-      "@WindowListener requires an instance string property 'windowName'.",
+      "@WindowListener requires a window name (via instance 'windowName' or @Window).",
     );
   }
 

@@ -5,13 +5,19 @@ import { join } from 'path';
 import { Result, Task } from '@assemblerjs/core';
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
+import { SystemStateHostService } from '@assemblerjs/electron';
 import { WindowControllerService } from '@windows/main';
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
 @Assemblage({
-  provide: [[ElectronAppModule], [IpcListenerService], [WindowControllerService]],
+  provide: [
+    [ElectronAppModule],
+    [IpcListenerService],
+    [SystemStateHostService],
+    [WindowControllerService],
+  ],
   global: {
     preload: join(__dirname, '../preload/index.js'),
   },
@@ -20,6 +26,7 @@ class MainApp implements AbstractAssemblage {
   constructor(
     public electron: ElectronAppModule,
     public ipc: IpcListenerService,
+    public systemState: SystemStateHostService,
     public windows: WindowControllerService,
   ) {}
 }

@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useContext } from '@renderer/composables/useContext';
+import { IpcModule } from '@features/ipc/renderer/ipc.module';
 
-const props = defineProps<{
-  lastLatencyMs?: number;
-  averageLatencyMs?: number;
-  latencyHistory: number[];
-}>();
-
-const emit = defineEmits<{
-  sendPing: [];
-  clear: [];
-}>();
+const context = useContext();
+const { debug } = context.require(IpcModule);
 
 const INTERVAL_OPTIONS = [150, 250, 500, 1000, 1500] as const;
 
@@ -23,21 +17,23 @@ let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
 let chartResizeObserver: ResizeObserver | undefined;
 
 const p95LatencyMs = computed<number | undefined>(() => {
-  if (props.latencyHistory.length === 0) {
+  const history = debug.latencyHistory.value;
+  if (history.length === 0) {
     return undefined;
   }
 
-  const sorted = [...props.latencyHistory].sort((a, b) => a - b);
+  const sorted = [...history].sort((a, b) => a - b);
   const index = Math.min(sorted.length - 1, Math.ceil(sorted.length * 0.95) - 1);
   return sorted[index];
 });
 
 const maxLatencyMs = computed<number | undefined>(() => {
-  if (props.latencyHistory.length === 0) {
+  const history = debug.latencyHistory.value;
+  if (history.length === 0) {
     return undefined;
   }
 
-  return Math.max(...props.latencyHistory);
+  return Math.max(...history);
 });
 
 function drawLatencyChart(): void {
@@ -46,8 +42,8 @@ function drawLatencyChart(): void {
     return;
   }
 
-  const context = canvas.getContext('2d');
-  if (!context) {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
     return;
   }
 
@@ -60,34 +56,31 @@ function drawLatencyChart(): void {
   canvas.width = width;
   canvas.height = height;
 
-  const data = [...props.latencyHistory].reverse();
-  context.clearRect(0, 0, width, height);
+  const data = [...debug.latencyHistory.value].reverse();
+  ctx.clearRect(0, 0, width, height);
 
-  const gradient = context.createLinearGradient(0, 0, 0, height);
+  const gradient = ctx.createLinearGradient(0, 0, 0, height);
   gradient.addColorStop(0, 'rgba(66, 211, 146, 0.25)');
   gradient.addColorStop(1, 'rgba(66, 211, 146, 0.02)');
-  context.fillStyle = gradient;
-  context.strokeStyle = 'rgba(66, 211, 146, 0.9)';
-  context.lineWidth = 1.6;
 
   const padding = 12;
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
 
-  context.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-  context.lineWidth = 1;
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.lineWidth = 1;
   for (let i = 0; i < 4; i += 1) {
     const y = padding + Math.round((chartHeight / 3) * i);
-    context.beginPath();
-    context.moveTo(padding, y);
-    context.lineTo(width - padding, y);
-    context.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padding, y);
+    ctx.lineTo(width - padding, y);
+    ctx.stroke();
   }
 
   if (data.length === 0) {
-    context.fillStyle = 'rgba(255, 255, 255, 0.6)';
-    context.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-    context.fillText('No latency samples yet', padding, Math.floor(height / 2));
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+    ctx.font = '12px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+    ctx.fillText('No latency samples yet', padding, Math.floor(height / 2));
     return;
   }
 
@@ -103,41 +96,41 @@ function drawLatencyChart(): void {
     return { x, y };
   });
 
-  context.beginPath();
-  context.moveTo(points[0].x, points[0].y);
+  ctx.beginPath();
+  ctx.moveTo(points[0].x, points[0].y);
 
   if (points.length === 1) {
-    context.lineTo(points[0].x + 0.001, points[0].y);
+    ctx.lineTo(points[0].x + 0.001, points[0].y);
   } else {
     for (let index = 0; index < points.length - 1; index += 1) {
       const current = points[index];
       const next = points[index + 1];
       const controlX = (current.x + next.x) / 2;
 
-      context.quadraticCurveTo(current.x, current.y, controlX, (current.y + next.y) / 2);
+      ctx.quadraticCurveTo(current.x, current.y, controlX, (current.y + next.y) / 2);
     }
 
     const beforeLast = points[points.length - 2];
     const last = points[points.length - 1];
-    context.quadraticCurveTo(beforeLast.x, beforeLast.y, last.x, last.y);
+    ctx.quadraticCurveTo(beforeLast.x, beforeLast.y, last.x, last.y);
   }
 
-  context.strokeStyle = 'rgba(66, 211, 146, 0.95)';
-  context.lineWidth = 1.6;
-  context.stroke();
+  ctx.strokeStyle = 'rgba(66, 211, 146, 0.95)';
+  ctx.lineWidth = 1.6;
+  ctx.stroke();
 
-  context.save();
-  context.lineTo(width - padding, height - padding);
-  context.lineTo(padding, height - padding);
-  context.closePath();
-  context.fillStyle = gradient;
-  context.fill();
-  context.restore();
+  ctx.save();
+  ctx.lineTo(width - padding, height - padding);
+  ctx.lineTo(padding, height - padding);
+  ctx.closePath();
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  ctx.restore();
 }
 
 function triggerPing(): void {
   totalPings.value += 1;
-  emit('sendPing');
+  debug.sendPing();
 }
 
 function startHeartbeat(): void {
@@ -163,7 +156,7 @@ function stopHeartbeat(): void {
 function resetMetrics(): void {
   stopHeartbeat();
   totalPings.value = 0;
-  emit('clear');
+  debug.clearFeedback();
 }
 
 watch(heartbeatIntervalMs, () => {
@@ -175,13 +168,9 @@ watch(heartbeatIntervalMs, () => {
   startHeartbeat();
 });
 
-watch(
-  () => props.latencyHistory,
-  () => {
-    drawLatencyChart();
-  },
-  { deep: true },
-);
+watch(debug.latencyHistory, () => {
+  drawLatencyChart();
+});
 
 onMounted(() => {
   drawLatencyChart();
@@ -210,9 +199,6 @@ onBeforeUnmount(() => {
         <h2>IPC</h2>
         <span class="ipc-duplex">Full-duplex</span>
       </div>
-      <span class="ipc-status" :class="{ 'ipc-status--running': isHeartbeatRunning }">
-        {{ isHeartbeatRunning ? 'Running' : 'Stopped' }}
-      </span>
     </header>
     <p class="card__description">
       Bidirectional renderer &lt;-&gt; main health panel with heartbeat and latency time-series.
@@ -240,7 +226,12 @@ onBeforeUnmount(() => {
       >
         Start Heartbeat
       </button>
-      <button v-else type="button" class="ipc-action-card" @click="stopHeartbeat">
+      <button
+        v-else
+        type="button"
+        class="ipc-action-card ipc-action-card--danger"
+        @click="stopHeartbeat"
+      >
         Stop Heartbeat
       </button>
       <button type="button" class="ipc-action-card" @click="resetMetrics">Reset</button>
@@ -249,11 +240,17 @@ onBeforeUnmount(() => {
     <dl class="ipc-health-grid">
       <div class="metric">
         <dt>Last RTT</dt>
-        <dd>{{ props.lastLatencyMs !== undefined ? `${props.lastLatencyMs} ms` : '—' }}</dd>
+        <dd>
+          {{ debug.lastLatencyMs.value !== undefined ? `${debug.lastLatencyMs.value} ms` : '—' }}
+        </dd>
       </div>
       <div class="metric">
         <dt>Average</dt>
-        <dd>{{ props.averageLatencyMs !== undefined ? `${props.averageLatencyMs} ms` : '—' }}</dd>
+        <dd>
+          {{
+            debug.averageLatencyMs.value !== undefined ? `${debug.averageLatencyMs.value} ms` : '—'
+          }}
+        </dd>
       </div>
       <div class="metric">
         <dt>P95</dt>
@@ -306,22 +303,6 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   white-space: nowrap;
-}
-
-.ipc-status {
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
-  background: color-mix(in srgb, var(--ev-c-black-soft) 76%, transparent);
-  color: var(--ev-c-text-2);
-  padding: 4px 10px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.ipc-status--running {
-  color: #42d392;
-  border-color: color-mix(in srgb, #42d392 45%, transparent);
 }
 
 .card__header h2 {
@@ -436,6 +417,11 @@ onBeforeUnmount(() => {
 .ipc-action-card--accent {
   border-color: color-mix(in srgb, #42d392 45%, transparent);
   color: #42d392;
+}
+
+.ipc-action-card--danger {
+  border-color: color-mix(in srgb, #ff6b6b 45%, transparent);
+  color: #ff6b6b;
 }
 
 .metric {

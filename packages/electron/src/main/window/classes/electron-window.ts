@@ -143,6 +143,16 @@ export class ElectronWindow extends BrowserWindow {
     return this.getBounds();
   }
 
+  @WindowOn('resized')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
+  /**
+   * Called on platforms that expose a post-resize event.
+   * Emits bounds to keep renderer geometry streams in sync.
+   */
+  public onResized() {
+    return this.getBounds();
+  }
+
   @WindowOn('move')
   @WindowEmit(WindowIpcChannel.OnBoundsChanged)
   /**
@@ -150,6 +160,16 @@ export class ElectronWindow extends BrowserWindow {
    * The returned payload is emitted automatically by WindowListener.
    */
   public onMove() {
+    return this.getBounds();
+  }
+
+  @WindowOn('moved')
+  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
+  /**
+   * Called on platforms that expose a post-move event.
+   * Emits bounds to keep renderer geometry streams in sync.
+   */
+  public onMoved() {
     return this.getBounds();
   }
 

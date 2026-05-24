@@ -3,6 +3,7 @@ import { getAssemblageContext, getAssemblageDefinition } from 'assemblerjs';
 import type { Identifier } from 'assemblerjs';
 import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
+import { WindowIpcChannel } from '@/universal/channels';
 import {
   loadWindowContent,
   type WindowContentTarget,
@@ -271,6 +272,57 @@ function registerManagedCommandHandlers(controller: any): void {
   }
 }
 
+function registerWindowRegistryHandlers(controller: any): void {
+  const state = getOrCreateState(controller);
+
+  const handlers: Array<[string, (_event: unknown, ...args: any[]) => any]> = [
+    [
+      WindowIpcChannel.ListWindowNames,
+      async () => controller.listWindowNames(),
+    ],
+    [
+      WindowIpcChannel.ListManagedWindows,
+      async () =>
+        controller
+          .listManagedWindows()
+          .map((window: { name: string; multiple: boolean }) => ({
+            name: window.name,
+            multiple: window.multiple,
+          })),
+    ],
+    [
+      WindowIpcChannel.HasWindow,
+      async (_event, name: string) => controller.hasWindow(name),
+    ],
+    [
+      WindowIpcChannel.OpenWindow,
+      async (_event, name: string, configuration?: Record<string, any>) => {
+        await controller.openWindow(name, configuration);
+        return true;
+      },
+    ],
+    [
+      WindowIpcChannel.CloseWindow,
+      async (_event, name: string) => controller.closeWindow(name),
+    ],
+  ];
+
+  for (const [channel, handler] of handlers) {
+    if (state.registeredHandlers.has(channel)) {
+      continue;
+    }
+
+    ipcMain.removeHandler(channel as any);
+    ipcMain.handle(channel as any, handler);
+    state.registeredHandlers.add(channel);
+
+    registerCleanup(controller, () => {
+      ipcMain.removeHandler(channel as any);
+      state.registeredHandlers.delete(channel);
+    });
+  }
+}
+
 function looksLikeLiteralPathOrUrl(value: string): boolean {
   return (
     value.startsWith('http://') ||
@@ -398,6 +450,7 @@ export const WindowController = createConstructorDecorator(function (
 ) {
   listManagedDefinitions(this);
   registerManagedCommandHandlers(this);
+  registerWindowRegistryHandlers(this);
 
   if (typeof this.listWindows !== 'function') {
     this.listWindows = (): ElectronWindow[] =>

@@ -1,4 +1,8 @@
-import { WindowIpcChannel, MenuIpcChannel } from './channels';
+import {
+  WindowIpcChannel,
+  MenuIpcChannel,
+  SystemStateIpcChannel,
+} from './channels';
 
 export interface IpcReturnType<T = any> {
   data: T | null;
@@ -18,6 +22,62 @@ export interface WindowState {
   isMaximized: boolean;
   isFullscreen: boolean;
 }
+
+export interface ManagedWindowDescriptor {
+  name: string;
+  multiple: boolean;
+}
+
+export interface RuntimeStackInfo {
+  electron: string;
+  chrome: string;
+  node: string;
+  platform: NodeJS.Platform;
+}
+
+export interface ProcessState {
+  pid: number;
+  uptimeSec: number;
+  rssBytes: number;
+  heapUsedBytes: number;
+  heapTotalBytes: number;
+  cpuPercent?: number;
+}
+
+export interface OsState {
+  totalMemBytes: number;
+  freeMemBytes: number;
+  availableMemBytes?: number;
+  memorySource?: 'platform-estimate' | 'electron-native' | 'node-os-fallback';
+  loadAvg1m: number;
+  loadAvg5m: number;
+  loadAvg15m: number;
+}
+
+export interface DisplayState {
+  id: number;
+  isPrimary: boolean;
+  bounds: WindowBounds;
+  workArea: WindowBounds;
+  scaleFactor: number;
+}
+
+export interface SystemStateSnapshot {
+  timestampMs: number;
+  runtime: RuntimeStackInfo;
+  process: ProcessState;
+  os: OsState;
+  displays: DisplayState[];
+}
+
+export interface SystemStateServiceOptions {
+  autoStart?: boolean;
+  intervalMs?: number;
+  includeCpuPercent?: boolean;
+  includeDisplays?: boolean;
+}
+
+export type SystemStateHealth = 'running' | 'stopped' | 'degraded';
 
 export interface IpcChannelDefinition<
   Args extends unknown[] = unknown[],
@@ -40,6 +100,26 @@ export interface DefaultIpcContractMap extends IpcContractMap {
   [WindowIpcChannel.GetBounds]: IpcChannelDefinition<
     [name: string],
     IpcReturnType<WindowBounds>
+  >;
+  [WindowIpcChannel.ListWindowNames]: IpcChannelDefinition<
+    [],
+    IpcReturnType<string[]>
+  >;
+  [WindowIpcChannel.ListManagedWindows]: IpcChannelDefinition<
+    [],
+    IpcReturnType<ManagedWindowDescriptor[]>
+  >;
+  [WindowIpcChannel.HasWindow]: IpcChannelDefinition<
+    [name: string],
+    IpcReturnType<boolean>
+  >;
+  [WindowIpcChannel.OpenWindow]: IpcChannelDefinition<
+    [name: string, configuration?: Record<string, any>],
+    IpcReturnType<boolean>
+  >;
+  [WindowIpcChannel.CloseWindow]: IpcChannelDefinition<
+    [name: string],
+    IpcReturnType<boolean>
   >;
   // Window control
   [WindowIpcChannel.Pin]: IpcChannelDefinition<
@@ -80,6 +160,28 @@ export interface DefaultIpcContractMap extends IpcContractMap {
   // Menu
   [MenuIpcChannel.OnItemClicked]: IpcChannelDefinition<
     [itemId: string, windowName: string],
+    void
+  >;
+  // System state
+  [SystemStateIpcChannel.GetSnapshot]: IpcChannelDefinition<
+    [],
+    SystemStateSnapshot
+  >;
+  [SystemStateIpcChannel.StartMonitoring]: IpcChannelDefinition<
+    [options?: Partial<SystemStateServiceOptions>],
+    void
+  >;
+  [SystemStateIpcChannel.StopMonitoring]: IpcChannelDefinition<[], void>;
+  [SystemStateIpcChannel.SetInterval]: IpcChannelDefinition<
+    [intervalMs: number],
+    void
+  >;
+  [SystemStateIpcChannel.OnSnapshot]: IpcChannelDefinition<
+    [snapshot: SystemStateSnapshot],
+    void
+  >;
+  [SystemStateIpcChannel.OnHealth]: IpcChannelDefinition<
+    [health: SystemStateHealth],
     void
   >;
 }

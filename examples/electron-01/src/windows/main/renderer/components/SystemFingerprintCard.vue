@@ -1,39 +1,61 @@
 <script setup lang="ts">
-const props = defineProps<{
-  runtime: {
-    electron: string;
-    chrome: string;
-    node: string;
-    platform: string;
-  };
+import { onMounted, ref } from 'vue';
+import { useContext } from '@renderer/composables/useContext';
+import { IpcModule } from '@features/ipc/renderer/ipc.module';
+
+defineProps<{
   compact?: boolean;
 }>();
+
+const context = useContext();
+const { debug } = context.require(IpcModule);
+
+const runtime = ref({
+  electron: 'unknown',
+  chrome: 'unknown',
+  node: 'unknown',
+  platform: 'unknown',
+});
+
+onMounted(async () => {
+  const [versions, platform] = await Promise.all([debug.getVersions(), debug.getPlatform()]);
+
+  if (versions) {
+    runtime.value.electron = versions.electron ?? 'unknown';
+    runtime.value.chrome = versions.chrome ?? 'unknown';
+    runtime.value.node = versions.node ?? 'unknown';
+  }
+
+  if (platform) {
+    runtime.value.platform = platform;
+  }
+});
 </script>
 
 <template>
-  <article class="card" :class="{ 'card--compact': props.compact }">
+  <article class="card" :class="{ 'card--compact': compact }">
     <header class="card__header">
       <h2>Runtime Stack</h2>
     </header>
-    <p v-if="!props.compact" class="card__description">
+    <p v-if="!compact" class="card__description">
       Electron, Chromium, Node, and platform values reported by the running app.
     </p>
     <dl class="metrics-grid">
       <div class="metric">
         <dt>Electron</dt>
-        <dd>{{ props.runtime.electron }}</dd>
+        <dd>{{ runtime.electron }}</dd>
       </div>
       <div class="metric">
         <dt>Chromium</dt>
-        <dd>{{ props.runtime.chrome }}</dd>
+        <dd>{{ runtime.chrome }}</dd>
       </div>
       <div class="metric">
         <dt>Node</dt>
-        <dd>{{ props.runtime.node }}</dd>
+        <dd>{{ runtime.node }}</dd>
       </div>
       <div class="metric">
         <dt>Platform</dt>
-        <dd>{{ props.runtime.platform }}</dd>
+        <dd>{{ runtime.platform }}</dd>
       </div>
     </dl>
   </article>

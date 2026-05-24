@@ -1,5 +1,9 @@
 import { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
-import type { WindowBounds, WindowState } from '@/universal/types';
+import type {
+  ManagedWindowDescriptor,
+  WindowBounds,
+  WindowState,
+} from '@/universal/types';
 
 export interface WindowSnapshot {
   name: string;
@@ -10,6 +14,19 @@ export interface WindowSnapshot {
 }
 
 export abstract class AbstractWindowRendererService implements AbstractAssemblage {
+  public abstract listWindowNames(): Promise<string[]>;
+
+  public abstract listManagedWindows(): Promise<ManagedWindowDescriptor[]>;
+
+  public abstract hasWindow(name: string): Promise<boolean>;
+
+  public abstract openWindow(
+    name: string,
+    configuration?: Record<string, any>,
+  ): Promise<boolean>;
+
+  public abstract closeWindow(name: string): Promise<boolean>;
+
   public abstract getBounds(name: string): Promise<WindowBounds | undefined>;
 
   public abstract focus(name: string): Promise<void>;
