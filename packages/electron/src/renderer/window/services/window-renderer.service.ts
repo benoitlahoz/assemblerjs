@@ -279,7 +279,7 @@ export class WindowRendererService extends AbstractWindowRendererService {
 
     return this.subscribeChannels<WindowBounds>(
       [...new Set(channels)],
-      (bounds, channel) => {
+      (bounds, _channel) => {
         this.updateSnapshot(name, (snapshot) => {
           snapshot.bounds = bounds;
         });
