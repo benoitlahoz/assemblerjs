@@ -1,13 +1,14 @@
 import {
   addMenuItemMetadata,
   getMenuItemMetadata,
+  type MenuItemLabelValue,
   type MenuItemMetadataEntry,
 } from '@/universal/metadata';
 
 export interface MenuItemDefinition {
   id: string;
-  path: string;
-  label?: string;
+  path?: string;
+  label?: MenuItemLabelValue;
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
   enabled?: boolean;
@@ -44,7 +45,10 @@ export function normalizeMenuItemDefinition(
   definition: MenuItemDefinition,
 ): Omit<MenuItemMetadataEntry, 'method'> {
   const id = assertNonEmptyString(definition.id, 'id');
-  const path = validatePath(assertNonEmptyString(definition.path, 'path'));
+  const path =
+    typeof definition.path === 'string'
+      ? validatePath(assertNonEmptyString(definition.path, 'path'))
+      : undefined;
 
   if (
     typeof definition.before === 'string' &&

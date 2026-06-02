@@ -5,6 +5,7 @@ import { join } from 'path';
 import { Result, Task } from '@assemblerjs/core';
 import { SystemStateHostService } from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
+import { I18nService } from '@features/i18n/main';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
 import { WindowControllerService } from '@windows/main';
 
@@ -14,6 +15,7 @@ import { WindowControllerService } from '@windows/main';
 @Assemblage({
   provide: [
     [ElectronAppModule],
+    [I18nService],
     [IpcListenerService],
     [SystemStateHostService],
     [WindowControllerService],

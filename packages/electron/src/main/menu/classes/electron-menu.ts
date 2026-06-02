@@ -4,14 +4,8 @@ import { Menu } from 'electron';
 import { ElectronMenuItem } from './electron-menu-item';
 
 export abstract class ElectronMenu implements AbstractAssemblage {
-  protected ready = false;
+  protected ready = true;
   protected items: ElectronMenuItem[] = [];
-
-  constructor(
-    protected localizationService: { translate: (key: string) => string },
-  ) {
-    this.ready = true;
-  }
 
   /**
    * Applies the current menu to the Electron application.

@@ -42,31 +42,68 @@ vi.mock('../src/main/menu/classes/create-menu-item', () => ({
     enabled?: boolean;
     accelerator?: string;
   }) {
-    return {
+    const item = {
       ...input,
       submenu: null,
+      _handleInMain: undefined as
+        | ((itemId: string, windowName: string) => void)
+        | undefined,
+      _forwardToRenderer: false,
+      handleInMain(callback: (itemId: string, windowName: string) => void) {
+        this._handleInMain = callback;
+        return this;
+      },
+      forwardClickToRenderer() {
+        this._forwardToRenderer = true;
+        return this;
+      },
     };
+
+    return item;
   },
 }));
 
 let MenuItem: (options: {
   id: string;
   path: string;
-  label?: string;
+  label?:
+    | string
+    | ((context: {
+        translate: (key: string) => string;
+        itemId: string;
+      }) => string | undefined);
   role?: string;
   order?: number;
   before?: string;
   after?: string;
 }) => MethodDecorator;
 
-let buildMenuTreeFromMetadata: (target: new (...args: unknown[]) => object) => {
+let HandleInMain: () => MethodDecorator;
+
+let ForwardClickToRenderer: () => MethodDecorator;
+
+let buildMenuTreeFromMetadata: (
+  targetOrInstance: (new (...args: unknown[]) => object) | object,
+) => {
   roots: Array<{ id: string; submenu?: Array<{ id: string }> }>;
-  itemsById: Map<string, { id: string; label?: string }>;
+  itemsById: Map<
+    string,
+    {
+      id: string;
+      label?: string;
+      _handleInMain?: (itemId: string, windowName: string) => void;
+      _forwardToRenderer?: boolean;
+    }
+  >;
 };
 
 beforeAll(async () => {
   ({ MenuItem } =
     await import('../src/main/menu/decorators/menu-item.decorator'));
+  ({ HandleInMain } =
+    await import('../src/main/menu/decorators/handle-in-main.decorator'));
+  ({ ForwardClickToRenderer } =
+    await import('../src/main/menu/decorators/forward-click-to-renderer.decorator'));
   ({ buildMenuTreeFromMetadata } =
     await import('../src/main/menu/classes/build-menu-tree-from-metadata'));
 });
@@ -126,5 +163,111 @@ describe('buildMenuTreeFromMetadata', () => {
 
     expect(built.roots).toEqual([]);
     expect(built.itemsById.size).toBe(0);
+  });
+
+  it('uses pathFallback when MenuItem path is omitted', () => {
+    @Assemblage()
+    class MenuDef {
+      @MenuItem({ id: 'main.window.refresh', label: 'Refresh' })
+      public refresh(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(MenuDef, {
+      pathFallback: 'Window',
+    });
+
+    expect(built.roots.map((root) => root.id)).toEqual(['menu.window']);
+    expect(built.itemsById.get('main.window.refresh')?.label).toBe('Refresh');
+  });
+
+  it('throws when neither MenuItem path nor pathFallback is provided', () => {
+    @Assemblage()
+    class MenuDef {
+      @MenuItem({ id: 'missing.path', label: 'No path' })
+      public missingPath(): void {}
+    }
+
+    expect(() => buildMenuTreeFromMetadata(MenuDef)).toThrow(
+      "@MenuItem('missing.path') requires a 'path' or a @MenuFragment({ path }) fallback.",
+    );
+  });
+
+  it('translates group labels with menu.group.* keys', () => {
+    @Assemblage()
+    class MenuDef {
+      @MenuItem({ id: 'app.quit', path: 'App', label: 'Quit' })
+      public quit(): void {}
+
+      @MenuItem({
+        id: 'main.window.centerWindow',
+        path: 'Window',
+        label: 'Center',
+      })
+      public center(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(MenuDef, {
+      translate: (key: string) => {
+        if (key === 'menu.group.app') return 'Application';
+        if (key === 'menu.group.window') return 'Fenetre';
+        return key;
+      },
+    });
+
+    expect(built.roots.map((root) => root.label)).toEqual([
+      'Application',
+      'Fenetre',
+    ]);
+  });
+
+  it('resolves function labels with translate context and bound source instance', () => {
+    @Assemblage()
+    class MenuDef {
+      public readonly prefix = 'Menu';
+
+      @MenuItem({
+        id: 'localized.item',
+        path: 'App',
+        label(context) {
+          return `${this.prefix}: ${context.translate('menu.app.quit')}`;
+        },
+      })
+      public localized(): void {}
+    }
+
+    const instance = new MenuDef();
+
+    const built = buildMenuTreeFromMetadata(instance, {
+      translate: (key: string) => `tr:${key}`,
+    });
+    expect(built.itemsById.get('localized.item')?.label).toBe(
+      'Menu: tr:menu.app.quit',
+    );
+  });
+
+  it('wires HandleInMain and ForwardClickToRenderer from method decorators', () => {
+    @Assemblage()
+    class MenuDef {
+      public calls: Array<{ itemId: string; windowName: string }> = [];
+
+      @MenuItem({ id: 'main.menu.autoCenter', path: 'Window', label: 'Auto' })
+      @HandleInMain()
+      @ForwardClickToRenderer()
+      public autoCenter(itemId: string, windowName: string): void {
+        this.calls.push({ itemId, windowName });
+      }
+    }
+
+    const instance = new MenuDef();
+    const built = buildMenuTreeFromMetadata(instance);
+    const item = built.itemsById.get('main.menu.autoCenter');
+
+    expect(item?._forwardToRenderer).toBe(true);
+    expect(typeof item?._handleInMain).toBe('function');
+
+    item?._handleInMain?.('main.menu.autoCenter', 'main');
+    expect(instance.calls).toEqual([
+      { itemId: 'main.menu.autoCenter', windowName: 'main' },
+    ]);
   });
 });

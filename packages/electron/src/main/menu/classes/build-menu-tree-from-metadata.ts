@@ -1,5 +1,10 @@
 import { getMenuItems } from '@/main/menu/decorators/menu-item.decorator';
-import type { MenuItemMetadataEntry } from '@/universal/metadata';
+import { getForwardToRendererMethods } from '@/main/menu/decorators/forward-click-to-renderer.decorator';
+import { getHandleInMainMethods } from '@/main/menu/decorators/handle-in-main.decorator';
+import type {
+  MenuItemLabelResolverContext,
+  MenuItemMetadataEntry,
+} from '@/universal/metadata';
 import type { ElectronMenuItem } from './electron-menu-item';
 import { createMenuItem } from './create-menu-item';
 
@@ -17,6 +22,85 @@ interface GroupNode {
 export interface BuiltMenuTree {
   roots: ElectronMenuItem[];
   itemsById: Map<string, ElectronMenuItem>;
+}
+
+export interface BuildMenuTreeOptions {
+  translate?: (key: string) => string;
+  pathFallback?: string;
+}
+
+interface BuildBehaviorContext {
+  handleInMainMethods: Set<string>;
+  forwardToRendererMethods: Set<string>;
+  instance?: Record<string, unknown>;
+  target: Function;
+  translate: (key: string) => string;
+}
+
+function normalizePath(path: string): string {
+  const normalized = path
+    .split('/')
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+    .join('/');
+
+  if (normalized.length === 0) {
+    throw new Error('Menu item path must be a valid non-empty string.');
+  }
+
+  return normalized;
+}
+
+function resolveEntryPath(
+  entry: MenuItemMetadataEntry,
+  pathFallback?: string,
+): string {
+  if (typeof entry.path === 'string') {
+    return normalizePath(entry.path);
+  }
+
+  if (typeof pathFallback === 'string') {
+    return normalizePath(pathFallback);
+  }
+
+  throw new Error(
+    `@MenuItem('${entry.id}') requires a 'path' or a @MenuFragment({ path }) fallback.`,
+  );
+}
+
+function resolveTranslate(
+  _instance: Record<string, unknown> | undefined,
+  options?: BuildMenuTreeOptions,
+): (key: string) => string {
+  if (typeof options?.translate === 'function') {
+    return options.translate;
+  }
+
+  return (key: string) => key;
+}
+
+function resolveLabel(
+  entry: IndexedMenuItemMetadataEntry,
+  behavior: BuildBehaviorContext,
+): string | undefined {
+  if (typeof entry.label === 'string') {
+    return entry.label;
+  }
+
+  if (typeof entry.label === 'function') {
+    const context: MenuItemLabelResolverContext = {
+      itemId: entry.id,
+      path: entry.path,
+      method: entry.method,
+      source: behavior.instance,
+      target: behavior.target,
+      translate: behavior.translate,
+    };
+
+    return entry.label.call(behavior.instance, context);
+  }
+
+  return undefined;
 }
 
 function normalizeSegment(segment: string): string {
@@ -139,8 +223,23 @@ function createGroupNode(pathKey: string, label: string): GroupNode {
   };
 }
 
+function resolveGroupLabel(
+  segment: string,
+  translate: (key: string) => string,
+): string {
+  const key = `menu.group.${normalizeSegment(segment)}`;
+  const translated = translate(key);
+
+  if (translated === key) {
+    return segment;
+  }
+
+  return translated;
+}
+
 function buildGroupHierarchy(
   entries: IndexedMenuItemMetadataEntry[],
+  translate: (key: string) => string,
 ): GroupNode {
   const root = createGroupNode('root', 'root');
 
@@ -158,7 +257,10 @@ function buildGroupHierarchy(
 
       let next = current.childGroups.get(segment);
       if (!next) {
-        next = createGroupNode(currentPath, segment);
+        next = createGroupNode(
+          currentPath,
+          resolveGroupLabel(segment, translate),
+        );
         current.childGroups.set(segment, next);
       }
 
@@ -173,29 +275,46 @@ function buildGroupHierarchy(
 
 function buildMenuItemFromEntry(
   entry: IndexedMenuItemMetadataEntry,
+  behavior: BuildBehaviorContext,
 ): ElectronMenuItem {
-  return createMenuItem({
+  const item = createMenuItem({
     id: entry.id,
-    label: entry.label,
+    label: resolveLabel(entry, behavior),
     type: entry.type,
     checked: entry.checked,
     enabled: entry.enabled,
     role: entry.role,
     accelerator: entry.accelerator,
   });
+
+  if (behavior.handleInMainMethods.has(entry.method)) {
+    item.handleInMain((itemId, windowName) => {
+      const method = behavior.instance?.[entry.method];
+      if (typeof method === 'function') {
+        method.call(behavior.instance, itemId, windowName);
+      }
+    });
+  }
+
+  if (behavior.forwardToRendererMethods.has(entry.method)) {
+    item.forwardClickToRenderer();
+  }
+
+  return item;
 }
 
 function materializeGroup(
   group: GroupNode,
   itemsById: Map<string, ElectronMenuItem>,
+  behavior: BuildBehaviorContext,
 ): ElectronMenuItem {
   const childGroups = [...group.childGroups.values()]
     .sort((a, b) => a.pathKey.localeCompare(b.pathKey))
-    .map((child) => materializeGroup(child, itemsById));
+    .map((child) => materializeGroup(child, itemsById, behavior));
 
   const sortedLeaves = sortEntriesWithAnchors([...group.leafEntries]).map(
     (entry) => {
-      const item = buildMenuItemFromEntry(entry);
+      const item = buildMenuItemFromEntry(entry, behavior);
       itemsById.set(entry.id, item);
       return item;
     },
@@ -209,11 +328,32 @@ function materializeGroup(
   return group.item;
 }
 
-export function buildMenuTreeFromMetadata(target: Function): BuiltMenuTree {
+export function buildMenuTreeFromMetadata(
+  targetOrInstance: Function | object,
+  options?: BuildMenuTreeOptions,
+): BuiltMenuTree {
+  const target =
+    typeof targetOrInstance === 'function'
+      ? targetOrInstance
+      : targetOrInstance.constructor;
+  const instance =
+    typeof targetOrInstance === 'function'
+      ? undefined
+      : (targetOrInstance as Record<string, unknown>);
+
   const metadata = getMenuItems(target).map((entry, index) => ({
     ...entry,
+    path: resolveEntryPath(entry, options?.pathFallback),
     declarationIndex: index,
   }));
+
+  const behavior: BuildBehaviorContext = {
+    handleInMainMethods: getHandleInMainMethods(target),
+    forwardToRendererMethods: getForwardToRendererMethods(target),
+    instance,
+    target,
+    translate: resolveTranslate(instance, options),
+  };
 
   if (metadata.length === 0) {
     return {
@@ -222,12 +362,12 @@ export function buildMenuTreeFromMetadata(target: Function): BuiltMenuTree {
     };
   }
 
-  const root = buildGroupHierarchy(metadata);
+  const root = buildGroupHierarchy(metadata, behavior.translate);
   const itemsById = new Map<string, ElectronMenuItem>();
 
   const roots = [...root.childGroups.values()]
     .sort((a, b) => a.pathKey.localeCompare(b.pathKey))
-    .map((group) => materializeGroup(group, itemsById));
+    .map((group) => materializeGroup(group, itemsById, behavior));
 
   return {
     roots,

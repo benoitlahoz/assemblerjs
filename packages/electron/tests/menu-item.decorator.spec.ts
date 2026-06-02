@@ -38,6 +38,19 @@ describe('MenuItem decorator metadata foundations', () => {
     ).toThrow("@MenuItem requires a non-empty 'path'.");
   });
 
+  it('accepts missing path metadata for fragment fallback resolution', () => {
+    expect(
+      normalizeMenuItemDefinition({
+        id: 'x',
+      }),
+    ).toEqual(
+      expect.objectContaining({
+        id: 'x',
+        path: undefined,
+      }),
+    );
+  });
+
   it('rejects duplicate ids', () => {
     expect(() =>
       validateMenuItemMetadata([

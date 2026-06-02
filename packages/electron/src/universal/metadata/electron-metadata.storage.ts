@@ -22,6 +22,24 @@ export interface ElectronMenuDefinitionMetadata {
   name: string;
 }
 
+export interface MenuFragmentDefinitionMetadata {
+  enabled: true;
+  path?: string;
+}
+
+export interface MenuItemLabelResolverContext {
+  itemId: string;
+  path: string;
+  method: string;
+  source?: object;
+  target: Function;
+  translate: (key: string) => string;
+}
+
+export type MenuItemLabelValue =
+  | string
+  | ((this: any, context?: MenuItemLabelResolverContext) => string | undefined);
+
 interface WindowCommandMetadataEntry {
   method: string;
   command: string;
@@ -32,11 +50,19 @@ interface MenuCommandMetadataEntry {
   command: string;
 }
 
+interface MenuItemHandleInMainMetadataEntry {
+  method: string;
+}
+
+interface MenuItemForwardToRendererMetadataEntry {
+  method: string;
+}
+
 export interface MenuItemMetadataEntry {
   method: string;
   id: string;
-  path: string;
-  label?: string;
+  path?: string;
+  label?: MenuItemLabelValue;
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
   enabled?: boolean;
@@ -76,12 +102,15 @@ export const ElectronMetadataNames = {
   IpcResultParameters: 'ipc.result.parameters',
   WindowDefinition: 'window.definition',
   MenuDefinition: 'menu.definition',
+  MenuFragmentDefinition: 'menu.fragment.definition',
   WindowRendererDefinition: 'window.renderer.definition',
   MenuRendererDefinition: 'menu.renderer.definition',
   WindowCommand: 'window.command',
   MenuCommand: 'menu.command',
   WindowEmit: 'window.emit',
   MenuItem: 'menu.item',
+  MenuItemHandleInMain: 'menu.item.handle-in-main',
+  MenuItemForwardToRenderer: 'menu.item.forward-to-renderer',
   WindowRendererSubscription: 'window.renderer.subscription',
   MenuRendererSubscription: 'menu.renderer.subscription',
   WindowMainSubscription: 'window.main.subscription',
@@ -191,6 +220,26 @@ export function setMenuDefinitionMetadata(
   );
 }
 
+export function setMenuFragmentDefinitionMetadata(
+  target: Function,
+  definition: MenuFragmentDefinitionMetadata,
+): void {
+  electronMetadata.setClass(
+    ElectronMetadataNames.MenuFragmentDefinition,
+    target,
+    definition,
+  );
+}
+
+export function getMenuFragmentDefinitionMetadata(
+  target: Function,
+): MenuFragmentDefinitionMetadata | undefined {
+  return electronMetadata.getClass(
+    ElectronMetadataNames.MenuFragmentDefinition,
+    target,
+  );
+}
+
 export function getMenuDefinitionMetadata(
   target: Function,
 ): ElectronMenuDefinitionMetadata | undefined {
@@ -297,6 +346,52 @@ export function getMenuItemMetadata(target: Function): MenuItemMetadataEntry[] {
   return uniqueByMethod(
     electronMetadata.getMethodEntries<MenuItemMetadataEntry>(
       ElectronMetadataNames.MenuItem,
+      target,
+    ),
+  );
+}
+
+export function addMenuItemHandleInMainMetadata(
+  target: object,
+  method: string,
+): void {
+  electronMetadata.addMethodEntry(
+    ElectronMetadataNames.MenuItemHandleInMain,
+    target,
+    method,
+    { method } as MenuItemHandleInMainMetadataEntry,
+  );
+}
+
+export function getMenuItemHandleInMainMetadata(
+  target: Function,
+): MenuItemHandleInMainMetadataEntry[] {
+  return uniqueByMethod(
+    electronMetadata.getMethodEntries<MenuItemHandleInMainMetadataEntry>(
+      ElectronMetadataNames.MenuItemHandleInMain,
+      target,
+    ),
+  );
+}
+
+export function addMenuItemForwardToRendererMetadata(
+  target: object,
+  method: string,
+): void {
+  electronMetadata.addMethodEntry(
+    ElectronMetadataNames.MenuItemForwardToRenderer,
+    target,
+    method,
+    { method } as MenuItemForwardToRendererMetadataEntry,
+  );
+}
+
+export function getMenuItemForwardToRendererMetadata(
+  target: Function,
+): MenuItemForwardToRendererMetadataEntry[] {
+  return uniqueByMethod(
+    electronMetadata.getMethodEntries<MenuItemForwardToRendererMetadataEntry>(
+      ElectronMetadataNames.MenuItemForwardToRenderer,
       target,
     ),
   );
@@ -441,6 +536,8 @@ export const ElectronMetadataStorage = {
   getWindowDefinitionMetadata,
   setMenuDefinitionMetadata,
   getMenuDefinitionMetadata,
+  setMenuFragmentDefinitionMetadata,
+  getMenuFragmentDefinitionMetadata,
   setWindowRendererDefinitionMetadata,
   getWindowRendererDefinitionMetadata,
   setMenuRendererDefinitionMetadata,
@@ -451,6 +548,10 @@ export const ElectronMetadataStorage = {
   getMenuCommandMetadata,
   addMenuItemMetadata,
   getMenuItemMetadata,
+  addMenuItemHandleInMainMetadata,
+  getMenuItemHandleInMainMetadata,
+  addMenuItemForwardToRendererMetadata,
+  getMenuItemForwardToRendererMetadata,
   addWindowEmitMetadata,
   getWindowEmitMetadata,
   getWindowEmitMetadataForMethod,
