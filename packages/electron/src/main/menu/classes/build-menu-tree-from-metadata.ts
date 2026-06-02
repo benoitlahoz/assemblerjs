@@ -28,6 +28,7 @@ export interface BuiltMenuTree {
 export interface BuildMenuTreeOptions {
   translate?: (key: string) => string;
   pathFallback?: string;
+  declarationIndexOffset?: number;
 }
 
 interface BuildBehaviorContext {
@@ -480,7 +481,7 @@ export function buildMenuTreeFromMetadata(
   const metadata = getMenuItems(target).map((entry, index) => ({
     ...entry,
     path: resolveEntryPath(entry, options?.pathFallback),
-    declarationIndex: index,
+    declarationIndex: (options?.declarationIndexOffset || 0) + index,
   }));
 
   const behavior: BuildBehaviorContext = {

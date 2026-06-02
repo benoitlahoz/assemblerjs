@@ -77,6 +77,14 @@ export abstract class ElectronMenu implements AbstractAssemblage {
   }
 
   /**
+   * Replaces all root items while preserving recursive item instances.
+   */
+  public replaceItems(items: ElectronMenuItem[]): this {
+    this.items = [...items];
+    return this;
+  }
+
+  /**
    * Finds an item by its identifier, searching recursively in submenus.
    * @param id The identifier of the item.
    * @returns {ElectronMenuItem | undefined} The found item or undefined.

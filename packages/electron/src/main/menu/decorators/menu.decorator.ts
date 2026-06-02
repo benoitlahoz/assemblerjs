@@ -3,10 +3,11 @@ import {
   getAssemblageContext,
   getAssemblageDefinition,
 } from 'assemblerjs';
+import { buildMenuTreeFromMetadata } from '@/main/menu/classes/build-menu-tree-from-metadata';
 import {
-  buildMenuTreeFromMetadata,
-  sortMenuItemsByOrdering,
-} from '@/main/menu/classes/build-menu-tree-from-metadata';
+  mergeRootMenus,
+  resolveMenuTranslate,
+} from '@/main/menu/classes/compose-menu-roots';
 import type { ElectronMenuItem } from '@/main/menu/classes/electron-menu-item';
 import {
   ElectronMetadataStorage,
@@ -152,71 +153,6 @@ function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
   });
 }
 
-function mergeSubmenu(
-  existing: ElectronMenuItem,
-  incoming: ElectronMenuItem,
-): void {
-  const existingSubmenu = existing.submenu || [];
-  const incomingSubmenu = incoming.submenu || [];
-
-  for (const incomingItem of incomingSubmenu) {
-    const duplicate = existingSubmenu.find(
-      (item) => item.id === incomingItem.id,
-    );
-
-    if (!duplicate) {
-      existingSubmenu.push(incomingItem);
-      continue;
-    }
-
-    const duplicateHasSubmenu = (duplicate.submenu?.length || 0) > 0;
-    const incomingHasSubmenu = (incomingItem.submenu?.length || 0) > 0;
-
-    if (duplicateHasSubmenu && incomingHasSubmenu) {
-      mergeSubmenu(duplicate, incomingItem);
-      continue;
-    }
-
-    throw new Error(
-      `Duplicate menu item id '${incomingItem.id}' detected while composing menu fragments.`,
-    );
-  }
-
-  existing.submenu = sortMenuItemsByOrdering(existingSubmenu);
-}
-
-function mergeRootMenus(roots: ElectronMenuItem[]): ElectronMenuItem[] {
-  const merged: ElectronMenuItem[] = [];
-  const byId = new Map<string, ElectronMenuItem>();
-
-  for (const root of roots) {
-    const duplicate = byId.get(root.id);
-    if (!duplicate) {
-      byId.set(root.id, root);
-      merged.push(root);
-      continue;
-    }
-
-    mergeSubmenu(duplicate, root);
-  }
-
-  return sortMenuItemsByOrdering(merged);
-}
-
-function resolveMenuTranslate(
-  menuInstance: any,
-): ((key: string) => string) | undefined {
-  if (typeof menuInstance?.translate === 'function') {
-    return (key: string) => menuInstance.translate(key);
-  }
-
-  if (typeof menuInstance?.i18n?.translate === 'function') {
-    return (key: string) => menuInstance.i18n.translate(key);
-  }
-
-  return undefined;
-}
-
 const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
   if (typeof this.getItems === 'function' && this.getItems().length > 0) {
     return;
@@ -231,11 +167,14 @@ const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
 
   roots.push(...buildMenuTreeFromMetadata(this, { translate }).roots);
 
-  for (const fragment of resolveMenuFragments(this)) {
+  for (const [fragmentIndex, fragment] of resolveMenuFragments(
+    this,
+  ).entries()) {
     roots.push(
       ...buildMenuTreeFromMetadata(fragment.instance || fragment.target, {
         translate,
         pathFallback: fragment.pathFallback,
+        declarationIndexOffset: (fragmentIndex + 1) * 10_000,
       }).roots,
     );
   }

@@ -22,6 +22,19 @@ export interface ElectronMenuDefinitionMetadata {
   name: string;
 }
 
+export interface MenuContributionDefinitionMetadata {
+  target: string;
+  priority: number;
+  path?: string;
+  states?: Array<{
+    itemId: string;
+    priority: number;
+    enabled?: boolean;
+    checked?: boolean;
+    whenWindowFocused?: string;
+  }>;
+}
+
 export interface MenuFragmentDefinitionMetadata {
   enabled: true;
   path?: string;
@@ -102,6 +115,7 @@ export const ElectronMetadataNames = {
   IpcResultParameters: 'ipc.result.parameters',
   WindowDefinition: 'window.definition',
   MenuDefinition: 'menu.definition',
+  MenuContributionDefinition: 'menu.contribution.definition',
   MenuFragmentDefinition: 'menu.fragment.definition',
   WindowRendererDefinition: 'window.renderer.definition',
   MenuRendererDefinition: 'menu.renderer.definition',
@@ -217,6 +231,26 @@ export function setMenuDefinitionMetadata(
     ElectronMetadataNames.MenuDefinition,
     target,
     definition,
+  );
+}
+
+export function setMenuContributionDefinitionMetadata(
+  target: Function,
+  definition: MenuContributionDefinitionMetadata,
+): void {
+  electronMetadata.setClass(
+    ElectronMetadataNames.MenuContributionDefinition,
+    target,
+    definition,
+  );
+}
+
+export function getMenuContributionDefinitionMetadata(
+  target: Function,
+): MenuContributionDefinitionMetadata | undefined {
+  return electronMetadata.getClass(
+    ElectronMetadataNames.MenuContributionDefinition,
+    target,
   );
 }
 
@@ -535,7 +569,9 @@ export const ElectronMetadataStorage = {
   setWindowDefinitionMetadata,
   getWindowDefinitionMetadata,
   setMenuDefinitionMetadata,
+  setMenuContributionDefinitionMetadata,
   getMenuDefinitionMetadata,
+  getMenuContributionDefinitionMetadata,
   setMenuFragmentDefinitionMetadata,
   getMenuFragmentDefinitionMetadata,
   setWindowRendererDefinitionMetadata,

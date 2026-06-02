@@ -1,4 +1,5 @@
 export * from './menu.decorator';
+export * from './menu-contribution.decorator';
 export * from './menu-fragment.decorator';
 export * from './menu-item.decorator';
 export * from './handle-in-main.decorator';
