@@ -32,26 +32,26 @@ vi.mock('../src/main/index.ts', () => ({
   },
 }));
 
-let ElectronMenu: typeof import('../src/main/menu/classes/electron-menu').ElectronMenu;
-let createMenuItem: typeof import('../src/main/menu/classes/create-menu-item').createMenuItem;
-let MenuFragment: typeof import('../src/main/menu/decorators/menu-fragment.decorator').MenuFragment;
-let MenuItem: typeof import('../src/main/menu/decorators/menu-item.decorator').MenuItem;
-let Menu: typeof import('../src/main/menu/decorators/menu.decorator').Menu;
+let ElectronMenu: typeof import('../src/main/menu/model/electron-menu').ElectronMenu;
+let createMenuItem: typeof import('../src/main/menu/builders/create-menu-item').createMenuItem;
+let MenuFragment: typeof import('../src/main/menu/menu-definition/menu-fragment.decorator').MenuFragment;
+let MenuItem: typeof import('../src/main/menu/menu-item/menu-item.decorator').MenuItem;
+let Menu: typeof import('../src/main/menu/menu-definition/menu.decorator').Menu;
 
 beforeAll(async () => {
-  ({ ElectronMenu } = await import('../src/main/menu/classes/electron-menu'));
+  ({ ElectronMenu } = await import('../src/main/menu/model/electron-menu'));
   ({ createMenuItem } =
-    await import('../src/main/menu/classes/create-menu-item'));
+    await import('../src/main/menu/builders/create-menu-item'));
   ({ MenuFragment } =
-    await import('../src/main/menu/decorators/menu-fragment.decorator'));
+    await import('../src/main/menu/menu-definition/menu-fragment.decorator'));
   ({ MenuItem } =
-    await import('../src/main/menu/decorators/menu-item.decorator'));
-  ({ Menu } = await import('../src/main/menu/decorators/menu.decorator'));
+    await import('../src/main/menu/menu-item/menu-item.decorator'));
+  ({ Menu } = await import('../src/main/menu/menu-definition/menu.decorator'));
 });
 
 describe('@Menu auto bootstrap', () => {
   it('registers menu roots from declarative @MenuItem metadata', () => {
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage()
     class DeclarativeMenu extends ElectronMenu {
       constructor() {
@@ -70,7 +70,7 @@ describe('@Menu auto bootstrap', () => {
   });
 
   it('does not duplicate items when constructor already registers manual items', () => {
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage()
     class MixedMenu extends ElectronMenu {
       constructor() {
@@ -96,7 +96,7 @@ describe('@Menu auto bootstrap', () => {
   });
 
   it('translates root group labels from menu root i18n service', () => {
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage()
     class LocalizedMenu extends ElectronMenu {
       public readonly i18n = {
@@ -133,7 +133,7 @@ describe('@Menu auto bootstrap', () => {
       public quit(): void {}
     }
 
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage({
       provide: [[WindowFragment], [AppFragment]],
     })
@@ -194,7 +194,7 @@ describe('@Menu auto bootstrap', () => {
       public refresh(): void {}
     }
 
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage({
       provide: [[WindowFragment]],
     })
@@ -225,7 +225,7 @@ describe('@Menu auto bootstrap', () => {
       public two(): void {}
     }
 
-    @Menu({ window: 'main', name: 'mainMenu' })
+    @Menu({ name: 'mainMenu' })
     @Assemblage({
       provide: [[FirstFragment], [SecondFragment]],
     })

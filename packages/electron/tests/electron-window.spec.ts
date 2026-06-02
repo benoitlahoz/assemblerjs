@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Assemblage, Assembler } from 'assemblerjs';
-import { Window } from '../src/main/window/decorators';
+import { Window } from '../src/main/window';
 
 const getAllWindows = vi.fn();
 const webContentsSend = vi.fn();

@@ -39,13 +39,13 @@ describe('MenuContribution decorator', () => {
   });
 
   it('applies targeted menu contributions during menu controller initialization', async () => {
-    const { ElectronMenu } = await import('../src/main/menu/classes/electron-menu');
-    const { Menu } = await import('../src/main/menu/decorators/menu.decorator');
-    const { MenuItem } = await import('../src/main/menu/decorators/menu-item.decorator');
-    const { MenuContribution } = await import('../src/main/menu/decorators/menu-contribution.decorator');
-    const { MenuController } = await import('../src/main/menu/decorators/menu-controller.decorator');
+    const { ElectronMenu } = await import('../src/main/menu/model/electron-menu');
+    const { Menu } = await import('../src/main/menu/menu-definition/menu.decorator');
+    const { MenuItem } = await import('../src/main/menu/menu-item/menu-item.decorator');
+    const { MenuContribution } = await import('../src/main/menu/menu-definition/menu-contribution.decorator');
+    const { MenuController } = await import('../src/main/menu/menu-controller/menu-controller.decorator');
 
-    @Menu({ window: 'main', name: 'appMenu' })
+    @Menu({ name: 'appMenu' })
     @Assemblage()
     class AppMenu extends ElectronMenu {
       @MenuItem({ id: 'app.quit', path: 'App', label: 'Quit', order: 10 })
@@ -79,13 +79,13 @@ describe('MenuContribution decorator', () => {
   });
 
   it('ignores contributions targeting another menu name', async () => {
-    const { ElectronMenu } = await import('../src/main/menu/classes/electron-menu');
-    const { Menu } = await import('../src/main/menu/decorators/menu.decorator');
-    const { MenuItem } = await import('../src/main/menu/decorators/menu-item.decorator');
-    const { MenuContribution } = await import('../src/main/menu/decorators/menu-contribution.decorator');
-    const { MenuController } = await import('../src/main/menu/decorators/menu-controller.decorator');
+    const { ElectronMenu } = await import('../src/main/menu/model/electron-menu');
+    const { Menu } = await import('../src/main/menu/menu-definition/menu.decorator');
+    const { MenuItem } = await import('../src/main/menu/menu-item/menu-item.decorator');
+    const { MenuContribution } = await import('../src/main/menu/menu-definition/menu-contribution.decorator');
+    const { MenuController } = await import('../src/main/menu/menu-controller/menu-controller.decorator');
 
-    @Menu({ window: 'main', name: 'appMenu' })
+    @Menu({ name: 'appMenu' })
     @Assemblage()
     class AppMenu extends ElectronMenu {
       @MenuItem({ id: 'app.quit', path: 'App', label: 'Quit' })

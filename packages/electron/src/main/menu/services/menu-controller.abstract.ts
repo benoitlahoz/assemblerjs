@@ -1,5 +1,5 @@
 import { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
-import type { ElectronMenu } from '@/main/menu/classes';
+import type { ElectronMenu } from '@/main/menu';
 import type { MenuSnapshot } from '@/universal/types';
 
 export abstract class AbstractMenuControllerService implements AbstractAssemblage {

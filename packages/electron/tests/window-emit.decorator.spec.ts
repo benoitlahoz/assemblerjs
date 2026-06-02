@@ -2,11 +2,7 @@ import 'reflect-metadata';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Assemblage, Assembler } from 'assemblerjs';
 import { WindowIpcChannel } from '../src/universal/channels';
-import {
-  WindowEmit,
-  WindowListener,
-  WindowOn,
-} from '../src/main/window/decorators';
+import { WindowEmit, WindowListener, WindowOn } from '../src/main/window';
 
 const ipcMainHandle = vi.fn();
 const ipcMainRemoveHandler = vi.fn();

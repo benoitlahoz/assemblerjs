@@ -4,7 +4,7 @@ import {
   getAssemblageContext,
 } from 'assemblerjs';
 import type { WindowBounds, WindowState } from '@/universal/types';
-import { resolveWindowRendererName } from '@/renderer/window/decorators/window-definition';
+import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 import {
   AbstractWindowControllerService,
   type WindowSnapshot,

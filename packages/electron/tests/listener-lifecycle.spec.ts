@@ -7,7 +7,7 @@ import {
   Dispose,
 } from 'assemblerjs';
 import { IpcHandle, IpcOn } from '../src/universal/decorators';
-import { WindowOn } from '../src/main/window/decorators';
+import { WindowOn } from '../src/main/window';
 
 const ipcMainOn = vi.fn();
 const ipcMainOff = vi.fn();
@@ -158,7 +158,7 @@ describe('listener lifecycle', () => {
   });
 
   it('removes window listeners on dispose', async () => {
-    const { WindowListener } = await import('../src/main/window/decorators');
+    const { WindowListener } = await import('../src/main/window');
 
     const onMock = vi.fn();
     const onceMock = vi.fn();

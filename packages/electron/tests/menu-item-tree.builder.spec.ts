@@ -32,7 +32,7 @@ vi.mock('../src/main/index.ts', () => ({
   },
 }));
 
-vi.mock('../src/main/menu/classes/create-menu-item', () => ({
+vi.mock('../src/main/menu/builders/create-menu-item', () => ({
   createMenuItem(input: {
     id: string;
     label?: string;
@@ -99,13 +99,13 @@ let buildMenuTreeFromMetadata: (
 
 beforeAll(async () => {
   ({ MenuItem } =
-    await import('../src/main/menu/decorators/menu-item.decorator'));
+    await import('../src/main/menu/menu-item/menu-item.decorator'));
   ({ HandleInMain } =
-    await import('../src/main/menu/decorators/handle-in-main.decorator'));
+    await import('../src/main/menu/menu-item/handle-in-main.decorator'));
   ({ ForwardClickToRenderer } =
-    await import('../src/main/menu/decorators/forward-click-to-renderer.decorator'));
+    await import('../src/main/menu/menu-item/forward-click-to-renderer.decorator'));
   ({ buildMenuTreeFromMetadata } =
-    await import('../src/main/menu/classes/build-menu-tree-from-metadata'));
+    await import('../src/main/menu/builders/build-menu-tree-from-metadata'));
 });
 
 describe('buildMenuTreeFromMetadata', () => {
