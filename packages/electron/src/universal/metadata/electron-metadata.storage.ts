@@ -32,6 +32,21 @@ interface MenuCommandMetadataEntry {
   command: string;
 }
 
+export interface MenuItemMetadataEntry {
+  method: string;
+  id: string;
+  path: string;
+  label?: string;
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  checked?: boolean;
+  enabled?: boolean;
+  role?: string;
+  accelerator?: string;
+  order?: number;
+  before?: string;
+  after?: string;
+}
+
 interface WindowEmitMetadataEntry {
   method: string;
   event: string;
@@ -66,6 +81,7 @@ export const ElectronMetadataNames = {
   WindowCommand: 'window.command',
   MenuCommand: 'menu.command',
   WindowEmit: 'window.emit',
+  MenuItem: 'menu.item',
   WindowRendererSubscription: 'window.renderer.subscription',
   MenuRendererSubscription: 'menu.renderer.subscription',
   WindowMainSubscription: 'window.main.subscription',
@@ -264,6 +280,28 @@ export function addMenuCommandMetadata(
   );
 }
 
+export function addMenuItemMetadata(
+  target: object,
+  method: string,
+  item: Omit<MenuItemMetadataEntry, 'method'>,
+): void {
+  electronMetadata.addMethodEntry(
+    ElectronMetadataNames.MenuItem,
+    target,
+    method,
+    { method, ...item } as MenuItemMetadataEntry,
+  );
+}
+
+export function getMenuItemMetadata(target: Function): MenuItemMetadataEntry[] {
+  return uniqueByMethod(
+    electronMetadata.getMethodEntries<MenuItemMetadataEntry>(
+      ElectronMetadataNames.MenuItem,
+      target,
+    ),
+  );
+}
+
 export function getMenuCommandMetadata(
   target: Function,
 ): MenuCommandMetadataEntry[] {
@@ -411,6 +449,8 @@ export const ElectronMetadataStorage = {
   getWindowCommandMetadata,
   addMenuCommandMetadata,
   getMenuCommandMetadata,
+  addMenuItemMetadata,
+  getMenuItemMetadata,
   addWindowEmitMetadata,
   getWindowEmitMetadata,
   getWindowEmitMetadataForMethod,
