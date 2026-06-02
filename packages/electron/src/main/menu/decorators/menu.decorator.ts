@@ -3,7 +3,10 @@ import {
   getAssemblageContext,
   getAssemblageDefinition,
 } from 'assemblerjs';
-import { buildMenuTreeFromMetadata } from '@/main/menu/classes/build-menu-tree-from-metadata';
+import {
+  buildMenuTreeFromMetadata,
+  sortMenuItemsByOrdering,
+} from '@/main/menu/classes/build-menu-tree-from-metadata';
 import type { ElectronMenuItem } from '@/main/menu/classes/electron-menu-item';
 import {
   ElectronMetadataStorage,
@@ -179,7 +182,7 @@ function mergeSubmenu(
     );
   }
 
-  existing.submenu = existingSubmenu;
+  existing.submenu = sortMenuItemsByOrdering(existingSubmenu);
 }
 
 function mergeRootMenus(roots: ElectronMenuItem[]): ElectronMenuItem[] {
@@ -197,7 +200,7 @@ function mergeRootMenus(roots: ElectronMenuItem[]): ElectronMenuItem[] {
     mergeSubmenu(duplicate, root);
   }
 
-  return merged;
+  return sortMenuItemsByOrdering(merged);
 }
 
 function resolveMenuTranslate(

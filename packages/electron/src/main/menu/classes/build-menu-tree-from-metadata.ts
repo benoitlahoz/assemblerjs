@@ -43,6 +43,14 @@ interface OrderingKey {
   declarationIndex: number;
 }
 
+export interface MenuItemOrderingMetadata extends OrderingKey {
+  stableId: string;
+}
+
+const MENU_ITEM_ORDERING_METADATA_KEY = Symbol(
+  'assemblerjs.electron.menu.item-ordering',
+);
+
 function normalizePath(path: string): string {
   const normalized = path
     .split('/')
@@ -157,6 +165,59 @@ function compareOrderingKeys(a: OrderingKey, b: OrderingKey): number {
   }
 
   return a.declarationIndex - b.declarationIndex;
+}
+
+function compareMenuItemOrdering(
+  a: MenuItemOrderingMetadata,
+  b: MenuItemOrderingMetadata,
+): number {
+  const byOrder = compareOrderingKeys(a, b);
+  if (byOrder !== 0) {
+    return byOrder;
+  }
+
+  return a.stableId.localeCompare(b.stableId);
+}
+
+function toFallbackOrdering(item: ElectronMenuItem): MenuItemOrderingMetadata {
+  return {
+    order: Number.MAX_SAFE_INTEGER,
+    declarationIndex: Number.MAX_SAFE_INTEGER,
+    stableId: item.id,
+  };
+}
+
+function setMenuItemOrdering(
+  item: ElectronMenuItem,
+  metadata: MenuItemOrderingMetadata,
+): void {
+  (item as any)[MENU_ITEM_ORDERING_METADATA_KEY] = metadata;
+}
+
+export function getMenuItemOrdering(
+  item: ElectronMenuItem,
+): MenuItemOrderingMetadata | undefined {
+  return (item as any)[MENU_ITEM_ORDERING_METADATA_KEY] as
+    | MenuItemOrderingMetadata
+    | undefined;
+}
+
+export function sortMenuItemsByOrdering(
+  items: ElectronMenuItem[],
+): ElectronMenuItem[] {
+  for (const item of items) {
+    const submenu = item.submenu || [];
+    if (submenu.length > 0) {
+      item.submenu = sortMenuItemsByOrdering(submenu);
+    }
+  }
+
+  return [...items].sort((a, b) => {
+    const aOrdering = getMenuItemOrdering(a) || toFallbackOrdering(a);
+    const bOrdering = getMenuItemOrdering(b) || toFallbackOrdering(b);
+
+    return compareMenuItemOrdering(aOrdering, bOrdering);
+  });
 }
 
 function resolveGroupOrderingKey(group: GroupNode): OrderingKey {
@@ -366,6 +427,10 @@ function materializeGroup(
   const sortedLeaves = sortEntriesWithAnchors([...group.leafEntries]).map(
     (entry) => {
       const item = buildMenuItemFromEntry(entry, behavior);
+      setMenuItemOrdering(item, {
+        ...entryToOrderingKey(entry),
+        stableId: entry.id,
+      });
       itemsById.set(entry.id, item);
 
       return {
@@ -390,6 +455,11 @@ function materializeGroup(
   if (submenu.length > 0) {
     group.item.submenu = submenu;
   }
+
+  setMenuItemOrdering(group.item, {
+    ...resolveGroupOrderingKey(group),
+    stableId: group.pathKey,
+  });
 
   return group.item;
 }
@@ -431,9 +501,11 @@ export function buildMenuTreeFromMetadata(
   const root = buildGroupHierarchy(metadata, behavior.translate);
   const itemsById = new Map<string, ElectronMenuItem>();
 
-  const roots = [...root.childGroups.values()]
-    .sort((a, b) => a.pathKey.localeCompare(b.pathKey))
-    .map((group) => materializeGroup(group, itemsById, behavior));
+  const roots = sortMenuItemsByOrdering(
+    [...root.childGroups.values()].map((group) =>
+      materializeGroup(group, itemsById, behavior),
+    ),
+  );
 
   return {
     roots,

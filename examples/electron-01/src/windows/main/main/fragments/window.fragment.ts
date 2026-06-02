@@ -17,7 +17,7 @@ export class MainWindowMenuFragment implements AbstractAssemblage {
     label(this: MainWindowMenuFragment) {
       return this.i18n.translate('menu.window.refreshBounds');
     },
-    accelerator: 'CmdOrCtrl+R',
+    accelerator: 'CmdOrCtrl+D',
     order: 10,
   })
   @ForwardClickToRenderer()
@@ -28,7 +28,7 @@ export class MainWindowMenuFragment implements AbstractAssemblage {
     label(this: MainWindowMenuFragment) {
       return this.i18n.translate('menu.window.randomBounds');
     },
-    accelerator: 'CmdOrCtrl+Shift+R',
+    accelerator: 'CmdOrCtrl+Shift+D',
     order: 20,
   })
   @ForwardClickToRenderer()

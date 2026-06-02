@@ -239,4 +239,45 @@ describe('@Menu auto bootstrap', () => {
       "Duplicate menu item id 'dup.item'",
     );
   });
+
+  it('orders merged fragment submenu and leaf by order values', () => {
+    @MenuFragment({ path: 'Developer/Refresh' })
+    @Assemblage()
+    class RefreshFragment {
+      @MenuItem({ id: 'dev.reload', label: 'Reload', order: 10 })
+      public reload(): void {}
+
+      @MenuItem({ id: 'dev.forceReload', label: 'Force Reload', order: 20 })
+      public forceReload(): void {}
+    }
+
+    @MenuFragment({ path: 'Developer' })
+    @Assemblage()
+    class DeveloperFragment {
+      @MenuItem({ id: 'dev.tools', label: 'Toggle DevTools', order: 30 })
+      public tools(): void {}
+    }
+
+    @Menu({
+      window: 'main',
+      name: 'mainMenu',
+      fragments: [DeveloperFragment, RefreshFragment],
+    })
+    @Assemblage({
+      provide: [[DeveloperFragment], [RefreshFragment]],
+    })
+    class OrderedDeveloperMenu extends ElectronMenu {
+      constructor() {
+        super();
+      }
+    }
+
+    const menu = new OrderedDeveloperMenu();
+    const developerRoot = menu
+      .getItems()
+      .find((item) => item.id === 'menu.developer');
+    const submenuIds = developerRoot?.submenu?.map((item) => item.id) || [];
+
+    expect(submenuIds).toEqual(['menu.developer.refresh', 'dev.tools']);
+  });
 });
