@@ -1,13 +1,22 @@
+import {
+  getIpcChannelParameterIndices,
+  setIpcChannelParameterIndices,
+} from '@/universal/metadata';
+
 export const IpcChannel = () => {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
-    const existingChannelParameters: number[] =
-      Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) || [];
-    existingChannelParameters.push(parameterIndex);
-    Reflect.defineMetadata(
-      'ipc-channel:parameters',
-      existingChannelParameters,
+  return (
+    target: object,
+    propertyKey: string | symbol,
+    parameterIndex: number,
+  ) => {
+    const existingChannelParameters = getIpcChannelParameterIndices(
       target,
       propertyKey,
     );
+
+    setIpcChannelParameterIndices(target, propertyKey, [
+      ...existingChannelParameters,
+      parameterIndex,
+    ]);
   };
 };

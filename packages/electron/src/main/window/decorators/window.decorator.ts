@@ -1,5 +1,10 @@
 import { getAssemblageDefinition } from 'assemblerjs';
 import type { BrowserWindowConstructorOptions } from 'electron';
+import {
+  ElectronMetadataStorage,
+  getWindowDefinitionMetadata,
+  setWindowDefinitionMetadata,
+} from '@/universal/metadata';
 
 export interface WindowRouterDefinition {
   file?: string;
@@ -22,9 +27,8 @@ export interface NormalizedWindowDefinition {
   options: BrowserWindowConstructorOptions;
 }
 
-export const WindowDefinitionMetadataKey = Symbol(
-  '__ElectronWindowDefinition__',
-);
+export const WindowDefinitionMetadataKey =
+  ElectronMetadataStorage.getKey('WindowDefinition');
 
 export function normalizeWindowDefinition(
   definition: WindowDefinition,
@@ -53,11 +57,7 @@ export function normalizeWindowDefinition(
  */
 export function Window(definition: WindowDefinition): ClassDecorator {
   return (target: Function) => {
-    Reflect.defineMetadata(
-      WindowDefinitionMetadataKey,
-      normalizeWindowDefinition(definition),
-      target,
-    );
+    setWindowDefinitionMetadata(target, normalizeWindowDefinition(definition));
 
     // Best-effort: enforce non-singleton when metadata is already available.
     const assemblageDefinition = getAssemblageDefinition(target as any);
@@ -70,5 +70,7 @@ export function Window(definition: WindowDefinition): ClassDecorator {
 export function getWindowDefinition(
   target: Function,
 ): NormalizedWindowDefinition | undefined {
-  return Reflect.getMetadata(WindowDefinitionMetadataKey, target);
+  return getWindowDefinitionMetadata(target) as
+    | NormalizedWindowDefinition
+    | undefined;
 }

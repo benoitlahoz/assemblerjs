@@ -6,5 +6,8 @@ const defaultChannels = getIpcContractChannels(ipcContracts);
 setupIpcBridge({
   channels: defaultChannels,
   strict: true,
-  autoWhitelist: [/^window:[A-Za-z0-9_-]+\.[A-Za-z0-9:_-]+$/],
+  autoWhitelist: [
+    /^window:[A-Za-z0-9_-]+\.[A-Za-z0-9:_-]+$/,
+    /^menu:[A-Za-z0-9_-]+\.[A-Za-z0-9:_-]+$/,
+  ],
 });

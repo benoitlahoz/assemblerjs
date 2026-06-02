@@ -19,6 +19,7 @@
   ],
   "dependencies": {
     "@rollup/plugin-swc": "^0.4.0",
+    "reflect-metadata": "^0.2.2",
     "vite": "^6.0.1",
     "vite-plugin-dts": "~4.5.0",
     "vite-tsconfig-paths": "5.1.4"

@@ -38,7 +38,6 @@ export default defineConfig({
         tsconfigRaw: {
           compilerOptions: {
             experimentalDecorators: true,
-            emitDecoratorMetadata: true,
           },
         },
       },

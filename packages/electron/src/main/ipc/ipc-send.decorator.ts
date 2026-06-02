@@ -1,5 +1,6 @@
 import { BrowserWindow, webContents } from 'electron';
 import { type ElectronWindow } from '@/main';
+import { getIpcChannelParameterIndices } from '@/universal/metadata';
 
 /**
  * Sends an IPC message from the main process to renderer process(es).
@@ -39,9 +40,10 @@ export function IpcSend<C extends string = string>(
     }
 
     descriptor.value = async function (...args: any[]): Promise<any> {
-      const channelParameters: number[] =
-        Reflect.getMetadata('ipc-channel:parameters', target, propertyKey) ||
-        [];
+      const channelParameters = getIpcChannelParameterIndices(
+        target,
+        propertyKey,
+      );
 
       let resolvedChannel: string | undefined = channel;
       if (!resolvedChannel) {

@@ -1,12 +1,12 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import { registerCleanup } from '@/universal/lifecycle';
+import {
+  getWindowRendererSubscriptionMetadata,
+  type WindowRendererSubscriptionMetadata,
+} from '@/universal/metadata';
+import { bindRendererEventListeners } from '@/universal/runtime';
 import { WindowIpcChannel } from '@/universal/channels';
 import { buildWindowEventChannel } from './window-channels';
 import { resolveWindowRendererName } from './window-definition';
-import {
-  WindowRendererSubMethods,
-  type WindowRendererSubMethod,
-} from './window-decorators.types';
 
 const windowEventAliases: Readonly<Record<string, string>> = {
   boundsChanged: WindowIpcChannel.OnBoundsChanged,
@@ -31,21 +31,15 @@ function resolveWindowEventChannels(
 }
 
 function getWindowSubMethods(
-  target: any,
-): Map<string, WindowRendererSubMethod> | undefined {
-  let prototype = target;
+  target: Function,
+): Map<string, WindowRendererSubscriptionMetadata> {
+  const subMethods = new Map<string, WindowRendererSubscriptionMetadata>();
 
-  while (prototype && prototype !== Object.prototype) {
-    const subMethods: Map<string, WindowRendererSubMethod> | undefined =
-      prototype[WindowRendererSubMethods];
-    if (subMethods) {
-      return subMethods;
-    }
-
-    prototype = Object.getPrototypeOf(prototype);
+  for (const entry of getWindowRendererSubscriptionMetadata(target)) {
+    subMethods.set(entry.method, entry);
   }
 
-  return undefined;
+  return subMethods;
 }
 
 /**
@@ -65,32 +59,25 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
     );
   }
 
-  const subMethods = getWindowSubMethods(this.constructor.prototype);
-  if (!subMethods) {
+  const subMethods = getWindowSubMethods(this.constructor);
+  if (subMethods.size === 0) {
     return;
   }
 
-  subMethods.forEach((handler, method) => {
-    const originalMethod = this[method];
-    if (typeof originalMethod !== 'function') {
-      throw new Error(
-        `Method ${method} is not a function on the target class.`,
-      );
-    }
-
-    const channels = resolveWindowEventChannels(windowName, handler.event);
-    const listener = (...args: any[]) => {
-      return originalMethod.apply(this, args);
-    };
-
-    for (const channel of channels) {
-      bridge[handler.type](channel as any, listener);
-    }
-
-    registerCleanup(this, () => {
-      for (const channel of channels) {
-        bridge.off(channel as any, listener);
+  bindRendererEventListeners(
+    this,
+    bridge,
+    [...subMethods.values()],
+    (event: string) => resolveWindowEventChannels(windowName, event),
+    (method: string, _channel: string, args: any[]) => {
+      const originalMethod = this[method];
+      if (typeof originalMethod !== 'function') {
+        throw new Error(
+          `Method ${method} is not a function on the target class.`,
+        );
       }
-    });
-  });
+
+      return originalMethod.apply(this, args);
+    },
+  );
 });

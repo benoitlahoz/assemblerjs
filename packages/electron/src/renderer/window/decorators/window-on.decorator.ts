@@ -1,20 +1,11 @@
-import {
-  WindowRendererSubMethods,
-  type WindowRendererSubMethod,
-} from './window-decorators.types';
+import { addWindowRendererSubscriptionMetadata } from '@/universal/metadata';
 
 export const WindowOn = (event: string): MethodDecorator => {
   return function (
-    target: any,
+    target: object,
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    target[WindowRendererSubMethods] =
-      target[WindowRendererSubMethods] || new Map();
-
-    const map: Map<string, WindowRendererSubMethod> =
-      target[WindowRendererSubMethods];
-
-    map.set(propertyKey, { event, type: 'on' });
+    addWindowRendererSubscriptionMetadata(target, propertyKey, event, 'on');
   } as MethodDecorator;
 };

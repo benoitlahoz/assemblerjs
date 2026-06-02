@@ -93,4 +93,13 @@ describe('preload bridge', () => {
 
     expect(() => bridge.send('window:bounds.get')).not.toThrow();
   });
+
+  it('allows scoped menu channels through auto-whitelist in strict mode', async () => {
+    const { createIpcBridge } = await import('../src/preload');
+    const bridge = createIpcBridge([]);
+
+    expect(() =>
+      bridge.send('menu:main.setItemEnabled', 'save', false),
+    ).not.toThrow();
+  });
 });

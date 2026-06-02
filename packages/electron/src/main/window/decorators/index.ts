@@ -1,6 +1,7 @@
 export * from './window-listener.decorator';
 export * from './window-on.decorator';
 export * from './window-controller.decorator';
+export * from './window-orchestrator.decorator';
 export * from './window.decorator';
 export * from './window-command.decorator';
 export * from './window-emit.decorator';

@@ -5,6 +5,7 @@ import {
   getWindowRendererDefinition,
   resolveWindowRendererName,
 } from './window-definition';
+import { setWindowRendererDefinitionMetadata } from '@/universal/metadata';
 import { WindowListener } from './window-listener.decorator';
 
 /**
@@ -20,13 +21,13 @@ export function Window(
   const listenerDecorator = WindowListener();
 
   return (target: Function) => {
-    Reflect.defineMetadata(
-      WindowRendererDefinitionMetadataKey,
-      normalizeWindowRendererDefinition(definition),
+    setWindowRendererDefinitionMetadata(
       target,
+      normalizeWindowRendererDefinition(definition),
     );
 
-    listenerDecorator(target as any);
+    const decorated = listenerDecorator(target as any) as Function | void;
+    return (decorated || target) as any;
   };
 }
 

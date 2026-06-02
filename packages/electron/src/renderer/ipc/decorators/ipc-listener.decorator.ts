@@ -1,6 +1,7 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { IpcType, IpcSubMethods } from '@/universal/decorators';
 import { registerCleanup } from '@/universal/lifecycle';
+import { getIpcResultParameterIndices } from '@/universal/metadata';
 
 /**
  * Class decorator to allow using preload scripts IPC API decorators.
@@ -25,8 +26,10 @@ export const IpcListener = createConstructorDecorator(function (this: any) {
               `Method ${method} is not a function on the target class.`,
             );
           }
-          const ipcResultParameters: number[] =
-            Reflect.getMetadata('ipc-result:parameters', this, method) || [];
+          const ipcResultParameters = getIpcResultParameterIndices(
+            this,
+            method,
+          );
 
           const newMethod = async (...args: any[]) => {
             const newArgs = args.filter(

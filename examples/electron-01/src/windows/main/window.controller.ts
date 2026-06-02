@@ -1,24 +1,18 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import {
-  AbstractWindowController,
-  AppListener,
-  AppOn,
-  WindowController,
-} from '@assemblerjs/electron';
+import { AbstractWindowController, AppOn, WindowOrchestrator } from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { ElectronAppEvent } from '@features/app/universal/app.events';
-import { MainWindow } from './main';
+import { MainMenu, MainWindow } from './main';
 import { MAIN_WINDOW_CONFIG } from './universal/window.config';
 
 type AppWindowMap = {
   [MAIN_WINDOW_CONFIG.name]: MainWindow;
 };
 
-@AppListener()
-@WindowController()
+@WindowOrchestrator()
 @Assemblage({
   // Centralize all window definitions here as the app grows.
-  provide: [[MainWindow]],
+  provide: [[MainWindow], [MainMenu]],
 })
 export class WindowControllerService
   extends AbstractWindowController<AppWindowMap>
@@ -31,7 +25,7 @@ export class WindowControllerService
   public async onInit(): Promise<void> {
     await this.electron.whenReady();
 
-    const mainWindow = (await this.openWindow(MAIN_WINDOW_CONFIG.name)) as MainWindow;
+    const mainWindow = await this.openWindow(MAIN_WINDOW_CONFIG.name);
     mainWindow.center();
     mainWindow.show();
   }
@@ -42,7 +36,7 @@ export class WindowControllerService
 
   @AppOn(ElectronAppEvent.Activate, true)
   private async onActivate(): Promise<void> {
-    const mainWindow = (await this.openWindow(MAIN_WINDOW_CONFIG.name)) as MainWindow;
+    const mainWindow = await this.openWindow(MAIN_WINDOW_CONFIG.name);
     mainWindow.center();
     mainWindow.show();
   }

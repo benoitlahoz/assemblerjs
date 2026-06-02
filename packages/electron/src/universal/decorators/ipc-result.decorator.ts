@@ -1,13 +1,22 @@
+import {
+  getIpcResultParameterIndices,
+  setIpcResultParameterIndices,
+} from '@/universal/metadata';
+
 export const IpcResult = () => {
-  return (target: any, propertyKey: string, parameterIndex: number) => {
-    const existingBodyParameters: number[] =
-      Reflect.getMetadata('ipc-result:parameters', target, propertyKey) || [];
-    existingBodyParameters.push(parameterIndex);
-    Reflect.defineMetadata(
-      'ipc-result:parameters',
-      existingBodyParameters,
+  return (
+    target: object,
+    propertyKey: string | symbol,
+    parameterIndex: number,
+  ) => {
+    const existingBodyParameters = getIpcResultParameterIndices(
       target,
       propertyKey,
     );
+
+    setIpcResultParameterIndices(target, propertyKey, [
+      ...existingBodyParameters,
+      parameterIndex,
+    ]);
   };
 };

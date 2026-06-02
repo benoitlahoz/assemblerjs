@@ -28,6 +28,30 @@ export interface ManagedWindowDescriptor {
   multiple: boolean;
 }
 
+export interface MenuItemClickedEvent {
+  itemId: string;
+  windowName: string;
+  menuName?: string;
+  checked?: boolean;
+  accelerator?: string;
+  timestampMs: number;
+}
+
+export interface MenuItemState {
+  id: string;
+  enabled?: boolean;
+  checked?: boolean;
+  label?: string;
+  visible?: boolean;
+}
+
+export interface MenuSnapshot {
+  windowName: string;
+  menuName: string;
+  items: Record<string, MenuItemState>;
+  updatedAt: number;
+}
+
 export interface RuntimeStackInfo {
   electron: string;
   chrome: string;
@@ -161,6 +185,26 @@ export interface DefaultIpcContractMap extends IpcContractMap {
   [MenuIpcChannel.OnItemClicked]: IpcChannelDefinition<
     [itemId: string, windowName: string],
     void
+  >;
+  [MenuIpcChannel.OnItemStateChanged]: IpcChannelDefinition<
+    [windowName: string, state: MenuItemState],
+    void
+  >;
+  [MenuIpcChannel.OnTemplateChanged]: IpcChannelDefinition<
+    [windowName: string, menuName: string],
+    void
+  >;
+  [MenuIpcChannel.GetSnapshot]: IpcChannelDefinition<
+    [windowName: string],
+    IpcReturnType<MenuSnapshot>
+  >;
+  [MenuIpcChannel.SetItemEnabled]: IpcChannelDefinition<
+    [windowName: string, itemId: string, enabled: boolean],
+    IpcReturnType<boolean>
+  >;
+  [MenuIpcChannel.SetItemChecked]: IpcChannelDefinition<
+    [windowName: string, itemId: string, checked: boolean],
+    IpcReturnType<boolean>
   >;
   // System state
   [SystemStateIpcChannel.GetSnapshot]: IpcChannelDefinition<

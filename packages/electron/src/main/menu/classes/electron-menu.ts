@@ -8,7 +8,7 @@ export abstract class ElectronMenu implements AbstractAssemblage {
   protected items: ElectronMenuItem[] = [];
 
   constructor(
-    protected localizationService: { translate: (key: string) => string }
+    protected localizationService: { translate: (key: string) => string },
   ) {
     this.ready = true;
   }
@@ -20,7 +20,7 @@ export abstract class ElectronMenu implements AbstractAssemblage {
   public async focus(): Promise<this> {
     await this.whenReady();
     const menuItems = this.items.map((item) =>
-      item.toMenuItemConstructorOptions()
+      item.toMenuItemConstructorOptions(),
     );
     Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
     return this;
@@ -99,6 +99,13 @@ export abstract class ElectronMenu implements AbstractAssemblage {
       return undefined;
     }
     return findIn(this.items);
+  }
+
+  /**
+   * Returns a readonly view of registered root menu items.
+   */
+  public getItems(): ReadonlyArray<ElectronMenuItem> {
+    return this.items;
   }
 
   @Await('ready')
