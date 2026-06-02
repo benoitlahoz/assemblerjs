@@ -1,10 +1,14 @@
+import {
+  ElectronMetadataStorage,
+  getWindowRendererDefinitionMetadata,
+} from '@/universal/metadata';
+
 export interface WindowRendererDefinition {
   name: string;
 }
 
-export const WindowRendererDefinitionMetadataKey = Symbol(
-  '__ElectronRendererWindowDefinition__',
-);
+export const WindowRendererDefinitionMetadataKey =
+  ElectronMetadataStorage.getKey('WindowRendererDefinition');
 
 export function normalizeWindowRendererDefinition(
   definition: string | WindowRendererDefinition,
@@ -28,10 +32,9 @@ export function getWindowRendererDefinition(
   let current: any = target;
 
   while (current && current !== Function.prototype) {
-    const definition = Reflect.getMetadata(
-      WindowRendererDefinitionMetadataKey,
-      current,
-    ) as WindowRendererDefinition | undefined;
+    const definition = getWindowRendererDefinitionMetadata(current) as
+      | WindowRendererDefinition
+      | undefined;
 
     if (definition?.name) {
       return definition;

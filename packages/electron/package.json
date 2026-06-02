@@ -26,6 +26,7 @@
     "!**/*.tsbuildinfo"
   ],
   "dependencies": {
+    "@assemblerjs/common": "1.0.1",
     "@assemblerjs/core": "0.9.8",
     "assemblerjs": "1.2.1"
   },

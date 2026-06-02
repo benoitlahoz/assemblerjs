@@ -1,54 +1,56 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import { bindCleanupToEvent, registerCleanup } from '@/universal/lifecycle';
+import { getWindowMainSubscriptionMetadata } from '@/universal/metadata';
+import { bindMainEventListeners } from '@/universal/runtime';
 import { getWindowEmitEvent } from './window-emit.decorator';
 import { buildWindowEventChannel } from './window-channels';
 
-export const WindowSubMethods = Symbol('__WindowListenerSubMethods__');
+/**
+ * @deprecated Backward compatibility token. Prefer metadata/runtime binders.
+ */
+export const WindowSubMethods = '__legacy:window-main-submethods__';
 
-function getWindowSubMethods(target: any): Map<string, string> | undefined {
-  let prototype = target;
+function getWindowSubMethods(target: Function): Map<string, string> {
+  const entries = getWindowMainSubscriptionMetadata(target);
+  const subMethods = new Map<string, string>();
 
-  while (prototype && prototype !== Object.prototype) {
-    const subMethods: Map<string, string> | undefined =
-      prototype[WindowSubMethods];
-    if (subMethods) {
-      return subMethods;
-    }
-
-    prototype = Object.getPrototypeOf(prototype);
+  for (const entry of entries) {
+    subMethods.set(entry.method, entry.channel);
   }
 
-  return undefined;
+  return subMethods;
 }
 
 export const WindowListener = createConstructorDecorator(function (this: any) {
-  const subMethods = getWindowSubMethods(this.constructor.prototype);
-  if (subMethods) {
-    bindCleanupToEvent(this, 'closed');
+  const subMethods = getWindowSubMethods(this.constructor);
+  if (subMethods.size > 0) {
+    bindMainEventListeners(
+      this,
+      subMethods.entries(),
+      (method: string, args: any[]) => {
+        const emitEvent = getWindowEmitEvent(
+          this.constructor.prototype,
+          method,
+        );
+        const methodRef = this[method];
 
-    subMethods.forEach((channel: string, method: string) => {
-      const emitEvent = getWindowEmitEvent(this.constructor.prototype, method);
-
-      const emitResult = (payload: any): void => {
-        if (!emitEvent || !this?.name || !this?.webContents?.send) {
+        if (typeof methodRef !== 'function') {
           return;
         }
 
-        const eventChannel = buildWindowEventChannel(this.name, emitEvent);
-        if (typeof payload === 'undefined') {
-          this.webContents.send(eventChannel);
-        } else {
-          this.webContents.send(eventChannel, payload);
-        }
-      };
+        const emitResult = (payload: any): void => {
+          if (!emitEvent || !this?.name || !this?.webContents?.send) {
+            return;
+          }
 
-      const listener = (...args: any[]) => {
-        if (!this[method]) {
-          return;
-        }
+          const eventChannel = buildWindowEventChannel(this.name, emitEvent);
+          if (typeof payload === 'undefined') {
+            this.webContents.send(eventChannel);
+          } else {
+            this.webContents.send(eventChannel, payload);
+          }
+        };
 
-        const result = this[method](...args);
-
+        const result = methodRef.apply(this, args);
         if (emitEvent) {
           if (result && typeof result.then === 'function') {
             void result.then((payload: any) => emitResult(payload));
@@ -58,12 +60,7 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
         }
 
         return result;
-      };
-
-      this.on(channel as any, listener);
-      registerCleanup(this, () => {
-        this.removeListener(channel as any, listener);
-      });
-    });
+      },
+    );
   }
 });

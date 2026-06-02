@@ -4,14 +4,8 @@ import { Menu } from 'electron';
 import { ElectronMenuItem } from './electron-menu-item';
 
 export abstract class ElectronMenu implements AbstractAssemblage {
-  protected ready = false;
+  protected ready = true;
   protected items: ElectronMenuItem[] = [];
-
-  constructor(
-    protected localizationService: { translate: (key: string) => string }
-  ) {
-    this.ready = true;
-  }
 
   /**
    * Applies the current menu to the Electron application.
@@ -20,7 +14,7 @@ export abstract class ElectronMenu implements AbstractAssemblage {
   public async focus(): Promise<this> {
     await this.whenReady();
     const menuItems = this.items.map((item) =>
-      item.toMenuItemConstructorOptions()
+      item.toMenuItemConstructorOptions(),
     );
     Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
     return this;
@@ -83,6 +77,14 @@ export abstract class ElectronMenu implements AbstractAssemblage {
   }
 
   /**
+   * Replaces all root items while preserving recursive item instances.
+   */
+  public replaceItems(items: ElectronMenuItem[]): this {
+    this.items = [...items];
+    return this;
+  }
+
+  /**
    * Finds an item by its identifier, searching recursively in submenus.
    * @param id The identifier of the item.
    * @returns {ElectronMenuItem | undefined} The found item or undefined.
@@ -99,6 +101,13 @@ export abstract class ElectronMenu implements AbstractAssemblage {
       return undefined;
     }
     return findIn(this.items);
+  }
+
+  /**
+   * Returns a readonly view of registered root menu items.
+   */
+  public getItems(): ReadonlyArray<ElectronMenuItem> {
+    return this.items;
   }
 
   @Await('ready')

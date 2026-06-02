@@ -21,6 +21,8 @@ import {
 } from './window-channels';
 
 type WindowToken = Identifier<any>;
+export type TypedWindowToken<TWindow extends ElectronWindow> =
+  Identifier<TWindow>;
 
 interface ManagedWindowCommand {
   method: string;
@@ -396,11 +398,21 @@ export interface WindowControllerRegistry {
     name: string;
     multiple: boolean;
   }>;
+  openWindow<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+    configuration?: Record<string, any>,
+  ): Promise<TWindow>;
   openWindow(
     tokenOrName: WindowToken | string,
     configuration?: Record<string, any>,
   ): Promise<any>;
+  closeWindow<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+  ): boolean;
   closeWindow(tokenOrName: WindowToken | string): boolean;
+  closeAllWindows<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+  ): number;
   closeAllWindows(tokenOrName?: WindowToken | string): number;
   getWindow(name: string): ElectronWindow | undefined;
   hasWindow(name: string): boolean;
@@ -422,15 +434,25 @@ export type TypedWindowControllerRegistry<
     name: Name,
     configuration?: Record<string, any>,
   ): Promise<Windows[Name]>;
+  openWindow<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+    configuration?: Record<string, any>,
+  ): Promise<TWindow>;
   openWindow(
     tokenOrName: WindowToken | string,
     configuration?: Record<string, any>,
   ): Promise<any>;
 
   closeWindow<Name extends keyof Windows & string>(name: Name): boolean;
+  closeWindow<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+  ): boolean;
   closeWindow(tokenOrName: WindowToken | string): boolean;
 
   closeAllWindows<Name extends keyof Windows & string>(name?: Name): number;
+  closeAllWindows<TWindow extends ElectronWindow>(
+    token: TypedWindowToken<TWindow>,
+  ): number;
   closeAllWindows(tokenOrName?: WindowToken | string): number;
 
   getWindow<Name extends keyof Windows & string>(

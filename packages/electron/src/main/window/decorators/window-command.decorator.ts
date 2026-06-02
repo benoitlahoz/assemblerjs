@@ -1,4 +1,11 @@
-export const WindowCommandMethods = Symbol('__WindowCommandMethods__');
+import {
+  ElectronMetadataStorage,
+  addWindowCommandMetadata,
+  getWindowCommandMetadata,
+} from '@/universal/metadata';
+
+export const WindowCommandMethods =
+  ElectronMetadataStorage.getKey('WindowCommand');
 
 export interface WindowCommandMetadata {
   method: string;
@@ -7,34 +14,14 @@ export interface WindowCommandMetadata {
 
 export function WindowCommand(command: string): MethodDecorator {
   return function (
-    target: any,
+    target: object,
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    target[WindowCommandMethods] = target[WindowCommandMethods] || new Map();
-    target[WindowCommandMethods].set(propertyKey, command);
+    addWindowCommandMetadata(target, propertyKey, command);
   } as MethodDecorator;
 }
 
 export function getWindowCommands(target: Function): WindowCommandMetadata[] {
-  const commands = new Map<string, string>();
-
-  let prototype: any = target.prototype;
-  while (prototype && prototype !== Object.prototype) {
-    const methods: Map<string, string> | undefined =
-      prototype[WindowCommandMethods];
-    if (methods) {
-      for (const [method, command] of methods.entries()) {
-        if (!commands.has(method)) {
-          commands.set(method, command);
-        }
-      }
-    }
-    prototype = Object.getPrototypeOf(prototype);
-  }
-
-  return [...commands.entries()].map(([method, command]) => ({
-    method,
-    command,
-  }));
+  return getWindowCommandMetadata(target);
 }

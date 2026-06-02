@@ -8,3 +8,5 @@ Current scope:
 
 - Metadata key conventions used by decorators across packages.
 - Key builder helpers used directly in libraries (for example `buildMetadataKey` and `buildDecoratorParameterKey`).
+- Generic metadata storage utilities shared by packages (class/method/parameter metadata helpers).
+- Scoped metadata storage creation via `createScopedMetadataStore(scope)` to enforce `assemblerjs:<scope>:<name>` keys.

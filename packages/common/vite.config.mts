@@ -51,7 +51,7 @@ export default {
       formats: ['es' as const, 'cjs' as const],
     },
     rollupOptions: {
-      external: [],
+      external: ['reflect-metadata'],
     },
     minify: 'terser' as const,
   },

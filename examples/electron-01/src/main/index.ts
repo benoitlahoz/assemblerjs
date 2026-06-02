@@ -3,10 +3,11 @@ import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
 import { app } from 'electron';
 import { join } from 'path';
 import { Result, Task } from '@assemblerjs/core';
-import { SystemStateHostService } from '@assemblerjs/electron';
+import { MenuControllerService, SystemStateHostService } from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
+import { I18nService } from '@features/i18n/main';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
-import { WindowControllerService } from '@windows/main';
+import { WindowControllerService } from '@windows/window.controller';
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
@@ -14,7 +15,9 @@ import { WindowControllerService } from '@windows/main';
 @Assemblage({
   provide: [
     [ElectronAppModule],
+    [I18nService],
     [IpcListenerService],
+    [MenuControllerService],
     [SystemStateHostService],
     [WindowControllerService],
   ],
@@ -26,6 +29,7 @@ class MainApp implements AbstractAssemblage {
   constructor(
     public electron: ElectronAppModule,
     public ipc: IpcListenerService,
+    public menus: MenuControllerService,
     public systemState: SystemStateHostService,
     public windows: WindowControllerService,
   ) {}

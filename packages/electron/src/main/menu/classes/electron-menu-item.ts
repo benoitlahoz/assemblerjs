@@ -1,6 +1,8 @@
 import { Event, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
 import { ElectronWindow } from '@/main';
+import { buildMenuEventChannel } from '@/universal';
 import { MenuIpcChannel } from '@/universal';
+import type { MenuItemClickedEvent } from '@/universal';
 
 export class ElectronMenuItem {
   private _id = 'ElectronMenuItem';
@@ -23,6 +25,23 @@ export class ElectronMenuItem {
     browserWindow: ElectronWindow | undefined,
     event: Event,
   ) => void;
+
+  private resolveTargetWindow(
+    browserWindow: ElectronWindow | undefined,
+  ): ElectronWindow | undefined {
+    if (browserWindow && !browserWindow.isDestroyed()) {
+      return browserWindow;
+    }
+
+    const focusedWindow =
+      ElectronWindow.getFocusedWindow() as ElectronWindow | null;
+
+    if (focusedWindow && !focusedWindow.isDestroyed()) {
+      return focusedWindow;
+    }
+
+    return undefined;
+  }
 
   /**
    * Sets the checked state of the menu item.
@@ -322,17 +341,18 @@ export class ElectronMenuItem {
       browserWindow: ElectronWindow | undefined,
       event: Event,
     ) => {
-      if (!browserWindow) return;
+      const targetWindow = this.resolveTargetWindow(browserWindow);
+      if (!targetWindow) return;
 
       const itemId = this.id;
-      const windowName = browserWindow.name;
+      const windowName = targetWindow.name;
 
       // Execute the main handler
       callback(itemId, windowName);
 
       // Call any previously configured click handler
       if (previousClick) {
-        previousClick(menuItem, browserWindow, event);
+        previousClick(menuItem, targetWindow, event);
       }
     };
     return this;
@@ -369,14 +389,15 @@ export class ElectronMenuItem {
       browserWindow: ElectronWindow | undefined,
       event: Event,
     ) => {
-      if (!browserWindow) return;
+      const targetWindow = this.resolveTargetWindow(browserWindow);
+      if (!targetWindow) return;
 
       const itemId = this.id;
-      const windowName = browserWindow.name;
+      const windowName = targetWindow.name;
 
       // Call any previously configured click handler (e.g., from handleInMain)
       if (previousClick) {
-        previousClick(menuItem, browserWindow, event);
+        previousClick(menuItem, targetWindow, event);
       }
 
       // Forward to renderer
@@ -384,7 +405,20 @@ export class ElectronMenuItem {
         ? payloadFactory(itemId, windowName)
         : [itemId, windowName];
 
-      browserWindow.webContents.send(MenuIpcChannel.OnItemClicked, ...payload);
+      const scopedPayload: MenuItemClickedEvent = {
+        itemId,
+        windowName,
+        checked: menuItem.checked,
+        accelerator: this.accelerator,
+        timestampMs: Date.now(),
+      };
+
+      targetWindow.webContents.send(
+        buildMenuEventChannel(windowName, 'itemClicked'),
+        scopedPayload,
+      );
+
+      targetWindow.webContents.send(MenuIpcChannel.OnItemClicked, ...payload);
     };
     return this;
   }

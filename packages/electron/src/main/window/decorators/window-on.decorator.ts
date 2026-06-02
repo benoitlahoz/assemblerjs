@@ -1,12 +1,11 @@
-import { WindowSubMethods } from './window-listener.decorator';
+import { addWindowMainSubscriptionMetadata } from '@/universal/metadata';
 
 export function WindowOn(channel: string): MethodDecorator {
   return function (
-    target: any,
+    target: object,
     propertyKey: string,
-    _descriptor: PropertyDescriptor
+    _descriptor: PropertyDescriptor,
   ) {
-    target[WindowSubMethods] = target[WindowSubMethods] || new Map();
-    target[WindowSubMethods].set(propertyKey, channel);
+    addWindowMainSubscriptionMetadata(target, propertyKey, channel);
   } as MethodDecorator;
 }

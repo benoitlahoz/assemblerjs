@@ -23,6 +23,11 @@ export enum WindowIpcChannel {
 
 export enum MenuIpcChannel {
   OnItemClicked = 'menu:item.clicked',
+  OnItemStateChanged = 'menu:item.state.changed',
+  OnTemplateChanged = 'menu:template.changed',
+  GetSnapshot = 'menu:snapshot.get',
+  SetItemEnabled = 'menu:item.enabled.set',
+  SetItemChecked = 'menu:item.checked.set',
 }
 
 export enum RpcIpcChannel {

@@ -1,5 +1,6 @@
 import { buildWindowCommandChannel } from './window-channels';
 import { resolveWindowRendererName } from './window-definition';
+import { getIpcResultParameterIndices } from '@/universal/metadata';
 
 export const WindowCommand = (command: string): MethodDecorator => {
   return (
@@ -13,8 +14,10 @@ export const WindowCommand = (command: string): MethodDecorator => {
       this: { windowName?: unknown },
       ...args: any[]
     ): Promise<any> {
-      const ipcResultParameters: number[] =
-        Reflect.getMetadata('ipc-result:parameters', target, propertyKey) || [];
+      const ipcResultParameters = getIpcResultParameterIndices(
+        target,
+        propertyKey,
+      );
 
       const windowName = resolveWindowRendererName(this);
       if (!windowName || typeof windowName !== 'string') {

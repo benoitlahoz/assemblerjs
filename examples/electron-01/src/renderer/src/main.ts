@@ -3,7 +3,7 @@ import { Task, Result } from '@assemblerjs/core';
 import { App as VueApp, createApp } from 'vue';
 import { IpcModule } from '@features/ipc/renderer/ipc.module';
 import { SystemStateModule } from '@features/system/renderer/system-state.module';
-import { MainWindow } from '@windows/main/renderer';
+import { MainMenuService, MainWindow } from '@windows/main/renderer';
 import { ContextInjectionKey } from '@common/keys';
 import App from './App.vue';
 import { router } from './router';
@@ -11,7 +11,7 @@ import { router } from './router';
 import './assets/main.css';
 
 @Assemblage({
-  provide: [[MainWindow], [IpcModule], [SystemStateModule]],
+  provide: [[MainWindow], [MainMenuService], [IpcModule], [SystemStateModule]],
 })
 class MainApp implements AbstractAssemblage {
   private app: VueApp;
@@ -22,6 +22,9 @@ class MainApp implements AbstractAssemblage {
   }
 
   public async onInit(context: AssemblerContext): Promise<void> {
+    // Ensure menu listeners are registered even if no UI component injects the service yet.
+    context.require(MainMenuService);
+
     this.app.provide(ContextInjectionKey, context);
     this.app.mount('#app');
   }
