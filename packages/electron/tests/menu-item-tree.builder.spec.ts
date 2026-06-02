@@ -270,4 +270,44 @@ describe('buildMenuTreeFromMetadata', () => {
       { itemId: 'main.menu.autoCenter', windowName: 'main' },
     ]);
   });
+
+  it('orders a nested submenu after a leaf item when subgroup entries have higher order', () => {
+    @Assemblage()
+    class MenuDef {
+      @MenuItem({
+        id: 'main.developer.toggleDevTools',
+        path: 'Developer',
+        label: 'Toggle DevTools',
+        order: 10,
+      })
+      public toggleDevTools(): void {}
+
+      @MenuItem({
+        id: 'main.developer.reload',
+        path: 'Developer/Refresh',
+        label: 'Reload',
+        order: 20,
+      })
+      public reload(): void {}
+
+      @MenuItem({
+        id: 'main.developer.forceReload',
+        path: 'Developer/Refresh',
+        label: 'Force Reload',
+        order: 30,
+      })
+      public forceReload(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(MenuDef);
+    const developerRoot = built.roots.find(
+      (root) => root.id === 'menu.developer',
+    );
+    const ids = developerRoot?.submenu?.map((item) => item.id) || [];
+
+    expect(ids).toEqual([
+      'main.developer.toggleDevTools',
+      'menu.developer.refresh',
+    ]);
+  });
 });

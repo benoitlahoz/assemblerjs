@@ -9,6 +9,7 @@ import type { ElectronMenuItem } from './electron-menu-item';
 import { createMenuItem } from './create-menu-item';
 
 interface IndexedMenuItemMetadataEntry extends MenuItemMetadataEntry {
+  path: string;
   declarationIndex: number;
 }
 
@@ -35,6 +36,11 @@ interface BuildBehaviorContext {
   instance?: Record<string, unknown>;
   target: Function;
   translate: (key: string) => string;
+}
+
+interface OrderingKey {
+  order: number;
+  declarationIndex: number;
 }
 
 function normalizePath(path: string): string {
@@ -135,6 +141,49 @@ function compareEntries(
   }
 
   return a.declarationIndex - b.declarationIndex;
+}
+
+function entryToOrderingKey(entry: IndexedMenuItemMetadataEntry): OrderingKey {
+  return {
+    order:
+      typeof entry.order === 'number' ? entry.order : Number.MAX_SAFE_INTEGER,
+    declarationIndex: entry.declarationIndex,
+  };
+}
+
+function compareOrderingKeys(a: OrderingKey, b: OrderingKey): number {
+  if (a.order !== b.order) {
+    return a.order - b.order;
+  }
+
+  return a.declarationIndex - b.declarationIndex;
+}
+
+function resolveGroupOrderingKey(group: GroupNode): OrderingKey {
+  let best: OrderingKey | undefined;
+
+  for (const entry of group.leafEntries) {
+    const candidate = entryToOrderingKey(entry);
+    if (!best || compareOrderingKeys(candidate, best) < 0) {
+      best = candidate;
+    }
+  }
+
+  for (const child of group.childGroups.values()) {
+    const candidate = resolveGroupOrderingKey(child);
+    if (!best || compareOrderingKeys(candidate, best) < 0) {
+      best = candidate;
+    }
+  }
+
+  if (best) {
+    return best;
+  }
+
+  return {
+    order: Number.MAX_SAFE_INTEGER,
+    declarationIndex: Number.MAX_SAFE_INTEGER,
+  };
 }
 
 function sortEntriesWithAnchors(
@@ -308,19 +357,36 @@ function materializeGroup(
   itemsById: Map<string, ElectronMenuItem>,
   behavior: BuildBehaviorContext,
 ): ElectronMenuItem {
-  const childGroups = [...group.childGroups.values()]
-    .sort((a, b) => a.pathKey.localeCompare(b.pathKey))
-    .map((child) => materializeGroup(child, itemsById, behavior));
+  const childGroups = [...group.childGroups.values()].map((child) => ({
+    item: materializeGroup(child, itemsById, behavior),
+    orderingKey: resolveGroupOrderingKey(child),
+    stableId: child.pathKey,
+  }));
 
   const sortedLeaves = sortEntriesWithAnchors([...group.leafEntries]).map(
     (entry) => {
       const item = buildMenuItemFromEntry(entry, behavior);
       itemsById.set(entry.id, item);
-      return item;
+
+      return {
+        item,
+        orderingKey: entryToOrderingKey(entry),
+        stableId: entry.id,
+      };
     },
   );
 
-  const submenu = [...childGroups, ...sortedLeaves];
+  const submenu = [...childGroups, ...sortedLeaves]
+    .sort((a, b) => {
+      const byOrder = compareOrderingKeys(a.orderingKey, b.orderingKey);
+      if (byOrder !== 0) {
+        return byOrder;
+      }
+
+      return a.stableId.localeCompare(b.stableId);
+    })
+    .map((node) => node.item);
+
   if (submenu.length > 0) {
     group.item.submenu = submenu;
   }
