@@ -1,6 +1,7 @@
 import { Assemblage } from 'assemblerjs';
-import { MenuItem } from '@assemblerjs/electron';
+import { MenuItem, SubMenu } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
+import { WindowCustomMenu } from './window-custom.menu';
 
 export const WindowMenuConfig = {
   Minimize: { id: 'window.minimize', order: 10 },
@@ -10,16 +11,18 @@ export const WindowMenuConfig = {
   Sep2: { id: 'window.sep.2', order: 50 },
   Front: { id: 'window.front', order: 60 },
   SepCustom: { id: 'window.sep.custom', order: 70 },
-  RefreshBounds: { id: 'window.refreshBounds', order: 80 },
-  RandomBounds: { id: 'window.randomBounds', order: 90 },
-  CenterWindow: { id: 'window.centerWindow', order: 100 },
-  AutoCenter: { id: 'window.autoCenter', order: 110 },
+  CustomMenu: { id: 'window.custom', order: 80 },
 } as const;
 
 @MenuItem('Window')
-@Assemblage()
+@Assemblage({
+  provide: [[WindowCustomMenu]],
+})
 export class WindowMenu {
-  constructor(public readonly i18n: I18nService) {}
+  constructor(
+    public readonly i18n: I18nService,
+    public readonly customMenu: WindowCustomMenu,
+  ) {}
 
   @MenuItem({
     id: WindowMenuConfig.Minimize.id,
@@ -70,51 +73,11 @@ export class WindowMenu {
   })
   private sepCustom(): void {}
 
-  @MenuItem({
-    id: WindowMenuConfig.RefreshBounds.id,
-    label(this: WindowMenu) {
-      return this.i18n.translate('menu.window.refreshBounds');
-    },
-    accelerator: 'CmdOrCtrl+D',
-    order: WindowMenuConfig.RefreshBounds.order,
-    forwardToRenderer: true,
+  @SubMenu({
+    id: WindowMenuConfig.CustomMenu.id,
+    order: WindowMenuConfig.CustomMenu.order,
   })
-  private refreshBounds(): void {}
-
-  @MenuItem({
-    id: WindowMenuConfig.RandomBounds.id,
-    label(this: WindowMenu) {
-      return this.i18n.translate('menu.window.randomBounds');
-    },
-    accelerator: 'CmdOrCtrl+Shift+D',
-    order: WindowMenuConfig.RandomBounds.order,
-    forwardToRenderer: true,
-  })
-  private randomBounds(): void {}
-
-  @MenuItem({
-    id: WindowMenuConfig.CenterWindow.id,
-    label(this: WindowMenu) {
-      return this.i18n.translate('menu.window.centerWindow');
-    },
-    accelerator: 'CmdOrCtrl+Shift+C',
-    order: WindowMenuConfig.CenterWindow.order,
-    forwardToRenderer: true,
-  })
-  private centerWindow(): void {}
-
-  @MenuItem({
-    id: WindowMenuConfig.AutoCenter.id,
-    label(this: WindowMenu) {
-      return this.i18n.translate('menu.window.autoCenter');
-    },
-    type: 'checkbox',
-    checked: false,
-    order: WindowMenuConfig.AutoCenter.order,
-    handleInMain: true,
-    forwardToRenderer: true,
-  })
-  private autoCenter(itemId: string, windowName: string): void {
-    console.log(`[menu][window] clicked '${itemId}' for window '${windowName}'`);
+  private custom(): WindowCustomMenu {
+    return this.customMenu;
   }
 }

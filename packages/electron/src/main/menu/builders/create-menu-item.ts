@@ -44,6 +44,11 @@ export function cloneMenuItem(
   clone.checked = source.checked;
   clone.enabled = source.enabled;
 
+  // Copy click handler
+  if (source.click) {
+    clone.click = source.click;
+  }
+
   if (submenuOverride !== undefined) {
     clone.submenu = submenuOverride;
   } else if (source.submenu && source.submenu.length > 0) {

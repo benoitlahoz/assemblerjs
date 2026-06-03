@@ -14,23 +14,23 @@ export class MainMenuService extends AbstractMenuService implements AbstractAsse
 
   private async onMenuItemClicked(event: MenuItemClickedEvent): Promise<void> {
     switch (event.itemId) {
-      case 'window.refreshBounds':
+      case 'window.custom.refreshBounds':
         await this.mainWindow.refreshBounds();
         break;
-      case 'window.randomBounds':
+      case 'window.custom.randomBounds':
         await this.mainWindow.randomBounds();
         if (this.autoCenterAfterRandom) {
           await this.mainWindow.centerWindow();
         }
         break;
-      case 'window.centerWindow':
+      case 'window.custom.centerWindow':
         await this.mainWindow.centerWindow();
         break;
-      case 'window.autoCenter': {
+      case 'window.custom.autoCenter': {
         const nextValue =
           typeof event.checked === 'boolean' ? event.checked : !this.autoCenterAfterRandom;
         this.autoCenterAfterRandom = nextValue;
-        await this.setItemChecked('window.autoCenter', nextValue);
+        await this.setItemChecked('window.custom.autoCenter', nextValue);
         break;
       }
       default:

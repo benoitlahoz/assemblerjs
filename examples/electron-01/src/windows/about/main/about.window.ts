@@ -31,10 +31,7 @@ import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
     {
       items: {
         [WindowMenuConfig.SepCustom.id]: { visible: false },
-        [WindowMenuConfig.RefreshBounds.id]: { visible: false },
-        [WindowMenuConfig.RandomBounds.id]: { visible: false },
-        [WindowMenuConfig.CenterWindow.id]: { visible: false },
-        [WindowMenuConfig.AutoCenter.id]: { visible: false },
+        [WindowMenuConfig.CustomMenu.id]: { visible: false },
       },
     },
   ],
