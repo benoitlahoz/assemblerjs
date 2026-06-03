@@ -4,8 +4,25 @@ import type {
   WindowSnapshot,
 } from '../src/renderer/window/services/window-controller.abstract';
 import { AbstractWindowService } from '../src/renderer/window/services/window.abstract';
-import { Window } from '../src/renderer/window/decorators/window.decorator';
+import { Window } from '../src/renderer/window/window-definition/window.decorator';
 import type { WindowBounds, WindowState } from '../src/universal/types';
+
+if (!(globalThis as any).window) {
+  (globalThis as any).window = {};
+}
+
+if (!(globalThis as any).window.ipc) {
+  (globalThis as any).window.ipc = {
+    on: vi.fn(),
+    once: vi.fn(),
+    off: vi.fn(),
+    removeAllListeners: vi.fn(),
+    send: vi.fn(),
+    invoke: vi.fn(),
+    handle: vi.fn(() => vi.fn()),
+    removeHandler: vi.fn(),
+  };
+}
 
 @Window('main')
 class MainWindowService extends AbstractWindowService {}

@@ -1,10 +1,10 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
 import { WindowIpcChannel } from '@/universal/channels';
-import { WindowListener } from '../decorators/window-listener.decorator';
-import { WindowOn } from '../decorators/window-on.decorator';
-import { WindowEmit } from '../decorators/window-emit.decorator';
-import { getWindowDefinition } from '@/main/window/decorators/window.decorator';
+import { WindowListener } from '../window-listener/window-listener.decorator';
+import { WindowOn } from '../window-listener/window-on.decorator';
+import { WindowEmit } from '../window-listener/window-emit.decorator';
+import { getWindowDefinition } from '@/main/window/window-definition/window.decorator';
 
 export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   definition: {

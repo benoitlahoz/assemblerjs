@@ -7,7 +7,7 @@ import { IpcService } from '@/renderer/ipc/services';
 import {
   getMenuRendererDefinition,
   resolveMenuRendererDefinition,
-} from '@/renderer/menu/decorators';
+} from '@/renderer/menu';
 import { AbstractMenuControllerService } from './menu-controller.abstract';
 import { MenuControllerService } from './menu-controller.service';
 import type {
@@ -15,7 +15,7 @@ import type {
   MenuItemState,
   MenuSnapshot,
 } from '@/universal/types';
-import { resolveWindowRendererName } from '@/renderer/window/decorators/window-definition';
+import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 
 export abstract class AbstractMenuService implements AbstractAssemblage {
   private static standaloneMenus?: AbstractMenuControllerService;

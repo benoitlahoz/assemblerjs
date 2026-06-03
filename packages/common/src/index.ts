@@ -1,2 +1,2 @@
-export * from './metadata-keys';
-export * from './metadata-storage';
+export * from './metadata';
+export * from './registry';

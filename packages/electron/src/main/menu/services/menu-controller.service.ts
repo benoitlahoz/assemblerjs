@@ -1,7 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
-import { ElectronMenu, ElectronMenuItem } from '@/main/menu/classes';
+import { ElectronMenu, ElectronMenuItem } from '@/main/menu';
 import { registerCleanup } from '@/universal/lifecycle';
 import {
   buildMenuCommandChannel,

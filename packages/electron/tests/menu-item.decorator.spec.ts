@@ -6,7 +6,7 @@ import {
   getMenuItems,
   normalizeMenuItemDefinition,
   validateMenuItemMetadata,
-} from '../src/main/menu/decorators/menu-item.decorator';
+} from '../src/main/menu/menu-item/menu-item.decorator';
 
 describe('MenuItem decorator metadata foundations', () => {
   it('collects declarative menu item metadata from class methods', () => {

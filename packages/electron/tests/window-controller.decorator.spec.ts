@@ -42,7 +42,7 @@ describe('WindowController decorator', () => {
     ]);
 
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
 
     @WindowController()
     @Assemblage()
@@ -61,7 +61,7 @@ describe('WindowController decorator', () => {
 
   it('does not override custom registry methods', async () => {
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
 
     @WindowController()
     @Assemblage()
@@ -79,9 +79,9 @@ describe('WindowController decorator', () => {
     getAllWindows.mockReturnValue([]);
 
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
     const { Window } =
-      await import('../src/main/window/decorators/window.decorator');
+      await import('../src/main/window/window-definition/window.decorator');
 
     @Window({ name: 'main' })
     @Assemblage({ singleton: true })
@@ -113,9 +113,9 @@ describe('WindowController decorator', () => {
     getAllWindows.mockReturnValue([]);
 
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
     const { Window } =
-      await import('../src/main/window/decorators/window.decorator');
+      await import('../src/main/window/window-definition/window.decorator');
 
     @Window({ name: 'document', multiple: true })
     @Assemblage({ singleton: true })
@@ -144,9 +144,9 @@ describe('WindowController decorator', () => {
     getAllWindows.mockReturnValue([]);
 
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
     const { Window } =
-      await import('../src/main/window/decorators/window.decorator');
+      await import('../src/main/window/window-definition/window.decorator');
 
     @Window({ name: 'forced-transient' })
     @Assemblage({ singleton: true })
@@ -174,11 +174,11 @@ describe('WindowController decorator', () => {
     getAllWindows.mockReturnValue([]);
 
     const { WindowController } =
-      await import('../src/main/window/decorators/window-controller.decorator');
+      await import('../src/main/window/window-controller/window-controller.decorator');
     const { Window } =
-      await import('../src/main/window/decorators/window.decorator');
+      await import('../src/main/window/window-definition/window.decorator');
     const { WindowCommand } =
-      await import('../src/main/window/decorators/window-command.decorator');
+      await import('../src/main/window/window-command/window-command.decorator');
 
     @Window({ name: 'main' })
     @Assemblage({ singleton: true })
