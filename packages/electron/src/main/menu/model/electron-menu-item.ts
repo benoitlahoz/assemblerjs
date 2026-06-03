@@ -199,8 +199,15 @@ export class ElectronMenuItem {
   ) {
     const item = this.getItem();
     if (item) {
-      item.type = value as any;
-      this._type = item.type;
+      try {
+        if (item.type !== (value as any)) {
+          item.type = value as any;
+        }
+      } catch {
+        // Some role-driven Electron MenuItem instances expose readonly type.
+      }
+
+      this._type = (item.type as any) ?? value;
       return;
     }
     this._type = value;
@@ -234,8 +241,15 @@ export class ElectronMenuItem {
   public set accelerator(value: string | undefined) {
     const item = this.getItem();
     if (item) {
-      item.accelerator = value;
-      this._accelerator = item.accelerator;
+      try {
+        if (item.accelerator !== value) {
+          item.accelerator = value;
+        }
+      } catch {
+        // Some role-driven Electron MenuItem instances expose readonly accelerator.
+      }
+
+      this._accelerator = item.accelerator ?? value;
       return;
     }
     this._accelerator = value;
@@ -261,9 +275,14 @@ export class ElectronMenuItem {
   public set submenu(value: ElectronMenuItem[]) {
     const item = this.getItem();
     if (item) {
-      item.submenu = Menu.buildFromTemplate(
-        value.map((i) => i.toMenuItemConstructorOptions()),
-      );
+      try {
+        item.submenu = Menu.buildFromTemplate(
+          value.map((i) => i.toMenuItemConstructorOptions()),
+        );
+      } catch {
+        // Some Electron MenuItem instances expose readonly submenu.
+      }
+
       this._submenu = value;
       return;
     }

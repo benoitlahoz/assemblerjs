@@ -6,6 +6,8 @@ import {
 } from '@/main/window-menu/services';
 import type { ManagedWindowDefinition } from './window-controller.types';
 
+const boundMenuFocusWindows = new WeakSet<object>();
+
 function resolveWindowMenuBindings(
   controller: any,
 ): AbstractWindowMenuBindingRegistryService | undefined {
@@ -25,6 +27,7 @@ function resolveWindowMenuBindings(
 export async function attachManagedWindowMenu(
   controller: any,
   managed: ManagedWindowDefinition,
+  windowInstance?: any,
 ): Promise<void> {
   const definition =
     getUseMenuDefinition(managed.concrete) ||
@@ -40,6 +43,20 @@ export async function attachManagedWindowMenu(
   }
 
   await bindings.attach(managed.definition.name, definition.menu);
+
+  if (
+    windowInstance &&
+    typeof windowInstance.on === 'function' &&
+    !boundMenuFocusWindows.has(windowInstance)
+  ) {
+    const refreshMenu = () => {
+      void bindings.refresh(managed.definition.name);
+    };
+
+    windowInstance.on('focus', refreshMenu);
+    windowInstance.on('show', refreshMenu);
+    boundMenuFocusWindows.add(windowInstance);
+  }
 }
 
 export function detachManagedWindowMenu(

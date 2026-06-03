@@ -126,7 +126,7 @@ export const WindowController = createConstructorDecorator(function (
           });
         }
 
-        await attachManagedWindowMenu(this, managed);
+        await attachManagedWindowMenu(this, managed, instance);
 
         return instance;
       };

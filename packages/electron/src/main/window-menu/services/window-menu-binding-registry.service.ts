@@ -1,5 +1,6 @@
 import { Assemblage, getAssemblageContext } from 'assemblerjs';
 import { MapNamedRegistry } from '@assemblerjs/common';
+import { ElectronWindow } from '@/main/window/classes';
 import {
   AbstractMenuControllerService,
   MenuControllerService,
@@ -43,6 +44,26 @@ export class WindowMenuBindingRegistryService
     menus.unregisterMenu(windowName);
 
     this.unregister(windowName);
+
+    const focusedWindow =
+      typeof (
+        ElectronWindow as typeof ElectronWindow & {
+          getFocusedWindow?: () => ElectronWindow | null;
+        }
+      ).getFocusedWindow === 'function'
+        ? (
+            ElectronWindow as typeof ElectronWindow & {
+              getFocusedWindow: () => ElectronWindow | null;
+            }
+          ).getFocusedWindow()
+        : null;
+
+    const focusedWindowName = (
+      focusedWindow as ElectronWindow & { name?: string }
+    )?.name;
+    if (focusedWindowName && this.has(focusedWindowName)) {
+      void menus.focus(focusedWindowName);
+    }
   }
 
   public async refresh(windowName: string): Promise<void> {

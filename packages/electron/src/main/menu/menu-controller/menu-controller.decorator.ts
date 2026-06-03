@@ -171,55 +171,6 @@ function ensureBoundWindowInstances(controller: any): WeakSet<object> {
   return controller[boundWindowInstancesSymbol] as WeakSet<object>;
 }
 
-function collectMenuBaseItemStates(
-  menu: ElectronMenu,
-): ManagedRegisteredMenu['baseItemStates'] {
-  const states: ManagedRegisteredMenu['baseItemStates'] = {};
-
-  const visit = (items: ReadonlyArray<ElectronMenuItem>): void => {
-    for (const item of items) {
-      states[item.id] = {
-        enabled: item.enabled,
-        checked: item.checked,
-      };
-
-      if (item.submenu) {
-        visit(item.submenu);
-      }
-    }
-  };
-
-  visit(menu.getItems());
-  return states;
-}
-
-function registerManagedMenu(
-  controller: any,
-  menu: ElectronMenu,
-  menuName: string,
-  windowName: string,
-): void {
-  const registeredMenus = ensureRegisteredMenus(controller);
-  const existing = registeredMenus.find(
-    (entry) => entry.windowName === windowName && entry.menuName === menuName,
-  );
-
-  const next: ManagedRegisteredMenu = {
-    windowName,
-    menuName,
-    menu,
-    baseItemStates: collectMenuBaseItemStates(menu),
-  };
-
-  if (existing) {
-    existing.menu = next.menu;
-    existing.baseItemStates = next.baseItemStates;
-    return;
-  }
-
-  registeredMenus.push(next);
-}
-
 function getFocusedWindowName(): string | undefined {
   const focusedWindow =
     typeof (
@@ -238,7 +189,8 @@ function getFocusedWindowName(): string | undefined {
     return undefined;
   }
 
-  return focusedWindow.name;
+  const namedWindow = focusedWindow as ElectronWindow & { name?: string };
+  return namedWindow.name;
 }
 
 function applyMenuStateContributions(

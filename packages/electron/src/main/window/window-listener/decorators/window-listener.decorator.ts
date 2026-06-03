@@ -1,7 +1,7 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { getWindowMainSubscriptionMetadata } from '@/universal/metadata';
 import { bindMainEventListeners } from '@/universal/runtime';
-import { getWindowEmitEvent } from '../../decorators/window-emit.decorator';
+import { getWindowEmitEvent } from '../window-emit.decorator';
 import { buildWindowEventChannel } from '../../common/window-channels';
 
 /**

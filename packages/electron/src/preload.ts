@@ -1,1 +1,1 @@
-export * from './preload';
+export * from './preload/index';

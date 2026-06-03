@@ -10,7 +10,7 @@ export interface ElectronWindowDefinitionMetadata {
 }
 
 export interface ElectronMenuDefinitionMetadata {
-  window: string;
+  window?: string;
   name: string;
 }
 

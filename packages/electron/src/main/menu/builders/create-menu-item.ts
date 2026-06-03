@@ -1,4 +1,4 @@
-import { ElectronMenuItem } from './electron-menu-item';
+import { ElectronMenuItem } from '../model/electron-menu-item';
 
 export interface CreateMenuItemInput {
   id: string;

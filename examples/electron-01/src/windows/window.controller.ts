@@ -1,8 +1,16 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import { AbstractWindowController, AppOn, WindowOrchestrator } from '@assemblerjs/electron';
+import {
+  AbstractMenuRegistryService,
+  AbstractWindowController,
+  AbstractWindowMenuBindingRegistryService,
+  AppOn,
+  MenuRegistryService,
+  WindowMenuBindingRegistryService,
+  WindowOrchestrator,
+} from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { ElectronAppEvent } from '@features/app/universal/app.events';
-import { AboutMenuContribution, AboutWindow } from './about';
+import { AboutMenu, AboutWindow } from './about';
 import { ABOUT_WINDOW_CONFIG } from './about/universal/window.config';
 import { MainMenu, MainWindow } from './main';
 import { MAIN_WINDOW_CONFIG } from './main/universal/window.config';
@@ -14,7 +22,14 @@ type AppWindowMap = {
 
 @WindowOrchestrator()
 @Assemblage({
-  provide: [[MainWindow], [AboutWindow], [MainMenu], [AboutMenuContribution]],
+  provide: [
+    [MainWindow],
+    [AboutWindow],
+    [MainMenu],
+    [AboutMenu],
+    [AbstractMenuRegistryService, MenuRegistryService],
+    [AbstractWindowMenuBindingRegistryService, WindowMenuBindingRegistryService],
+  ],
 })
 export class WindowControllerService
   extends AbstractWindowController<AppWindowMap>
