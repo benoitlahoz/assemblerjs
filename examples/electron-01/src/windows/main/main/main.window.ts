@@ -2,7 +2,9 @@ import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
 import { join } from 'path';
 import { ElectronWindow, UseMenu, Window, WindowCommand } from '@assemblerjs/electron';
-import { MainMenu } from '@menus/main.menu';
+import { AppMenu } from '@menus/app';
+import { WindowMenu } from '@menus/window';
+import { DeveloperToolsMenu } from '@menus/developer';
 import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 const MAIN_WINDOW_INITIAL_WIDTH = 1280;
@@ -38,8 +40,8 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     route: MAIN_WINDOW_CONFIG.route,
   },
 })
-@UseMenu(MainMenu)
-@Assemblage({ singleton: false })
+@UseMenu([AppMenu, WindowMenu, DeveloperToolsMenu])
+@Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('preload') preload: string) {
     super({

@@ -2,170 +2,115 @@ import { Assemblage } from 'assemblerjs';
 import { MenuItem } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
 
-const StandardWindowMenuConfig = {
+export const WindowMenuConfig = {
   Minimize: { id: 'window.minimize', order: 10 },
   Zoom: { id: 'window.zoom', order: 20 },
-  SeparatorMinimizeClose: { id: 'window.separator.minimize-close', order: 30 },
+  Sep1: { id: 'window.sep.1', order: 30 },
   Close: { id: 'window.close', order: 40 },
-  SeparatorCloseFront: { id: 'window.separator.close-front', order: 50 },
+  Sep2: { id: 'window.sep.2', order: 50 },
   Front: { id: 'window.front', order: 60 },
-} as const;
-
-const MainWindowMenuConfig = {
-  Minimize: { id: 'main.window.minimize', order: 10 },
-  Zoom: { id: 'main.window.zoom', order: 20 },
-  SeparatorMinimizeClose: { id: 'main.window.separator.minimize-close', order: 30 },
-  Close: { id: 'main.window.close', order: 40 },
-  SeparatorCloseFront: { id: 'main.window.separator.close-front', order: 50 },
-  Front: { id: 'main.window.front', order: 60 },
-  SeparatorCustomActions: { id: 'main.window.separator.custom-actions', order: 70 },
-  RefreshBounds: { id: 'main.window.refreshBounds', order: 80 },
-  RandomBounds: { id: 'main.window.randomBounds', order: 90 },
-  CenterWindow: { id: 'main.window.centerWindow', order: 100 },
-  AutoCenter: { id: 'main.menu.autoCenter', order: 110 },
+  SepCustom: { id: 'window.sep.custom', order: 70 },
+  RefreshBounds: { id: 'window.refreshBounds', order: 80 },
+  RandomBounds: { id: 'window.randomBounds', order: 90 },
+  CenterWindow: { id: 'window.centerWindow', order: 100 },
+  AutoCenter: { id: 'window.autoCenter', order: 110 },
 } as const;
 
 @MenuItem('Window')
 @Assemblage()
-export class StandardWindowMenu {
-  @MenuItem({
-    id: StandardWindowMenuConfig.Minimize.id,
-    role: 'minimize',
-    order: StandardWindowMenuConfig.Minimize.order,
-  })
-  private minimize(): void {}
-
-  @MenuItem({
-    id: StandardWindowMenuConfig.Zoom.id,
-    role: 'zoom',
-    order: StandardWindowMenuConfig.Zoom.order,
-  })
-  private zoom(): void {}
-
-  @MenuItem({
-    id: StandardWindowMenuConfig.SeparatorMinimizeClose.id,
-    type: 'separator',
-    order: StandardWindowMenuConfig.SeparatorMinimizeClose.order,
-  })
-  private separatorMinimizeClose(): void {}
-
-  @MenuItem({
-    id: StandardWindowMenuConfig.Close.id,
-    role: 'close',
-    order: StandardWindowMenuConfig.Close.order,
-  })
-  private close(): void {}
-
-  @MenuItem({
-    id: StandardWindowMenuConfig.SeparatorCloseFront.id,
-    type: 'separator',
-    order: StandardWindowMenuConfig.SeparatorCloseFront.order,
-  })
-  private separatorCloseFront(): void {}
-
-  @MenuItem({
-    id: StandardWindowMenuConfig.Front.id,
-    role: 'front',
-    order: StandardWindowMenuConfig.Front.order,
-  })
-  private front(): void {}
-}
-
-@MenuItem('Window')
-@Assemblage()
-export class MainWindowMenu {
+export class WindowMenu {
   constructor(public readonly i18n: I18nService) {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.Minimize.id,
+    id: WindowMenuConfig.Minimize.id,
     role: 'minimize',
-    order: MainWindowMenuConfig.Minimize.order,
+    order: WindowMenuConfig.Minimize.order,
   })
   private minimize(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.Zoom.id,
+    id: WindowMenuConfig.Zoom.id,
     role: 'zoom',
-    order: MainWindowMenuConfig.Zoom.order,
+    order: WindowMenuConfig.Zoom.order,
   })
   private zoom(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.SeparatorMinimizeClose.id,
+    id: WindowMenuConfig.Sep1.id,
     type: 'separator',
-    order: MainWindowMenuConfig.SeparatorMinimizeClose.order,
+    order: WindowMenuConfig.Sep1.order,
   })
-  private separatorMinimizeClose(): void {}
+  private sep1(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.Close.id,
+    id: WindowMenuConfig.Close.id,
     role: 'close',
-    order: MainWindowMenuConfig.Close.order,
+    order: WindowMenuConfig.Close.order,
   })
   private close(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.SeparatorCloseFront.id,
+    id: WindowMenuConfig.Sep2.id,
     type: 'separator',
-    order: MainWindowMenuConfig.SeparatorCloseFront.order,
+    order: WindowMenuConfig.Sep2.order,
   })
-  private separatorCloseFront(): void {}
+  private sep2(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.Front.id,
+    id: WindowMenuConfig.Front.id,
     role: 'front',
-    order: MainWindowMenuConfig.Front.order,
+    order: WindowMenuConfig.Front.order,
   })
   private front(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.SeparatorCustomActions.id,
+    id: WindowMenuConfig.SepCustom.id,
     type: 'separator',
-    order: MainWindowMenuConfig.SeparatorCustomActions.order,
+    order: WindowMenuConfig.SepCustom.order,
   })
-  private separatorCustomActions(): void {}
+  private sepCustom(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.RefreshBounds.id,
-    label(this: MainWindowMenu) {
+    id: WindowMenuConfig.RefreshBounds.id,
+    label(this: WindowMenu) {
       return this.i18n.translate('menu.window.refreshBounds');
     },
     accelerator: 'CmdOrCtrl+D',
-    order: MainWindowMenuConfig.RefreshBounds.order,
+    order: WindowMenuConfig.RefreshBounds.order,
     forwardToRenderer: true,
   })
   private refreshBounds(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.RandomBounds.id,
-    label(this: MainWindowMenu) {
+    id: WindowMenuConfig.RandomBounds.id,
+    label(this: WindowMenu) {
       return this.i18n.translate('menu.window.randomBounds');
     },
     accelerator: 'CmdOrCtrl+Shift+D',
-    order: MainWindowMenuConfig.RandomBounds.order,
+    order: WindowMenuConfig.RandomBounds.order,
     forwardToRenderer: true,
   })
   private randomBounds(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.CenterWindow.id,
-    label(this: MainWindowMenu) {
+    id: WindowMenuConfig.CenterWindow.id,
+    label(this: WindowMenu) {
       return this.i18n.translate('menu.window.centerWindow');
     },
     accelerator: 'CmdOrCtrl+Shift+C',
-    order: MainWindowMenuConfig.CenterWindow.order,
+    order: WindowMenuConfig.CenterWindow.order,
     forwardToRenderer: true,
   })
   private centerWindow(): void {}
 
   @MenuItem({
-    id: MainWindowMenuConfig.AutoCenter.id,
-    label(this: MainWindowMenu) {
+    id: WindowMenuConfig.AutoCenter.id,
+    label(this: WindowMenu) {
       return this.i18n.translate('menu.window.autoCenter');
     },
     type: 'checkbox',
     checked: false,
-    order: MainWindowMenuConfig.AutoCenter.order,
+    order: WindowMenuConfig.AutoCenter.order,
     handleInMain: true,
     forwardToRenderer: true,
   })

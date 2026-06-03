@@ -58,8 +58,12 @@ export class ElectronMenuItem {
   public set checked(value: boolean | undefined) {
     const item = this.getItem();
     if (item) {
-      item.checked = value ?? false;
-      this._checked = item.checked;
+      try {
+        item.checked = value ?? false;
+      } catch {
+        // Some Electron MenuItem instances expose readonly checked.
+      }
+      this._checked = item.checked ?? value;
       return;
     }
     this._checked = value;
@@ -85,8 +89,12 @@ export class ElectronMenuItem {
   public set id(value: string) {
     const item = this.getItem();
     if (item) {
-      item.id = value;
-      this._id = item.id;
+      try {
+        item.id = value;
+      } catch {
+        // Some Electron MenuItem instances expose readonly id.
+      }
+      this._id = item.id ?? value;
       return;
     }
     this._id = value;
@@ -116,8 +124,14 @@ export class ElectronMenuItem {
 
     const item = this.getItem();
     if (item) {
-      item.label = value;
-      this._label = item.label;
+      try {
+        if (item.label !== value) {
+          item.label = value;
+        }
+      } catch {
+        // Some Electron MenuItem instances expose readonly label.
+      }
+      this._label = item.label ?? value;
       return;
     }
     this._label = value;
@@ -143,8 +157,14 @@ export class ElectronMenuItem {
   public set role(value: string) {
     const item = this.getItem();
     if (item) {
-      item.role = value as any;
-      this._role = item.role;
+      try {
+        if (item.role !== value) {
+          item.role = value as any;
+        }
+      } catch {
+        // Some Electron MenuItem instances expose readonly role.
+      }
+      this._role = item.role ?? value;
       return;
     }
     this._role = value;
@@ -170,8 +190,12 @@ export class ElectronMenuItem {
   public set enabled(value: boolean) {
     const item = this.getItem();
     if (item) {
-      item.enabled = value;
-      this._enabled = item.enabled;
+      try {
+        item.enabled = value;
+      } catch {
+        // Some Electron MenuItem instances expose readonly enabled.
+      }
+      this._enabled = item.enabled ?? value;
       return;
     }
     this._enabled = value;

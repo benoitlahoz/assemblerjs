@@ -26,7 +26,6 @@ export function resolveEntryPath(
     return normalizePath(pathFallback);
   }
 
-  throw new Error(
-    `@MenuItem('${entry.id}') requires a 'path' or a menu-level path fallback.`,
-  );
+  // Default to root when no path is provided (slots-based composition)
+  return 'root';
 }

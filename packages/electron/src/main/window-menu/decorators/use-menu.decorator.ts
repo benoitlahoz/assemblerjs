@@ -7,6 +7,7 @@ import {
   type MenuReference,
   type NormalizedUseMenuDefinition,
   type UseMenuDefinition,
+  type UseMenuSlot,
 } from '../contracts';
 
 /**
@@ -14,7 +15,7 @@ import {
  * This decorator stores metadata only; runtime binding is handled by services.
  */
 export function UseMenu(
-  definition: MenuReference | UseMenuDefinition,
+  definition: MenuReference | UseMenuDefinition | UseMenuSlot[],
 ): ClassDecorator {
   return (target: Function) => {
     setWindowUseMenuDefinitionMetadata(

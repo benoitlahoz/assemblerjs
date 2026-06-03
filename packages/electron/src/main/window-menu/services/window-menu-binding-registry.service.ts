@@ -1,6 +1,7 @@
 import { Assemblage, getAssemblageContext } from 'assemblerjs';
 import { MapNamedRegistry } from '@assemblerjs/common';
 import { ElectronWindow } from '@/main/window/classes';
+import { ElectronMenu } from '@/main/menu/model/electron-menu';
 import {
   AbstractMenuControllerService,
   MenuControllerService,
@@ -84,20 +85,32 @@ export class WindowMenuBindingRegistryService
     void this.focusMenuSafely(target);
   }
 
-  public async attach(windowName: string, menu: MenuReference): Promise<void> {
+  public async attach(
+    windowName: string,
+    menu: MenuReference | ElectronMenu,
+  ): Promise<void> {
     const current = this.get(windowName);
     if (current && current.menu === menu) {
       return;
     }
 
     const menus = this.resolveMenuController();
-    const menuRegistry = this.resolveMenuRegistry();
-    const menuInstance = menuRegistry.resolveMenu(menu);
+
+    let menuInstance: ElectronMenu;
+    if (menu instanceof ElectronMenu) {
+      menuInstance = menu;
+    } else {
+      const menuRegistry = this.resolveMenuRegistry();
+      menuInstance = menuRegistry.resolveMenu(menu as MenuReference);
+    }
 
     menus.registerMenu(windowName, menuInstance);
     await menus.focus(windowName);
 
-    this.register(windowName, { menu });
+    // For composed menus we store the window name as sentinel; for token menus store the reference.
+    this.register(windowName, {
+      menu: menu instanceof ElectronMenu ? windowName : (menu as MenuReference),
+    });
   }
 
   public detach(windowName: string): void {

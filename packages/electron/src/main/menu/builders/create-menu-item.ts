@@ -25,3 +25,30 @@ export function createMenuItem(input: CreateMenuItemInput): ElectronMenuItem {
   }
   return item;
 }
+
+/**
+ * Creates a deep clone of a MenuItem, optionally overriding submenu.
+ */
+export function cloneMenuItem(
+  source: ElectronMenuItem,
+  submenuOverride?: ElectronMenuItem[],
+): ElectronMenuItem {
+  const clone = new ElectronMenuItem();
+  clone.id = source.id;
+  clone.label = source.label;
+  if (source.role) {
+    clone.role = source.role;
+  }
+  clone.accelerator = source.accelerator;
+  clone.type = source.type;
+  clone.checked = source.checked;
+  clone.enabled = source.enabled;
+
+  if (submenuOverride !== undefined) {
+    clone.submenu = submenuOverride;
+  } else if (source.submenu && source.submenu.length > 0) {
+    clone.submenu = source.submenu; // Shallow copy submenu reference
+  }
+
+  return clone;
+}

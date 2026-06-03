@@ -15,14 +15,14 @@ export interface ElectronMenuDefinitionMetadata {
 }
 
 export interface WindowUseMenuDefinitionMetadata {
-  menu: unknown;
+  menu?: unknown;
+  slots?: unknown;
   layout?: unknown;
   state?: unknown;
 }
 
 export interface MenuItemLabelResolverContext {
   itemId: string;
-  path: string;
   method: string;
   source?: object;
   target: Function;
@@ -36,7 +36,6 @@ export type MenuItemLabelValue =
 export interface MenuItemMetadataEntry {
   method: string;
   id: string;
-  path?: string;
   label?: MenuItemLabelValue;
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
@@ -48,6 +47,7 @@ export interface MenuItemMetadataEntry {
   after?: string;
   handleInMain?: boolean;
   forwardToRenderer?: boolean;
+  _submenuPath?: string; // Internal: generated from @MenuItem class labels and @SubMenu hierarchy
 }
 
 export type RendererIpcSubscriptionType = 'on' | 'once';

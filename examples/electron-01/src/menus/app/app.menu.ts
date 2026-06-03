@@ -15,6 +15,7 @@ const AppMenuConfig = {
   Quit: { id: 'app.quit', order: 80 },
 } as const;
 
+@MenuItem('App')
 @Assemblage()
 export class AppMenu {
   constructor(

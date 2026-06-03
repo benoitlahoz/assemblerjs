@@ -29,7 +29,6 @@ export function resolveLabel(
   if (typeof entry.label === 'function') {
     const context: MenuItemLabelResolverContext = {
       itemId: entry.id,
-      path: entry.path,
       method: entry.method,
       source,
       target: behavior.target,

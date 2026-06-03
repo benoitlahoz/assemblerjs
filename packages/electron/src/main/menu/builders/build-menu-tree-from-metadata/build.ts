@@ -3,7 +3,6 @@ import { buildGroupHierarchy } from './hierarchy';
 import { resolveTranslate } from './labels';
 import { materializeGroup } from './materialize';
 import { sortMenuItemsByOrdering } from './ordering';
-import { resolveEntryPath } from './path';
 import type {
   BuildBehaviorContext,
   BuildMenuTreeOptions,
@@ -31,7 +30,7 @@ export function buildMenuTreeFromMetadata(
     return {
       ...entry,
       source: sourceFromEntry ?? instance,
-      path: resolveEntryPath(entry, options?.pathFallback),
+      _submenuPath: entry._submenuPath || 'root',
       declarationIndex: (options?.declarationIndexOffset || 0) + index,
     };
   });
