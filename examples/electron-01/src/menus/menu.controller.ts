@@ -4,10 +4,17 @@ import { AppMenu } from './app';
 import { AboutMenu } from './about.menu';
 import { DeveloperToolsMenu } from './developer';
 import { MainMenu } from './main.menu';
-import { WindowMenu } from './window';
+import { MainWindowMenu, StandardWindowMenu } from './window';
 
 @MenuOrchestrator()
 @Assemblage({
-  provide: [[DeveloperToolsMenu], [AppMenu], [WindowMenu], [MainMenu], [AboutMenu]],
+  provide: [
+    [DeveloperToolsMenu],
+    [AppMenu],
+    [StandardWindowMenu],
+    [MainWindowMenu],
+    [MainMenu],
+    [AboutMenu],
+  ],
 })
 export class MenuControllerService extends AbstractMenuController implements AbstractAssemblage {}
