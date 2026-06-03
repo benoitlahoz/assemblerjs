@@ -27,6 +27,6 @@ export function resolveEntryPath(
   }
 
   throw new Error(
-    `@MenuItem('${entry.id}') requires a 'path' or a @MenuFragment({ path }) fallback.`,
+    `@MenuItem('${entry.id}') requires a 'path' or a menu-level path fallback.`,
   );
 }

@@ -6,6 +6,10 @@ import {
   MenuControllerService,
 } from '@/main/menu/services';
 import { getMenuDefinition } from '@/main/menu/menu-definition/menu.decorator';
+import {
+  AbstractMenuRegistryService,
+  MenuRegistryService,
+} from '@/main/window-menu/services';
 
 type MenuToken = Identifier<any>;
 
@@ -84,6 +88,22 @@ function resolveMenuControllerService(
   }
 }
 
+function resolveMenuRegistryService(
+  controller: any,
+): AbstractMenuRegistryService | undefined {
+  const context = getAssemblageContext(controller.constructor);
+
+  try {
+    return context.require(AbstractMenuRegistryService);
+  } catch {
+    try {
+      return context.require(MenuRegistryService);
+    } catch {
+      return undefined;
+    }
+  }
+}
+
 export const MenuController = createConstructorDecorator(function (this: any) {
   const context = getAssemblageContext(this.constructor);
   const menus = resolveMenuControllerService(this);
@@ -97,10 +117,21 @@ export const MenuController = createConstructorDecorator(function (this: any) {
       await originalOnInit(...args);
     }
 
-    // Legacy fragment/contribution composition is intentionally removed.
-    // We only validate that provided menu classes are resolvable in the DI graph.
+    const menuRegistry = resolveMenuRegistryService(this);
+
     for (const entry of managedMenus) {
       context.require(entry.token as any);
+
+      if (
+        menuRegistry &&
+        typeof menuRegistry.has === 'function' &&
+        typeof menuRegistry.register === 'function' &&
+        !menuRegistry.has(entry.definition.name)
+      ) {
+        menuRegistry.register(entry.definition.name, {
+          reference: entry.token as any,
+        });
+      }
     }
   };
 

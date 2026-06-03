@@ -24,7 +24,14 @@ export interface OpenApiGeneratorOptions {
 export interface RestMetadataStorage {
   getAllControllers(): Function[];
   getControllerPath(cls: Function): string | undefined;
-  getRoutesForClass(cls: Function): Array<{ method: string; path: string; handlerName: string | symbol; summary: string }>;
+  getRoutesForClass(
+    cls: Function,
+  ): Array<{
+    method: string;
+    path: string;
+    handlerName: string | symbol;
+    summary: string;
+  }>;
 }
 
 @Assemblage()
@@ -32,9 +39,11 @@ export class OpenApiGenerator {
   private options: OpenApiGeneratorOptions | null = null;
 
   // Default to the global singletons; replaceable in tests via _setStorages().
-  private _restStorage: RestMetadataStorage = MetadataStorage as unknown as RestMetadataStorage;
+  private _restStorage: RestMetadataStorage =
+    MetadataStorage as unknown as RestMetadataStorage;
   private _openApiStorage: OpenApiMetadataStorage = OpenApiMetadataStorage;
-  private _dtoExtractor: { extract(cls: Function): object } = DtoSchemaExtractor;
+  private _dtoExtractor: { extract(cls: Function): object } =
+    DtoSchemaExtractor;
 
   /**
    * Override storage objects for unit testing.
@@ -43,7 +52,7 @@ export class OpenApiGenerator {
   public _setStorages(
     rest: RestMetadataStorage,
     openApi: OpenApiMetadataStorage,
-    dto?: { extract(cls: Function): object }
+    dto?: { extract(cls: Function): object },
   ): void {
     this._restStorage = rest;
     this._openApiStorage = openApi;
@@ -58,7 +67,7 @@ export class OpenApiGenerator {
     if (!this.options) {
       throw new Error(
         '[assemblerjs/openapi] OpenApiGenerator.generate() called before configure(). ' +
-          'Make sure OpenApiModule is properly initialized before calling generate().'
+          'Make sure OpenApiModule is properly initialized before calling generate().',
       );
     }
 
@@ -68,21 +77,34 @@ export class OpenApiGenerator {
     for (const controllerClass of this._restStorage.getAllControllers()) {
       if (this._openApiStorage.isIgnored(controllerClass)) continue;
 
-      const basePath = this._restStorage.getControllerPath(controllerClass) ?? '/';
+      const basePath =
+        this._restStorage.getControllerPath(controllerClass) ?? '/';
       const tag = this.deriveTag(basePath, controllerClass);
       const routes = this._restStorage.getRoutesForClass(controllerClass);
 
       for (const route of routes) {
-        const { method, path: routePath, handlerName, summary: routeSummary } = route;
+        const {
+          method,
+          path: routePath,
+          handlerName,
+          summary: routeSummary,
+        } = route;
 
-        if (this._openApiStorage.isIgnored(controllerClass, handlerName)) continue;
+        if (this._openApiStorage.isIgnored(controllerClass, handlerName))
+          continue;
 
         const fullPath = toOpenApiPath(this.joinPaths(basePath, routePath));
 
         if (!paths[fullPath]) paths[fullPath] = {};
 
-        const operation = this._openApiStorage.getOperation(controllerClass, handlerName);
-        const responses = this._openApiStorage.getResponsesForHandler(controllerClass, handlerName);
+        const operation = this._openApiStorage.getOperation(
+          controllerClass,
+          handlerName,
+        );
+        const responses = this._openApiStorage.getResponsesForHandler(
+          controllerClass,
+          handlerName,
+        );
 
         const summary = operation?.summary ?? (routeSummary || undefined);
         const description = operation?.description;

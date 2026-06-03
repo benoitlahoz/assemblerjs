@@ -20,16 +20,17 @@ export function buildMenuItemFromEntry(
     accelerator: entry.accelerator,
   });
 
-  if (behavior.handleInMainMethods.has(entry.method)) {
+  if (entry.handleInMain) {
     item.handleInMain((itemId: string, windowName: string) => {
-      const method = behavior.instance?.[entry.method];
+      const source = entry.source ?? behavior.instance;
+      const method = source?.[entry.method];
       if (typeof method === 'function') {
-        method.call(behavior.instance, itemId, windowName);
+        method.call(source, itemId, windowName);
       }
     });
   }
 
-  if (behavior.forwardToRendererMethods.has(entry.method)) {
+  if (entry.forwardToRenderer) {
     item.forwardClickToRenderer();
   }
 

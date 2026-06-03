@@ -207,4 +207,32 @@ describe('WindowController decorator', () => {
     );
     expect(controller.listWindowChannels()).toContain('window:main.focus');
   });
+
+  it('keeps existing provide definition with WindowOrchestrator', async () => {
+    const { WindowOrchestrator } =
+      await import('../src/main/window/window-orchestration/window-orchestrator.decorator');
+    const { Window } =
+      await import('../src/main/window/window-definition/window.decorator');
+
+    @Window({ name: 'main' })
+    @Assemblage({ singleton: true })
+    class MainWindow {
+      public isDestroyed() {
+        return false;
+      }
+      public once(_event: string, _callback: () => void) {}
+      public close() {}
+    }
+
+    @WindowOrchestrator()
+    @Assemblage({ provide: [[MainWindow]] })
+    class OrchestratedController {}
+
+    const definition = getAssemblageDefinition(OrchestratedController as any);
+    const provides = Array.isArray(definition?.provide)
+      ? definition.provide
+      : [];
+
+    expect(provides).toEqual([[MainWindow]]);
+  });
 });

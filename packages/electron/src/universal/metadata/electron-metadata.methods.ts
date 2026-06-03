@@ -1,4 +1,8 @@
-import { electronMetadata, resolveConstructor, uniqueByMethod } from './electron-metadata.shared';
+import {
+  electronMetadata,
+  resolveConstructor,
+  uniqueByMethod,
+} from './electron-metadata.shared';
 import { ElectronMetadataNames } from './electron-metadata.names';
 import type {
   MenuItemMetadataEntry,
@@ -16,14 +20,6 @@ interface WindowCommandMetadataEntry {
 interface MenuCommandMetadataEntry {
   method: string;
   command: string;
-}
-
-interface MenuItemHandleInMainMetadataEntry {
-  method: string;
-}
-
-interface MenuItemForwardToRendererMetadataEntry {
-  method: string;
 }
 
 interface WindowEmitMetadataEntry {
@@ -71,7 +67,9 @@ export function addMenuCommandMetadata(
   );
 }
 
-export function getMenuCommandMetadata(target: Function): MenuCommandMetadataEntry[] {
+export function getMenuCommandMetadata(
+  target: Function,
+): MenuCommandMetadataEntry[] {
   return uniqueByMethod(
     electronMetadata.getMethodEntries<MenuCommandMetadataEntry>(
       ElectronMetadataNames.MenuCommand,
@@ -102,52 +100,6 @@ export function getMenuItemMetadata(target: Function): MenuItemMetadataEntry[] {
   );
 }
 
-export function addMenuItemHandleInMainMetadata(
-  target: object,
-  method: string,
-): void {
-  electronMetadata.addMethodEntry(
-    ElectronMetadataNames.MenuItemHandleInMain,
-    target,
-    method,
-    { method } as MenuItemHandleInMainMetadataEntry,
-  );
-}
-
-export function getMenuItemHandleInMainMetadata(
-  target: Function,
-): MenuItemHandleInMainMetadataEntry[] {
-  return uniqueByMethod(
-    electronMetadata.getMethodEntries<MenuItemHandleInMainMetadataEntry>(
-      ElectronMetadataNames.MenuItemHandleInMain,
-      target,
-    ),
-  );
-}
-
-export function addMenuItemForwardToRendererMetadata(
-  target: object,
-  method: string,
-): void {
-  electronMetadata.addMethodEntry(
-    ElectronMetadataNames.MenuItemForwardToRenderer,
-    target,
-    method,
-    { method } as MenuItemForwardToRendererMetadataEntry,
-  );
-}
-
-export function getMenuItemForwardToRendererMetadata(
-  target: Function,
-): MenuItemForwardToRendererMetadataEntry[] {
-  return uniqueByMethod(
-    electronMetadata.getMethodEntries<MenuItemForwardToRendererMetadataEntry>(
-      ElectronMetadataNames.MenuItemForwardToRenderer,
-      target,
-    ),
-  );
-}
-
 export function addWindowEmitMetadata(
   target: object,
   method: string,
@@ -164,7 +116,9 @@ export function addWindowEmitMetadata(
   );
 }
 
-export function getWindowEmitMetadata(target: Function): WindowEmitMetadataEntry[] {
+export function getWindowEmitMetadata(
+  target: Function,
+): WindowEmitMetadataEntry[] {
   return uniqueByMethod(
     electronMetadata.getMethodEntries<WindowEmitMetadataEntry>(
       ElectronMetadataNames.WindowEmit,

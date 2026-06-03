@@ -4,7 +4,7 @@
       <p class="about-card__eyebrow">AssemblerJS Electron</p>
       <h1 class="about-card__title">About This Example</h1>
       <p class="about-card__body">
-        This window is opened from a MenuContribution provided by the About module.
+        This window is opened through the @UseMenu binding provided by the About module.
       </p>
       <dl class="about-card__meta">
         <div>
@@ -17,7 +17,7 @@
         </div>
         <div>
           <dt>Menu source</dt>
-          <dd>AboutMenuContribution</dd>
+          <dd>AboutMenu</dd>
         </div>
       </dl>
     </section>

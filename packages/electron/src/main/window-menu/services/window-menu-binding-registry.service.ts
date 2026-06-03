@@ -18,6 +18,72 @@ export class WindowMenuBindingRegistryService
   extends MapNamedRegistry<string, WindowMenuBindingEntry>
   implements AbstractWindowMenuBindingRegistryService
 {
+  private isMissingMenuRegistrationError(error: unknown): boolean {
+    return (
+      error instanceof Error &&
+      error.message.startsWith('No menu registered for window')
+    );
+  }
+
+  private async focusMenuSafely(windowName: string): Promise<void> {
+    const menus = this.resolveMenuController();
+
+    try {
+      await menus.focus(windowName);
+    } catch (error) {
+      if (!this.isMissingMenuRegistrationError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  private resolveFocusedWindowName(): string | undefined {
+    const focusedWindow =
+      typeof (
+        ElectronWindow as typeof ElectronWindow & {
+          getFocusedWindow?: () => ElectronWindow | null;
+        }
+      ).getFocusedWindow === 'function'
+        ? (
+            ElectronWindow as typeof ElectronWindow & {
+              getFocusedWindow: () => ElectronWindow | null;
+            }
+          ).getFocusedWindow()
+        : null;
+
+    const focusedWindowName = (
+      focusedWindow as ElectronWindow & { name?: string }
+    )?.name;
+
+    if (focusedWindowName && this.has(focusedWindowName)) {
+      return focusedWindowName;
+    }
+
+    return undefined;
+  }
+
+  private resolveFallbackWindowName(): string | undefined {
+    for (const entry of this.list()) {
+      const candidate = ElectronWindow.getByName(entry.name);
+      if (candidate && !candidate.isDestroyed()) {
+        return entry.name;
+      }
+    }
+
+    return undefined;
+  }
+
+  private refreshBestAvailableWindowMenu(): void {
+    const target =
+      this.resolveFocusedWindowName() || this.resolveFallbackWindowName();
+
+    if (!target) {
+      return;
+    }
+
+    void this.focusMenuSafely(target);
+  }
+
   public async attach(windowName: string, menu: MenuReference): Promise<void> {
     const current = this.get(windowName);
     if (current && current.menu === menu) {
@@ -45,25 +111,7 @@ export class WindowMenuBindingRegistryService
 
     this.unregister(windowName);
 
-    const focusedWindow =
-      typeof (
-        ElectronWindow as typeof ElectronWindow & {
-          getFocusedWindow?: () => ElectronWindow | null;
-        }
-      ).getFocusedWindow === 'function'
-        ? (
-            ElectronWindow as typeof ElectronWindow & {
-              getFocusedWindow: () => ElectronWindow | null;
-            }
-          ).getFocusedWindow()
-        : null;
-
-    const focusedWindowName = (
-      focusedWindow as ElectronWindow & { name?: string }
-    )?.name;
-    if (focusedWindowName && this.has(focusedWindowName)) {
-      void menus.focus(focusedWindowName);
-    }
+    this.refreshBestAvailableWindowMenu();
   }
 
   public async refresh(windowName: string): Promise<void> {
@@ -71,8 +119,7 @@ export class WindowMenuBindingRegistryService
       return;
     }
 
-    const menus = this.resolveMenuController();
-    await menus.focus(windowName);
+    await this.focusMenuSafely(windowName);
   }
 
   private resolveMenuController(): AbstractMenuControllerService {

@@ -1,6 +1,5 @@
 import {
   createConstructorDecorator,
-  getAssemblageContext,
   getAssemblageDefinition,
 } from 'assemblerjs';
 import { buildMenuTreeFromMetadata } from '@/main/menu/builders/build-menu-tree-from-metadata';
@@ -11,145 +10,20 @@ import {
 import type { ElectronMenuItem } from '@/main/menu/model/electron-menu-item';
 import {
   ElectronMetadataStorage,
-  getMenuFragmentDefinitionMetadata,
   getMenuDefinitionMetadata,
   setMenuDefinitionMetadata,
 } from '@/universal/metadata';
 
 export interface MenuDefinition {
   name?: string;
-  fragments?: any[];
 }
 
 export interface NormalizedMenuDefinition {
   name: string;
-  fragments: any[];
 }
 
 export const MenuDefinitionMetadataKey =
   ElectronMetadataStorage.getKey('MenuDefinition');
-
-interface MenuFragmentSource {
-  token: any;
-  target: Function;
-  provideIndex: number;
-  pathFallback?: string;
-  instance?: object;
-}
-
-function resolveFragmentTarget(
-  token: any,
-  concrete: any,
-): Function | undefined {
-  if (
-    typeof concrete === 'function' &&
-    getMenuFragmentDefinitionMetadata(concrete)
-  ) {
-    return concrete;
-  }
-
-  if (typeof token === 'function' && getMenuFragmentDefinitionMetadata(token)) {
-    return token;
-  }
-
-  return undefined;
-}
-
-function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
-  const menuCtor = menuInstance.constructor as new (...args: any[]) => unknown;
-  const assemblageDefinition = getAssemblageDefinition(menuCtor) || {};
-  const menuDefinition = getMenuDefinitionMetadata(menuCtor) as
-    | NormalizedMenuDefinition
-    | undefined;
-  const provide = (assemblageDefinition.provide ||
-    assemblageDefinition.inject ||
-    []) as unknown as Array<any[]>;
-
-  if (!Array.isArray(provide) || provide.length === 0) {
-    return [];
-  }
-
-  let context: ReturnType<typeof getAssemblageContext> | undefined;
-  try {
-    context = getAssemblageContext(menuCtor);
-  } catch {
-    context = undefined;
-  }
-
-  const fragments: MenuFragmentSource[] = [];
-  const seenTargets = new Set<Function>();
-
-  for (let index = 0; index < provide.length; index += 1) {
-    const injection = provide[index];
-    if (!Array.isArray(injection) || injection.length === 0) {
-      continue;
-    }
-
-    const token = injection[0];
-    const concrete = injection[1] || injection[0];
-    const target = resolveFragmentTarget(token, concrete);
-    if (!target || seenTargets.has(target)) {
-      continue;
-    }
-
-    if (getMenuDefinitionMetadata(target)) {
-      throw new Error(
-        `Menu fragment '${target.name || 'anonymous'}' cannot also be decorated with @Menu.`,
-      );
-    }
-
-    let instance: object | undefined;
-    if (context) {
-      try {
-        instance = context.require(token);
-      } catch {
-        instance = undefined;
-      }
-    }
-
-    fragments.push({
-      token,
-      target,
-      provideIndex: index,
-      pathFallback: getMenuFragmentDefinitionMetadata(target)?.path,
-      instance,
-    });
-    seenTargets.add(target);
-  }
-
-  const fragmentOrder =
-    menuDefinition && Array.isArray(menuDefinition.fragments)
-      ? menuDefinition.fragments
-      : [];
-
-  if (fragmentOrder.length === 0) {
-    return fragments.sort((a, b) => a.provideIndex - b.provideIndex);
-  }
-
-  const orderIndex = new Map<any, number>();
-  fragmentOrder.forEach((entry, index) => {
-    orderIndex.set(entry, index);
-  });
-
-  return fragments.sort((a, b) => {
-    const aOrder = orderIndex.get(a.token) ?? orderIndex.get(a.target);
-    const bOrder = orderIndex.get(b.token) ?? orderIndex.get(b.target);
-
-    if (typeof aOrder === 'number' && typeof bOrder === 'number') {
-      return aOrder - bOrder;
-    }
-
-    if (typeof aOrder === 'number') {
-      return -1;
-    }
-
-    if (typeof bOrder === 'number') {
-      return 1;
-    }
-
-    return a.provideIndex - b.provideIndex;
-  });
-}
 
 const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
   if (typeof this.getItems === 'function' && this.getItems().length > 0) {
@@ -164,18 +38,6 @@ const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
   const translate = resolveMenuTranslate(this);
 
   roots.push(...buildMenuTreeFromMetadata(this, { translate }).roots);
-
-  for (const [fragmentIndex, fragment] of resolveMenuFragments(
-    this,
-  ).entries()) {
-    roots.push(
-      ...buildMenuTreeFromMetadata(fragment.instance || fragment.target, {
-        translate,
-        pathFallback: fragment.pathFallback,
-        declarationIndexOffset: (fragmentIndex + 1) * 10_000,
-      }).roots,
-    );
-  }
 
   for (const root of mergeRootMenus(roots)) {
     this.registerItem(root);
@@ -202,12 +64,17 @@ export function normalizeMenuDefinition(
     );
   }
 
+  if (typeof raw.fragments !== 'undefined') {
+    throw new Error(
+      '@Menu.fragments has been removed. Compose menu trees with @SubMenu and injected assemblages.',
+    );
+  }
+
   return {
     name:
       definition.name && typeof definition.name === 'string'
         ? definition.name
         : 'mainMenu',
-    fragments: Array.isArray(definition.fragments) ? definition.fragments : [],
   };
 }
 

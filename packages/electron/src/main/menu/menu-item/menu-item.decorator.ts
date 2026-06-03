@@ -4,6 +4,13 @@ import {
   type MenuItemLabelValue,
   type MenuItemMetadataEntry,
 } from '@/universal/metadata';
+import {
+  getMenuDslSubmenus,
+  getMenuNodeLabel,
+  hasMenuDslMetadata,
+  setMenuNodeLabel,
+  SubMenu,
+} from './menu-dsl.decorator';
 
 export interface MenuItemDefinition {
   id: string;
@@ -17,6 +24,8 @@ export interface MenuItemDefinition {
   order?: number;
   before?: string;
   after?: string;
+  handleInMain?: boolean;
+  forwardToRenderer?: boolean;
 }
 
 function assertNonEmptyString(value: unknown, field: string): string {
@@ -74,6 +83,8 @@ export function normalizeMenuItemDefinition(
     order: definition.order,
     before: definition.before?.trim() || undefined,
     after: definition.after?.trim() || undefined,
+    handleInMain: definition.handleInMain === true,
+    forwardToRenderer: definition.forwardToRenderer === true,
   };
 }
 
@@ -175,7 +186,17 @@ export function validateMenuItemMetadata(
   return entries;
 }
 
-export function MenuItem(definition: MenuItemDefinition): MethodDecorator {
+export function MenuItem(definition: MenuItemDefinition): MethodDecorator;
+export function MenuItem(groupLabel: string): ClassDecorator;
+export function MenuItem(
+  definitionOrGroup: MenuItemDefinition | string,
+): MethodDecorator | ClassDecorator {
+  if (typeof definitionOrGroup === 'string') {
+    return (target: Function) => {
+      setMenuNodeLabel(target, definitionOrGroup);
+    };
+  }
+
   return (
     target: object,
     propertyKey: string | symbol,
@@ -188,12 +209,204 @@ export function MenuItem(definition: MenuItemDefinition): MethodDecorator {
     addMenuItemMetadata(
       target,
       propertyKey,
-      normalizeMenuItemDefinition(definition),
+      normalizeMenuItemDefinition(definitionOrGroup),
     );
   };
 }
 
-export function getMenuItems(target: Function): MenuItemMetadataEntry[] {
-  const entries = getMenuItemMetadata(target);
-  return validateMenuItemMetadata(entries);
+function resolveSubmenuTarget(
+  target: Function,
+  instance: object | undefined,
+  submenu: ReturnType<typeof getMenuDslSubmenus>[number],
+): { ctor: Function; instance?: object } {
+  if (submenu.targetResolver) {
+    const resolved = submenu.targetResolver();
+    if (typeof resolved === 'function') {
+      return {
+        ctor: resolved,
+      };
+    }
+  }
+
+  if (instance) {
+    const candidate = (instance as Record<string, unknown>)[submenu.member];
+
+    if (submenu.source === 'method') {
+      if (typeof candidate === 'function') {
+        const resolved = candidate.call(instance);
+        if (typeof resolved === 'function') {
+          return {
+            ctor: resolved,
+          };
+        }
+
+        if (
+          resolved &&
+          typeof (resolved as { constructor?: unknown }).constructor ===
+            'function'
+        ) {
+          return {
+            ctor: (resolved as { constructor: Function }).constructor,
+            instance: resolved as object,
+          };
+        }
+      }
+    } else if (typeof candidate === 'function') {
+      return {
+        ctor: candidate,
+      };
+    }
+
+    if (
+      candidate &&
+      typeof (candidate as { constructor?: unknown }).constructor === 'function'
+    ) {
+      return {
+        ctor: (candidate as { constructor: Function }).constructor,
+        instance: candidate as object,
+      };
+    }
+  }
+
+  const staticTarget = target as unknown as Record<string, unknown>;
+  const staticCandidate = staticTarget[submenu.member];
+  if (submenu.source === 'property' && typeof staticCandidate === 'function') {
+    return {
+      ctor: staticCandidate,
+    };
+  }
+
+  throw new Error(
+    `@SubMenu('${submenu.member}') could not resolve submenu target. Use @SubMenu({...}) on a method returning submenu instance, @SubMenu(label, () => SubMenuClass), or assign a class constructor on '${submenu.member}'.`,
+  );
 }
+
+function resolveSubmenuLabel(
+  submenu: ReturnType<typeof getMenuDslSubmenus>[number],
+  target: Function,
+  instance: object | undefined,
+  fallbackCtor: Function,
+): string {
+  if (typeof submenu.label === 'string' && submenu.label.trim().length > 0) {
+    return submenu.label.trim();
+  }
+
+  if (typeof submenu.label === 'function') {
+    const label = submenu.label.call(instance ?? target);
+    if (typeof label === 'string' && label.trim().length > 0) {
+      return label.trim();
+    }
+  }
+
+  return getMenuNodeLabel(fallbackCtor) ?? submenu.member;
+}
+
+const SUBMENU_ORDER_SCALE_FACTOR = 1_000;
+
+function applyBranchOrder(
+  entry: MenuItemMetadataEntry,
+  branchOrderBase: number,
+  branchOrderScale: number,
+): number | undefined {
+  if (
+    branchOrderBase === 0 &&
+    branchOrderScale === SUBMENU_ORDER_SCALE_FACTOR
+  ) {
+    return entry.order;
+  }
+
+  const localOrder = typeof entry.order === 'number' ? entry.order : 0;
+  const localScale = branchOrderScale / SUBMENU_ORDER_SCALE_FACTOR;
+
+  if (typeof entry.order !== 'number') {
+    return branchOrderBase;
+  }
+
+  return branchOrderBase + localOrder * localScale;
+}
+
+function collectDslMenuItems(
+  target: Function,
+  instance: object | undefined,
+  pathSegments: string[],
+  includeOwnLabel: boolean,
+  branchOrderBase: number,
+  branchOrderScale: number,
+  out: MenuItemMetadataEntry[],
+  visited: Set<Function>,
+): void {
+  const ownLabel = includeOwnLabel ? getMenuNodeLabel(target) : undefined;
+  const currentSegments = ownLabel ? [...pathSegments, ownLabel] : pathSegments;
+  const sourceInstance = instance as Record<string, unknown> | undefined;
+
+  for (const entry of getMenuItemMetadata(target)) {
+    out.push({
+      ...entry,
+      source: sourceInstance,
+      order: applyBranchOrder(entry, branchOrderBase, branchOrderScale),
+      path:
+        entry.path ??
+        (currentSegments.length > 0 ? currentSegments.join('/') : undefined),
+    } as MenuItemMetadataEntry);
+  }
+
+  if (visited.has(target)) {
+    return;
+  }
+
+  visited.add(target);
+
+  for (const submenu of getMenuDslSubmenus(target)) {
+    const resolved = resolveSubmenuTarget(target, instance, submenu);
+    const submenuLabel = resolveSubmenuLabel(
+      submenu,
+      target,
+      instance,
+      resolved.ctor,
+    );
+    const childScale = branchOrderScale / SUBMENU_ORDER_SCALE_FACTOR;
+    const submenuOrder = typeof submenu.order === 'number' ? submenu.order : 0;
+    const childBase = branchOrderBase + submenuOrder * childScale;
+
+    collectDslMenuItems(
+      resolved.ctor,
+      resolved.instance,
+      [...currentSegments, submenuLabel],
+      false,
+      childBase,
+      childScale,
+      out,
+      visited,
+    );
+  }
+}
+
+export function getMenuItems(
+  targetOrInstance: Function | object,
+): MenuItemMetadataEntry[] {
+  const target =
+    typeof targetOrInstance === 'function'
+      ? targetOrInstance
+      : targetOrInstance.constructor;
+
+  if (!hasMenuDslMetadata(target)) {
+    return validateMenuItemMetadata(getMenuItemMetadata(target));
+  }
+
+  const dslEntries: MenuItemMetadataEntry[] = [];
+
+  collectDslMenuItems(
+    target,
+    typeof targetOrInstance === 'function' ? undefined : targetOrInstance,
+    [],
+    true,
+    0,
+    SUBMENU_ORDER_SCALE_FACTOR,
+    dslEntries,
+    new Set<Function>(),
+  );
+
+  return validateMenuItemMetadata(dslEntries);
+}
+
+export { SubMenu };

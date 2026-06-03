@@ -6,12 +6,13 @@ export class I18nService implements AbstractAssemblage {
     'menu.group.app': 'App',
     'menu.group.window': 'Window',
     'menu.group.developer': 'Developer',
-    'menu.group.refresh': 'Refresh',
+    'menu.group.reload': 'Reload',
     'menu.app.about': 'About',
     'menu.window.refreshBounds': 'Refresh Bounds',
     'menu.window.randomBounds': 'Random Bounds',
     'menu.window.centerWindow': 'Center Window',
     'menu.window.autoCenter': 'Auto-center after random',
+    'menu.developer.toggleDevTools': 'Toggle Developer Tools',
     'menu.app.quit': 'Quit',
   };
 

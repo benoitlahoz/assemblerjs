@@ -7,6 +7,7 @@ import type { ElectronMenuItem } from '../../model/electron-menu-item';
 export interface IndexedMenuItemMetadataEntry extends MenuItemMetadataEntry {
   path: string;
   declarationIndex: number;
+  source?: Record<string, unknown>;
 }
 
 export interface GroupNode {
@@ -28,8 +29,6 @@ export interface BuildMenuTreeOptions {
 }
 
 export interface BuildBehaviorContext {
-  handleInMainMethods: Set<string>;
-  forwardToRendererMethods: Set<string>;
   instance?: Record<string, unknown>;
   target: Function;
   translate: (key: string) => string;

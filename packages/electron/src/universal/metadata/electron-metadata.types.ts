@@ -20,24 +20,6 @@ export interface WindowUseMenuDefinitionMetadata {
   state?: unknown;
 }
 
-export interface MenuContributionDefinitionMetadata {
-  target: string;
-  priority: number;
-  path?: string;
-  states?: Array<{
-    itemId: string;
-    priority: number;
-    enabled?: boolean;
-    checked?: boolean;
-    whenWindowFocused?: string;
-  }>;
-}
-
-export interface MenuFragmentDefinitionMetadata {
-  enabled: true;
-  path?: string;
-}
-
 export interface MenuItemLabelResolverContext {
   itemId: string;
   path: string;
@@ -64,6 +46,8 @@ export interface MenuItemMetadataEntry {
   order?: number;
   before?: string;
   after?: string;
+  handleInMain?: boolean;
+  forwardToRenderer?: boolean;
 }
 
 export type RendererIpcSubscriptionType = 'on' | 'once';

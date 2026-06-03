@@ -33,6 +33,10 @@ export default defineConfig(() => ({
     dts({
       entryRoot: 'src',
       tsconfigPath: join(__dirname, 'tsconfig.lib.json'),
+      compilerOptions: {
+        composite: false,
+        declarationMap: false,
+      },
       rollupTypes: false,
       insertTypesEntry: true,
       exclude: ['**/node_modules/**'],

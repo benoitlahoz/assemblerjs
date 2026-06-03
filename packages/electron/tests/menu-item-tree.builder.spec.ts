@@ -76,11 +76,16 @@ let MenuItem: (options: {
   order?: number;
   before?: string;
   after?: string;
+  handleInMain?: boolean;
+  forwardToRenderer?: boolean;
 }) => MethodDecorator;
-
-let HandleInMain: () => MethodDecorator;
-
-let ForwardClickToRenderer: () => MethodDecorator;
+let SubMenu: (options: {
+  id?: string;
+  label?: string | ((this: any) => string | undefined);
+  order?: number;
+  before?: string;
+  after?: string;
+}) => MethodDecorator;
 
 let buildMenuTreeFromMetadata: (
   targetOrInstance: (new (...args: unknown[]) => object) | object,
@@ -98,12 +103,8 @@ let buildMenuTreeFromMetadata: (
 };
 
 beforeAll(async () => {
-  ({ MenuItem } =
+  ({ MenuItem, SubMenu } =
     await import('../src/main/menu/menu-item/menu-item.decorator'));
-  ({ HandleInMain } =
-    await import('../src/main/menu/menu-item/handle-in-main.decorator'));
-  ({ ForwardClickToRenderer } =
-    await import('../src/main/menu/menu-item/forward-click-to-renderer.decorator'));
   ({ buildMenuTreeFromMetadata } =
     await import('../src/main/menu/builders/build-menu-tree-from-metadata'));
 });
@@ -188,7 +189,7 @@ describe('buildMenuTreeFromMetadata', () => {
     }
 
     expect(() => buildMenuTreeFromMetadata(MenuDef)).toThrow(
-      "@MenuItem('missing.path') requires a 'path' or a @MenuFragment({ path }) fallback.",
+      "@MenuItem('missing.path') requires a 'path' or a menu-level path fallback.",
     );
   });
 
@@ -245,14 +246,18 @@ describe('buildMenuTreeFromMetadata', () => {
     );
   });
 
-  it('wires HandleInMain and ForwardClickToRenderer from method decorators', () => {
+  it('wires handleInMain and forwardToRenderer from @MenuItem options', () => {
     @Assemblage()
     class MenuDef {
       public calls: Array<{ itemId: string; windowName: string }> = [];
 
-      @MenuItem({ id: 'main.menu.autoCenter', path: 'Window', label: 'Auto' })
-      @HandleInMain()
-      @ForwardClickToRenderer()
+      @MenuItem({
+        id: 'main.menu.autoCenter',
+        path: 'Window',
+        label: 'Auto',
+        handleInMain: true,
+        forwardToRenderer: true,
+      })
       public autoCenter(itemId: string, windowName: string): void {
         this.calls.push({ itemId, windowName });
       }
@@ -268,6 +273,44 @@ describe('buildMenuTreeFromMetadata', () => {
     item?._handleInMain?.('main.menu.autoCenter', 'main');
     expect(instance.calls).toEqual([
       { itemId: 'main.menu.autoCenter', windowName: 'main' },
+    ]);
+  });
+
+  it('calls handleInMain method on injected submenu instance', () => {
+    @MenuItem('App')
+    @Assemblage()
+    class AppMenu {
+      public calls: Array<{ itemId: string; windowName: string }> = [];
+
+      @MenuItem({
+        id: 'app.about',
+        label: 'About',
+        handleInMain: true,
+      })
+      public openAboutWindow(itemId: string, windowName: string): void {
+        this.calls.push({ itemId, windowName });
+      }
+    }
+
+    @Assemblage()
+    class MainMenu {
+      constructor(public readonly appMenu: AppMenu) {}
+
+      @SubMenu({ id: 'main.menu.app', label: 'App', order: 10 })
+      public app(): AppMenu {
+        return this.appMenu;
+      }
+    }
+
+    const appMenu = new AppMenu();
+    const built = buildMenuTreeFromMetadata(new MainMenu(appMenu));
+    const item = built.itemsById.get('app.about');
+
+    expect(typeof item?._handleInMain).toBe('function');
+
+    item?._handleInMain?.('app.about', 'main');
+    expect(appMenu.calls).toEqual([
+      { itemId: 'app.about', windowName: 'main' },
     ]);
   });
 
@@ -309,5 +352,95 @@ describe('buildMenuTreeFromMetadata', () => {
       'main.developer.toggleDevTools',
       'menu.developer.refresh',
     ]);
+  });
+
+  it('respects @SubMenu order even when declaration order is reversed', () => {
+    @MenuItem('Developer')
+    @Assemblage()
+    class DeveloperMenu {
+      @MenuItem({
+        id: 'main.developer.toggleDevTools',
+        label: 'Toggle DevTools',
+        order: 10,
+      })
+      public toggleDevTools(): void {}
+    }
+
+    @MenuItem('Window')
+    @Assemblage()
+    class WindowMenu {
+      @MenuItem({
+        id: 'main.window.centerWindow',
+        label: 'Center Window',
+        order: 10,
+      })
+      public centerWindow(): void {}
+    }
+
+    @Assemblage()
+    class MainMenu {
+      constructor(
+        public readonly developer: DeveloperMenu,
+        public readonly window: WindowMenu,
+      ) {}
+
+      @SubMenu({ id: 'main.menu.developer', label: 'Developer', order: 30 })
+      public developerMenu(): DeveloperMenu {
+        return this.developer;
+      }
+
+      @SubMenu({ id: 'main.menu.window', label: 'Window', order: 20 })
+      public windowMenu(): WindowMenu {
+        return this.window;
+      }
+    }
+
+    const built = buildMenuTreeFromMetadata(
+      new MainMenu(new DeveloperMenu(), new WindowMenu()),
+    );
+    const rootIds = built.roots.map((root) => root.id);
+
+    expect(rootIds).toEqual(['menu.window', 'menu.developer']);
+  });
+
+  it('keeps submenu children ordered by local order inside the same parent group', () => {
+    @MenuItem('Refresh')
+    @Assemblage()
+    class RefreshMenu {
+      @MenuItem({
+        id: 'developer.reload',
+        label: 'Reload',
+        order: 10,
+      })
+      public reload(): void {}
+    }
+
+    @MenuItem('Developer')
+    @Assemblage()
+    class DeveloperMenu {
+      constructor(public readonly refresh: RefreshMenu) {}
+
+      @SubMenu({ id: 'developer.refresh', label: 'Refresh', order: 10 })
+      public refreshMenu(): RefreshMenu {
+        return this.refresh;
+      }
+
+      @MenuItem({
+        id: 'developer.toggleDevTools',
+        label: 'Toggle DevTools',
+        order: 30,
+      })
+      public toggleDevTools(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(
+      new DeveloperMenu(new RefreshMenu()),
+    );
+    const developerRoot = built.roots.find(
+      (root) => root.id === 'menu.developer',
+    );
+    const ids = developerRoot?.submenu?.map((item) => item.id) || [];
+
+    expect(ids).toEqual(['menu.developer.refresh', 'developer.toggleDevTools']);
   });
 });

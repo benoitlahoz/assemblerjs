@@ -3,8 +3,6 @@ import { ElectronMetadataNames } from './electron-metadata.names';
 import type {
   ElectronMenuDefinitionMetadata,
   ElectronWindowDefinitionMetadata,
-  MenuContributionDefinitionMetadata,
-  MenuFragmentDefinitionMetadata,
   WindowUseMenuDefinitionMetadata,
 } from './electron-metadata.types';
 
@@ -64,46 +62,6 @@ export function getWindowUseMenuDefinitionMetadata(
 ): WindowUseMenuDefinitionMetadata | undefined {
   return electronMetadata.getClass(
     ElectronMetadataNames.WindowUseMenuDefinition,
-    target,
-  );
-}
-
-export function setMenuContributionDefinitionMetadata(
-  target: Function,
-  definition: MenuContributionDefinitionMetadata,
-): void {
-  electronMetadata.setClass(
-    ElectronMetadataNames.MenuContributionDefinition,
-    target,
-    definition,
-  );
-}
-
-export function getMenuContributionDefinitionMetadata(
-  target: Function,
-): MenuContributionDefinitionMetadata | undefined {
-  return electronMetadata.getClass(
-    ElectronMetadataNames.MenuContributionDefinition,
-    target,
-  );
-}
-
-export function setMenuFragmentDefinitionMetadata(
-  target: Function,
-  definition: MenuFragmentDefinitionMetadata,
-): void {
-  electronMetadata.setClass(
-    ElectronMetadataNames.MenuFragmentDefinition,
-    target,
-    definition,
-  );
-}
-
-export function getMenuFragmentDefinitionMetadata(
-  target: Function,
-): MenuFragmentDefinitionMetadata | undefined {
-  return electronMetadata.getClass(
-    ElectronMetadataNames.MenuFragmentDefinition,
     target,
   );
 }

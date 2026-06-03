@@ -1,10 +1,9 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 import { AbstractMenuService, Menu, MenuOn } from '@assemblerjs/electron/renderer';
 import type { MenuItemClickedEvent } from '@assemblerjs/electron/renderer';
-import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 import { MainWindow } from './main.window';
 
-@Menu({ window: MAIN_WINDOW_CONFIG.name, name: 'mainMenu' })
+@Menu({ name: 'mainMenu' })
 @Assemblage()
 export class MainMenuService extends AbstractMenuService implements AbstractAssemblage {
   private autoCenterAfterRandom = false;

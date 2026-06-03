@@ -72,7 +72,7 @@ const buildMongoCmd = (res: StartMongoTaskObject) => {
   const logPath = `--logpath=${res.options.logPath} `;
 
   result.cmd = `${exe} ${dbPath}${logPath}--port=${String(
-    port
+    port,
   )} --bind_ip=${bindIp} --fork`;
 
   return result;
@@ -94,7 +94,7 @@ const execProcess = (res: StartMongoTaskObject) => {
  * @returns { Promise<string | Error> } The process stdout string or an `Error`.
  */
 export const startMongo = async (
-  options: StartMongoOptions
+  options: StartMongoOptions,
 ): Promise<string | Error> => {
   const task = (op: StartMongoOptions) =>
     Task.of(() => {
@@ -106,16 +106,16 @@ export const startMongo = async (
       .map(buildMongoCmd)
       .map(execProcess);
 
-  const taskResult = await task(options).fork();
+  const taskResult = await task(options).fork<StartMongoTaskObject, Error>();
 
   return taskResult.fold(
     (err: unknown) => err as Error,
     (res: StartMongoTaskObject) => {
       if (res.result) return res.result;
       return new Error(
-        `An unknown error occurred while trying to start Mongo.`
+        `An unknown error occurred while trying to start Mongo.`,
       );
-    }
+    },
   );
 };
 
@@ -126,8 +126,8 @@ export const startMongo = async (
  * @todo For Windows (replace pgrep)
  */
 export const isMongoRunning = async (): Promise<boolean | Error> => {
-  const taskResult = await findMongoPid.fork();
-  return taskResult.fold<boolean | Error>(errorOrFalse, () => true);
+  const taskResult = await findMongoPid.fork<string, Error>();
+  return taskResult.fold<boolean | Error, boolean>(errorOrFalse, () => true);
 };
 
 /**
@@ -137,12 +137,12 @@ export const isMongoRunning = async (): Promise<boolean | Error> => {
  */
 export const stopMongo = async (): Promise<boolean | Error> => {
   const task = findMongoPid.map((pid: string) =>
-    execSync(`kill ${pid}`, { encoding: 'utf-8' })
+    execSync(`kill ${pid}`, { encoding: 'utf-8' }),
   );
-  const taskResult = await task.fork();
-  return taskResult.fold<boolean | Error>(
+  const taskResult = await task.fork<string, Error>();
+  return taskResult.fold<boolean | Error, boolean>(
     (err: unknown) => errorOrFalse(err),
-    () => true
+    () => true,
   );
 };
 
@@ -156,11 +156,11 @@ export const purgeLogs = (path: string): true => {
     const withoutFilepart = parse(path).dir;
     if (!existsSync(withoutFilepart))
       throw new Error(
-        `Logs directory doesn't exist at path '${withoutFilepart}'. No logs to purge.`
+        `Logs directory doesn't exist at path '${withoutFilepart}'. No logs to purge.`,
       );
 
     readdirSync(withoutFilepart).forEach((file: string) =>
-      rmSync(`${withoutFilepart}/${file}`)
+      rmSync(`${withoutFilepart}/${file}`),
     );
     return true;
   } catch (err: unknown) {
