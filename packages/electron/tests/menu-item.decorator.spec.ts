@@ -108,4 +108,39 @@ describe('MenuItem decorator metadata foundations', () => {
       ]),
     );
   });
+
+  it('supports @SubMenu({...}) method composition from injected submenu instance', () => {
+    @MenuItem('Refresh')
+    @Assemblage()
+    class RefreshMenu {
+      @MenuItem({ id: 'developer.reload', label: 'Reload', order: 10 })
+      public reload(): void {}
+    }
+
+    @MenuItem('Developer')
+    @Assemblage()
+    class DeveloperMenu {
+      constructor(public readonly refresh: RefreshMenu) {}
+
+      @SubMenu({
+        id: 'developer.refresh',
+        label: 'Refresh',
+        order: 10,
+      })
+      public refreshMenu(): RefreshMenu {
+        return this.refresh;
+      }
+    }
+
+    const items = getMenuItems(new DeveloperMenu(new RefreshMenu()));
+
+    expect(items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: 'developer.reload',
+          path: 'Developer/Refresh',
+        }),
+      ]),
+    );
+  });
 });

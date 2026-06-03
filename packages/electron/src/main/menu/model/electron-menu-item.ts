@@ -40,6 +40,14 @@ export class ElectronMenuItem {
       return focusedWindow;
     }
 
+    const firstAliveWindow = ElectronWindow.getAllWindows().find(
+      (window) => !window.isDestroyed(),
+    ) as ElectronWindow | undefined;
+
+    if (firstAliveWindow) {
+      return firstAliveWindow;
+    }
+
     return undefined;
   }
 

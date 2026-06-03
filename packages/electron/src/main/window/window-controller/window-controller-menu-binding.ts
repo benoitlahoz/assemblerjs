@@ -3,9 +3,7 @@ import { ElectronWindow } from '@/main/window/classes/electron-window';
 import { getUseMenuDefinition } from '@/main/window-menu/decorators';
 import {
   AbstractMenuRegistryService,
-  AbstractWindowMenuBindingRegistryService,
   MenuRegistryService,
-  WindowMenuBindingRegistryService,
 } from '@/main/window-menu/services';
 import {
   AbstractMenuControllerService,
@@ -18,31 +16,116 @@ const boundMenuFocusWindows = new WeakSet<object>();
 const fallbackBindingsSymbol = Symbol(
   '__WindowControllerFallbackMenuBindings__',
 );
+const resolvedMenuControllerSymbol = Symbol(
+  '__WindowControllerResolvedMenuController__',
+);
+const fallbackMenuControllerSymbol = Symbol(
+  '__WindowControllerFallbackMenuController__',
+);
+
+function resolveBestWindowNameForBindings(
+  bindings: WindowMenuBindings,
+): string | undefined {
+  const focusedWindow =
+    typeof (
+      ElectronWindow as typeof ElectronWindow & {
+        getFocusedWindow?: () => ElectronWindow | null;
+      }
+    ).getFocusedWindow === 'function'
+      ? (
+          ElectronWindow as typeof ElectronWindow & {
+            getFocusedWindow: () => ElectronWindow | null;
+          }
+        ).getFocusedWindow()
+      : null;
+
+  const focusedWindowName =
+    (focusedWindow as ElectronWindow & { name?: string })?.name || undefined;
+  if (focusedWindowName && bindings.has?.(focusedWindowName)) {
+    return focusedWindowName;
+  }
+
+  const listNames =
+    typeof (bindings as MenuBindingsLike).listNames === 'function'
+      ? (bindings as MenuBindingsLike).listNames!()
+      : [];
+
+  for (const windowName of listNames) {
+    const candidate = ElectronWindow.getByName(windowName);
+    if (candidate && !candidate.isDestroyed()) {
+      return windowName;
+    }
+  }
+
+  return undefined;
+}
 
 interface MenuBindingsLike {
   attach(windowName: string, menu: MenuReference): Promise<void>;
   detach(windowName: string): void;
   refresh(windowName: string): Promise<void>;
   has?(windowName: string): boolean;
+  listNames?(): string[];
 }
 
 type WindowMenuBindings = Pick<
-  AbstractWindowMenuBindingRegistryService,
+  MenuBindingsLike,
   'attach' | 'detach' | 'refresh'
 > & {
   has?(windowName: string): boolean;
 };
 
 function resolveMenuController(controller: any): AbstractMenuControllerService {
+  if (
+    controller[resolvedMenuControllerSymbol] &&
+    typeof controller[resolvedMenuControllerSymbol].registerMenu === 'function'
+  ) {
+    return controller[
+      resolvedMenuControllerSymbol
+    ] as AbstractMenuControllerService;
+  }
+
+  if (
+    controller.menus &&
+    typeof controller.menus.registerMenu === 'function' &&
+    typeof controller.menus.unregisterMenu === 'function'
+  ) {
+    controller[resolvedMenuControllerSymbol] =
+      controller.menus as AbstractMenuControllerService;
+    return controller[
+      resolvedMenuControllerSymbol
+    ] as AbstractMenuControllerService;
+  }
+
   const context = getAssemblageContext(controller.constructor);
 
   try {
-    return context.require(AbstractMenuControllerService);
+    controller[resolvedMenuControllerSymbol] = context.require(
+      AbstractMenuControllerService,
+    );
+    return controller[
+      resolvedMenuControllerSymbol
+    ] as AbstractMenuControllerService;
   } catch {
     try {
-      return context.require(MenuControllerService);
+      controller[resolvedMenuControllerSymbol] = context.require(
+        MenuControllerService,
+      );
+      return controller[
+        resolvedMenuControllerSymbol
+      ] as AbstractMenuControllerService;
     } catch {
-      return new MenuControllerService();
+      if (
+        !controller[fallbackMenuControllerSymbol] ||
+        typeof controller[fallbackMenuControllerSymbol].registerMenu !==
+          'function'
+      ) {
+        controller[fallbackMenuControllerSymbol] = new MenuControllerService();
+      }
+
+      return controller[
+        fallbackMenuControllerSymbol
+      ] as AbstractMenuControllerService;
     }
   }
 }
@@ -70,6 +153,71 @@ function resolveMenuReference(controller: any, reference: MenuReference): any {
 function createFallbackBindings(controller: any): MenuBindingsLike {
   const entries = new Map<string, { menu: MenuReference }>();
 
+  const isMissingMenuRegistrationError = (error: unknown): boolean => {
+    return (
+      error instanceof Error &&
+      error.message.startsWith('No menu registered for window')
+    );
+  };
+
+  const focusMenuSafely = async (windowName: string): Promise<void> => {
+    const menus = resolveMenuController(controller);
+
+    try {
+      await menus.focus(windowName);
+    } catch (error) {
+      if (!isMissingMenuRegistrationError(error)) {
+        throw error;
+      }
+    }
+  };
+
+  const resolveFocusedWindowName = (): string | undefined => {
+    const focusedWindow =
+      typeof (
+        ElectronWindow as typeof ElectronWindow & {
+          getFocusedWindow?: () => ElectronWindow | null;
+        }
+      ).getFocusedWindow === 'function'
+        ? (
+            ElectronWindow as typeof ElectronWindow & {
+              getFocusedWindow: () => ElectronWindow | null;
+            }
+          ).getFocusedWindow()
+        : null;
+
+    const focusedWindowName = (
+      focusedWindow as ElectronWindow & { name?: string }
+    )?.name;
+
+    if (focusedWindowName && entries.has(focusedWindowName)) {
+      return focusedWindowName;
+    }
+
+    return undefined;
+  };
+
+  const resolveFallbackWindowName = (): string | undefined => {
+    for (const windowName of entries.keys()) {
+      const candidate = ElectronWindow.getByName(windowName);
+      if (candidate && !candidate.isDestroyed()) {
+        return windowName;
+      }
+    }
+
+    return undefined;
+  };
+
+  const refreshBestAvailableWindowMenu = (): void => {
+    const target = resolveFocusedWindowName() || resolveFallbackWindowName();
+
+    if (!target) {
+      return;
+    }
+
+    void focusMenuSafely(target);
+  };
+
   return {
     async attach(windowName: string, menu: MenuReference): Promise<void> {
       const current = entries.get(windowName);
@@ -95,36 +243,20 @@ function createFallbackBindings(controller: any): MenuBindingsLike {
       menus.unregisterMenu(windowName);
       entries.delete(windowName);
 
-      const focusedWindow =
-        typeof (
-          ElectronWindow as typeof ElectronWindow & {
-            getFocusedWindow?: () => ElectronWindow | null;
-          }
-        ).getFocusedWindow === 'function'
-          ? (
-              ElectronWindow as typeof ElectronWindow & {
-                getFocusedWindow: () => ElectronWindow | null;
-              }
-            ).getFocusedWindow()
-          : null;
-
-      const focusedWindowName = (
-        focusedWindow as ElectronWindow & { name?: string }
-      )?.name;
-      if (focusedWindowName && entries.has(focusedWindowName)) {
-        void menus.focus(focusedWindowName);
-      }
+      refreshBestAvailableWindowMenu();
     },
     async refresh(windowName: string): Promise<void> {
       if (!entries.has(windowName)) {
         return;
       }
 
-      const menus = resolveMenuController(controller);
-      await menus.focus(windowName);
+      await focusMenuSafely(windowName);
     },
     has(windowName: string): boolean {
       return entries.has(windowName);
+    },
+    listNames(): string[] {
+      return [...entries.keys()];
     },
   };
 }
@@ -132,21 +264,11 @@ function createFallbackBindings(controller: any): MenuBindingsLike {
 function resolveWindowMenuBindings(
   controller: any,
 ): WindowMenuBindings | undefined {
-  const context = getAssemblageContext(controller.constructor);
-
-  try {
-    return context.require(AbstractWindowMenuBindingRegistryService);
-  } catch {
-    try {
-      return context.require(WindowMenuBindingRegistryService);
-    } catch {
-      if (!controller[fallbackBindingsSymbol]) {
-        controller[fallbackBindingsSymbol] = createFallbackBindings(controller);
-      }
-
-      return controller[fallbackBindingsSymbol] as MenuBindingsLike;
-    }
+  if (!controller[fallbackBindingsSymbol]) {
+    controller[fallbackBindingsSymbol] = createFallbackBindings(controller);
   }
+
+  return controller[fallbackBindingsSymbol] as MenuBindingsLike;
 }
 
 export async function attachManagedWindowMenu(
@@ -175,11 +297,24 @@ export async function attachManagedWindowMenu(
     !boundMenuFocusWindows.has(windowInstance)
   ) {
     const refreshMenu = () => {
-      void bindings.refresh(managed.definition.name);
+      void bindings.refresh(managed.definition.name).catch(() => undefined);
+    };
+
+    const refreshAfterTransition = () => {
+      queueMicrotask(() => {
+        const bestWindowName = resolveBestWindowNameForBindings(bindings);
+        if (!bestWindowName) {
+          return;
+        }
+
+        void bindings.refresh(bestWindowName).catch(() => undefined);
+      });
     };
 
     windowInstance.on('focus', refreshMenu);
     windowInstance.on('show', refreshMenu);
+    windowInstance.on('blur', refreshAfterTransition);
+    windowInstance.on('closed', refreshAfterTransition);
     boundMenuFocusWindows.add(windowInstance);
   }
 }

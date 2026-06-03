@@ -1,9 +1,26 @@
 const menuNodeLabelKey = Symbol('electron:menu:dsl:node-label');
 const menuNodeSubmenusKey = Symbol('electron:menu:dsl:submenus');
 
+type SubMenuLabelValue =
+  | string
+  | ((this: any, ...args: any[]) => string | undefined);
+
+export interface SubMenuDefinition {
+  id?: string;
+  label?: SubMenuLabelValue;
+  order?: number;
+  before?: string;
+  after?: string;
+}
+
 interface DslSubmenuMetadata {
-  property: string;
-  label?: string;
+  member: string;
+  source: 'property' | 'method';
+  label?: SubMenuLabelValue;
+  id?: string;
+  order?: number;
+  before?: string;
+  after?: string;
   targetResolver?: () => Function;
 }
 
@@ -48,10 +65,52 @@ export function hasMenuDslMetadata(target: Function): boolean {
   );
 }
 
+function isSubMenuDefinition(value: unknown): value is SubMenuDefinition {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function SubMenu(definition: SubMenuDefinition): MethodDecorator;
 export function SubMenu(
   labelOrResolver?: string | (() => Function),
   resolver?: () => Function,
-): PropertyDecorator {
+): PropertyDecorator;
+export function SubMenu(
+  definitionOrLabelOrResolver?: SubMenuDefinition | string | (() => Function),
+  resolver?: () => Function,
+): PropertyDecorator | MethodDecorator {
+  if (isSubMenuDefinition(definitionOrLabelOrResolver)) {
+    const definition = definitionOrLabelOrResolver;
+
+    return (
+      target: object,
+      propertyKey: string | symbol,
+      descriptor: PropertyDescriptor,
+    ) => {
+      if (typeof propertyKey !== 'string') {
+        throw new Error('@SubMenu supports string method names only.');
+      }
+
+      if (typeof descriptor.value !== 'function') {
+        throw new Error('@SubMenu({...}) can only be used on methods.');
+      }
+
+      const ctor = getTargetCtor(target);
+      const submenus = getStoredSubmenus(ctor);
+
+      submenus.push({
+        member: propertyKey,
+        source: 'method',
+        label: definition.label,
+        id: definition.id?.trim() || undefined,
+        order: definition.order,
+        before: definition.before?.trim() || undefined,
+        after: definition.after?.trim() || undefined,
+      });
+
+      Reflect.defineMetadata(menuNodeSubmenusKey, submenus, ctor);
+    };
+  }
+
   return (target: object, propertyKey: string | symbol) => {
     if (typeof propertyKey !== 'string') {
       throw new Error('@SubMenu supports string property names only.');
@@ -63,15 +122,16 @@ export function SubMenu(
     let label: string | undefined;
     let targetResolver: (() => Function) | undefined;
 
-    if (typeof labelOrResolver === 'string') {
-      label = labelOrResolver.trim();
+    if (typeof definitionOrLabelOrResolver === 'string') {
+      label = definitionOrLabelOrResolver.trim();
       targetResolver = resolver;
-    } else if (typeof labelOrResolver === 'function') {
-      targetResolver = labelOrResolver;
+    } else if (typeof definitionOrLabelOrResolver === 'function') {
+      targetResolver = definitionOrLabelOrResolver;
     }
 
     submenus.push({
-      property: propertyKey,
+      member: propertyKey,
+      source: 'property',
       label,
       targetResolver,
     });

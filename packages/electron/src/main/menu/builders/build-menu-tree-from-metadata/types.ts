@@ -7,6 +7,7 @@ import type { ElectronMenuItem } from '../../model/electron-menu-item';
 export interface IndexedMenuItemMetadataEntry extends MenuItemMetadataEntry {
   path: string;
   declarationIndex: number;
+  source?: Record<string, unknown>;
 }
 
 export interface GroupNode {

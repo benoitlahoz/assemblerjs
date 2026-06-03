@@ -3,7 +3,7 @@ import { AbstractAssemblage, Assemblage, Assembler } from 'assemblerjs';
 import { app } from 'electron';
 import { join } from 'path';
 import { Result, Task } from '@assemblerjs/core';
-import { AbstractMenuControllerService, SystemStateHostService } from '@assemblerjs/electron';
+import { AbstractWindowController, SystemStateHostService } from '@assemblerjs/electron';
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { I18nService } from '@features/i18n/main';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
@@ -18,8 +18,8 @@ import { WindowControllerService } from '@windows/window.controller';
     [ElectronAppModule],
     [I18nService],
     [IpcListenerService],
-    [AbstractMenuControllerService, MenuControllerService],
-    [WindowControllerService],
+    [MenuControllerService],
+    [AbstractWindowController, WindowControllerService],
     [SystemStateHostService],
   ],
   global: {
@@ -30,8 +30,8 @@ class MainApp implements AbstractAssemblage {
   constructor(
     public electron: ElectronAppModule,
     public ipc: IpcListenerService,
-    public windows: WindowControllerService,
-    public menus: AbstractMenuControllerService,
+    public windows: AbstractWindowController,
+    public menus: MenuControllerService,
     public systemState: SystemStateHostService,
   ) {}
 }

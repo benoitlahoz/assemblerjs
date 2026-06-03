@@ -27,7 +27,7 @@ export function mergeSubmenu(
     }
 
     throw new Error(
-      `Duplicate menu item id '${incomingItem.id}' detected while composing menu fragments.`,
+      `Duplicate menu item id '${incomingItem.id}' detected while composing menu trees.`,
     );
   }
 

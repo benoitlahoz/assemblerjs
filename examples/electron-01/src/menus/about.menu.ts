@@ -1,29 +1,41 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import { ElectronMenu, Menu, MenuItem, SubMenu } from '@assemblerjs/electron';
+import { ElectronMenu, Menu, SubMenu } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
-import { DeveloperToolsMenu } from './developer-tools.menu';
+import { AppMenu } from './app';
+import { DeveloperToolsMenu } from './developer';
 
 @Menu({
   name: 'aboutMenu',
 })
 @Assemblage()
 export class AboutMenu extends ElectronMenu implements AbstractAssemblage {
-  constructor(public readonly i18n: I18nService) {
+  constructor(
+    public readonly i18n: I18nService,
+    private readonly appMenu: AppMenu,
+    private readonly developerToolsMenu: DeveloperToolsMenu,
+  ) {
     super();
   }
 
-  @MenuItem({
-    id: 'about.app.quit',
-    path: 'App',
-    label(this: AboutMenu) {
-      return this.i18n.translate('menu.app.quit');
+  @SubMenu({
+    id: 'about.menu.app',
+    label() {
+      return this.i18n.translate('menu.group.app');
     },
-    accelerator: 'CmdOrCtrl+Q',
-    role: 'quit',
     order: 10,
   })
-  private quit(): void {}
+  public app(): AppMenu {
+    return this.appMenu;
+  }
 
-  @SubMenu('Developer')
-  public developer = DeveloperToolsMenu;
+  @SubMenu({
+    id: 'about.menu.developer',
+    label() {
+      return this.i18n.translate('menu.group.developer');
+    },
+    order: 20,
+  })
+  public developer(): DeveloperToolsMenu {
+    return this.developerToolsMenu;
+  }
 }

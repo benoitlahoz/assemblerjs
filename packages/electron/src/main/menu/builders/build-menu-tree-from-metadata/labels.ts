@@ -20,6 +20,8 @@ export function resolveLabel(
   entry: IndexedMenuItemMetadataEntry,
   behavior: BuildBehaviorContext,
 ): string | undefined {
+  const source = entry.source ?? behavior.instance;
+
   if (typeof entry.label === 'string') {
     return entry.label;
   }
@@ -29,12 +31,12 @@ export function resolveLabel(
       itemId: entry.id,
       path: entry.path,
       method: entry.method,
-      source: behavior.instance,
+      source,
       target: behavior.target,
       translate: behavior.translate,
     };
 
-    return entry.label.call(behavior.instance, context);
+    return entry.label.call(source, context);
   }
 
   return undefined;

@@ -24,11 +24,17 @@ export function buildMenuTreeFromMetadata(
       ? undefined
       : (targetOrInstance as Record<string, unknown>);
 
-  const metadata = getMenuItems(targetOrInstance).map((entry, index) => ({
-    ...entry,
-    path: resolveEntryPath(entry, options?.pathFallback),
-    declarationIndex: (options?.declarationIndexOffset || 0) + index,
-  }));
+  const metadata = getMenuItems(targetOrInstance).map((entry, index) => {
+    const sourceFromEntry = (entry as { source?: Record<string, unknown> })
+      .source;
+
+    return {
+      ...entry,
+      source: sourceFromEntry ?? instance,
+      path: resolveEntryPath(entry, options?.pathFallback),
+      declarationIndex: (options?.declarationIndexOffset || 0) + index,
+    };
+  });
 
   const behavior: BuildBehaviorContext = {
     instance,

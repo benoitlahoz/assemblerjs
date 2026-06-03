@@ -513,6 +513,138 @@
 			"type": "shell",
 			"command": "node -e \"const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));console.log('root devDependencies.typescript =',p.devDependencies?.typescript||'none');console.log('root dependencies.typescript =',p.dependencies?.typescript||'none');console.log('root resolutions.typescript =',p.resolutions?.typescript||'none');\" && npm ls typescript --depth=3",
 			"isBackground": false
+		},
+		{
+			"label": "git-status-short-now",
+			"type": "shell",
+			"command": "git status --short",
+			"isBackground": false
+		},
+		{
+			"label": "git-diff-electron-files-now",
+			"type": "shell",
+			"command": "git diff -- packages/electron/src/main/window/window-controller/window-controller-menu-binding.ts packages/electron/src/main/menu/menu-controller/menu-controller.decorator.ts",
+			"isBackground": false
+		},
+		{
+			"label": "test-electron-window-controller-spec",
+			"type": "shell",
+			"command": "CI=1 npx vitest run packages/electron/tests/window-controller.decorator.spec.ts",
+			"isBackground": false
+		},
+		{
+			"label": "test-electron-menu-orchestrator-spec",
+			"type": "shell",
+			"command": "CI=1 npx vitest run packages/electron/tests/menu-orchestrator.decorator.spec.ts",
+			"isBackground": false
+		},
+		{
+			"label": "test-electron-menu-orchestrator-spec-rerun",
+			"type": "shell",
+			"command": "CI=1 npx vitest run packages/electron/tests/menu-orchestrator.decorator.spec.ts",
+			"isBackground": false
+		},
+		{
+			"label": "test-menu-orchestrator-after-fix",
+			"type": "shell",
+			"command": "CI=1 npx vitest run packages/electron/tests/menu-orchestrator.decorator.spec.ts",
+			"isBackground": false
+		},
+		{
+			"label": "test-window-controller-spec-after-fix",
+			"type": "shell",
+			"command": "CI=1 npx vitest run packages/electron/tests/window-controller.decorator.spec.ts packages/electron/tests/menu-orchestrator.decorator.spec.ts",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-after-convention-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-after-cycle-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-after-submenu-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-submenu-method-api",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-menu-focus-regression-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-shared-app-menu",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-after-menu-barrels",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-no-fragments-no-path",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-package-no-fragments",
+			"type": "shell",
+			"command": "CI=1 npx nx build assemblerjs-electron --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-no-fragments-final",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-no-fragments-final",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-menu-race-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-developer-root-menu",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-submenu-order-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-submenu-local-order-fix",
+			"type": "shell",
+			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"isBackground": false
 		}
 	]
 }

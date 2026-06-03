@@ -22,9 +22,10 @@ export function buildMenuItemFromEntry(
 
   if (entry.handleInMain) {
     item.handleInMain((itemId: string, windowName: string) => {
-      const method = behavior.instance?.[entry.method];
+      const source = entry.source ?? behavior.instance;
+      const method = source?.[entry.method];
       if (typeof method === 'function') {
-        method.call(behavior.instance, itemId, windowName);
+        method.call(source, itemId, windowName);
       }
     });
   }
