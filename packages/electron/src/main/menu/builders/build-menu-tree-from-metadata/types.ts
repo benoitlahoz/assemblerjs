@@ -28,8 +28,6 @@ export interface BuildMenuTreeOptions {
 }
 
 export interface BuildBehaviorContext {
-  handleInMainMethods: Set<string>;
-  forwardToRendererMethods: Set<string>;
   instance?: Record<string, unknown>;
   target: Function;
   translate: (key: string) => string;

@@ -1,14 +1,14 @@
 import { AbstractAssemblage, Assemblage, Context, type AssemblerContext } from 'assemblerjs';
 import {
+  AbstractWindowController,
   ElectronMenu,
-  ForwardClickToRenderer,
-  HandleInMain,
   Menu,
   MenuItem,
+  SubMenu,
 } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
-import { WindowControllerService } from '@windows/window.controller';
 import { ABOUT_WINDOW_CONFIG } from '@windows/about/universal/window.config';
+import { DeveloperToolsMenu } from './developer-tools.menu';
 
 @Menu({
   name: 'mainMenu',
@@ -17,6 +17,7 @@ import { ABOUT_WINDOW_CONFIG } from '@windows/about/universal/window.config';
 export class MainMenu extends ElectronMenu implements AbstractAssemblage {
   constructor(
     public readonly i18n: I18nService,
+    public readonly windowsController: AbstractWindowController,
     @Context() private readonly context: AssemblerContext,
   ) {
     super();
@@ -29,11 +30,10 @@ export class MainMenu extends ElectronMenu implements AbstractAssemblage {
       return this.i18n.translate('menu.app.about');
     },
     order: 5,
+    handleInMain: true,
   })
-  @HandleInMain()
   private async openAboutWindow(): Promise<void> {
-    const windows = this.context.require(WindowControllerService);
-    const aboutWindow = await windows.openWindow(ABOUT_WINDOW_CONFIG.name);
+    const aboutWindow = await this.windowsController.openWindow(ABOUT_WINDOW_CONFIG.name);
     aboutWindow.center();
     aboutWindow.show();
     aboutWindow.focus();
@@ -59,8 +59,8 @@ export class MainMenu extends ElectronMenu implements AbstractAssemblage {
     },
     accelerator: 'CmdOrCtrl+D',
     order: 10,
+    forwardToRenderer: true,
   })
-  @ForwardClickToRenderer()
   private refreshBounds(): void {}
 
   @MenuItem({
@@ -71,8 +71,8 @@ export class MainMenu extends ElectronMenu implements AbstractAssemblage {
     },
     accelerator: 'CmdOrCtrl+Shift+D',
     order: 20,
+    forwardToRenderer: true,
   })
-  @ForwardClickToRenderer()
   private randomBounds(): void {}
 
   @MenuItem({
@@ -83,8 +83,8 @@ export class MainMenu extends ElectronMenu implements AbstractAssemblage {
     },
     accelerator: 'CmdOrCtrl+Shift+C',
     order: 30,
+    forwardToRenderer: true,
   })
-  @ForwardClickToRenderer()
   private centerWindow(): void {}
 
   @MenuItem({
@@ -96,34 +96,13 @@ export class MainMenu extends ElectronMenu implements AbstractAssemblage {
     type: 'checkbox',
     checked: false,
     order: 40,
+    handleInMain: true,
+    forwardToRenderer: true,
   })
-  @HandleInMain()
-  @ForwardClickToRenderer()
   private autoCenter(itemId: string, windowName: string): void {
     console.log(`[menu][main] clicked '${itemId}' for window '${windowName}'`);
   }
 
-  @MenuItem({
-    id: 'main.developer.reload',
-    path: 'Developer/Refresh',
-    role: 'reload',
-    order: 10,
-  })
-  private reload(): void {}
-
-  @MenuItem({
-    id: 'main.developer.forceReload',
-    path: 'Developer/Refresh',
-    role: 'forceReload',
-    order: 20,
-  })
-  private forceReload(): void {}
-
-  @MenuItem({
-    id: 'main.developer.toggleDevTools',
-    path: 'Developer',
-    role: 'toggleDevTools',
-    order: 30,
-  })
-  private toggleDevTools(): void {}
+  @SubMenu('Developer')
+  public developer = DeveloperToolsMenu;
 }

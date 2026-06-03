@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { Assemblage } from 'assemblerjs';
 import {
   MenuItem,
+  SubMenu,
   getMenuItems,
   normalizeMenuItemDefinition,
   validateMenuItemMetadata,
@@ -75,5 +76,36 @@ describe('MenuItem decorator metadata foundations', () => {
         { method: 'b', id: 'b', path: 'Window', after: 'a' },
       ]),
     ).toThrow('Detected cycle in @MenuItem ordering constraints.');
+  });
+
+  it('supports DSL composition with class group + item + submenu without explicit paths', () => {
+    @MenuItem('Recent')
+    @Assemblage()
+    class RecentMenu {
+      @MenuItem({ id: 'file.recent.clear', label: 'Clear', order: 10 })
+      public clear(): void {}
+    }
+
+    @MenuItem('File')
+    @Assemblage()
+    class FileMenu {
+      @MenuItem({ id: 'file.open', label: 'Open', order: 5 })
+      public open(): void {}
+
+      @SubMenu('Recent')
+      public recent = RecentMenu;
+    }
+
+    const items = getMenuItems(new FileMenu());
+
+    expect(items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'file.open', path: 'File' }),
+        expect.objectContaining({
+          id: 'file.recent.clear',
+          path: 'File/Recent',
+        }),
+      ]),
+    );
   });
 });

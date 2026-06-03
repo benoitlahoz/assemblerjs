@@ -1,6 +1,7 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
-import { ElectronMenu, Menu, MenuItem } from '@assemblerjs/electron';
+import { ElectronMenu, Menu, MenuItem, SubMenu } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
+import { DeveloperToolsMenu } from './developer-tools.menu';
 
 @Menu({
   name: 'aboutMenu',
@@ -23,27 +24,6 @@ export class AboutMenu extends ElectronMenu implements AbstractAssemblage {
   })
   private quit(): void {}
 
-  @MenuItem({
-    id: 'about.developer.reload',
-    path: 'Developer/Refresh',
-    role: 'reload',
-    order: 10,
-  })
-  private reload(): void {}
-
-  @MenuItem({
-    id: 'about.developer.forceReload',
-    path: 'Developer/Refresh',
-    role: 'forceReload',
-    order: 20,
-  })
-  private forceReload(): void {}
-
-  @MenuItem({
-    id: 'about.developer.toggleDevTools',
-    path: 'Developer',
-    role: 'toggleDevTools',
-    order: 30,
-  })
-  private toggleDevTools(): void {}
+  @SubMenu('Developer')
+  public developer = DeveloperToolsMenu;
 }

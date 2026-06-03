@@ -4,6 +4,13 @@ import {
   type MenuItemLabelValue,
   type MenuItemMetadataEntry,
 } from '@/universal/metadata';
+import {
+  getMenuDslSubmenus,
+  getMenuNodeLabel,
+  hasMenuDslMetadata,
+  setMenuNodeLabel,
+  SubMenu,
+} from './menu-dsl.decorator';
 
 export interface MenuItemDefinition {
   id: string;
@@ -17,6 +24,8 @@ export interface MenuItemDefinition {
   order?: number;
   before?: string;
   after?: string;
+  handleInMain?: boolean;
+  forwardToRenderer?: boolean;
 }
 
 function assertNonEmptyString(value: unknown, field: string): string {
@@ -74,6 +83,8 @@ export function normalizeMenuItemDefinition(
     order: definition.order,
     before: definition.before?.trim() || undefined,
     after: definition.after?.trim() || undefined,
+    handleInMain: definition.handleInMain === true,
+    forwardToRenderer: definition.forwardToRenderer === true,
   };
 }
 
@@ -175,7 +186,17 @@ export function validateMenuItemMetadata(
   return entries;
 }
 
-export function MenuItem(definition: MenuItemDefinition): MethodDecorator {
+export function MenuItem(definition: MenuItemDefinition): MethodDecorator;
+export function MenuItem(groupLabel: string): ClassDecorator;
+export function MenuItem(
+  definitionOrGroup: MenuItemDefinition | string,
+): MethodDecorator | ClassDecorator {
+  if (typeof definitionOrGroup === 'string') {
+    return (target: Function) => {
+      setMenuNodeLabel(target, definitionOrGroup);
+    };
+  }
+
   return (
     target: object,
     propertyKey: string | symbol,
@@ -188,12 +209,125 @@ export function MenuItem(definition: MenuItemDefinition): MethodDecorator {
     addMenuItemMetadata(
       target,
       propertyKey,
-      normalizeMenuItemDefinition(definition),
+      normalizeMenuItemDefinition(definitionOrGroup),
     );
   };
 }
 
-export function getMenuItems(target: Function): MenuItemMetadataEntry[] {
-  const entries = getMenuItemMetadata(target);
-  return validateMenuItemMetadata(entries);
+function resolveSubmenuTarget(
+  target: Function,
+  instance: object | undefined,
+  submenu: ReturnType<typeof getMenuDslSubmenus>[number],
+): { ctor: Function; instance?: object } {
+  if (submenu.targetResolver) {
+    const resolved = submenu.targetResolver();
+    if (typeof resolved === 'function') {
+      return {
+        ctor: resolved,
+      };
+    }
+  }
+
+  if (instance) {
+    const candidate = (instance as Record<string, unknown>)[submenu.property];
+    if (typeof candidate === 'function') {
+      return {
+        ctor: candidate,
+      };
+    }
+
+    if (
+      candidate &&
+      typeof (candidate as { constructor?: unknown }).constructor === 'function'
+    ) {
+      return {
+        ctor: (candidate as { constructor: Function }).constructor,
+        instance: candidate as object,
+      };
+    }
+  }
+
+  const staticTarget = target as unknown as Record<string, unknown>;
+  const staticCandidate = staticTarget[submenu.property];
+  if (typeof staticCandidate === 'function') {
+    return {
+      ctor: staticCandidate,
+    };
+  }
+
+  throw new Error(
+    `@SubMenu('${submenu.property}') could not resolve submenu target. Use @SubMenu(label, () => SubMenuClass) or assign a class constructor on '${submenu.property}'.`,
+  );
 }
+
+function collectDslMenuItems(
+  target: Function,
+  instance: object | undefined,
+  pathSegments: string[],
+  includeOwnLabel: boolean,
+  out: MenuItemMetadataEntry[],
+  visited: Set<Function>,
+): void {
+  const ownLabel = includeOwnLabel ? getMenuNodeLabel(target) : undefined;
+  const currentSegments = ownLabel ? [...pathSegments, ownLabel] : pathSegments;
+
+  for (const entry of getMenuItemMetadata(target)) {
+    out.push({
+      ...entry,
+      path:
+        entry.path ??
+        (currentSegments.length > 0 ? currentSegments.join('/') : undefined),
+    });
+  }
+
+  if (visited.has(target)) {
+    return;
+  }
+
+  visited.add(target);
+
+  for (const submenu of getMenuDslSubmenus(target)) {
+    const resolved = resolveSubmenuTarget(target, instance, submenu);
+    const submenuLabel =
+      typeof submenu.label === 'string' && submenu.label.trim().length > 0
+        ? submenu.label.trim()
+        : (getMenuNodeLabel(resolved.ctor) ?? submenu.property);
+
+    collectDslMenuItems(
+      resolved.ctor,
+      resolved.instance,
+      [...currentSegments, submenuLabel],
+      false,
+      out,
+      visited,
+    );
+  }
+}
+
+export function getMenuItems(
+  targetOrInstance: Function | object,
+): MenuItemMetadataEntry[] {
+  const target =
+    typeof targetOrInstance === 'function'
+      ? targetOrInstance
+      : targetOrInstance.constructor;
+
+  if (!hasMenuDslMetadata(target)) {
+    return validateMenuItemMetadata(getMenuItemMetadata(target));
+  }
+
+  const dslEntries: MenuItemMetadataEntry[] = [];
+
+  collectDslMenuItems(
+    target,
+    typeof targetOrInstance === 'function' ? undefined : targetOrInstance,
+    [],
+    true,
+    dslEntries,
+    new Set<Function>(),
+  );
+
+  return validateMenuItemMetadata(dslEntries);
+}
+
+export { SubMenu };

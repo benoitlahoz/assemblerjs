@@ -1,0 +1,518 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "build-assemblerjs-electron-ci",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-electron",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-assemblerjs-electron-ci-2",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-electron",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-01-ci",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-dts-versions",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"view",
+				"vite-plugin-dts",
+				"version",
+				"&&",
+				"npm",
+				"view",
+				"@microsoft/api-extractor",
+				"version"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "yarn-install-monorepo",
+			"type": "shell",
+			"command": "yarn",
+			"args": [
+				"install"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-all-ci",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-all-ci-2",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-all-ci-3",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-ci",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-electron-ci-final",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-electron",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-ci-2",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-all-ci-final",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-no-shim",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-all-packages-no-example",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--exclude=electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tsc-check-rest-lib",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"tsc",
+				"--noEmit",
+				"-p",
+				"packages/rest/tsconfig.lib.json"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tsc-check-dto-lib",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"tsc",
+				"--noEmit",
+				"-p",
+				"packages/dto/tsconfig.lib.json"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "yarn-install-revert-dts",
+			"type": "shell",
+			"command": "yarn",
+			"args": [
+				"install"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-rest-after-revert",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-rest",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-dto-after-revert",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-dto",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-packages-no-example-final",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--exclude=electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-rest-dts-fixed",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-rest",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-dto-dts-fixed",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-dto",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "tsc-emit-rest-dts-manual",
+			"type": "shell",
+			"command": "npx",
+			"args": [
+				"tsc",
+				"-p",
+				"packages/rest/tsconfig.lib.json",
+				"--declaration",
+				"--emitDeclarationOnly",
+				"--declarationMap",
+				"false",
+				"--composite",
+				"false",
+				"--outDir",
+				"packages/rest/.tmp-dts"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-dto-composite-off",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-dto",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-rest-composite-off",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-rest",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-packages-no-example-clean",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--exclude=electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "audit-internal-version-alignment",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				"-e",
+				"const fs=require('fs');const path=require('path');let semver=null;try{semver=require('semver')}catch{};const root=process.cwd();const scopes=['packages','examples'];const manifests=[];for(const scope of scopes){const scopeDir=path.join(root,scope);if(!fs.existsSync(scopeDir))continue;for(const name of fs.readdirSync(scopeDir)){const pkgPath=path.join(scopeDir,name,'package.json');if(fs.existsSync(pkgPath)){const json=JSON.parse(fs.readFileSync(pkgPath,'utf8'));manifests.push({pkgPath:path.relative(root,pkgPath),dir:path.join(scope,name),name:json.name,version:json.version,json});}}}const byName=new Map(manifests.filter(m=>m.name&&m.version).map(m=>[m.name,m.version]));const depFields=['dependencies','devDependencies','peerDependencies','optionalDependencies'];const issues=[];for(const m of manifests){for(const field of depFields){const deps=m.json[field]||{};for(const [dep,spec] of Object.entries(deps)){if(!byName.has(dep))continue;const latest=byName.get(dep);let isAligned=false; if(spec===latest)isAligned=true; else if(semver){ try{ const min=semver.minVersion(spec); if(min && semver.gte(min, latest) && semver.satisfies(latest,spec)) isAligned=true; else if(semver.satisfies(latest,spec)) isAligned=true; }catch{} } else { if(String(spec).includes(latest)) isAligned=true; } if(!isAligned){issues.push({consumer:m.name,consumerPath:m.pkgPath,field,dep,spec,latest});}}}}console.log('INTERNAL_PACKAGE_VERSIONS');for(const m of manifests.sort((a,b)=>a.name.localeCompare(b.name))){console.log(`${m.name}@${m.version} <- ${m.pkgPath}`);}console.log('\\nMISMATCHES');if(!issues.length){console.log('NONE');}else{for(const i of issues){console.log(`${i.consumer} (${i.consumerPath}) :: ${i.field} -> ${i.dep}@${i.spec} (latest local: ${i.latest})`);}}"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "run-internal-version-audit-script",
+			"type": "shell",
+			"command": "node",
+			"args": [
+				".private/tmp-internal-version-audit.cjs"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "cleanup-internal-version-audit-script",
+			"type": "shell",
+			"command": "rm",
+			"args": [
+				"-f",
+				".private/tmp-internal-version-audit.cjs"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "nx-build-packages-status-check",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--exclude=electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-after-import-fix",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-packages-after-import-fix",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"run-many",
+				"-t",
+				"build",
+				"--all",
+				"--exclude=electron-01",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-after-tsconfig-cleanup",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-after-tsconfig-align",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-after-dto-composite-true",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "build-openapi-after-rest-composite-true",
+			"type": "shell",
+			"command": "CI=1",
+			"args": [
+				"npx",
+				"nx",
+				"build",
+				"assemblerjs-openapi",
+				"--skip-nx-cache",
+				"--output-style=stream"
+			],
+			"isBackground": false
+		},
+		{
+			"label": "check-typescript-versions",
+			"type": "shell",
+			"command": "node -e \"const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));console.log('root devDependencies.typescript =',p.devDependencies?.typescript||'none');console.log('root dependencies.typescript =',p.dependencies?.typescript||'none');console.log('root resolutions.typescript =',p.resolutions?.typescript||'none');\" && npm ls typescript --depth=3",
+			"isBackground": false
+		}
+	]
+}

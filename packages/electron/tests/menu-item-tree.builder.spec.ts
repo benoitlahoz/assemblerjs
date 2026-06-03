@@ -76,11 +76,9 @@ let MenuItem: (options: {
   order?: number;
   before?: string;
   after?: string;
+  handleInMain?: boolean;
+  forwardToRenderer?: boolean;
 }) => MethodDecorator;
-
-let HandleInMain: () => MethodDecorator;
-
-let ForwardClickToRenderer: () => MethodDecorator;
 
 let buildMenuTreeFromMetadata: (
   targetOrInstance: (new (...args: unknown[]) => object) | object,
@@ -100,10 +98,6 @@ let buildMenuTreeFromMetadata: (
 beforeAll(async () => {
   ({ MenuItem } =
     await import('../src/main/menu/menu-item/menu-item.decorator'));
-  ({ HandleInMain } =
-    await import('../src/main/menu/menu-item/handle-in-main.decorator'));
-  ({ ForwardClickToRenderer } =
-    await import('../src/main/menu/menu-item/forward-click-to-renderer.decorator'));
   ({ buildMenuTreeFromMetadata } =
     await import('../src/main/menu/builders/build-menu-tree-from-metadata'));
 });
@@ -188,7 +182,7 @@ describe('buildMenuTreeFromMetadata', () => {
     }
 
     expect(() => buildMenuTreeFromMetadata(MenuDef)).toThrow(
-      "@MenuItem('missing.path') requires a 'path' or a @MenuFragment({ path }) fallback.",
+      "@MenuItem('missing.path') requires a 'path' or a menu-level path fallback.",
     );
   });
 
@@ -245,14 +239,18 @@ describe('buildMenuTreeFromMetadata', () => {
     );
   });
 
-  it('wires HandleInMain and ForwardClickToRenderer from method decorators', () => {
+  it('wires handleInMain and forwardToRenderer from @MenuItem options', () => {
     @Assemblage()
     class MenuDef {
       public calls: Array<{ itemId: string; windowName: string }> = [];
 
-      @MenuItem({ id: 'main.menu.autoCenter', path: 'Window', label: 'Auto' })
-      @HandleInMain()
-      @ForwardClickToRenderer()
+      @MenuItem({
+        id: 'main.menu.autoCenter',
+        path: 'Window',
+        label: 'Auto',
+        handleInMain: true,
+        forwardToRenderer: true,
+      })
       public autoCenter(itemId: string, windowName: string): void {
         this.calls.push({ itemId, windowName });
       }

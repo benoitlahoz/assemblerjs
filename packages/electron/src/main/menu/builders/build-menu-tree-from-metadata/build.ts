@@ -1,5 +1,3 @@
-import { getForwardToRendererMethods } from '@/main/menu/menu-item/forward-click-to-renderer.decorator';
-import { getHandleInMainMethods } from '@/main/menu/menu-item/handle-in-main.decorator';
 import { getMenuItems } from '@/main/menu/menu-item/menu-item.decorator';
 import { buildGroupHierarchy } from './hierarchy';
 import { resolveTranslate } from './labels';
@@ -26,15 +24,13 @@ export function buildMenuTreeFromMetadata(
       ? undefined
       : (targetOrInstance as Record<string, unknown>);
 
-  const metadata = getMenuItems(target).map((entry, index) => ({
+  const metadata = getMenuItems(targetOrInstance).map((entry, index) => ({
     ...entry,
     path: resolveEntryPath(entry, options?.pathFallback),
     declarationIndex: (options?.declarationIndexOffset || 0) + index,
   }));
 
   const behavior: BuildBehaviorContext = {
-    handleInMainMethods: getHandleInMainMethods(target),
-    forwardToRendererMethods: getForwardToRendererMethods(target),
     instance,
     target,
     translate: resolveTranslate(instance, options),

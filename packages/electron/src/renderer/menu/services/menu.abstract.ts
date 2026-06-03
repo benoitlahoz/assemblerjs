@@ -6,7 +6,7 @@ import {
 import { IpcService } from '@/renderer/ipc/services';
 import {
   getMenuRendererDefinition,
-  resolveMenuRendererDefinition,
+  resolveMenuWindowName,
 } from '@/renderer/menu';
 import { AbstractMenuControllerService } from './menu-controller.abstract';
 import { MenuControllerService } from './menu-controller.service';
@@ -15,7 +15,6 @@ import type {
   MenuItemState,
   MenuSnapshot,
 } from '@/universal/types';
-import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 
 export abstract class AbstractMenuService implements AbstractAssemblage {
   private static standaloneMenus?: AbstractMenuControllerService;
@@ -68,18 +67,13 @@ export abstract class AbstractMenuService implements AbstractAssemblage {
   }
 
   protected resolveWindowName(): string {
-    const fromMenuDecorator = resolveMenuRendererDefinition(this)?.window;
-    if (fromMenuDecorator) {
-      return fromMenuDecorator;
-    }
-
-    const fromWindowDecorator = resolveWindowRendererName(this);
+    const fromWindowDecorator = resolveMenuWindowName(this);
     if (fromWindowDecorator) {
       return fromWindowDecorator;
     }
 
     throw new Error(
-      "AbstractMenuService requires a window name (via instance 'windowName', @Menu, or @Window).",
+      "AbstractMenuService requires a window name (via instance 'windowName', @Window, or injected window service).",
     );
   }
 

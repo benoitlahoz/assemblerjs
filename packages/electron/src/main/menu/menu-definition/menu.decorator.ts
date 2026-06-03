@@ -11,7 +11,6 @@ import {
 import type { ElectronMenuItem } from '@/main/menu/model/electron-menu-item';
 import {
   ElectronMetadataStorage,
-  getMenuFragmentDefinitionMetadata,
   getMenuDefinitionMetadata,
   setMenuDefinitionMetadata,
 } from '@/universal/metadata';
@@ -29,11 +28,10 @@ export interface NormalizedMenuDefinition {
 export const MenuDefinitionMetadataKey =
   ElectronMetadataStorage.getKey('MenuDefinition');
 
-interface MenuFragmentSource {
+interface ComposedMenuSource {
   token: any;
   target: Function;
   provideIndex: number;
-  pathFallback?: string;
   instance?: object;
 }
 
@@ -41,21 +39,30 @@ function resolveFragmentTarget(
   token: any,
   concrete: any,
 ): Function | undefined {
-  if (
-    typeof concrete === 'function' &&
-    getMenuFragmentDefinitionMetadata(concrete)
-  ) {
+  if (typeof concrete === 'function') {
     return concrete;
   }
 
-  if (typeof token === 'function' && getMenuFragmentDefinitionMetadata(token)) {
+  if (typeof token === 'function') {
     return token;
   }
 
   return undefined;
 }
 
-function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
+function resolveFragmentLabel(reference: any): string {
+  if (typeof reference === 'function' && reference.name) {
+    return reference.name;
+  }
+
+  if (typeof reference === 'string' && reference.length > 0) {
+    return reference;
+  }
+
+  return '<anonymous>';
+}
+
+function resolveComposedMenus(menuInstance: any): ComposedMenuSource[] {
   const menuCtor = menuInstance.constructor as new (...args: any[]) => unknown;
   const assemblageDefinition = getAssemblageDefinition(menuCtor) || {};
   const menuDefinition = getMenuDefinitionMetadata(menuCtor) as
@@ -65,8 +72,19 @@ function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
     assemblageDefinition.inject ||
     []) as unknown as Array<any[]>;
 
-  if (!Array.isArray(provide) || provide.length === 0) {
+  const fragmentOrder =
+    menuDefinition && Array.isArray(menuDefinition.fragments)
+      ? menuDefinition.fragments
+      : [];
+
+  if (fragmentOrder.length === 0) {
     return [];
+  }
+
+  if (!Array.isArray(provide) || provide.length === 0) {
+    throw new Error(
+      '@Menu({ fragments }) requires fragment tokens to be registered in provide/inject.',
+    );
   }
 
   let context: ReturnType<typeof getAssemblageContext> | undefined;
@@ -76,8 +94,12 @@ function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
     context = undefined;
   }
 
-  const fragments: MenuFragmentSource[] = [];
+  const fragments: ComposedMenuSource[] = [];
   const seenTargets = new Set<Function>();
+  const byReference = new Map<
+    any,
+    { token: any; concrete: any; index: number }
+  >();
 
   for (let index = 0; index < provide.length; index += 1) {
     const injection = provide[index];
@@ -87,7 +109,19 @@ function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
 
     const token = injection[0];
     const concrete = injection[1] || injection[0];
-    const target = resolveFragmentTarget(token, concrete);
+    byReference.set(token, { token, concrete, index });
+    byReference.set(concrete, { token, concrete, index });
+  }
+
+  for (const [fragmentIndex, reference] of fragmentOrder.entries()) {
+    const provided = byReference.get(reference);
+    if (!provided) {
+      throw new Error(
+        `@Menu({ fragments }) reference '${resolveFragmentLabel(reference)}' is not registered in provide/inject.`,
+      );
+    }
+
+    const target = resolveFragmentTarget(provided.token, provided.concrete);
     if (!target || seenTargets.has(target)) {
       continue;
     }
@@ -101,54 +135,22 @@ function resolveMenuFragments(menuInstance: any): MenuFragmentSource[] {
     let instance: object | undefined;
     if (context) {
       try {
-        instance = context.require(token);
+        instance = context.require(provided.token);
       } catch {
         instance = undefined;
       }
     }
 
     fragments.push({
-      token,
+      token: provided.token,
       target,
-      provideIndex: index,
-      pathFallback: getMenuFragmentDefinitionMetadata(target)?.path,
+      provideIndex: provided.index + fragmentIndex,
       instance,
     });
     seenTargets.add(target);
   }
 
-  const fragmentOrder =
-    menuDefinition && Array.isArray(menuDefinition.fragments)
-      ? menuDefinition.fragments
-      : [];
-
-  if (fragmentOrder.length === 0) {
-    return fragments.sort((a, b) => a.provideIndex - b.provideIndex);
-  }
-
-  const orderIndex = new Map<any, number>();
-  fragmentOrder.forEach((entry, index) => {
-    orderIndex.set(entry, index);
-  });
-
-  return fragments.sort((a, b) => {
-    const aOrder = orderIndex.get(a.token) ?? orderIndex.get(a.target);
-    const bOrder = orderIndex.get(b.token) ?? orderIndex.get(b.target);
-
-    if (typeof aOrder === 'number' && typeof bOrder === 'number') {
-      return aOrder - bOrder;
-    }
-
-    if (typeof aOrder === 'number') {
-      return -1;
-    }
-
-    if (typeof bOrder === 'number') {
-      return 1;
-    }
-
-    return a.provideIndex - b.provideIndex;
-  });
+  return fragments.sort((a, b) => a.provideIndex - b.provideIndex);
 }
 
 const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
@@ -165,13 +167,12 @@ const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
 
   roots.push(...buildMenuTreeFromMetadata(this, { translate }).roots);
 
-  for (const [fragmentIndex, fragment] of resolveMenuFragments(
+  for (const [fragmentIndex, fragment] of resolveComposedMenus(
     this,
   ).entries()) {
     roots.push(
       ...buildMenuTreeFromMetadata(fragment.instance || fragment.target, {
         translate,
-        pathFallback: fragment.pathFallback,
         declarationIndexOffset: (fragmentIndex + 1) * 10_000,
       }).roots,
     );

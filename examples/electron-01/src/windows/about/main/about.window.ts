@@ -1,8 +1,8 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { join } from 'path';
 import { ElectronWindow, UseMenu, Window } from '@assemblerjs/electron';
+import { AboutMenu } from '@menus/about.menu';
 import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
-import { AboutMenu } from './about.menu';
 
 @Window({
   name: ABOUT_WINDOW_CONFIG.name,

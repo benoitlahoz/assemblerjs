@@ -7,6 +7,7 @@
     "src/preload/*.d.ts",
     "src/common/**/*",
     "src/features/**/*",
+    "src/menus/**/*",
     "src/windows/**/*"
   ],
   "compilerOptions": {
@@ -21,6 +22,8 @@
       "@renderer/*": ["src/renderer/src/*"],
       "@common/*": ["src/common/*"],
       "@features/*": ["src/features/*"],
+      "@menus": ["src/menus/index.ts"],
+      "@menus/*": ["src/menus/*"],
       "@windows/*": ["src/windows/*"],
       "@preload/*": ["src/preload/*"]
     }

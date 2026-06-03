@@ -74,6 +74,10 @@
     "packages/*",
     "examples/*"
   ],
+  "resolutions": {
+    "vite-plugin-dts": "~4.5.0",
+    "@microsoft/api-extractor": "^7.58.7"
+  },
   "nx": {
     "includedScripts": [],
     "targets": {

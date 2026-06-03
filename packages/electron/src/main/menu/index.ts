@@ -4,6 +4,4 @@ export * from './menu-definition/menu.decorator';
 export * from './menu-command/menu-command.decorator';
 export * from './menu-controller/menu-controller.decorator';
 export * from './menu-item/menu-item.decorator';
-export * from './menu-item/handle-in-main.decorator';
-export * from './menu-item/forward-click-to-renderer.decorator';
 export * from './services';

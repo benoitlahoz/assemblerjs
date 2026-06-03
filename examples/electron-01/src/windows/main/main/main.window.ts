@@ -2,8 +2,8 @@ import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
 import { join } from 'path';
 import { ElectronWindow, UseMenu, Window, WindowCommand } from '@assemblerjs/electron';
+import { MainMenu } from '@menus/main.menu';
 import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
-import { MainMenu } from './main.menu';
 
 const MAIN_WINDOW_INITIAL_WIDTH = 1280;
 const MAIN_WINDOW_INITIAL_HEIGHT = 900;

@@ -9,7 +9,7 @@ import {
 } from '@/universal/runtime';
 import { buildMenuEventChannel, MenuIpcChannel } from '@/universal';
 import type { MenuItemClickedEvent, MenuItemState } from '@/universal/types';
-import { resolveMenuRendererDefinition } from '../menu-definition/menu-definition';
+import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
 function resolveMenuEventChannels(windowName: string, event: string): string[] {
   const channels = new Set<string>();
@@ -118,11 +118,10 @@ export const MenuListener = createConstructorDecorator(function (this: any) {
     throw new Error('IpcRenderer is not available in the current context.');
   }
 
-  const definition = resolveMenuRendererDefinition(this);
-  const windowName = definition?.window;
+  const windowName = resolveMenuWindowName(this);
   if (!windowName || typeof windowName !== 'string') {
     throw new Error(
-      "@MenuListener requires a menu definition (via instance 'windowName' or @Menu).",
+      "@MenuListener requires a window name (via instance 'windowName', @Window, or injected window service).",
     );
   }
 

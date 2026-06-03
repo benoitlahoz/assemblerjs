@@ -2,9 +2,9 @@ import {
   ElectronMetadataStorage,
   getMenuRendererDefinitionMetadata,
 } from '@/universal/metadata';
+import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 
 export interface MenuRendererDefinition {
-  window: string;
   name: string;
 }
 
@@ -17,18 +17,22 @@ export function normalizeMenuRendererDefinition(
 ): MenuRendererDefinition {
   if (typeof definition === 'string') {
     return {
-      window: definition,
-      name: 'mainMenu',
+      name: definition,
     };
   }
 
-  const window = definition?.window;
-  if (!window || typeof window !== 'string') {
-    throw new Error('@Menu requires a valid window name.');
+  if (!definition || typeof definition !== 'object') {
+    throw new Error('@Menu requires a valid menu definition.');
+  }
+
+  const raw = definition as Record<string, unknown>;
+  if (typeof raw.window !== 'undefined') {
+    throw new Error(
+      '@Menu.window has been removed. Resolve window through @Window or instance windowName.',
+    );
   }
 
   return {
-    window,
     name:
       definition.name && typeof definition.name === 'string'
         ? definition.name
@@ -46,7 +50,7 @@ export function getMenuRendererDefinition(
       | MenuRendererDefinition
       | undefined;
 
-    if (definition?.window) {
+    if (definition?.name) {
       return definition;
     }
 
@@ -63,16 +67,11 @@ export function resolveMenuRendererDefinition(
     return undefined;
   }
 
-  const directWindow = (instance as { windowName?: unknown }).windowName;
   const directName = (instance as { menuName?: unknown }).menuName;
 
-  if (typeof directWindow === 'string' && directWindow.length > 0) {
+  if (typeof directName === 'string' && directName.length > 0) {
     return {
-      window: directWindow,
-      name:
-        typeof directName === 'string' && directName.length > 0
-          ? directName
-          : 'mainMenu',
+      name: directName,
     };
   }
 
@@ -82,4 +81,32 @@ export function resolveMenuRendererDefinition(
   }
 
   return getMenuRendererDefinition(ctor);
+}
+
+export function resolveMenuWindowName(instance: unknown): string | undefined {
+  const direct = resolveWindowRendererName(instance);
+  if (direct) {
+    return direct;
+  }
+
+  if (!instance || typeof instance !== 'object') {
+    return undefined;
+  }
+
+  const source = instance as Record<string, unknown>;
+  for (const key of Object.keys(source)) {
+    let candidate: unknown;
+    try {
+      candidate = source[key];
+    } catch {
+      continue;
+    }
+
+    const nested = resolveWindowRendererName(candidate);
+    if (nested) {
+      return nested;
+    }
+  }
+
+  return undefined;
 }

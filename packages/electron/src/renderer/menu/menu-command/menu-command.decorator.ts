@@ -1,6 +1,6 @@
 import { buildMenuCommandChannel, MenuIpcChannel } from '@/universal';
 import { getIpcResultParameterIndices } from '@/universal/metadata';
-import { resolveMenuRendererDefinition } from '../menu-definition/menu-definition';
+import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
 function resolveFallbackChannel(command: string): string | undefined {
   if (command === 'snapshot') {
@@ -35,13 +35,12 @@ export const MenuCommand = (command: string): MethodDecorator => {
         propertyKey,
       );
 
-      const definition = resolveMenuRendererDefinition(this);
-      const windowName = definition?.window;
+      const windowName = resolveMenuWindowName(this);
       if (!windowName || typeof windowName !== 'string') {
         throw new Error(
           `@MenuCommand on method '${String(
             propertyKey,
-          )}' requires a window name (via instance 'windowName' or @Menu).`,
+          )}' requires a window name (via instance 'windowName', @Window, or injected window service).`,
         );
       }
 

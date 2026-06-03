@@ -20,7 +20,7 @@ export function buildMenuItemFromEntry(
     accelerator: entry.accelerator,
   });
 
-  if (behavior.handleInMainMethods.has(entry.method)) {
+  if (entry.handleInMain) {
     item.handleInMain((itemId: string, windowName: string) => {
       const method = behavior.instance?.[entry.method];
       if (typeof method === 'function') {
@@ -29,7 +29,7 @@ export function buildMenuItemFromEntry(
     });
   }
 
-  if (behavior.forwardToRendererMethods.has(entry.method)) {
+  if (entry.forwardToRenderer) {
     item.forwardClickToRenderer();
   }
 
