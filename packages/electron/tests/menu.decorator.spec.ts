@@ -34,7 +34,6 @@ vi.mock('../src/main/index.ts', () => ({
 
 let ElectronMenu: typeof import('../src/main/menu/model/electron-menu').ElectronMenu;
 let createMenuItem: typeof import('../src/main/menu/builders/create-menu-item').createMenuItem;
-let MenuFragment: typeof import('../src/main/menu/menu-definition/menu-fragment.decorator').MenuFragment;
 let MenuItem: typeof import('../src/main/menu/menu-item/menu-item.decorator').MenuItem;
 let Menu: typeof import('../src/main/menu/menu-definition/menu.decorator').Menu;
 
@@ -42,8 +41,6 @@ beforeAll(async () => {
   ({ ElectronMenu } = await import('../src/main/menu/model/electron-menu'));
   ({ createMenuItem } =
     await import('../src/main/menu/builders/create-menu-item'));
-  ({ MenuFragment } =
-    await import('../src/main/menu/menu-definition/menu-fragment.decorator'));
   ({ MenuItem } =
     await import('../src/main/menu/menu-item/menu-item.decorator'));
   ({ Menu } = await import('../src/main/menu/menu-definition/menu.decorator'));
@@ -116,168 +113,5 @@ describe('@Menu auto bootstrap', () => {
 
     const menu = new LocalizedMenu();
     expect(menu.getItems()[0]?.label).toBe('Fenetre');
-  });
-
-  it('aggregates menu items from two provided @MenuFragment classes', () => {
-    @MenuFragment()
-    @Assemblage()
-    class WindowFragment {
-      @MenuItem({ id: 'window.refresh', path: 'Window', label: 'Refresh' })
-      public refresh(): void {}
-    }
-
-    @MenuFragment()
-    @Assemblage()
-    class AppFragment {
-      @MenuItem({ id: 'app.quit', path: 'App', label: 'Quit', role: 'quit' })
-      public quit(): void {}
-    }
-
-    @Menu({ name: 'mainMenu' })
-    @Assemblage({
-      provide: [[WindowFragment], [AppFragment]],
-    })
-    class FragmentedMenu extends ElectronMenu {
-      constructor() {
-        super();
-      }
-    }
-
-    const menu = new FragmentedMenu();
-
-    expect(menu.itemById('window.refresh')?.label).toBe('Refresh');
-    expect(menu.itemById('app.quit')?.label).toBe('Quit');
-  });
-
-  it('uses Menu.fragments class order for root menu ordering', () => {
-    @MenuFragment()
-    @Assemblage()
-    class WindowFragment {
-      @MenuItem({ id: 'window.refresh', path: 'Window', label: 'Refresh' })
-      public refresh(): void {}
-    }
-
-    @MenuFragment()
-    @Assemblage()
-    class AppFragment {
-      @MenuItem({ id: 'app.quit', path: 'App', label: 'Quit', role: 'quit' })
-      public quit(): void {}
-    }
-
-    @Menu({
-      window: 'main',
-      name: 'mainMenu',
-      fragments: [AppFragment, WindowFragment],
-    })
-    @Assemblage({
-      provide: [[WindowFragment], [AppFragment]],
-    })
-    class OrderedFragmentedMenu extends ElectronMenu {
-      constructor() {
-        super();
-      }
-    }
-
-    const menu = new OrderedFragmentedMenu();
-
-    expect(menu.getItems().map((item) => item.id)).toEqual([
-      'menu.app',
-      'menu.window',
-    ]);
-  });
-
-  it('uses MenuFragment path fallback when provided and MenuItem path is omitted', () => {
-    @MenuFragment({ path: 'Window' })
-    @Assemblage()
-    class WindowFragment {
-      @MenuItem({ id: 'window.refresh', label: 'Refresh' })
-      public refresh(): void {}
-    }
-
-    @Menu({ name: 'mainMenu' })
-    @Assemblage({
-      provide: [[WindowFragment]],
-    })
-    class FragmentedMenu extends ElectronMenu {
-      constructor() {
-        super();
-      }
-    }
-
-    const menu = new FragmentedMenu();
-
-    expect(menu.getItems().map((item) => item.id)).toEqual(['menu.window']);
-    expect(menu.itemById('window.refresh')?.label).toBe('Refresh');
-  });
-
-  it('throws on duplicate leaf ids across fragments in strict composition', () => {
-    @MenuFragment()
-    @Assemblage()
-    class FirstFragment {
-      @MenuItem({ id: 'dup.item', path: 'Window', label: 'One' })
-      public one(): void {}
-    }
-
-    @MenuFragment()
-    @Assemblage()
-    class SecondFragment {
-      @MenuItem({ id: 'dup.item', path: 'Window', label: 'Two' })
-      public two(): void {}
-    }
-
-    @Menu({ name: 'mainMenu' })
-    @Assemblage({
-      provide: [[FirstFragment], [SecondFragment]],
-    })
-    class InvalidFragmentedMenu extends ElectronMenu {
-      constructor() {
-        super();
-      }
-    }
-
-    expect(() => new InvalidFragmentedMenu()).toThrow(
-      "Duplicate menu item id 'dup.item'",
-    );
-  });
-
-  it('orders merged fragment submenu and leaf by order values', () => {
-    @MenuFragment({ path: 'Developer/Refresh' })
-    @Assemblage()
-    class RefreshFragment {
-      @MenuItem({ id: 'dev.reload', label: 'Reload', order: 10 })
-      public reload(): void {}
-
-      @MenuItem({ id: 'dev.forceReload', label: 'Force Reload', order: 20 })
-      public forceReload(): void {}
-    }
-
-    @MenuFragment({ path: 'Developer' })
-    @Assemblage()
-    class DeveloperFragment {
-      @MenuItem({ id: 'dev.tools', label: 'Toggle DevTools', order: 30 })
-      public tools(): void {}
-    }
-
-    @Menu({
-      window: 'main',
-      name: 'mainMenu',
-      fragments: [DeveloperFragment, RefreshFragment],
-    })
-    @Assemblage({
-      provide: [[DeveloperFragment], [RefreshFragment]],
-    })
-    class OrderedDeveloperMenu extends ElectronMenu {
-      constructor() {
-        super();
-      }
-    }
-
-    const menu = new OrderedDeveloperMenu();
-    const developerRoot = menu
-      .getItems()
-      .find((item) => item.id === 'menu.developer');
-    const submenuIds = developerRoot?.submenu?.map((item) => item.id) || [];
-
-    expect(submenuIds).toEqual(['menu.developer.refresh', 'dev.tools']);
   });
 });

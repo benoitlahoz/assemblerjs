@@ -2,18 +2,9 @@ import { createConstructorDecorator } from 'assemblerjs';
 import { getAssemblageContext, getAssemblageDefinition } from 'assemblerjs';
 import type { Identifier } from 'assemblerjs';
 import {
-  buildMenuTreeFromMetadata,
-  mergeRootMenus,
-  resolveMenuTranslate,
-  type ElectronMenu,
-  type ElectronMenuItem,
-} from '@/main/menu';
-import { ElectronWindow } from '@/main/window/classes/electron-window';
-import {
   AbstractMenuControllerService,
   MenuControllerService,
 } from '@/main/menu/services';
-import { getMenuContributionDefinition } from '@/main/menu/menu-definition/menu-contribution.decorator';
 import { getMenuDefinition } from '@/main/menu/menu-definition/menu.decorator';
 
 type MenuToken = Identifier<any>;
@@ -26,45 +17,7 @@ interface ManagedMenuDefinition {
   };
 }
 
-interface ManagedMenuContributionDefinition {
-  token: MenuToken;
-  concrete: Function;
-  definition: {
-    target: string;
-    priority: number;
-    path?: string;
-    states?: Array<{
-      itemId: string;
-      priority: number;
-      enabled?: boolean;
-      checked?: boolean;
-      whenWindowFocused?: string;
-    }>;
-  };
-}
-
-interface ManagedRegisteredMenu {
-  windowName: string;
-  menuName: string;
-  menu: ElectronMenu;
-  baseItemStates: Record<
-    string,
-    {
-      enabled: boolean;
-      checked?: boolean;
-    }
-  >;
-}
-
 const managedMenusSymbol = Symbol('__MenuControllerManagedMenus__');
-const managedContributionsSymbol = Symbol(
-  '__MenuControllerManagedContributions__',
-);
-const registeredMenuWindowsSymbol = Symbol(
-  '__MenuControllerRegisteredWindows__',
-);
-const registeredMenusSymbol = Symbol('__MenuControllerRegisteredMenus__');
-const boundWindowInstancesSymbol = Symbol('__MenuControllerBoundWindows__');
 
 function listManagedMenus(controller: any): ManagedMenuDefinition[] {
   if (!controller[managedMenusSymbol]) {
@@ -107,234 +60,6 @@ function listManagedMenus(controller: any): ManagedMenuDefinition[] {
   return managedMenus;
 }
 
-function listManagedContributions(
-  controller: any,
-): ManagedMenuContributionDefinition[] {
-  if (!controller[managedContributionsSymbol]) {
-    controller[managedContributionsSymbol] =
-      [] as ManagedMenuContributionDefinition[];
-  }
-
-  const managedContributions = controller[
-    managedContributionsSymbol
-  ] as ManagedMenuContributionDefinition[];
-  if (managedContributions.length > 0) {
-    return managedContributions;
-  }
-
-  const controllerDefinition =
-    getAssemblageDefinition(controller.constructor) || {};
-  const provide = (controllerDefinition.provide ||
-    controllerDefinition.inject ||
-    []) as unknown as Array<any[]>;
-
-  for (const injection of provide) {
-    if (!Array.isArray(injection)) {
-      continue;
-    }
-
-    const token = injection[0] as MenuToken;
-    const concrete = (injection[1] || injection[0]) as Function;
-    const definition =
-      getMenuContributionDefinition(concrete) ||
-      getMenuContributionDefinition(token as any);
-
-    if (!definition) {
-      continue;
-    }
-
-    managedContributions.push({
-      token,
-      concrete,
-      definition,
-    });
-  }
-
-  return managedContributions.sort(
-    (a, b) => a.definition.priority - b.definition.priority,
-  );
-}
-
-function ensureRegisteredMenus(controller: any): ManagedRegisteredMenu[] {
-  if (!controller[registeredMenusSymbol]) {
-    controller[registeredMenusSymbol] = [] as ManagedRegisteredMenu[];
-  }
-
-  return controller[registeredMenusSymbol] as ManagedRegisteredMenu[];
-}
-
-function ensureBoundWindowInstances(controller: any): WeakSet<object> {
-  if (!controller[boundWindowInstancesSymbol]) {
-    controller[boundWindowInstancesSymbol] = new WeakSet<object>();
-  }
-
-  return controller[boundWindowInstancesSymbol] as WeakSet<object>;
-}
-
-function getFocusedWindowName(): string | undefined {
-  const focusedWindow =
-    typeof (
-      ElectronWindow as typeof ElectronWindow & {
-        getFocusedWindow?: () => ElectronWindow | null;
-      }
-    ).getFocusedWindow === 'function'
-      ? (
-          ElectronWindow as typeof ElectronWindow & {
-            getFocusedWindow: () => ElectronWindow | null;
-          }
-        ).getFocusedWindow()
-      : null;
-
-  if (!focusedWindow || focusedWindow.isDestroyed()) {
-    return undefined;
-  }
-
-  const namedWindow = focusedWindow as ElectronWindow & { name?: string };
-  return namedWindow.name;
-}
-
-function applyMenuStateContributions(
-  controller: any,
-  menus: AbstractMenuControllerService,
-  contributions: ManagedMenuContributionDefinition[],
-): void {
-  const stateEntries = contributions.flatMap((contribution) =>
-    (contribution.definition.states || []).map((state) => ({
-      target: contribution.definition.target,
-      definition: state,
-    })),
-  );
-
-  if (stateEntries.length === 0) {
-    return;
-  }
-
-  const registeredMenus = ensureRegisteredMenus(controller);
-  const focusedWindowName = getFocusedWindowName();
-
-  for (const registeredMenu of registeredMenus) {
-    const matching = stateEntries.filter(
-      (entry) => entry.target === registeredMenu.menuName,
-    );
-
-    if (matching.length === 0) {
-      continue;
-    }
-
-    const affectedItemIds = new Set<string>();
-    for (const entry of matching) {
-      affectedItemIds.add(entry.definition.itemId);
-    }
-
-    // Reset targeted items to the post-composition baseline before reapplying active states.
-    for (const itemId of affectedItemIds) {
-      const baseState = registeredMenu.baseItemStates[itemId];
-      if (!baseState) {
-        continue;
-      }
-
-      menus.setItemEnabled(
-        registeredMenu.windowName,
-        itemId,
-        baseState.enabled,
-      );
-
-      if (typeof baseState.checked === 'boolean') {
-        menus.setItemChecked(
-          registeredMenu.windowName,
-          itemId,
-          baseState.checked,
-        );
-      }
-    }
-
-    for (const entry of matching) {
-      if (
-        entry.definition.whenWindowFocused &&
-        entry.definition.whenWindowFocused !== focusedWindowName
-      ) {
-        continue;
-      }
-
-      if (typeof entry.definition.enabled === 'boolean') {
-        menus.setItemEnabled(
-          registeredMenu.windowName,
-          entry.definition.itemId,
-          entry.definition.enabled,
-        );
-      }
-
-      if (typeof entry.definition.checked === 'boolean') {
-        menus.setItemChecked(
-          registeredMenu.windowName,
-          entry.definition.itemId,
-          entry.definition.checked,
-        );
-      }
-    }
-  }
-}
-
-function bindWindowForMenuStateContributions(
-  controller: any,
-  windowInstance: any,
-  menus: AbstractMenuControllerService,
-  contributions: ManagedMenuContributionDefinition[],
-): void {
-  if (
-    !windowInstance ||
-    typeof windowInstance.on !== 'function' ||
-    contributions.length === 0
-  ) {
-    return;
-  }
-
-  const boundWindowInstances = ensureBoundWindowInstances(controller);
-  if (boundWindowInstances.has(windowInstance)) {
-    return;
-  }
-
-  const refresh = () => {
-    applyMenuStateContributions(controller, menus, contributions);
-  };
-
-  windowInstance.on('focus', refresh);
-  windowInstance.on('blur', refresh);
-  windowInstance.on('closed', refresh);
-  boundWindowInstances.add(windowInstance);
-}
-
-function applyMenuContributions(
-  context: ReturnType<typeof getAssemblageContext>,
-  menu: ElectronMenu,
-  menuName: string,
-  contributions: ManagedMenuContributionDefinition[],
-): void {
-  const matching = contributions.filter(
-    (entry) => entry.definition.target === menuName,
-  );
-
-  if (matching.length === 0) {
-    return;
-  }
-
-  const translate = resolveMenuTranslate(menu);
-  const roots: ElectronMenuItem[] = [...menu.getItems()];
-
-  for (const entry of matching) {
-    const instance = context.require(entry.token as any) as object;
-    const built = buildMenuTreeFromMetadata(instance || entry.concrete, {
-      translate,
-      pathFallback: entry.definition.path,
-      declarationIndexOffset: entry.definition.priority * 10_000,
-    });
-
-    roots.push(...built.roots);
-  }
-
-  menu.replaceItems(mergeRootMenus(roots));
-}
-
 function resolveMenuControllerService(
   controller: any,
 ): AbstractMenuControllerService {
@@ -362,29 +87,7 @@ function resolveMenuControllerService(
 export const MenuController = createConstructorDecorator(function (this: any) {
   const context = getAssemblageContext(this.constructor);
   const menus = resolveMenuControllerService(this);
-  const managed = listManagedMenus(this);
-  const managedContributions = listManagedContributions(this);
-
-  if (!this[registeredMenuWindowsSymbol]) {
-    this[registeredMenuWindowsSymbol] = new Set<string>();
-  }
-
-  const registeredWindows = this[registeredMenuWindowsSymbol] as Set<string>;
-
-  if (typeof this.openWindow === 'function') {
-    const originalOpenWindow = this.openWindow.bind(this);
-    this.openWindow = async (...args: any[]) => {
-      const windowInstance = await originalOpenWindow(...args);
-      bindWindowForMenuStateContributions(
-        this,
-        windowInstance,
-        menus,
-        managedContributions,
-      );
-      applyMenuStateContributions(this, menus, managedContributions);
-      return windowInstance;
-    };
-  }
+  const managedMenus = listManagedMenus(this);
 
   const originalOnInit =
     typeof this.onInit === 'function' ? this.onInit.bind(this) : undefined;
@@ -394,28 +97,11 @@ export const MenuController = createConstructorDecorator(function (this: any) {
       await originalOnInit(...args);
     }
 
-    for (const entry of managed) {
-      const instance = context.require(entry.token as any) as ElectronMenu;
-      applyMenuContributions(
-        context,
-        instance,
-        entry.definition.name,
-        managedContributions,
-      );
+    // Legacy fragment/contribution composition is intentionally removed.
+    // We only validate that provided menu classes are resolvable in the DI graph.
+    for (const entry of managedMenus) {
+      context.require(entry.token as any);
     }
-
-    const openWindows =
-      typeof this.listWindows === 'function' ? this.listWindows() : [];
-    for (const windowInstance of openWindows) {
-      bindWindowForMenuStateContributions(
-        this,
-        windowInstance,
-        menus,
-        managedContributions,
-      );
-    }
-
-    applyMenuStateContributions(this, menus, managedContributions);
   };
 
   const originalOnDispose =
@@ -424,12 +110,12 @@ export const MenuController = createConstructorDecorator(function (this: any) {
       : undefined;
 
   this.onDispose = async (...args: any[]) => {
-    ensureRegisteredMenus(this).length = 0;
-
-    for (const windowName of registeredWindows) {
-      menus.unregisterMenu(windowName);
+    if (typeof this.listWindowNames === 'function') {
+      const names = this.listWindowNames() as string[];
+      for (const windowName of names) {
+        menus.unregisterMenu(windowName);
+      }
     }
-    registeredWindows.clear();
 
     if (originalOnDispose) {
       return await originalOnDispose(...args);
