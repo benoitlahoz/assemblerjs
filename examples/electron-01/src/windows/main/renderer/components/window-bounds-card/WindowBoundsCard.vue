@@ -2,8 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue';
 import type { MenuItemState } from '@assemblerjs/electron/renderer';
 import { useContext } from '@renderer/composables/useContext';
-import { KeyboardShortcut } from '@renderer/components/keyboard-shortcut';
-import type { KeyboardShortcutType } from '@renderer/components/keyboard-shortcut';
+import { SystemStateModule } from '@features/system/renderer/system-state.module';
 import { MainWindow } from '../../main.window';
 import { MainMenuService } from '../../main.menu';
 import { useWindowBoundsCard } from './useWindowBoundsCard';
@@ -11,9 +10,11 @@ import { useWindowBoundsCard } from './useWindowBoundsCard';
 const context = useContext();
 const mainWindow = context.require(MainWindow);
 const menuService = context.require(MainMenuService);
+const { system } = context.require(SystemStateModule);
 const bounds = mainWindow.bounds;
 
 const menuItems = ref<Record<string, MenuItemState>>({});
+const platform = ref<string>('');
 
 onMounted(async () => {
   // Subscribe to updates
@@ -27,6 +28,12 @@ onMounted(async () => {
   const snapshot = await menuService.waitForSnapshot();
   if (snapshot) {
     menuItems.value = { ...snapshot.items };
+  }
+
+  // Get platform from system state
+  const systemSnapshot = await system.getSnapshot();
+  if (systemSnapshot) {
+    platform.value = systemSnapshot.runtime.platform;
   }
 });
 
@@ -45,8 +52,8 @@ const {
 } = useWindowBoundsCard(mainWindow, bounds);
 
 function acceleratorToKeys(accelerator: string): string[] {
-  // Detect macOS from navigator instead of process
-  const isMac = /Mac|iPhone|iPad|iPod/.test(navigator.platform);
+  // Use platform from system state runtime stack
+  const isMac = platform.value === 'darwin';
 
   return accelerator.split('+').map((key) => {
     const normalized = key.toLowerCase();
@@ -57,61 +64,64 @@ function acceleratorToKeys(accelerator: string): string[] {
   });
 }
 
-const shortcuts = computed<KeyboardShortcutType[]>(() => {
-  const itemIds = [
-    'window.bounds.refreshBounds',
-    'window.bounds.randomBounds',
-    'window.bounds.centerWindow',
+function formatKey(key: string): string {
+  const replacements: Record<string, string> = {
+    cmd: '⌘',
+    command: '⌘',
+    ctrl: '⌃',
+    control: '⌃',
+    alt: '⌥',
+    option: '⌥',
+    shift: '⇧',
+    enter: '↵',
+    return: '↵',
+    delete: '⌫',
+    backspace: '⌫',
+    esc: '⎋',
+    escape: '⎋',
+    tab: '⇥',
+    space: '␣',
+    up: '↑',
+    down: '↓',
+    left: '←',
+    right: '→',
+  };
+
+  return replacements[key.toLowerCase()] || key.toUpperCase();
+}
+
+interface ActionButton {
+  id: string;
+  label: string;
+  accelerator?: string;
+  keys?: string[];
+  action: () => void;
+}
+
+const actionButtons = computed<ActionButton[]>(() => {
+  const buttons: Array<{ id: string; action: () => void }> = [
+    { id: 'window.bounds.refreshBounds', action: refreshBounds },
+    { id: 'window.bounds.randomBounds', action: randomizeBounds },
+    { id: 'window.bounds.centerWindow', action: centerWindow },
   ];
 
-  const result = itemIds
-    .map((id) => {
-      const itemState = menuItems.value[id];
-      if (!itemState) {
-        return null;
-      }
-
-      const { label, accelerator } = itemState;
-      if (!accelerator) {
-        return null;
-      }
-
-      return {
-        keys: acceleratorToKeys(accelerator),
-        description: label || id,
-      };
-    })
-    .filter((shortcut): shortcut is KeyboardShortcutType => shortcut !== null);
-
-  return result;
+  return buttons.map((btn) => {
+    const itemState = menuItems.value[btn.id];
+    return {
+      ...btn,
+      label: itemState?.label || btn.id,
+      accelerator: itemState?.accelerator,
+      keys: itemState?.accelerator ? acceleratorToKeys(itemState.accelerator) : undefined,
+    };
+  });
 });
 </script>
 
 <template>
   <article class="card card--window-bounds" aria-live="polite">
     <header class="card__header">
-      <div class="card__title-row">
-        <h2>Window Geometry</h2>
-        <span class="window-bounds-duplex">Full-duplex</span>
-      </div>
-      <button
-        type="button"
-        class="window-bounds-refresh"
-        aria-label="Refresh window bounds"
-        title="Refresh bounds"
-        @click="refreshBounds"
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M20 4v6h-6M4 20v-6h6M20 10a8 8 0 0 0-14.9-2M4 14a8 8 0 0 0 14.9 2"
-            fill="none"
-            stroke="currentColor"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.8"
-          />
-        </svg>
-      </button>
+      <h2>Window Geometry</h2>
+      <span class="window-bounds-duplex">Full-duplex</span>
     </header>
 
     <p class="card__description">
@@ -119,11 +129,19 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
     </p>
 
     <div class="window-bounds-actions">
-      <button type="button" class="window-bounds-action" @click="randomizeBounds">
-        Random Bounds
-      </button>
-      <button type="button" class="window-bounds-action" @click="centerWindow">
-        Center Window
+      <button
+        v-for="btn in actionButtons"
+        :key="btn.id"
+        type="button"
+        class="window-bounds-action"
+        @click="btn.action"
+      >
+        <span class="action-label">{{ btn.label }}</span>
+        <span v-if="btn.keys" class="action-shortcut">
+          <kbd v-for="(key, idx) in btn.keys" :key="idx" class="action-key">{{
+            formatKey(key)
+          }}</kbd>
+        </span>
       </button>
     </div>
 
@@ -138,19 +156,6 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
       @pointerleave="onCanvasLeave"
       @pointerenter="onCanvasHover"
     />
-
-    <section class="user-menu-section">
-      <h3 class="user-menu-section__title">with user menu</h3>
-      <dl class="user-menu-section__shortcuts">
-        <KeyboardShortcut
-          v-for="(shortcut, index) in shortcuts"
-          :key="index"
-          :keys="shortcut.keys"
-          :description="shortcut.description"
-          compact
-        />
-      </dl>
-    </section>
   </article>
 </template>
 
@@ -174,13 +179,6 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
   justify-content: space-between;
   gap: 10px;
   min-height: 32px;
-}
-
-.card__title-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
 }
 
 .window-bounds-duplex {
@@ -211,45 +209,6 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
   line-height: 1.45;
 }
 
-.window-bounds-refresh {
-  cursor: pointer;
-  appearance: none;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 24%, transparent);
-  background: color-mix(in srgb, var(--ev-c-black-soft) 76%, transparent);
-  color: var(--ev-c-text-1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition:
-    transform 120ms ease,
-    border-color 120ms ease,
-    background-color 120ms ease;
-}
-
-.window-bounds-refresh svg {
-  width: 15px;
-  height: 15px;
-}
-
-.window-bounds-refresh:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--ev-c-text-2) 44%, transparent);
-  background: color-mix(in srgb, var(--ev-c-black-soft) 68%, transparent);
-}
-
-.window-bounds-refresh:active {
-  transform: translateY(0);
-}
-
-.window-bounds-refresh:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--ev-c-text-1) 70%, transparent);
-  outline-offset: 2px;
-}
-
 .window-bounds-canvas {
   margin-top: 10px;
   border-radius: 12px;
@@ -268,7 +227,7 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
 .window-bounds-actions {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -282,16 +241,51 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
   font-size: 13px;
   font-weight: 600;
   text-align: center;
-  padding: 0 12px;
-  height: 40px;
-  min-height: 40px;
+  padding: 8px 12px;
+  min-height: 52px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 4px;
   transition:
     transform 120ms ease,
     border-color 120ms ease,
     background-color 120ms ease;
+}
+
+.action-label {
+  display: block;
+  line-height: 1.2;
+  margin-top: 6px;
+}
+
+.action-shortcut {
+  margin-top: 6px;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.action-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ev-c-text-1);
+  background: color-mix(in srgb, var(--ev-c-bg-soft) 80%, transparent);
+  border: 1px solid var(--ev-button-alt-border);
+  border-radius: 4px;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .window-bounds-action:hover {
@@ -311,32 +305,6 @@ const shortcuts = computed<KeyboardShortcutType[]>(() => {
 
 @media (max-width: 620px) {
   .window-bounds-actions {
-    grid-template-columns: 1fr;
-  }
-}
-
-.user-menu-section {
-  margin-top: 12px;
-}
-
-.user-menu-section__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--ev-c-text-2);
-  margin: 0 0 10px 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.user-menu-section__shortcuts {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
-  margin: 0;
-}
-
-@media (max-width: 620px) {
-  .user-menu-section__shortcuts {
     grid-template-columns: 1fr;
   }
 }

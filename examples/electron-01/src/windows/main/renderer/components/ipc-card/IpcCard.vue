@@ -195,10 +195,8 @@ onBeforeUnmount(() => {
 <template>
   <article class="card" aria-live="polite">
     <header class="card__header">
-      <div class="card__title-row">
-        <h2>IPC</h2>
-        <span class="ipc-duplex">Full-duplex</span>
-      </div>
+      <h2>IPC</h2>
+      <span class="ipc-duplex">Full-duplex</span>
     </header>
     <p class="card__description">
       Bidirectional renderer &lt;-&gt; main health panel with heartbeat and latency time-series.
@@ -284,13 +282,6 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 10px;
   min-height: 32px;
-}
-
-.card__title-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
 }
 
 .ipc-duplex {

@@ -73,7 +73,11 @@ export interface OsState {
   totalMemBytes: number;
   freeMemBytes: number;
   availableMemBytes?: number;
-  memorySource?: 'platform-estimate' | 'electron-native' | 'node-os-fallback';
+  memorySource?:
+    | 'electron-native'
+    | 'node-native'
+    | 'platform-sysctl'
+    | 'node-os-fallback';
   loadAvg1m: number;
   loadAvg5m: number;
   loadAvg15m: number;

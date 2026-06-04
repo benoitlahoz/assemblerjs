@@ -59,6 +59,21 @@ const cpuPercentLabel = computed(() => {
   return `${cpuPercent.toFixed(1)}%`;
 });
 
+const formattedUptime = computed(() => {
+  if (!snapshot.value) {
+    return '—';
+  }
+
+  const totalSeconds = snapshot.value.process.uptimeSec;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  const milliseconds = Math.round((totalSeconds % 1) * 1000);
+
+  // Format 00:00:00.000
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
+});
+
 async function startMonitoring(): Promise<void> {
   await system.startMonitoring({
     intervalMs: intervalMs.value,
@@ -106,10 +121,8 @@ onBeforeUnmount(async () => {
 <template>
   <article class="card card--system-state" aria-live="polite">
     <header class="card__header">
-      <div class="card__title-row">
-        <h2>System State Stream</h2>
-        <span class="system-duplex">Full-duplex</span>
-      </div>
+      <h2>System State Stream</h2>
+      <span class="system-duplex">Full-duplex</span>
     </header>
 
     <p class="card__description">
@@ -119,7 +132,7 @@ onBeforeUnmount(async () => {
     <dl class="system-metrics-grid">
       <div class="metric">
         <dt>App Uptime</dt>
-        <dd>{{ snapshot ? `${snapshot.process.uptimeSec}s` : '—' }}</dd>
+        <dd>{{ formattedUptime }}</dd>
       </div>
       <div class="metric">
         <dt>Heap Used</dt>
@@ -195,13 +208,6 @@ onBeforeUnmount(async () => {
   justify-content: space-between;
   gap: 10px;
   min-height: 32px;
-}
-
-.card__title-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
 }
 
 .card__header h2 {
