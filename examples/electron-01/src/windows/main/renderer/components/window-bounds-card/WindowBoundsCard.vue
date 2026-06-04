@@ -6,6 +6,7 @@ import { SystemStateModule } from '@features/system/renderer/system-state.module
 import { MainWindow } from '../../main.window';
 import { MainMenuService } from '../../main.menu';
 import { useWindowBoundsCard } from './useWindowBoundsCard';
+import { TrafficLightsControls } from '../custom-title-bar';
 
 const context = useContext();
 const mainWindow = context.require(MainWindow);
@@ -144,6 +145,9 @@ const actionButtons = computed<ActionButton[]>(() => {
         </span>
       </button>
     </div>
+
+    <!-- Title Bar Controls -->
+    <TrafficLightsControls :platform="platform" />
 
     <canvas
       ref="canvasRef"

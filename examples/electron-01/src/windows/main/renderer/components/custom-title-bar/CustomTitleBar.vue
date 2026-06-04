@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
 import { useContext } from '@renderer/composables/useContext';
 import { MainWindow } from '../../main.window';
-import type { TitleBarConfig } from '@assemblerjs/electron/universal';
+import type { TitleBarConfig } from '@assemblerjs/electron/renderer';
 
 const context = useContext();
 const mainWindow = context.require(MainWindow);
 
-const config = ref<TitleBarConfig | undefined>(undefined);
-const buttonPosition = ref<{ x: number; y: number } | undefined>(undefined);
-const windowTitle = ref<string>('');
+// Inject config from MainWindow
+const config = inject<Ref<TitleBarConfig | undefined>>('titleBarConfig')!;
+
+const windowTitle = ref<string | undefined>('');
 const titleInputRef = ref<HTMLInputElement | null>(null);
 const measureSpan = ref<HTMLSpanElement | null>(null);
+const titleBarRef = ref<HTMLDivElement | null>(null);
 
 // Check if we're on macOS (traffic lights on left)
 const isMacOS = computed(() => config.value?.platform === 'darwin');
@@ -31,7 +33,7 @@ const inputWidth = computed(() => {
 });
 
 const updateTitle = async () => {
-  const trimmedTitle = windowTitle.value.trim();
+  const trimmedTitle = windowTitle.value?.trim();
   if (trimmedTitle) {
     await mainWindow.setTitle(trimmedTitle);
   } else {
@@ -58,7 +60,7 @@ const handleTitleKeydown = (event: KeyboardEvent) => {
 // Compute balanced padding for centered title
 const paddingStyle = computed(() => {
   if (!config.value) return {};
-  const { insets } = config.value;
+  const { insets, height } = config.value;
 
   // On macOS, balance horizontal padding to truly center the title
   if (isMacOS.value) {
@@ -67,6 +69,7 @@ const paddingStyle = computed(() => {
       paddingRight: `${insets.left}px`, // Same as left for centering
       paddingBottom: `${insets.bottom}px`,
       paddingLeft: `${insets.left}px`,
+      height: `${height}px`,
     };
   }
 
@@ -76,39 +79,77 @@ const paddingStyle = computed(() => {
     paddingRight: `${insets.right}px`,
     paddingBottom: `${insets.bottom}px`,
     paddingLeft: `${insets.left}px`,
+    height: `${height}px`,
   };
 });
 
+// Blur handler - blur on any click except the input itself
+let cleanupTitleChanged: (() => void) | undefined;
+let cleanupTitleBarChanged: (() => void) | undefined;
+
+const handleClickOutside = (e: MouseEvent) => {
+  const target = e.target as Node;
+
+  // Only keep focus if clicking directly on the input
+  if (!titleInputRef.value?.contains(target) && document.activeElement === titleInputRef.value) {
+    titleInputRef.value?.blur();
+  }
+};
+
 onMounted(async () => {
-  config.value = await mainWindow.getTitleBarConfig();
-  buttonPosition.value = await mainWindow.getWindowButtonPosition();
+  console.log('[RENDERER/CustomTitleBar] Initial config:', config.value);
   windowTitle.value = await mainWindow.getTitle();
 
-  // Listen for title changes
-  const cleanup = mainWindow.onTitleChanged((newTitle: string) => {
+  // Listen for title changes from main process
+  cleanupTitleChanged = mainWindow.onTitleChanged((newTitle: string) => {
     windowTitle.value = newTitle;
   });
 
-  // Cleanup on unmount
-  return cleanup;
+  // Listen for titlebar config changes (Windows/Linux system overlay updates)
+  // On macOS, height is managed locally via provide/inject
+  cleanupTitleBarChanged = mainWindow.onTitleBarChanged((newConfig) => {
+    if (!newConfig) {
+      console.warn('[RENDERER/CustomTitleBar] Received undefined titlebar config, ignoring');
+      return;
+    }
+    console.log('[RENDERER/CustomTitleBar] Received titlebar-changed event:', newConfig);
+    console.log(
+      '[RENDERER/CustomTitleBar] Previous height:',
+      config.value?.height,
+      '→ New height:',
+      newConfig.height,
+    );
+    config.value = newConfig;
+  });
+
+  // Add global click handler for blur
+  document.addEventListener('click', handleClickOutside, true);
+});
+
+onUnmounted(() => {
+  cleanupTitleChanged?.();
+  cleanupTitleBarChanged?.();
+  document.removeEventListener('click', handleClickOutside, true);
 });
 </script>
 
 <template>
-  <div v-if="config" class="custom-title-bar" :style="paddingStyle">
+  <div v-if="config" ref="titleBarRef" class="custom-title-bar" :style="paddingStyle">
     <!-- Title bar content -->
     <div class="title-bar-content">
       <span ref="measureSpan" class="title-bar-measure"></span>
-      <input
-        ref="titleInputRef"
-        v-model="windowTitle"
-        type="text"
-        class="title-bar-title-input"
-        :style="{ width: inputWidth }"
-        placeholder="Window Title"
-        @blur="updateTitle"
-        @keydown="handleTitleKeydown"
-      />
+      <div class="title-bar-input-wrapper">
+        <input
+          ref="titleInputRef"
+          v-model="windowTitle"
+          type="text"
+          class="title-bar-title-input"
+          :style="{ width: inputWidth }"
+          placeholder="Window Title"
+          @blur="updateTitle"
+          @keydown="handleTitleKeydown"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -119,7 +160,7 @@ onMounted(async () => {
   top: 0;
   left: 0;
   right: 0;
-  height: 52px;
+  /* height is set dynamically via inline style */
   background: linear-gradient(135deg, #181818 0%, #1e1e1e 50%, #141414 100%);
   -webkit-app-region: drag;
   display: flex;
@@ -128,6 +169,7 @@ onMounted(async () => {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   box-sizing: border-box;
+  transition: height 0.2s ease;
 }
 
 .title-bar-content {
@@ -149,6 +191,12 @@ onMounted(async () => {
   font-weight: 600;
   letter-spacing: 0.3px;
   pointer-events: none;
+}
+
+.title-bar-input-wrapper {
+  position: relative;
+  display: inline-flex;
+  -webkit-app-region: no-drag;
 }
 
 .title-bar-title-input {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, provide } from 'vue';
 import { useContext } from '@renderer/composables/useContext';
 import { AppHero } from './components/app-hero';
 import { IpcCard } from './components/ipc-card';
@@ -8,27 +8,44 @@ import { SystemStateCard } from './components/system-state-card';
 import { WindowBoundsCard } from './components/window-bounds-card';
 import { CustomTitleBar } from './components/custom-title-bar';
 import { MainWindow } from './main.window';
-import type { TitleBarConfig } from '@assemblerjs/electron/universal';
+import type { TitleBarConfig } from '@assemblerjs/electron/renderer';
 
 const context = useContext();
 const mainWindow = context.require(MainWindow);
 
+// Create and provide titleBarConfig for all child components
 const titleBarConfig = ref<TitleBarConfig | undefined>(undefined);
+provide('titleBarConfig', titleBarConfig);
 
-const hasCustomTitleBar = computed(() => titleBarConfig.value?.enabled === true);
+const effectiveTitleBarConfig = titleBarConfig;
+
+const hasCustomTitleBar = computed(() => effectiveTitleBarConfig.value?.enabled === true);
 const windowShellStyle = computed(() => {
-  if (!hasCustomTitleBar.value || !titleBarConfig.value) {
+  if (!hasCustomTitleBar.value || !effectiveTitleBarConfig.value) {
     return { height: '100vh' };
   }
-  const height = titleBarConfig.value.height;
+  const height = effectiveTitleBarConfig.value.height;
   return {
     marginTop: `${height}px`,
     height: `calc(100vh - ${height}px)`,
   };
 });
 
+let cleanup: (() => void) | undefined;
+
 onMounted(async () => {
   titleBarConfig.value = await mainWindow.getTitleBarConfig();
+
+  // Listen for title bar configuration changes (Windows/Linux only)
+  cleanup = mainWindow.onTitleBarChanged((newConfig) => {
+    if (newConfig) {
+      titleBarConfig.value = newConfig;
+    }
+  });
+});
+
+onUnmounted(() => {
+  cleanup?.();
 });
 </script>
 

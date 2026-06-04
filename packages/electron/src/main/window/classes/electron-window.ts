@@ -195,9 +195,42 @@ export class ElectronWindow extends BrowserWindow {
    */
   @WindowCommand('setTitleBarOverlay')
   public setTitleBarOverlayCommand(options: TitleBarOptions): void {
+    console.log(
+      '[MAIN] setTitleBarOverlayCommand called with options:',
+      options,
+      'platform:',
+      process.platform,
+    );
     if (process.platform === 'darwin') {
-      // macOS: Title bar style is set at creation time, no runtime update
-      console.warn('Title bar updates are not supported on macOS');
+      // macOS: Can't change overlay colors, but we can update height in config
+      // This allows the renderer to know the new height when traffic lights move
+      if (options.height !== undefined) {
+        // Rebuild config to get proper contentArea calculation
+        const baseConfig = this.buildTitleBarConfig();
+        if (baseConfig) {
+          // Override with custom height
+          const bounds = this.getBounds();
+          const customContentArea = {
+            x: baseConfig.insets.left,
+            y: baseConfig.insets.top,
+            width:
+              bounds.width - baseConfig.insets.left - baseConfig.insets.right,
+            height:
+              options.height - baseConfig.insets.top - baseConfig.insets.bottom,
+          };
+
+          this.titleBarConfig = {
+            ...baseConfig,
+            height: options.height,
+            contentArea: customContentArea,
+          };
+          console.log(
+            '[MAIN] Emitting titlebar-changed with new height:',
+            this.titleBarConfig.height,
+          );
+          this.emitTitleBarChanged();
+        }
+      }
       return;
     }
 
@@ -243,10 +276,7 @@ export class ElectronWindow extends BrowserWindow {
     }
 
     this.setWindowButtonPosition(position);
-
-    // Rebuild config and emit change
-    this.titleBarConfig = this.buildTitleBarConfig();
-    this.emitTitleBarChanged();
+    // Note: Don't rebuild config here - height will be updated separately via setTitleBarOverlay
   }
 
   /**
@@ -334,7 +364,17 @@ export class ElectronWindow extends BrowserWindow {
    */
   private emitTitleBarChanged(): void {
     if (this.titleBarConfig) {
-      this.webContents.send('window:titlebar-changed', this.titleBarConfig);
+      const channel = buildWindowEventChannel(this.name, 'titlebar-changed');
+      console.log('[MAIN] emitTitleBarChanged - channel:', channel);
+      console.log(
+        '[MAIN] emitTitleBarChanged - titleBarConfig:',
+        JSON.stringify(this.titleBarConfig, null, 2),
+      );
+      this.webContents.send(channel, this.titleBarConfig);
+    } else {
+      console.error(
+        '[MAIN] emitTitleBarChanged called but titleBarConfig is undefined!',
+      );
     }
   }
 }
