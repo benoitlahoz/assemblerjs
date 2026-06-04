@@ -19,7 +19,7 @@ const props = defineProps<Props>();
 
 // State
 const buttonPosition = ref<{ x: number; y: number } | undefined>();
-const trafficX = ref(16);
+const trafficX = ref(25);
 const trafficY = ref(20);
 const directHeight = ref(52); // For Windows/Linux direct height control
 
@@ -166,6 +166,11 @@ const getThumbPositionHeight = computed(() => {
 
 // Lifecycle
 onMounted(async () => {
+  // Initialize from injected config first
+  if (titleBarConfig?.value?.height) {
+    directHeight.value = titleBarConfig.value.height;
+  }
+
   if (isMacOS.value) {
     // macOS: get traffic lights position
     buttonPosition.value = await mainWindow.getWindowButtonPosition();
@@ -175,7 +180,7 @@ onMounted(async () => {
       trafficY.value = buttonPosition.value.y;
     }
   } else {
-    // Windows/Linux: get current titlebar height
+    // Windows/Linux: get current titlebar height (overrides if different from config)
     const config = await mainWindow.getTitleBarConfig();
     if (config?.height) {
       directHeight.value = config.height;

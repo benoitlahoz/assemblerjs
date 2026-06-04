@@ -52,7 +52,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     height: 52, // All platforms: initial height (macOS: CSS, Windows/Linux: native overlay)
     color: '#1e1e1e', // Windows/Linux only: overlay background color
     symbolColor: '#ffffff', // Windows/Linux only: system buttons color
-    trafficLightPosition: { x: 16, y: 20 }, // macOS only: traffic lights position
+    trafficLightPosition: { x: 25, y: 20 }, // macOS only: traffic lights position
   },
 })
 @UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])

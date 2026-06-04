@@ -257,8 +257,18 @@ export class ElectronWindow extends BrowserWindow {
     if (process.platform !== 'darwin') {
       return undefined;
     }
-    const position = this.getWindowButtonPosition();
-    return position ?? undefined;
+
+    // Return configured position from window definition
+    // (BrowserWindow.getWindowButtonPosition() doesn't reliably return the configured value)
+    const definition = getWindowDefinition(this.constructor as Function);
+    const configured = definition?.titleBar?.trafficLightPosition;
+
+    if (configured) {
+      return configured;
+    }
+
+    // Fallback to BrowserWindow API if no configuration
+    return this.getWindowButtonPosition() ?? undefined;
   }
 
   /**

@@ -55,8 +55,10 @@ onUnmounted(() => {
     <main class="window-shell" :style="windowShellStyle">
       <section class="window-shell__hero-row">
         <AppHero class="window-shell__hero-main" />
-        <RuntimeStackCard class="window-shell__runtime" compact />
-        <SystemStateCard class="window-shell__system" compact />
+        <div class="window-shell__stats-group">
+          <RuntimeStackCard class="window-shell__runtime" compact />
+          <SystemStateCard class="window-shell__system" compact />
+        </div>
       </section>
 
       <section class="window-shell__cards-grid">
@@ -91,25 +93,34 @@ onUnmounted(() => {
 
 .window-shell__hero-row {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  align-items: stretch;
   gap: 12px;
   padding-bottom: 16px;
   border-bottom: 1px solid color-mix(in srgb, var(--ev-c-text-3) 35%, transparent);
 }
 
 .window-shell__hero-main {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 2 1 0;
+  min-width: 280px;
+}
+
+.window-shell__stats-group {
+  flex: 1 1 320px;
+  min-width: 320px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  align-items: stretch;
 }
 
 .window-shell__runtime {
-  flex: 0 0 auto;
+  flex: 1;
   opacity: 0.88;
 }
 
 .window-shell__system {
-  flex: 0 0 auto;
+  flex: 1;
   opacity: 0.88;
 }
 
@@ -120,21 +131,27 @@ onUnmounted(() => {
   align-items: stretch;
 }
 
-/* Portrait mode: stack everything vertically */
+/* Medium: hero pleine largeur, stats en 2 colonnes */
 @media (max-width: 1100px) {
-  .window-shell__hero-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 12px;
+  .window-shell__hero-main {
+    flex: 1 1 100%;
   }
 
-  .window-shell__hero-main {
-    grid-column: 1 / -1;
+  .window-shell__stats-group {
+    flex: 1 1 100%;
+    flex-direction: row;
   }
 
   .window-shell__runtime,
   .window-shell__system {
-    width: auto;
+    flex: 1;
+  }
+}
+
+/* Small: tout en stack */
+@media (max-width: 720px) {
+  .window-shell__stats-group {
+    flex-direction: column;
   }
 }
 

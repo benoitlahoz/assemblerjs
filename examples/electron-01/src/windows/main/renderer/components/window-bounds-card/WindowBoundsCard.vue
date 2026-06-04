@@ -119,9 +119,23 @@ const actionButtons = computed<ActionButton[]>(() => {
 
 const autoCenterItem = computed(() => menuItems.value['window.bounds.autoCenter']);
 const isAutoCenterEnabled = computed(() => menuService.autoCenterAfterRandom.value);
+const isCopied = ref(false);
 
 async function toggleAutoCenter() {
   await menuService.toggleAutoCenter();
+}
+
+async function copyBounds() {
+  const currentBounds = bounds.value;
+  if (currentBounds) {
+    const boundsText = JSON.stringify(currentBounds, null, 2);
+    await navigator.clipboard.writeText(boundsText);
+
+    isCopied.value = true;
+    setTimeout(() => {
+      isCopied.value = false;
+    }, 1500);
+  }
 }
 </script>
 
@@ -173,17 +187,58 @@ async function toggleAutoCenter() {
     <!-- Title Bar Controls -->
     <TrafficLightsControls :platform="platform" />
 
-    <canvas
-      ref="canvasRef"
-      class="window-bounds-canvas"
-      :style="windowBoundsCanvasStyle"
-      @pointerdown="onCanvasPointerDown"
-      @pointermove="onCanvasPointerMove"
-      @pointerup="onCanvasPointerUp"
-      @pointercancel="onCanvasPointerCancel"
-      @pointerleave="onCanvasLeave"
-      @pointerenter="onCanvasHover"
-    />
+    <div class="canvas-wrapper">
+      <div class="canvas-container">
+        <button
+          type="button"
+          class="copy-bounds-btn"
+          :class="{ 'copy-bounds-btn--copied': isCopied }"
+          :title="isCopied ? 'Copied!' : 'Copy bounds to clipboard'"
+          @click="copyBounds"
+        >
+          <svg
+            v-if="!isCopied"
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+          </svg>
+          <svg
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </button>
+        <canvas
+          ref="canvasRef"
+          class="window-bounds-canvas"
+          :style="windowBoundsCanvasStyle"
+          @pointerdown="onCanvasPointerDown"
+          @pointermove="onCanvasPointerMove"
+          @pointerup="onCanvasPointerUp"
+          @pointercancel="onCanvasPointerCancel"
+          @pointerleave="onCanvasLeave"
+          @pointerenter="onCanvasHover"
+        />
+      </div>
+    </div>
   </article>
 </template>
 
@@ -237,14 +292,67 @@ async function toggleAutoCenter() {
   line-height: 1.45;
 }
 
-.window-bounds-canvas {
+.canvas-wrapper {
   margin-top: 10px;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 170px;
+}
+
+.canvas-container {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.copy-bounds-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
+  cursor: pointer;
+  color: rgba(88, 166, 255, 0.8);
+  border-color: color-mix(in srgb, #58a6ff 25%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.copy-bounds-btn:hover {
+  background: color-mix(in srgb, #58a6ff 15%, transparent);
+  border-color: color-mix(in srgb, #58a6ff 45%, transparent);
+  color: #58a6ff;
+}
+
+.copy-bounds-btn:active {
+  transform: scale(0.95);
+}
+
+.copy-bounds-btn--copied {
+  color: rgba(66, 211, 146, 0.8);
+  border-color: color-mix(in srgb, #42d392 25%, transparent);
+  background: color-mix(in srgb, #42d392 15%, transparent);
+}
+
+.copy-bounds-btn--copied:hover {
+  color: #42d392;
+  border-color: color-mix(in srgb, #42d392 45%, transparent);
+}
+
+.window-bounds-canvas {
   border-radius: 12px;
   border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
   background: color-mix(in srgb, var(--ev-c-black-soft) 74%, transparent);
   overflow: clip;
   flex: 1 1 auto;
-  min-height: 170px;
   width: 100%;
   height: auto;
   display: block;
