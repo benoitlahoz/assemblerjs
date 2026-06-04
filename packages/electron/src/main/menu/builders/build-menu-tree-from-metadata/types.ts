@@ -5,9 +5,9 @@ import type {
 import type { ElectronMenuItem } from '../../model/electron-menu-item';
 
 export interface IndexedMenuItemMetadataEntry extends MenuItemMetadataEntry {
-  path: string;
   declarationIndex: number;
   source?: Record<string, unknown>;
+  _submenuPath: string; // Generated hierarchy path
 }
 
 export interface GroupNode {
@@ -24,7 +24,6 @@ export interface BuiltMenuTree {
 
 export interface BuildMenuTreeOptions {
   translate?: (key: string) => string;
-  pathFallback?: string;
   declarationIndexOffset?: number;
 }
 

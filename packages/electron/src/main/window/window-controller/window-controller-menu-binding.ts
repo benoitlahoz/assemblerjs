@@ -1,5 +1,7 @@
 import { getAssemblageContext } from 'assemblerjs';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
+import { ElectronMenu } from '@/main/menu/model/electron-menu';
+import { assembleMenuFromSlots } from '@/main/menu/builders/assemble-menu-from-slots';
 import { getUseMenuDefinition } from '@/main/window-menu/decorators';
 import {
   AbstractMenuRegistryService,
@@ -61,7 +63,11 @@ function resolveBestWindowNameForBindings(
 }
 
 interface MenuBindingsLike {
-  attach(windowName: string, menu: MenuReference): Promise<void>;
+  attach(
+    windowName: string,
+    menu: MenuReference | ElectronMenu,
+    windowInstance?: any,
+  ): Promise<void>;
   detach(windowName: string): void;
   refresh(windowName: string): Promise<void>;
   has?(windowName: string): boolean;
@@ -219,19 +225,29 @@ function createFallbackBindings(controller: any): MenuBindingsLike {
   };
 
   return {
-    async attach(windowName: string, menu: MenuReference): Promise<void> {
+    async attach(
+      windowName: string,
+      menu: MenuReference | ElectronMenu,
+      windowInstance?: any,
+    ): Promise<void> {
       const current = entries.get(windowName);
       if (current && current.menu === menu) {
         return;
       }
 
       const menus = resolveMenuController(controller);
-      const menuInstance = resolveMenuReference(controller, menu);
+      const menuInstance =
+        menu instanceof ElectronMenu
+          ? menu
+          : resolveMenuReference(controller, menu as MenuReference);
 
-      menus.registerMenu(windowName, menuInstance);
+      menus.registerMenu(windowName, menuInstance, 'mainMenu', windowInstance);
       await menus.focus(windowName);
 
-      entries.set(windowName, { menu });
+      entries.set(windowName, {
+        menu:
+          menu instanceof ElectronMenu ? windowName : (menu as MenuReference),
+      });
     },
     detach(windowName: string): void {
       const current = entries.get(windowName);
@@ -280,7 +296,7 @@ export async function attachManagedWindowMenu(
     getUseMenuDefinition(managed.concrete) ||
     getUseMenuDefinition(managed.token as unknown as Function);
 
-  if (!definition?.menu) {
+  if (!definition?.menu && !definition?.slots) {
     return;
   }
 
@@ -289,7 +305,17 @@ export async function attachManagedWindowMenu(
     return;
   }
 
-  await bindings.attach(managed.definition.name, definition.menu);
+  let menuToAttach: MenuReference | ElectronMenu;
+  if (definition.slots && definition.slots.length > 0) {
+    const context = getAssemblageContext(controller.constructor);
+    menuToAttach = assembleMenuFromSlots(definition.slots, (token) =>
+      context.require(token),
+    );
+  } else {
+    menuToAttach = definition.menu!;
+  }
+
+  await bindings.attach(managed.definition.name, menuToAttach, windowInstance);
 
   if (
     windowInstance &&

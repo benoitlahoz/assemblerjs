@@ -1,20 +1,11 @@
 import { AbstractAssemblage, Assemblage } from 'assemblerjs';
 import { AbstractMenuController, MenuOrchestrator } from '@assemblerjs/electron';
 import { AppMenu } from './app';
-import { AboutMenu } from './about.menu';
 import { DeveloperToolsMenu } from './developer';
-import { MainMenu } from './main.menu';
-import { MainWindowMenu, StandardWindowMenu } from './window';
+import { WindowMenu } from './window';
 
 @MenuOrchestrator()
 @Assemblage({
-  provide: [
-    [DeveloperToolsMenu],
-    [AppMenu],
-    [StandardWindowMenu],
-    [MainWindowMenu],
-    [MainMenu],
-    [AboutMenu],
-  ],
+  provide: [[DeveloperToolsMenu], [AppMenu], [WindowMenu]],
 })
 export class MenuControllerService extends AbstractMenuController implements AbstractAssemblage {}

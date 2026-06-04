@@ -5,6 +5,7 @@ import {
   getWindowDefinitionMetadata,
   setWindowDefinitionMetadata,
 } from '@/universal/metadata';
+import { WindowListener } from '../window-listener/decorators/window-listener.decorator';
 
 export interface WindowRouterDefinition {
   file?: string;
@@ -54,8 +55,27 @@ export function normalizeWindowDefinition(
 /**
  * Marks an assemblage as a managed window definition.
  * Lifecycle is managed by WindowController from injected/provided windows.
+ *
+ * This decorator automatically applies `@WindowListener()`, so event
+ * subscriptions declared via `@WindowOn(...)`, `@WindowEmit(...)`, or
+ * `@WindowForward(...)` are wired without requiring an explicit
+ * class-level `@WindowListener()`.
+ *
+ * @example
+ * ```typescript
+ * @Window({ name: 'main', width: 800, height: 600 })
+ * @Assemblage()
+ * export class MainWindow extends ElectronWindow {
+ *   @WindowOn('ready-to-show')
+ *   public onReadyToShow(): void {
+ *     this.center();
+ *   }
+ * }
+ * ```
  */
 export function Window(definition: WindowDefinition): ClassDecorator {
+  const listenerDecorator = WindowListener();
+
   return (target: Function) => {
     setWindowDefinitionMetadata(target, normalizeWindowDefinition(definition));
 
@@ -64,6 +84,10 @@ export function Window(definition: WindowDefinition): ClassDecorator {
     if (assemblageDefinition) {
       assemblageDefinition.singleton = false;
     }
+
+    // Automatically apply @WindowListener to wire @WindowOn/@WindowEmit subscriptions
+    const decorated = listenerDecorator(target as any) as Function | void;
+    return (decorated || target) as any;
   };
 }
 

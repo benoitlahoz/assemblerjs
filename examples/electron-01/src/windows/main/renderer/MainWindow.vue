@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import AppHero from './components/AppHero.vue';
-import IpcCard from './components/IpcCard.vue';
-import RuntimeStackCard from './components/RuntimeStackCard.vue';
-import SystemStateCard from './components/SystemStateCard.vue';
-import WindowBoundsCard from './components/WindowBoundsCard.vue';
+import { AppHero } from './components/app-hero';
+import { IpcCard } from './components/ipc-card';
+import { RuntimeStackCard } from './components/runtime-stack-card';
+import { SystemStateCard } from './components/system-state-card';
+import { WindowBoundsCard } from './components/window-bounds-card';
 </script>
 
 <template>

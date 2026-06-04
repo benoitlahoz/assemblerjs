@@ -8,4 +8,5 @@ export * from './window-definition/window.decorator';
 export * from './window-listener/window-listener.decorator';
 export * from './window-listener/window-on.decorator';
 export * from './window-listener/window-emit.decorator';
+export * from './window-listener/window-forward.decorator';
 export * from './window-orchestration/window-orchestrator.decorator';

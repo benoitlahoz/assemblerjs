@@ -10,6 +10,12 @@ export abstract class AbstractMenuControllerService implements AbstractAssemblag
     windowName: string,
   ): Promise<MenuSnapshot | undefined>;
 
+  public abstract waitForSnapshot(
+    windowName: string,
+    interval?: number,
+    maxAttempts?: number,
+  ): Promise<MenuSnapshot | undefined>;
+
   public abstract setItemEnabled(
     windowName: string,
     itemId: string,

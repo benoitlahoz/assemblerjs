@@ -86,25 +86,10 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     command: string,
     args: unknown[],
-    fallbackChannel?: string,
   ): Promise<T | undefined> {
-    const scopedChannel = buildWindowCommandChannel(name, command);
-
-    try {
-      const scopedResult = await this.ipc.invoke(scopedChannel, ...args);
-      return unwrapIpcResult<T>(scopedChannel, scopedResult);
-    } catch (error) {
-      if (!fallbackChannel) {
-        throw error;
-      }
-
-      const fallbackResult = await this.ipc.invoke(
-        fallbackChannel,
-        name,
-        ...args,
-      );
-      return unwrapIpcResult<T>(fallbackChannel, fallbackResult);
-    }
+    const channel = buildWindowCommandChannel(name, command);
+    const result = await this.ipc.invoke(channel, ...args);
+    return unwrapIpcResult<T>(channel, result);
   }
 
   private async invokeWindowRegistryCommand<T>(
@@ -163,69 +148,34 @@ export class WindowControllerService extends AbstractWindowControllerService {
   }
 
   public async getBounds(name: string): Promise<WindowBounds | undefined> {
-    return await this.invokeWindowCommand<WindowBounds>(
-      name,
-      'getBounds',
-      [],
-      WindowIpcChannel.GetBounds,
-    );
+    return await this.invokeWindowCommand<WindowBounds>(name, 'getBounds', []);
   }
 
   public async focus(name: string): Promise<void> {
-    await this.invokeWindowCommand<void>(
-      name,
-      'focus',
-      [],
-      WindowIpcChannel.Focus,
-    );
+    await this.invokeWindowCommand<void>(name, 'focus', []);
   }
 
   public async setVisible(name: string, visible: boolean): Promise<void> {
-    await this.invokeWindowCommand<void>(
-      name,
-      'setVisible',
-      [visible],
-      WindowIpcChannel.SetVisible,
-    );
+    await this.invokeWindowCommand<void>(name, 'setVisible', [visible]);
   }
 
   public async setMinimized(name: string, minimized: boolean): Promise<void> {
-    await this.invokeWindowCommand<void>(
-      name,
-      'setMinimized',
-      [minimized],
-      WindowIpcChannel.SetMinimized,
-    );
+    await this.invokeWindowCommand<void>(name, 'setMinimized', [minimized]);
   }
 
   public async setMaximized(name: string, maximized: boolean): Promise<void> {
-    await this.invokeWindowCommand<void>(
-      name,
-      'setMaximized',
-      [maximized],
-      WindowIpcChannel.SetMaximized,
-    );
+    await this.invokeWindowCommand<void>(name, 'setMaximized', [maximized]);
   }
 
   public async restore(name: string): Promise<void> {
-    await this.invokeWindowCommand<void>(
-      name,
-      'restore',
-      [],
-      WindowIpcChannel.Restore,
-    );
+    await this.invokeWindowCommand<void>(name, 'restore', []);
   }
 
   public async pin(
     name: string,
     pinned: boolean,
   ): Promise<boolean | undefined> {
-    return await this.invokeWindowCommand<boolean>(
-      name,
-      'pin',
-      [pinned],
-      WindowIpcChannel.Pin,
-    );
+    return await this.invokeWindowCommand<boolean>(name, 'pin', [pinned]);
   }
 
   public snapshot(name: string): WindowSnapshot | undefined {
@@ -250,13 +200,10 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     callback: (bounds: WindowBounds) => void,
   ): () => void {
-    const channels = [
-      buildWindowEventChannel(name, 'boundsChanged'),
-      WindowIpcChannel.OnBoundsChanged,
-    ];
+    const channel = buildWindowEventChannel(name, 'resize');
 
     return this.subscribeChannels<WindowBounds>(
-      [...new Set(channels)],
+      [channel],
       (bounds, _channel) => {
         this.updateSnapshot(name, (snapshot) => {
           snapshot.bounds = bounds;
@@ -271,57 +218,39 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     callback: (state: WindowState) => void,
   ): () => void {
-    const channels = [
-      buildWindowEventChannel(name, 'stateChanged'),
-      WindowIpcChannel.OnStateChanged,
-    ];
+    const channel = buildWindowEventChannel(name, 'stateChanged');
 
-    return this.subscribeChannels<WindowState>(
-      [...new Set(channels)],
-      (state) => {
-        this.updateSnapshot(name, (snapshot) => {
-          snapshot.state = state;
-        });
+    return this.subscribeChannels<WindowState>([channel], (state) => {
+      this.updateSnapshot(name, (snapshot) => {
+        snapshot.state = state;
+      });
 
-        callback(state);
-      },
-    );
+      callback(state);
+    });
   }
 
   public onFullscreenChanged(
     name: string,
     callback: (active: boolean) => void,
   ): () => void {
-    const enterChannels = [
-      buildWindowEventChannel(name, 'enterFullscreen'),
-      WindowIpcChannel.OnEnterFullscreen,
-    ];
-    const leaveChannels = [
-      buildWindowEventChannel(name, 'leaveFullscreen'),
-      WindowIpcChannel.OnLeaveFullscreen,
-    ];
+    const enterChannel = buildWindowEventChannel(name, 'enter-full-screen');
+    const leaveChannel = buildWindowEventChannel(name, 'leave-full-screen');
 
-    const unsubEnter = this.subscribeChannels<void>(
-      [...new Set(enterChannels)],
-      () => {
-        this.updateSnapshot(name, (snapshot) => {
-          snapshot.isFullscreen = true;
-        });
+    const unsubEnter = this.subscribeChannels<void>([enterChannel], () => {
+      this.updateSnapshot(name, (snapshot) => {
+        snapshot.isFullscreen = true;
+      });
 
-        callback(true);
-      },
-    );
+      callback(true);
+    });
 
-    const unsubLeave = this.subscribeChannels<void>(
-      [...new Set(leaveChannels)],
-      () => {
-        this.updateSnapshot(name, (snapshot) => {
-          snapshot.isFullscreen = false;
-        });
+    const unsubLeave = this.subscribeChannels<void>([leaveChannel], () => {
+      this.updateSnapshot(name, (snapshot) => {
+        snapshot.isFullscreen = false;
+      });
 
-        callback(false);
-      },
-    );
+      callback(false);
+    });
 
     const unsubscribe = () => {
       unsubEnter();

@@ -1,7 +1,9 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { join } from 'path';
 import { ElectronWindow, UseMenu, Window } from '@assemblerjs/electron';
-import { AboutMenu } from '@menus/about.menu';
+import { AppMenu } from '@menus/app';
+import { WindowMenu, WindowMenuConfig } from '@menus/window';
+import { DeveloperToolsMenu } from '@menus/developer';
 import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
 
 @Window({
@@ -22,8 +24,20 @@ import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
     route: ABOUT_WINDOW_CONFIG.route,
   },
 })
-@UseMenu(AboutMenu)
-@Assemblage({ singleton: false })
+@UseMenu([
+  AppMenu,
+  [
+    WindowMenu,
+    {
+      items: {
+        [WindowMenuConfig.SepCustom.id]: { visible: false },
+        [WindowMenuConfig.CustomMenu.id]: { visible: false },
+      },
+    },
+  ],
+  DeveloperToolsMenu,
+])
+@Assemblage()
 export class AboutWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('preload') preload: string) {
     super({

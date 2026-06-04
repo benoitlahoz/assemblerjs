@@ -58,8 +58,12 @@ export class ElectronMenuItem {
   public set checked(value: boolean | undefined) {
     const item = this.getItem();
     if (item) {
-      item.checked = value ?? false;
-      this._checked = item.checked;
+      try {
+        item.checked = value ?? false;
+      } catch {
+        // Some Electron MenuItem instances expose readonly checked.
+      }
+      this._checked = item.checked ?? value;
       return;
     }
     this._checked = value;
@@ -85,8 +89,12 @@ export class ElectronMenuItem {
   public set id(value: string) {
     const item = this.getItem();
     if (item) {
-      item.id = value;
-      this._id = item.id;
+      try {
+        item.id = value;
+      } catch {
+        // Some Electron MenuItem instances expose readonly id.
+      }
+      this._id = item.id ?? value;
       return;
     }
     this._id = value;
@@ -116,8 +124,14 @@ export class ElectronMenuItem {
 
     const item = this.getItem();
     if (item) {
-      item.label = value;
-      this._label = item.label;
+      try {
+        if (item.label !== value) {
+          item.label = value;
+        }
+      } catch {
+        // Some Electron MenuItem instances expose readonly label.
+      }
+      this._label = item.label ?? value;
       return;
     }
     this._label = value;
@@ -143,8 +157,14 @@ export class ElectronMenuItem {
   public set role(value: string) {
     const item = this.getItem();
     if (item) {
-      item.role = value as any;
-      this._role = item.role;
+      try {
+        if (item.role !== value) {
+          item.role = value as any;
+        }
+      } catch {
+        // Some Electron MenuItem instances expose readonly role.
+      }
+      this._role = item.role ?? value;
       return;
     }
     this._role = value;
@@ -170,8 +190,12 @@ export class ElectronMenuItem {
   public set enabled(value: boolean) {
     const item = this.getItem();
     if (item) {
-      item.enabled = value;
-      this._enabled = item.enabled;
+      try {
+        item.enabled = value;
+      } catch {
+        // Some Electron MenuItem instances expose readonly enabled.
+      }
+      this._enabled = item.enabled ?? value;
       return;
     }
     this._enabled = value;
@@ -306,6 +330,16 @@ export class ElectronMenuItem {
   }
 
   /**
+   * Gets the click handler for the menu item.
+   * @returns The click handler function.
+   */
+  public get click():
+    | ((menuItem: MenuItem, browserWindow: any, event: any) => void)
+    | undefined {
+    return this._click;
+  }
+
+  /**
    * Sets the click handler for the menu item.
    * @param value The click handler function.
    */
@@ -362,7 +396,10 @@ export class ElectronMenuItem {
   public handleInMain(
     callback: (itemId: string, windowName: string) => void,
   ): this {
+    // CRITICAL: Capture ID NOW to avoid closure issues when cloning
+    const capturedId = this.id;
     const previousClick = this._click;
+
     this.click = (
       menuItem: MenuItem,
       browserWindow: ElectronWindow | undefined,
@@ -371,11 +408,10 @@ export class ElectronMenuItem {
       const targetWindow = this.resolveTargetWindow(browserWindow);
       if (!targetWindow) return;
 
-      const itemId = this.id;
       const windowName = targetWindow.name;
 
       // Execute the main handler
-      callback(itemId, windowName);
+      callback(capturedId, windowName);
 
       // Call any previously configured click handler
       if (previousClick) {
@@ -410,7 +446,11 @@ export class ElectronMenuItem {
       windowName: string,
     ) => [itemId: string, windowName: string],
   ): this {
+    // CRITICAL: Capture values NOW to avoid closure issues when cloning
+    const capturedId = this.id;
+    const capturedAccelerator = this.accelerator;
     const previousClick = this._click;
+
     this.click = (
       menuItem: MenuItem,
       browserWindow: ElectronWindow | undefined,
@@ -419,7 +459,6 @@ export class ElectronMenuItem {
       const targetWindow = this.resolveTargetWindow(browserWindow);
       if (!targetWindow) return;
 
-      const itemId = this.id;
       const windowName = targetWindow.name;
 
       // Call any previously configured click handler (e.g., from handleInMain)
@@ -429,14 +468,14 @@ export class ElectronMenuItem {
 
       // Forward to renderer
       const payload = payloadFactory
-        ? payloadFactory(itemId, windowName)
-        : [itemId, windowName];
+        ? payloadFactory(capturedId, windowName)
+        : [capturedId, windowName];
 
       const scopedPayload: MenuItemClickedEvent = {
-        itemId,
+        itemId: capturedId,
         windowName,
         checked: menuItem.checked,
-        accelerator: this.accelerator,
+        accelerator: capturedAccelerator,
         timestampMs: Date.now(),
       };
 

@@ -1,8 +1,16 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
 import { join } from 'path';
-import { ElectronWindow, UseMenu, Window, WindowCommand } from '@assemblerjs/electron';
-import { MainMenu } from '@menus/main.menu';
+import {
+  ElectronWindow,
+  UseMenu,
+  Window,
+  WindowCommand,
+  WindowForward,
+} from '@assemblerjs/electron';
+import { AppMenu } from '@menus/app';
+import { WindowMenu } from '@menus/window';
+import { DeveloperToolsMenu } from '@menus/developer';
 import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 const MAIN_WINDOW_INITIAL_WIDTH = 1280;
@@ -38,14 +46,19 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     route: MAIN_WINDOW_CONFIG.route,
   },
 })
-@UseMenu(MainMenu)
-@Assemblage({ singleton: false })
+@UseMenu([AppMenu, WindowMenu, DeveloperToolsMenu])
+@Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('preload') preload: string) {
     super({
       webPreferences: {
         preload,
       },
+    });
+
+    // Center window when ready to show
+    this.on('ready-to-show', () => {
+      this.center();
     });
   }
 
@@ -55,6 +68,40 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
       return { action: 'deny' };
     });
   }
+
+  // ========================================
+  // Event Forwarding (Main → Renderer)
+  // ========================================
+
+  @WindowForward('resize')
+  public onResize(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('resized')
+  public onResized(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('move')
+  public onMove(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('moved')
+  public onMoved(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('enter-full-screen')
+  public onEnterFullScreen(): void {}
+
+  @WindowForward('leave-full-screen')
+  public onLeaveFullScreen(): void {}
+
+  // ========================================
+  // Window Commands (Renderer → Main RPC)
+  // ========================================
 
   @WindowCommand('getBounds')
   public getBoundsCommand(): Rectangle {

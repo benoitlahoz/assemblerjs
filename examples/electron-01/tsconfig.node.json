@@ -14,8 +14,9 @@
     "src/common/**/*",
     "src/features/**/*",
     "src/menus/**/*",
-    "src/windows/**/*",
-    "src/windows/**/*"
+    "src/windows/*/main/**/*",
+    "src/windows/*/universal/**/*",
+    "src/windows/*/index.ts"
   ],
   "compilerOptions": {
     "composite": true,

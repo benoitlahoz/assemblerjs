@@ -1,9 +1,5 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
-import { WindowIpcChannel } from '@/universal/channels';
-import { WindowListener } from '../window-listener/window-listener.decorator';
-import { WindowOn } from '../window-listener/window-on.decorator';
-import { WindowEmit } from '../window-listener/window-emit.decorator';
 import { getWindowDefinition } from '@/main/window/window-definition/window.decorator';
 
 export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
@@ -36,7 +32,35 @@ const mergeWindowOptions = (
   };
 };
 
-@WindowListener()
+/**
+ * Base window class for all Electron windows.
+ *
+ * Provides minimal window utilities.
+ * Event forwarding and command exposure are the responsibility of user-defined window classes.
+ *
+ * Users should define their own events and commands using:
+ * - `@WindowForward(event)` for forwarding BrowserWindow events to renderer
+ * - `@WindowCommand(command)` for exposing RPC methods to renderer
+ *
+ * @example
+ * ```typescript
+ * @Window({ name: 'main', width: 800, height: 600 })
+ * @Assemblage()
+ * export class MainWindow extends ElectronWindow {
+ *   // Forward events to renderer
+ *   @WindowForward('resize')
+ *   public onResize(): Rectangle {
+ *     return this.getBounds();
+ *   }
+ *
+ *   // Expose commands for renderer RPC
+ *   @WindowCommand('getBounds')
+ *   public getBoundsCommand(): Rectangle {
+ *     return this.getBounds();
+ *   }
+ * }
+ * ```
+ */
 export class ElectronWindow extends BrowserWindow {
   private options: ElectronWindowOptions;
 
@@ -127,63 +151,4 @@ export class ElectronWindow extends BrowserWindow {
     const windowBounds = this.getBounds();
     return screen.getDisplayMatching(windowBounds);
   }
-
-  @WindowOn('ready-to-show')
-  public onReadyToShow(): void {
-    this.center();
-  }
-
-  @WindowOn('resize')
-  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
-  /**
-   * Called when the window is resized.
-   * The returned payload is emitted automatically by WindowListener.
-   */
-  public onResize() {
-    return this.getBounds();
-  }
-
-  @WindowOn('resized')
-  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
-  /**
-   * Called on platforms that expose a post-resize event.
-   * Emits bounds to keep renderer geometry streams in sync.
-   */
-  public onResized() {
-    return this.getBounds();
-  }
-
-  @WindowOn('move')
-  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
-  /**
-   * Called when the window is moved.
-   * The returned payload is emitted automatically by WindowListener.
-   */
-  public onMove() {
-    return this.getBounds();
-  }
-
-  @WindowOn('moved')
-  @WindowEmit(WindowIpcChannel.OnBoundsChanged)
-  /**
-   * Called on platforms that expose a post-move event.
-   * Emits bounds to keep renderer geometry streams in sync.
-   */
-  public onMoved() {
-    return this.getBounds();
-  }
-
-  @WindowOn('enter-full-screen')
-  @WindowEmit(WindowIpcChannel.OnEnterFullscreen)
-  /**
-   * Called when the window enters fullscreen.
-   */
-  public onEnterFullScreen(): void {}
-
-  @WindowOn('leave-full-screen')
-  @WindowEmit(WindowIpcChannel.OnLeaveFullscreen)
-  /**
-   * Called when the window leaves fullscreen.
-   */
-  public onLeaveFullScreen(): void {}
 }

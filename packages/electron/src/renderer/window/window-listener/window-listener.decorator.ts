@@ -4,30 +4,14 @@ import {
   type WindowRendererSubscriptionMetadata,
 } from '@/universal/metadata';
 import { bindRendererEventListeners } from '@/universal/runtime';
-import { WindowIpcChannel } from '@/universal/channels';
 import { buildWindowEventChannel } from '../common/window-channels';
 import { resolveWindowRendererName } from '../window-definition/window-definition';
-
-const windowEventAliases: Readonly<Record<string, string>> = {
-  boundsChanged: WindowIpcChannel.OnBoundsChanged,
-  stateChanged: WindowIpcChannel.OnStateChanged,
-  enterFullscreen: WindowIpcChannel.OnEnterFullscreen,
-  leaveFullscreen: WindowIpcChannel.OnLeaveFullscreen,
-};
 
 function resolveWindowEventChannels(
   windowName: string,
   event: string,
 ): string[] {
-  const channels = new Set<string>();
-  channels.add(buildWindowEventChannel(windowName, event));
-
-  const alias = windowEventAliases[event];
-  if (alias) {
-    channels.add(alias);
-  }
-
-  return [...channels];
+  return [buildWindowEventChannel(windowName, event)];
 }
 
 function getWindowSubMethods(

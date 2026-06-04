@@ -1,24 +1,15 @@
+/**
+ * Window IPC channels for global window registry operations.
+ *
+ * Instance-specific commands (getBounds, focus, etc.) are now handled via @WindowCommand.
+ * Event forwarding (resize, move, etc.) is now handled via @WindowForward with auto-generated channels.
+ */
 export enum WindowIpcChannel {
-  // Queries
-  GetName = 'window:name.get',
-  GetBounds = 'window:bounds.get',
   ListWindowNames = 'window:names.list',
   ListManagedWindows = 'window:managed.list',
   HasWindow = 'window:has',
   OpenWindow = 'window:open',
   CloseWindow = 'window:close',
-  // Window control
-  Pin = 'window:pin',
-  SetVisible = 'window:visible.set',
-  SetMinimized = 'window:minimized.set',
-  SetMaximized = 'window:maximized.set',
-  Restore = 'window:restore',
-  Focus = 'window:focus',
-  // Events
-  OnBoundsChanged = 'window:bounds.changed',
-  OnStateChanged = 'window:state.changed',
-  OnEnterFullscreen = 'window:fullscreen.enter',
-  OnLeaveFullscreen = 'window:fullscreen.leave',
 }
 
 export enum MenuIpcChannel {

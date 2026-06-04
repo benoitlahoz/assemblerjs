@@ -15,6 +15,7 @@ interface MenuRegistration {
   windowName: string;
   menuName: string;
   menu: ElectronMenu;
+  window?: ElectronWindow;
 }
 
 @Assemblage()
@@ -22,6 +23,11 @@ export class MenuControllerService extends AbstractMenuControllerService {
   private readonly registrations = new Map<string, MenuRegistration>();
   private globalHandlersRegistered = false;
   private readonly scopedHandlers = new Set<string>();
+
+  constructor() {
+    super();
+    this.registerGlobalHandlers();
+  }
 
   private requireRegistration(windowName: string): MenuRegistration {
     const registration = this.registrations.get(windowName);
@@ -52,6 +58,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
       enabled: item.enabled,
       checked: item.checked,
       label: item.label,
+      accelerator: item.accelerator,
     };
   }
 
@@ -86,23 +93,52 @@ export class MenuControllerService extends AbstractMenuControllerService {
       return;
     }
 
+    // Don't send if webContents is not ready yet
+    if (!window.webContents || window.webContents.isDestroyed()) {
+      return;
+    }
+
     window.webContents.send(channel, ...args);
   }
 
   private emitTemplateChanged(windowName: string): void {
     const registration = this.requireRegistration(windowName);
+    // Use stored instance if available, otherwise fallback to lookup
+    const window = registration.window || ElectronWindow.getByName(windowName);
 
-    this.emit(
-      windowName,
-      buildMenuEventChannel(windowName, 'templateChanged'),
-      registration.menuName,
-    );
-    this.emit(
-      windowName,
-      MenuIpcChannel.OnTemplateChanged,
-      windowName,
-      registration.menuName,
-    );
+    if (!window || window.isDestroyed()) {
+      return;
+    }
+
+    const webContents = window.webContents;
+    if (!webContents || webContents.isDestroyed()) {
+      return;
+    }
+
+    // Helper to emit the events
+    const emitEvents = (): void => {
+      this.emit(
+        windowName,
+        buildMenuEventChannel(windowName, 'templateChanged'),
+        registration.menuName,
+      );
+      this.emit(
+        windowName,
+        MenuIpcChannel.OnTemplateChanged,
+        windowName,
+        registration.menuName,
+      );
+    };
+
+    // If the page is already loaded, emit immediately
+    if (!webContents.isLoading()) {
+      emitEvents();
+    } else {
+      // Otherwise, wait for the page to finish loading
+      webContents.once('dom-ready', () => {
+        emitEvents();
+      });
+    }
   }
 
   private emitStateChanged(windowName: string, state: MenuItemState): void {
@@ -194,6 +230,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
     windowName: string,
     menu: ElectronMenu,
     menuName = 'mainMenu',
+    window?: ElectronWindow,
   ): this {
     this.registerGlobalHandlers();
     this.registerScopedHandlers(windowName);
@@ -202,6 +239,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
       windowName,
       menuName,
       menu,
+      window,
     });
 
     return this;
@@ -261,10 +299,11 @@ export class MenuControllerService extends AbstractMenuControllerService {
 
   public snapshot(windowName: string): MenuSnapshot {
     const registration = this.requireRegistration(windowName);
+    const items = this.collectItemStates(registration.menu.getItems());
     return {
       windowName,
       menuName: registration.menuName,
-      items: this.collectItemStates(registration.menu.getItems()),
+      items,
       updatedAt: Date.now(),
     };
   }

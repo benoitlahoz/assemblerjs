@@ -33,20 +33,10 @@ function createGroupNode(pathKey: string, label: string): GroupNode {
   };
 }
 
-function resolveGroupLabel(
-  segment: string,
-  translate: (key: string) => string,
-): string {
-  const key = `menu.group.${normalizeSegment(segment)}`;
-  const translated = translate(key);
-
-  if (translated === key) {
-    return segment;
-  }
-
-  return translated;
-}
-
+/**
+ * Builds group hierarchy from _submenuPath metadata.
+ * _submenuPath is generated automatically from @MenuItem class labels and @SubMenu hierarchy.
+ */
 export function buildGroupHierarchy(
   entries: IndexedMenuItemMetadataEntry[],
   translate: (key: string) => string,
@@ -54,7 +44,8 @@ export function buildGroupHierarchy(
   const root = createGroupNode('root', 'root');
 
   for (const entry of entries) {
-    const segments = entry.path
+    const submenuPath = entry._submenuPath || 'root';
+    const segments = submenuPath
       .split('/')
       .map((segment) => segment.trim())
       .filter((segment) => segment.length > 0);
@@ -67,10 +58,7 @@ export function buildGroupHierarchy(
 
       let next = current.childGroups.get(segment);
       if (!next) {
-        next = createGroupNode(
-          currentPath,
-          resolveGroupLabel(segment, translate),
-        );
+        next = createGroupNode(currentPath, segment);
         current.childGroups.set(segment, next);
       }
 

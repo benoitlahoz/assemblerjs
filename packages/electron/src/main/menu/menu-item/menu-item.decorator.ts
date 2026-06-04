@@ -14,7 +14,6 @@ import {
 
 export interface MenuItemDefinition {
   id: string;
-  path?: string;
   label?: MenuItemLabelValue;
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
@@ -36,28 +35,10 @@ function assertNonEmptyString(value: unknown, field: string): string {
   return value.trim();
 }
 
-function validatePath(path: string): string {
-  const normalized = path
-    .split('/')
-    .map((segment) => segment.trim())
-    .filter((segment) => segment.length > 0)
-    .join('/');
-
-  if (normalized.length === 0) {
-    throw new Error("@MenuItem requires a valid non-empty 'path'.");
-  }
-
-  return normalized;
-}
-
 export function normalizeMenuItemDefinition(
   definition: MenuItemDefinition,
 ): Omit<MenuItemMetadataEntry, 'method'> {
   const id = assertNonEmptyString(definition.id, 'id');
-  const path =
-    typeof definition.path === 'string'
-      ? validatePath(assertNonEmptyString(definition.path, 'path'))
-      : undefined;
 
   if (
     typeof definition.before === 'string' &&
@@ -73,7 +54,6 @@ export function normalizeMenuItemDefinition(
 
   return {
     id,
-    path,
     label: definition.label,
     type: definition.type,
     checked: definition.checked,
@@ -281,26 +261,6 @@ function resolveSubmenuTarget(
   );
 }
 
-function resolveSubmenuLabel(
-  submenu: ReturnType<typeof getMenuDslSubmenus>[number],
-  target: Function,
-  instance: object | undefined,
-  fallbackCtor: Function,
-): string {
-  if (typeof submenu.label === 'string' && submenu.label.trim().length > 0) {
-    return submenu.label.trim();
-  }
-
-  if (typeof submenu.label === 'function') {
-    const label = submenu.label.call(instance ?? target);
-    if (typeof label === 'string' && label.trim().length > 0) {
-      return label.trim();
-    }
-  }
-
-  return getMenuNodeLabel(fallbackCtor) ?? submenu.member;
-}
-
 const SUBMENU_ORDER_SCALE_FACTOR = 1_000;
 
 function applyBranchOrder(
@@ -329,24 +289,21 @@ function collectDslMenuItems(
   target: Function,
   instance: object | undefined,
   pathSegments: string[],
-  includeOwnLabel: boolean,
   branchOrderBase: number,
   branchOrderScale: number,
   out: MenuItemMetadataEntry[],
   visited: Set<Function>,
 ): void {
-  const ownLabel = includeOwnLabel ? getMenuNodeLabel(target) : undefined;
-  const currentSegments = ownLabel ? [...pathSegments, ownLabel] : pathSegments;
   const sourceInstance = instance as Record<string, unknown> | undefined;
+  const submenuPath =
+    pathSegments.length > 0 ? pathSegments.join('/') : undefined;
 
   for (const entry of getMenuItemMetadata(target)) {
     out.push({
       ...entry,
       source: sourceInstance,
       order: applyBranchOrder(entry, branchOrderBase, branchOrderScale),
-      path:
-        entry.path ??
-        (currentSegments.length > 0 ? currentSegments.join('/') : undefined),
+      _submenuPath: submenuPath,
     } as MenuItemMetadataEntry);
   }
 
@@ -358,12 +315,7 @@ function collectDslMenuItems(
 
   for (const submenu of getMenuDslSubmenus(target)) {
     const resolved = resolveSubmenuTarget(target, instance, submenu);
-    const submenuLabel = resolveSubmenuLabel(
-      submenu,
-      target,
-      instance,
-      resolved.ctor,
-    );
+    const submenuLabel = getMenuNodeLabel(resolved.ctor) ?? submenu.member;
     const childScale = branchOrderScale / SUBMENU_ORDER_SCALE_FACTOR;
     const submenuOrder = typeof submenu.order === 'number' ? submenu.order : 0;
     const childBase = branchOrderBase + submenuOrder * childScale;
@@ -371,8 +323,7 @@ function collectDslMenuItems(
     collectDslMenuItems(
       resolved.ctor,
       resolved.instance,
-      [...currentSegments, submenuLabel],
-      false,
+      [...pathSegments, submenuLabel],
       childBase,
       childScale,
       out,
@@ -394,12 +345,13 @@ export function getMenuItems(
   }
 
   const dslEntries: MenuItemMetadataEntry[] = [];
+  const classLabel = getMenuNodeLabel(target);
+  const rootPath = classLabel ? [classLabel] : [];
 
   collectDslMenuItems(
     target,
     typeof targetOrInstance === 'function' ? undefined : targetOrInstance,
-    [],
-    true,
+    rootPath,
     0,
     SUBMENU_ORDER_SCALE_FACTOR,
     dslEntries,
