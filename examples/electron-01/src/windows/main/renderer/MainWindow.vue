@@ -56,10 +56,7 @@ onUnmounted(() => {
       <section class="window-shell__hero-row">
         <AppHero class="window-shell__hero-main" />
         <RuntimeStackCard class="window-shell__runtime" compact />
-      </section>
-
-      <section class="window-shell__system-row">
-        <SystemStateCard />
+        <SystemStateCard class="window-shell__system" compact />
       </section>
 
       <section class="window-shell__cards-grid">
@@ -82,7 +79,7 @@ onUnmounted(() => {
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
   overflow-y: auto;
   overflow-x: hidden;
   padding: 16px;
@@ -97,6 +94,8 @@ onUnmounted(() => {
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ev-c-text-3) 35%, transparent);
 }
 
 .window-shell__hero-main {
@@ -109,8 +108,9 @@ onUnmounted(() => {
   opacity: 0.88;
 }
 
-.window-shell__system-row {
-  display: block;
+.window-shell__system {
+  flex: 0 0 auto;
+  opacity: 0.88;
 }
 
 .window-shell__cards-grid {
@@ -120,26 +120,26 @@ onUnmounted(() => {
   align-items: stretch;
 }
 
-@media (max-width: 980px) {
+/* Portrait mode: stack everything vertically */
+@media (max-width: 1100px) {
   .window-shell__hero-row {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
   }
 
-  .window-shell__runtime {
-    align-self: flex-end;
+  .window-shell__hero-main {
+    grid-column: 1 / -1;
   }
 
-  .window-shell__cards-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .window-shell__runtime,
+  .window-shell__system {
+    width: auto;
   }
 }
 
+/* Mobile: single column for cards grid */
 @media (max-width: 620px) {
-  .window-shell__runtime {
-    width: 100%;
-    align-self: stretch;
-  }
-
   .window-shell__cards-grid {
     grid-template-columns: 1fr;
   }

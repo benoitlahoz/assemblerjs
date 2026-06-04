@@ -70,13 +70,12 @@ onMounted(async () => {
   background: color-mix(in srgb, var(--ev-c-black-soft) 50%, transparent);
   backdrop-filter: blur(8px);
   min-width: 0;
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
 
 .runtime-card--compact {
-  padding: 10px;
+  padding: 10px 12px;
   width: 260px;
   min-height: auto;
 }

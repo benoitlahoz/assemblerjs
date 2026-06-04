@@ -2,10 +2,12 @@
 import { ref, computed, onMounted, onUnmounted, inject, type Ref } from 'vue';
 import { useContext } from '@renderer/composables/useContext';
 import { MainWindow } from '../../main.window';
+import { SystemStateModule } from '@features/system/renderer/system-state.module';
 import type { TitleBarConfig } from '@assemblerjs/electron/renderer';
 
 const context = useContext();
 const mainWindow = context.require(MainWindow);
+const { system } = context.require(SystemStateModule);
 
 // Inject config from MainWindow
 const config = inject<Ref<TitleBarConfig | undefined>>('titleBarConfig')!;
@@ -15,9 +17,18 @@ const titleInputRef = ref<HTMLInputElement | null>(null);
 const measureSpan = ref<HTMLSpanElement | null>(null);
 const titleBarRef = ref<HTMLDivElement | null>(null);
 const isPinned = ref(false);
+const appUptimeSec = ref<number>(0);
 
 // Check if we're on macOS (traffic lights on left)
 const isMacOS = computed(() => config.value?.platform === 'darwin');
+
+const formattedUptime = computed(() => {
+  const totalSeconds = appUptimeSec.value;
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+});
 
 // Compute input width based on content
 const inputWidth = computed(() => {
@@ -102,10 +113,25 @@ const togglePin = async () => {
   await mainWindow.setAlwaysOnTop(isPinned.value);
 };
 
+let unsubscribeSnapshot: (() => void) | undefined;
+
 onMounted(async () => {
   console.log('[RENDERER/CustomTitleBar] Initial config:', config.value);
   windowTitle.value = await mainWindow.getTitle();
   isPinned.value = await mainWindow.isAlwaysOnTop();
+
+  // Subscribe to system state for uptime
+  unsubscribeSnapshot = system.onSnapshot((snapshot) => {
+    if (snapshot?.process?.uptimeSec !== undefined) {
+      appUptimeSec.value = snapshot.process.uptimeSec;
+    }
+  });
+
+  // Get initial snapshot
+  const snapshot = await system.getSnapshot();
+  if (snapshot?.process?.uptimeSec !== undefined) {
+    appUptimeSec.value = snapshot.process.uptimeSec;
+  }
 
   // Listen for title changes from main process
   cleanupTitleChanged = mainWindow.onTitleChanged((newTitle: string) => {
@@ -136,6 +162,7 @@ onMounted(async () => {
 onUnmounted(() => {
   cleanupTitleChanged?.();
   cleanupTitleBarChanged?.();
+  unsubscribeSnapshot?.();
   document.removeEventListener('click', handleClickOutside, true);
 });
 </script>
@@ -156,6 +183,7 @@ onUnmounted(() => {
           @blur="updateTitle"
           @keydown="handleTitleKeydown"
         />
+        <span class="title-bar-uptime">{{ formattedUptime }}</span>
       </div>
     </div>
 
@@ -228,6 +256,18 @@ onUnmounted(() => {
 .title-bar-input-wrapper {
   position: relative;
   display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  -webkit-app-region: no-drag;
+}
+
+.title-bar-uptime {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: rgba(255, 255, 255, 0.4);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
   -webkit-app-region: no-drag;
 }
 

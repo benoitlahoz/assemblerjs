@@ -236,7 +236,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
     const windowName = this.resolveWindowName();
     const channel = buildWindowCommandChannel(windowName, 'setAlwaysOnTop');
     const result = await this.windows.ipc.invoke(channel, flag);
-    return unwrapIpcResult<boolean>(channel, result);
+    return unwrapIpcResult<boolean>(channel, result) ?? false;
   }
 
   /**
@@ -246,7 +246,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
     const windowName = this.resolveWindowName();
     const channel = buildWindowCommandChannel(windowName, 'isAlwaysOnTop');
     const result = await this.windows.ipc.invoke(channel);
-    return unwrapIpcResult<boolean>(channel, result);
+    return unwrapIpcResult<boolean>(channel, result) ?? false;
   }
 
   /**
