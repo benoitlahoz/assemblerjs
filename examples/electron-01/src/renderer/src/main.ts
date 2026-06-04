@@ -40,7 +40,7 @@ task
         window.close();
       },
       () => {
-        console.log('Renderer was successfully initialized.');
+        // Renderer was successfully initialized.
       },
     );
   })

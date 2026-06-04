@@ -31,10 +31,10 @@
     "assemblerjs": "1.2.1"
   },
   "peerDependencies": {
-    "electron": "^30.0.0 || ^38.0.0"
+    "electron": "^30.0.0 || ^38.0.0 || ^42.0.0"
   },
   "devDependencies": {
-    "electron": "38.4.0",
+    "electron": "42.3.3",
     "reflect-metadata": "^0.2.2"
   }
 }

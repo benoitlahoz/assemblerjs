@@ -47,11 +47,6 @@ const updateTrafficLightsPosition = async () => {
   if (isMacOS.value) {
     // macOS: only update traffic lights position
     // Height is CSS-only, update locally by modifying shared config
-    console.log('[RENDERER/TrafficLights] Updating position:', {
-      x: trafficX.value,
-      y: trafficY.value,
-      height: titleBarHeight.value,
-    });
     await mainWindow.setWindowButtonPosition({
       x: trafficX.value,
       y: trafficY.value,
@@ -69,7 +64,6 @@ const updateTrafficLightsPosition = async () => {
           height: newContentAreaHeight,
         },
       };
-      console.log('[RENDERER/TrafficLights] Local height updated to:', newHeight);
     }
   } else {
     // Windows/Linux: update system titleBarOverlay

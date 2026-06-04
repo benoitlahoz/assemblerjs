@@ -116,7 +116,6 @@ const togglePin = async () => {
 let unsubscribeSnapshot: (() => void) | undefined;
 
 onMounted(async () => {
-  console.log('[RENDERER/CustomTitleBar] Initial config:', config.value);
   windowTitle.value = await mainWindow.getTitle();
   isPinned.value = await mainWindow.isAlwaysOnTop();
 
@@ -142,16 +141,8 @@ onMounted(async () => {
   // On macOS, height is managed locally via provide/inject
   cleanupTitleBarChanged = mainWindow.onTitleBarChanged((newConfig) => {
     if (!newConfig) {
-      console.warn('[RENDERER/CustomTitleBar] Received undefined titlebar config, ignoring');
       return;
     }
-    console.log('[RENDERER/CustomTitleBar] Received titlebar-changed event:', newConfig);
-    console.log(
-      '[RENDERER/CustomTitleBar] Previous height:',
-      config.value?.height,
-      '→ New height:',
-      newConfig.height,
-    );
     config.value = newConfig;
   });
 

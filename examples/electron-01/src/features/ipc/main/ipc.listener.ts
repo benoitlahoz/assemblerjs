@@ -40,7 +40,7 @@ export class IpcListenerService implements AbstractAssemblage {
       return;
     }
 
-    console.log('Renderer metrics', metrics);
+    // Handle renderer metrics
   }
 
   @IpcHandle(IpcChannels.GetVersions)
