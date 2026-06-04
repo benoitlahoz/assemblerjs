@@ -1,6 +1,9 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
+import type { TitleBarConfig, TitleBarOptions } from '@/universal/types';
 import { getWindowDefinition } from '@/main/window/window-definition/window.decorator';
+import { WindowCommand } from '../window-command/window-command.decorator';
+import { buildWindowEventChannel } from '../common/window-channels';
 
 export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   definition: {
@@ -63,6 +66,7 @@ const mergeWindowOptions = (
  */
 export class ElectronWindow extends BrowserWindow {
   private options: ElectronWindowOptions;
+  private titleBarConfig?: TitleBarConfig;
 
   private static getOpenWindows(): ElectronWindow[] {
     return BrowserWindow.getAllWindows().filter(
@@ -119,6 +123,27 @@ export class ElectronWindow extends BrowserWindow {
       );
     }
 
+    // Apply title bar configuration if enabled
+    if (definition?.titleBar?.enabled) {
+      const titleBar = definition.titleBar;
+      const platform = process.platform as 'darwin' | 'win32' | 'linux';
+
+      if (platform === 'darwin') {
+        // macOS: Use titleBarStyle + trafficLightPosition
+        resolvedOptions.titleBarStyle = 'hidden';
+        resolvedOptions.trafficLightPosition =
+          titleBar.trafficLightPosition || { x: 16, y: 16 };
+      } else {
+        // Windows/Linux: Use titleBarOverlay
+        resolvedOptions.titleBarStyle = 'hidden';
+        resolvedOptions.titleBarOverlay = {
+          color: titleBar.color || '#2f3241',
+          symbolColor: titleBar.symbolColor || '#ffffff',
+          height: titleBar.height || 40,
+        };
+      }
+    }
+
     super(resolvedOptions);
     this.options = resolvedOptions;
   }
@@ -150,5 +175,206 @@ export class ElectronWindow extends BrowserWindow {
   public get currentDisplay(): Display {
     const windowBounds = this.getBounds();
     return screen.getDisplayMatching(windowBounds);
+  }
+
+  /**
+   * Get the unified title bar configuration.
+   * Returns undefined if custom title bar is not enabled.
+   */
+  @WindowCommand('getTitleBarConfig')
+  public getTitleBarConfigCommand(): TitleBarConfig | undefined {
+    if (!this.titleBarConfig) {
+      this.titleBarConfig = this.buildTitleBarConfig();
+    }
+    return this.titleBarConfig;
+  }
+
+  /**
+   * Update title bar appearance (unified API).
+   * Automatically adapts to the current platform.
+   */
+  @WindowCommand('setTitleBarOverlay')
+  public setTitleBarOverlayCommand(options: TitleBarOptions): void {
+    console.log(
+      '[MAIN] setTitleBarOverlayCommand called with options:',
+      options,
+      'platform:',
+      process.platform,
+    );
+    if (process.platform === 'darwin') {
+      // macOS: Can't change overlay colors, but we can update height in config
+      // This allows the renderer to know the new height when traffic lights move
+      if (options.height !== undefined) {
+        // Rebuild config to get proper contentArea calculation
+        const baseConfig = this.buildTitleBarConfig();
+        if (baseConfig) {
+          // Override with custom height
+          const bounds = this.getBounds();
+          const customContentArea = {
+            x: baseConfig.insets.left,
+            y: baseConfig.insets.top,
+            width:
+              bounds.width - baseConfig.insets.left - baseConfig.insets.right,
+            height:
+              options.height - baseConfig.insets.top - baseConfig.insets.bottom,
+          };
+
+          this.titleBarConfig = {
+            ...baseConfig,
+            height: options.height,
+            contentArea: customContentArea,
+          };
+          console.log(
+            '[MAIN] Emitting titlebar-changed with new height:',
+            this.titleBarConfig.height,
+          );
+          this.emitTitleBarChanged();
+        }
+      }
+      return;
+    }
+
+    // Windows/Linux: Update overlay
+    this.setTitleBarOverlay({
+      color: options.color,
+      symbolColor: options.symbolColor,
+      height: options.height,
+    });
+
+    // Rebuild config and emit change
+    this.titleBarConfig = this.buildTitleBarConfig();
+    this.emitTitleBarChanged();
+  }
+
+  /**
+   * Get the current position of macOS traffic light buttons.
+   * Returns undefined on non-macOS platforms.
+   */
+  @WindowCommand('getWindowButtonPosition')
+  public getWindowButtonPositionCommand():
+    | { x: number; y: number }
+    | undefined {
+    if (process.platform !== 'darwin') {
+      return undefined;
+    }
+    const position = this.getWindowButtonPosition();
+    return position ?? undefined;
+  }
+
+  /**
+   * Set the position of macOS traffic light buttons.
+   * Only works on macOS. Position is relative to top-left corner.
+   */
+  @WindowCommand('setWindowButtonPosition')
+  public setWindowButtonPositionCommand(position: {
+    x: number;
+    y: number;
+  }): void {
+    if (process.platform !== 'darwin') {
+      console.warn('setWindowButtonPosition is only supported on macOS');
+      return;
+    }
+
+    this.setWindowButtonPosition(position);
+    // Note: Don't rebuild config here - height will be updated separately via setTitleBarOverlay
+  }
+
+  /**
+   * Get the current window title.
+   */
+  @WindowCommand('getTitle')
+  public getTitleCommand(): string {
+    return this.getTitle();
+  }
+
+  /**
+   * Set the window title.
+   */
+  @WindowCommand('setTitle')
+  public setTitleCommand(title: string): void {
+    this.setTitle(title);
+    // Emit title-changed event to renderer
+    this.webContents.send(
+      buildWindowEventChannel(this.name, 'title-changed'),
+      title,
+    );
+  }
+
+  /**
+   * Build the unified title bar config from window options.
+   */
+  private buildTitleBarConfig(): TitleBarConfig | undefined {
+    const definition = getWindowDefinition(this.constructor as Function);
+    const titleBarOptions = definition?.titleBar;
+
+    if (!titleBarOptions?.enabled) {
+      return undefined;
+    }
+
+    const bounds = this.getBounds();
+    const platform = process.platform as 'darwin' | 'win32' | 'linux';
+
+    // Platform-specific defaults
+    const defaultHeight = platform === 'darwin' ? 52 : 40;
+    const height = titleBarOptions.height || defaultHeight;
+
+    // Calculate insets based on platform
+    const insets = this.calculateTitleBarInsets(platform);
+
+    // Calculate content area
+    const contentArea = {
+      x: insets.left,
+      y: insets.top,
+      width: bounds.width - insets.left - insets.right,
+      height: height - insets.top - insets.bottom,
+    };
+
+    return {
+      enabled: true,
+      height,
+      color: titleBarOptions.color,
+      symbolColor: titleBarOptions.symbolColor,
+      insets,
+      contentArea,
+      platform,
+    };
+  }
+
+  /**
+   * Calculate title bar insets based on platform.
+   */
+  private calculateTitleBarInsets(platform: 'darwin' | 'win32' | 'linux'): {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  } {
+    if (platform === 'darwin') {
+      // macOS: Reserve space for traffic lights on the left
+      return { top: 0, right: 0, bottom: 0, left: 80 };
+    } else {
+      // Windows/Linux: Reserve space for window controls on the right
+      const controlsWidth = platform === 'win32' ? 138 : 120;
+      return { top: 0, right: controlsWidth, bottom: 0, left: 0 };
+    }
+  }
+
+  /**
+   * Emit title bar changed event to renderer.
+   */
+  private emitTitleBarChanged(): void {
+    if (this.titleBarConfig) {
+      const channel = buildWindowEventChannel(this.name, 'titlebar-changed');
+      console.log('[MAIN] emitTitleBarChanged - channel:', channel);
+      console.log(
+        '[MAIN] emitTitleBarChanged - titleBarConfig:',
+        JSON.stringify(this.titleBarConfig, null, 2),
+      );
+      this.webContents.send(channel, this.titleBarConfig);
+    } else {
+      console.error(
+        '[MAIN] emitTitleBarChanged called but titleBarConfig is undefined!',
+      );
+    }
   }
 }

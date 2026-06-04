@@ -24,7 +24,6 @@ export class AppEventsListener implements AbstractAssemblage {
   @AppOn(ElectronAppEvent.Activate, true)
   public onActivate(): void {
     // TODO: Recreate main window if all windows are closed (macOS)
-    console.log('App activated');
   }
 
   @AppOn(ElectronAppEvent.WindowAllClosed)
@@ -36,7 +35,6 @@ export class AppEventsListener implements AbstractAssemblage {
 
   @AppOn(ElectronAppEvent.WillQuit)
   protected onWillQuit(): void {
-    console.log('App is quitting');
     // Use with caution as it will dispose all the services and listeners registered in MainApp
     this.dispose();
   }

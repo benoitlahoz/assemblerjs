@@ -63,6 +63,11 @@ export abstract class AbstractWindowControllerService implements AbstractAssembl
     callback: (active: boolean) => void,
   ): () => void;
 
+  /**
+   * Access to the IPC service for custom window commands.
+   */
+  public abstract get ipc(): any;
+
   public abstract onDispose(
     context: AssemblerContext,
     configuration?: Record<string, any>,

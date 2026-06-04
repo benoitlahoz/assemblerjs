@@ -183,6 +183,9 @@ onMounted(() => {
     drawLatencyChart();
   });
   chartResizeObserver.observe(chartRef.value);
+
+  // Start heartbeat automatically on mount
+  startHeartbeat();
 });
 
 onBeforeUnmount(() => {

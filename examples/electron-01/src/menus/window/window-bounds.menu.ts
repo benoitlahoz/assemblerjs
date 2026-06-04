@@ -58,7 +58,7 @@ export class WindowBoundsMenu {
     handleInMain: true,
     forwardToRenderer: true,
   })
-  private autoCenter(itemId: string, windowName: string): void {
+  private autoCenter(_itemId: string, _windowName: string): void {
     // Auto-center handled via subscription in renderer
   }
 }

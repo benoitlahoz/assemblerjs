@@ -4,6 +4,10 @@ import type { SystemStateHealth, SystemStateSnapshot } from '@assemblerjs/electr
 import { useContext } from '@renderer/composables/useContext';
 import { SystemStateModule } from '@features/system/renderer/system-state.module';
 
+defineProps<{
+  compact?: boolean;
+}>();
+
 const context = useContext();
 const { system } = context.require(SystemStateModule);
 
@@ -119,46 +123,115 @@ onBeforeUnmount(async () => {
 </script>
 
 <template>
-  <article class="card card--system-state" aria-live="polite">
+  <article class="card card--system-state" :class="{ 'card--compact': compact }" aria-live="polite">
     <header class="card__header">
-      <h2>System State Stream</h2>
-      <span class="system-duplex">Full-duplex</span>
+      <h2>{{ compact ? 'System' : 'System State Stream' }}</h2>
+      <div v-if="compact" class="compact-controls">
+        <select
+          class="compact-interval-select"
+          :value="intervalMs"
+          @change="setSystemInterval(Number(($event.target as HTMLSelectElement).value))"
+        >
+          <option v-for="option in INTERVAL_OPTIONS" :key="option" :value="option">
+            {{ option }}ms
+          </option>
+        </select>
+        <button
+          v-if="isRunning"
+          type="button"
+          class="compact-stop-button"
+          :title="'Stop monitoring'"
+          @click="stopMonitoring"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+          </svg>
+        </button>
+        <button
+          v-else
+          type="button"
+          class="compact-start-button"
+          :title="'Start monitoring'"
+          @click="startMonitoring"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polygon points="6 3 20 12 6 21 6 3" />
+          </svg>
+        </button>
+      </div>
+      <span v-if="!compact" class="system-duplex">Full-duplex</span>
     </header>
 
-    <p class="card__description">
+    <p v-if="!compact" class="card__description">
       Native package stream for runtime, process, OS, and displays with typed snapshot updates.
     </p>
 
     <dl class="system-metrics-grid">
       <div class="metric">
-        <dt>App Uptime</dt>
-        <dd>{{ formattedUptime }}</dd>
+        <dt>{{ compact ? 'CPU' : 'App Uptime' }}</dt>
+        <dd>{{ compact ? (cpuPercentLabel ?? '—') : formattedUptime }}</dd>
       </div>
       <div class="metric">
-        <dt>Heap Used</dt>
-        <dd>{{ usedMemoryMb !== undefined ? `${usedMemoryMb} MB` : '—' }}</dd>
-      </div>
-      <div class="metric">
-        <dt>Available RAM (OS)</dt>
+        <dt>{{ compact ? 'RAM' : 'Heap Used' }}</dt>
         <dd>
           {{
-            availableMemoryGb !== undefined && totalMemoryGb !== undefined
-              ? `${availableMemoryGb} / ${totalMemoryGb} GB`
-              : '—'
+            compact
+              ? availableMemoryGb !== undefined && totalMemoryGb !== undefined
+                ? `${availableMemoryGb}/${totalMemoryGb}GB`
+                : '—'
+              : usedMemoryMb !== undefined
+                ? `${usedMemoryMb} MB`
+                : '—'
           }}
         </dd>
       </div>
       <div class="metric">
-        <dt>CPU Usage</dt>
-        <dd>{{ cpuPercentLabel ?? '—' }}</dd>
+        <dt>{{ compact ? 'Heap' : 'Available RAM (OS)' }}</dt>
+        <dd>
+          {{
+            compact
+              ? usedMemoryMb !== undefined
+                ? `${usedMemoryMb}MB`
+                : '—'
+              : availableMemoryGb !== undefined && totalMemoryGb !== undefined
+                ? `${availableMemoryGb} / ${totalMemoryGb} GB`
+                : '—'
+          }}
+        </dd>
       </div>
       <div class="metric">
+        <dt>{{ compact ? 'Disp' : 'CPU Usage' }}</dt>
+        <dd>
+          {{ compact ? (snapshot ? snapshot.displays.length : '—') : (cpuPercentLabel ?? '—') }}
+        </dd>
+      </div>
+      <div v-if="!compact" class="metric">
         <dt>Displays</dt>
         <dd>{{ snapshot ? snapshot.displays.length : '—' }}</dd>
       </div>
     </dl>
 
-    <div class="system-controls">
+    <div v-if="!compact" class="system-controls">
       <label for="system-state-interval">Interval</label>
       <select
         id="system-state-interval"
@@ -200,6 +273,14 @@ onBeforeUnmount(async () => {
   background: color-mix(in srgb, var(--ev-c-black-soft) 50%, transparent);
   backdrop-filter: blur(8px);
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.card--compact {
+  padding: 10px 12px;
+  width: 320px;
+  min-height: auto;
 }
 
 .card__header {
@@ -217,6 +298,13 @@ onBeforeUnmount(async () => {
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ev-c-text-1);
+}
+
+.card--compact .card__header h2 {
+  font-size: 11px;
+  line-height: 1.2;
+  letter-spacing: 0.06em;
+  color: var(--ev-c-text-2);
 }
 
 .system-duplex {
@@ -243,6 +331,14 @@ onBeforeUnmount(async () => {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 8px;
+  flex: 1;
+}
+
+.card--compact .system-metrics-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  grid-auto-rows: minmax(0, 1fr);
+  align-content: stretch;
 }
 
 .metric {
@@ -251,9 +347,14 @@ onBeforeUnmount(async () => {
   border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 18%, transparent);
   padding: 8px 10px;
   min-height: 56px;
+  height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+.card--compact .metric {
+  padding: 6px 8px;
 }
 
 .metric dt {
@@ -338,6 +439,70 @@ onBeforeUnmount(async () => {
 .system-action--danger {
   border-color: color-mix(in srgb, #ff6b6b 45%, transparent);
   color: #ff6b6b;
+}
+
+.compact-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.compact-interval-select {
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
+  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
+  color: var(--ev-c-text-1);
+  padding: 0 6px;
+  font-size: 11px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  cursor: pointer;
+}
+
+.compact-interval-select:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--ev-c-text-2) 40%, transparent);
+}
+
+.compact-stop-button,
+.compact-start-button {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.compact-stop-button {
+  color: rgba(255, 107, 107, 0.8);
+  border-color: color-mix(in srgb, #ff6b6b 25%, transparent);
+}
+
+.compact-stop-button:hover {
+  background: color-mix(in srgb, #ff6b6b 15%, transparent);
+  border-color: color-mix(in srgb, #ff6b6b 45%, transparent);
+  color: #ff6b6b;
+}
+
+.compact-start-button {
+  color: rgba(66, 211, 146, 0.8);
+  border-color: color-mix(in srgb, #42d392 25%, transparent);
+}
+
+.compact-start-button:hover {
+  background: color-mix(in srgb, #42d392 15%, transparent);
+  border-color: color-mix(in srgb, #42d392 45%, transparent);
+  color: #42d392;
+}
+
+.compact-stop-button:active,
+.compact-start-button:active {
+  transform: scale(0.95);
 }
 
 @media (max-width: 980px) {

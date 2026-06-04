@@ -46,7 +46,7 @@ task
         app.quit();
       },
       () => {
-        console.log('App was successfully initialized.');
+        // App was successfully initialized.
       },
     );
   })

@@ -1,19 +1,24 @@
 <template>
   <header class="hero">
     <div class="hero__brand">
-      <img alt="logo" class="hero__logo" src="@renderer/assets/electron.svg" />
       <div class="hero__content">
-        <p class="hero__eyebrow">AssemblerJS Electron Playground</p>
-        <h1 class="hero__title">Window Geometry + Full-Duplex IPC</h1>
-        <p class="hero__description">
-          Drag and resize the window from the canvas, then monitor bidirectional IPC heartbeat and
-          latency trends in real time.
-        </p>
-        <div class="hero__chips" aria-hidden="true">
-          <span class="hero__chip">Window Bounds Control</span>
-          <span class="hero__chip">Full-Duplex RPC</span>
-          <span class="hero__chip">Live Latency Chart</span>
+        <div class="hero__layout">
+          <div class="hero__text">
+            <p class="hero__eyebrow">AssemblerJS Electron Playground</p>
+            <h1 class="hero__title">Full-Duplex Electron</h1>
+          </div>
+          <div class="hero__chips" aria-hidden="true">
+            <span class="hero__chip">Unified DI</span>
+            <span class="hero__chip">Type-Safe IPC</span>
+            <span class="hero__chip">Custom Title Bar</span>
+          </div>
         </div>
+        <p class="hero__description">
+          A comprehensive AssemblerJS playground demonstrating unified dependency injection,
+          decorator-powered IPC, and seamless communication across Electron's main, renderer, and
+          preload processes. Explore real-time system monitoring, custom window controls, and
+          type-safe command patterns.
+        </p>
       </div>
     </div>
   </header>
@@ -22,64 +27,69 @@
 <style scoped>
 .hero {
   display: block;
-  padding: 2px 2px 4px;
+  padding: 0;
 }
 
 .hero__brand {
   display: flex;
-  align-items: center;
-  gap: 18px;
+  flex-direction: column;
+  justify-content: flex-start;
   text-align: left;
-  padding: 14px 16px;
+  padding: 10px 12px;
   border-radius: 16px;
-  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
-  background:
-    radial-gradient(120% 180% at 0% 0%, rgba(88, 166, 255, 0.18), transparent 58%),
-    radial-gradient(120% 180% at 100% 100%, rgba(66, 211, 146, 0.16), transparent 56%),
-    color-mix(in srgb, var(--ev-c-black-soft) 45%, transparent);
-}
-
-.hero__logo {
-  width: 64px;
-  height: 64px;
-  flex-shrink: 0;
-  filter: drop-shadow(0 8px 20px rgba(88, 166, 255, 0.22));
+  border: 1px solid transparent;
+  background: transparent;
 }
 
 .hero__content {
   min-width: 0;
 }
 
+.hero__layout {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.hero__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
 .hero__eyebrow {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  line-height: 1.2;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--ev-c-text-2);
 }
 
 .hero__title {
-  margin: 6px 0 0;
+  margin: 0;
   max-width: 760px;
-  font-size: 28px;
-  line-height: 1.12;
+  font-size: 22px;
+  line-height: 1.15;
   color: var(--ev-c-text-1);
 }
 
 .hero__description {
-  margin: 8px 0 0;
-  max-width: 760px;
+  margin: 10px 0 0;
+  max-width: 66%;
   color: var(--ev-c-text-2);
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.35;
 }
 
 .hero__chips {
-  margin-top: 10px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  justify-content: flex-end;
 }
 
 .hero__chip {
@@ -95,23 +105,37 @@
   text-transform: uppercase;
 }
 
+@media (max-width: 980px) {
+  .hero__description {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 1200px) {
+  .hero__chips {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
 @media (max-width: 620px) {
   .hero__brand {
     align-items: flex-start;
-    padding: 12px;
-  }
-
-  .hero__logo {
-    width: 56px;
-    height: 56px;
+    padding: 0;
   }
 
   .hero__title {
-    font-size: 24px;
+    font-size: 20px;
   }
 
   .hero__description {
     font-size: 13px;
+  }
+
+  .hero__chip {
+    font-size: 10px;
+    padding: 3px 8px;
   }
 }
 </style>

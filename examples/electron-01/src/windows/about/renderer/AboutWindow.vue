@@ -1,23 +1,24 @@
 <template>
   <main class="about-window">
     <section class="about-card">
-      <p class="about-card__eyebrow">AssemblerJS Electron</p>
-      <h1 class="about-card__title">About This Example</h1>
+      <p class="about-card__eyebrow">AssemblerJS Electron Playground</p>
+      <h1 class="about-card__title">Full-Duplex Electron</h1>
       <p class="about-card__body">
-        This window is opened through the @UseMenu binding provided by the About module.
+        Break the process barrier. This example demonstrates unified dependency injection and
+        decorator-powered IPC across main, renderer, and preload processes.
       </p>
       <dl class="about-card__meta">
         <div>
-          <dt>Window</dt>
-          <dd>about</dd>
+          <dt>Architecture</dt>
+          <dd>Unified DI</dd>
         </div>
         <div>
-          <dt>Route</dt>
-          <dd>/about</dd>
+          <dt>IPC Pattern</dt>
+          <dd>Type-Safe Decorators</dd>
         </div>
         <div>
-          <dt>Menu source</dt>
-          <dd>AboutMenu</dd>
+          <dt>Window Control</dt>
+          <dd>Custom Title Bar API</dd>
         </div>
       </dl>
     </section>
@@ -31,39 +32,43 @@
   place-items: center;
   padding: 24px;
   box-sizing: border-box;
-  background:
-    radial-gradient(circle at top left, rgba(41, 98, 255, 0.18), transparent 42%),
-    linear-gradient(160deg, #0f172a 0%, #111827 52%, #172554 100%);
+  background: var(--ev-c-bg);
 }
 
 .about-card {
-  width: min(100%, 420px);
-  border-radius: 20px;
-  padding: 28px;
-  color: #e5eefb;
-  background: rgba(15, 23, 42, 0.78);
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.35);
+  width: min(100%, 480px);
+  border-radius: 16px;
+  padding: 32px;
+  text-align: left;
+  color: var(--ev-c-text-1);
+  background:
+    radial-gradient(120% 180% at 0% 0%, rgba(88, 166, 255, 0.18), transparent 58%),
+    color-mix(in srgb, var(--ev-c-black-soft) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
 .about-card__eyebrow {
   margin: 0 0 8px;
   font-size: 12px;
-  letter-spacing: 0.22em;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #93c5fd;
+  color: var(--ev-c-text-2);
 }
 
 .about-card__title {
   margin: 0;
   font-size: 32px;
-  line-height: 1.05;
+  line-height: 1.12;
+  color: var(--ev-c-text-1);
 }
 
 .about-card__body {
-  margin: 14px 0 22px;
+  margin: 12px 0 24px;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: var(--ev-c-text-2);
+  font-size: 14px;
 }
 
 .about-card__meta {
@@ -75,18 +80,26 @@
 .about-card__meta div {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 16px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  padding: 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ev-c-black-soft) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 16%, transparent);
 }
 
 .about-card__meta dt {
   font-weight: 600;
-  color: #93c5fd;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ev-c-text-2);
 }
 
 .about-card__meta dd {
   margin: 0;
-  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ev-c-text-1);
 }
 </style>

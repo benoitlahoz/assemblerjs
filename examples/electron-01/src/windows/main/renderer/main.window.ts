@@ -118,24 +118,20 @@ export class MainWindow extends AbstractWindowService {
   /**
    * Receives 'enter-full-screen' events forwarded by @WindowForward('enter-full-screen') on the main side.
    * Auto-generated channel: 'window:main.enter-full-screen'
-   * No payload (void).
    */
   @WindowOn('enter-full-screen')
-  public onEnterFullScreenEvent(): void {
-    console.log('[Renderer] enter-full-screen event received', {
-      channel: 'window:main.enter-full-screen',
-    });
+  public async onEnterFullScreenEvent(bounds: WindowBounds): Promise<void> {
+    await this.ensureBoundsStream();
+    this.bounds.value = this.cloneBounds(bounds);
   }
 
   /**
    * Receives 'leave-full-screen' events forwarded by @WindowForward('leave-full-screen') on the main side.
    * Auto-generated channel: 'window:main.leave-full-screen'
-   * No payload (void).
    */
   @WindowOn('leave-full-screen')
-  public onLeaveFullScreenEvent(): void {
-    console.log('[Renderer] leave-full-screen event received', {
-      channel: 'window:main.leave-full-screen',
-    });
+  public async onLeaveFullScreenEvent(bounds: WindowBounds): Promise<void> {
+    await this.ensureBoundsStream();
+    this.bounds.value = this.cloneBounds(bounds);
   }
 }

@@ -1,5 +1,6 @@
 import { getAssemblageDefinition } from 'assemblerjs';
 import type { BrowserWindowConstructorOptions } from 'electron';
+import type { WindowTitleBarConfig } from '@/universal/types';
 import {
   ElectronMetadataStorage,
   getWindowDefinitionMetadata,
@@ -19,12 +20,18 @@ export interface WindowDefinition extends BrowserWindowConstructorOptions {
   router?: WindowRouterDefinition;
   /** @deprecated Use router.route instead. */
   route?: string;
+  /**
+   * Custom title bar configuration (unified API).
+   * Automatically adapted to the current platform.
+   */
+  titleBar?: WindowTitleBarConfig;
 }
 
 export interface NormalizedWindowDefinition {
   name: string;
   multiple: boolean;
   router?: WindowRouterDefinition;
+  titleBar?: WindowTitleBarConfig;
   options: BrowserWindowConstructorOptions;
 }
 
@@ -34,7 +41,8 @@ export const WindowDefinitionMetadataKey =
 export function normalizeWindowDefinition(
   definition: WindowDefinition,
 ): NormalizedWindowDefinition {
-  const { name, multiple, route, router, ...windowOptions } = definition;
+  const { name, multiple, route, router, titleBar, ...windowOptions } =
+    definition;
 
   const normalizedRouter =
     router || route
@@ -48,6 +56,7 @@ export function normalizeWindowDefinition(
     name,
     multiple: multiple === true,
     router: normalizedRouter,
+    titleBar,
     options: windowOptions,
   };
 }

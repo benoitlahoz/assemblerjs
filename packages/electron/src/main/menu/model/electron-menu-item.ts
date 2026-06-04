@@ -275,7 +275,7 @@ export class ElectronMenuItem {
     if (item) {
       try {
         if (item.accelerator !== value) {
-          item.accelerator = value;
+          item.accelerator = value ?? null;
         }
       } catch {
         // Some role-driven Electron MenuItem instances expose readonly accelerator.
@@ -294,7 +294,7 @@ export class ElectronMenuItem {
   public get accelerator(): string | undefined {
     const item = this.getItem();
     if (item) {
-      this._accelerator = item.accelerator;
+      this._accelerator = item.accelerator ?? undefined;
       return this._accelerator;
     }
     return this._accelerator;
