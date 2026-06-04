@@ -24,8 +24,12 @@ export class WindowControllerService extends AbstractWindowControllerService {
   private readonly snapshots = new Map<string, WindowSnapshot>();
   private readonly subscriptions = new Set<() => void>();
 
-  constructor(private readonly ipc: AbstractIpcService) {
+  constructor(private readonly _ipc: AbstractIpcService) {
     super();
+  }
+
+  public get ipc(): AbstractIpcService {
+    return this._ipc;
   }
 
   private ensureSnapshot(name: string): WindowSnapshot {
@@ -70,7 +74,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     callback: (payload: T, channel: string) => void,
   ): () => void {
     const unsubs = channels.map((channel) =>
-      this.ipc.on(channel, (payload: T) => callback(payload, channel)),
+      this._ipc.on(channel, (payload: T) => callback(payload, channel)),
     );
 
     const unsubscribe = () => {
@@ -88,7 +92,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     args: unknown[],
   ): Promise<T | undefined> {
     const channel = buildWindowCommandChannel(name, command);
-    const result = await this.ipc.invoke(channel, ...args);
+    const result = await this._ipc.invoke(channel, ...args);
     return unwrapIpcResult<T>(channel, result);
   }
 
@@ -96,7 +100,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     channel: WindowIpcChannel,
     ...args: unknown[]
   ): Promise<T | undefined> {
-    const result = await this.ipc.invoke(channel, ...args);
+    const result = await this._ipc.invoke(channel, ...args);
     return unwrapIpcResult<T>(channel, result);
   }
 

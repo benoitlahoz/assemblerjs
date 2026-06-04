@@ -3,7 +3,12 @@ import {
   AssemblerContext,
   getAssemblageContext,
 } from 'assemblerjs';
-import type { WindowBounds, WindowState } from '@/universal/types';
+import type {
+  WindowBounds,
+  WindowState,
+  TitleBarConfig,
+  TitleBarOptions,
+} from '@/universal/types';
 import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 import {
   AbstractWindowControllerService,
@@ -11,6 +16,11 @@ import {
 } from './window-controller.abstract';
 import { WindowControllerService } from './window-controller.service';
 import { IpcService } from '@/renderer/ipc/services';
+import {
+  buildWindowCommandChannel,
+  buildWindowEventChannel,
+} from '../common/window-channels';
+import { unwrapIpcResult } from '@/renderer/ipc/services/ipc-result.utils';
 
 /**
  * Base class for window-specific renderer services.
@@ -132,6 +142,114 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
 
   public onFullscreenChanged(callback: (active: boolean) => void): () => void {
     return this.windows.onFullscreenChanged(this.resolveWindowName(), callback);
+  }
+
+  /**
+   * Get the unified title bar configuration.
+   * Returns undefined if custom title bar is not enabled.
+   */
+  public async getTitleBarConfig(): Promise<TitleBarConfig | undefined> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(windowName, 'getTitleBarConfig');
+    const result = await this.windows.ipc.invoke(channel);
+    return unwrapIpcResult<TitleBarConfig | undefined>(channel, result);
+  }
+
+  /**
+   * Update title bar appearance (unified API).
+   * Works automatically across all platforms.
+   */
+  public async setTitleBarOverlay(options: TitleBarOptions): Promise<void> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(windowName, 'setTitleBarOverlay');
+    const result = await this.windows.ipc.invoke(channel, options);
+    unwrapIpcResult<void>(channel, result);
+  }
+
+  /**
+   * Get the position of macOS traffic light buttons.
+   * Returns undefined on non-macOS platforms.
+   */
+  public async getWindowButtonPosition(): Promise<
+    { x: number; y: number } | undefined
+  > {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(
+      windowName,
+      'getWindowButtonPosition',
+    );
+    const result = await this.windows.ipc.invoke(channel);
+    return unwrapIpcResult<{ x: number; y: number } | undefined>(
+      channel,
+      result,
+    );
+  }
+
+  /**
+   * Set the position of macOS traffic light buttons.
+   * Only works on macOS.
+   */
+  public async setWindowButtonPosition(position: {
+    x: number;
+    y: number;
+  }): Promise<void> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(
+      windowName,
+      'setWindowButtonPosition',
+    );
+    const result = await this.windows.ipc.invoke(channel, position);
+    unwrapIpcResult<void>(channel, result);
+  }
+
+  /**
+   * Get the current window title.
+   */
+  public async getTitle(): Promise<string | undefined> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(windowName, 'getTitle');
+    const result = await this.windows.ipc.invoke(channel);
+    return unwrapIpcResult<string | undefined>(channel, result);
+  }
+
+  /**
+   * Set the window title.
+   */
+  public async setTitle(title: string): Promise<void> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowCommandChannel(windowName, 'setTitle');
+    const result = await this.windows.ipc.invoke(channel, title);
+    unwrapIpcResult<void>(channel, result);
+  }
+
+  /**
+   * Listen for title changes.
+   * Returns a cleanup function to remove the listener.
+   */
+  public onTitleChanged(callback: (title: string) => void): () => void {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowEventChannel(windowName, 'title-changed');
+    return this.windows.ipc.on(channel, callback);
+  }
+
+  /**
+   * Subscribe to title bar changes.
+   * Triggered when overlay is updated or window is resized.
+   */
+  public onTitleBarChanged(
+    callback: (config: TitleBarConfig) => void,
+  ): () => void {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowEventChannel(windowName, 'titlebar-changed');
+    const handler = (_event: any, config: TitleBarConfig) => {
+      callback(config);
+    };
+
+    this.windows.ipc.on(channel, handler);
+
+    return () => {
+      this.windows.ipc.off(channel, handler);
+    };
   }
 
   public onDispose(

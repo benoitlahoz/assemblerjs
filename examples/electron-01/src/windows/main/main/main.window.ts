@@ -7,6 +7,7 @@ import {
   Window,
   WindowCommand,
   WindowForward,
+  WindowOn,
 } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
@@ -46,6 +47,13 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     dev: process.env['ELECTRON_RENDERER_URL'],
     route: MAIN_WINDOW_CONFIG.route,
   },
+  titleBar: {
+    enabled: true,
+    height: 52,
+    color: '#1e1e1e',
+    symbolColor: '#ffffff',
+    trafficLightPosition: { x: 16, y: 20 },
+  },
 })
 @UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
 @Assemblage()
@@ -56,11 +64,6 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
         preload,
       },
     });
-
-    // Center window when ready to show
-    this.on('ready-to-show', () => {
-      this.center();
-    });
   }
 
   public async onInit(): Promise<void> {
@@ -68,6 +71,15 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
       shell.openExternal(details.url);
       return { action: 'deny' };
     });
+  }
+
+  @WindowOn('ready-to-show')
+  public onReadyToShow(): void {
+    const title = 'assemblerjs - Electron Example';
+    this.setTitle(title);
+    // Emit title change event to renderer
+    this.webContents.send(`window:${this.name}.title-changed`, title);
+    this.center();
   }
 
   // ========================================
@@ -95,10 +107,14 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   }
 
   @WindowForward('enter-full-screen')
-  public onEnterFullScreen(): void {}
+  public onEnterFullScreen(): Rectangle {
+    return this.getBounds();
+  }
 
   @WindowForward('leave-full-screen')
-  public onLeaveFullScreen(): void {}
+  public onLeaveFullScreen(): Rectangle {
+    return this.getBounds();
+  }
 
   // ========================================
   // Window Commands (Renderer → Main RPC)

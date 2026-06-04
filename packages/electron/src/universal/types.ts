@@ -263,3 +263,87 @@ export interface TypedIpcBridge<
   ): void;
   removeHandler(channel: string): void;
 }
+
+/**
+ * Title bar configuration (unified API for all platforms).
+ * Platform-specific details are abstracted internally.
+ */
+export interface TitleBarConfig {
+  /** Whether a custom title bar is enabled */
+  enabled: boolean;
+
+  /** Height of the title bar in pixels (unified across platforms) */
+  height: number;
+
+  /** Color of the title bar background (CSS color) */
+  color?: string;
+
+  /** Color of title bar symbols/text (CSS color) */
+  symbolColor?: string;
+
+  /**
+   * Insets for title bar content (to avoid overlap with system controls).
+   * Calculated automatically based on platform:
+   * - macOS: left inset for traffic lights
+   * - Windows/Linux: right inset for window controls
+   */
+  insets: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+
+  /**
+   * Available content area (after accounting for system controls).
+   * Use this to position your custom title bar content.
+   */
+  contentArea: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+
+  /** Internal platform (for advanced use cases) */
+  readonly platform: 'darwin' | 'win32' | 'linux';
+}
+
+/**
+ * Simplified options for setting title bar appearance.
+ * Works across all platforms with automatic adaptation.
+ */
+export interface TitleBarOptions {
+  /** Height of the title bar in pixels (default: 40 on Windows/Linux, 52 on macOS) */
+  height?: number;
+
+  /** Background color (CSS color or hex) */
+  color?: string;
+
+  /** Symbol/text color (CSS color or hex) */
+  symbolColor?: string;
+}
+
+/**
+ * Title bar configuration for @Window decorator.
+ * Simplifies platform-specific setup.
+ */
+export interface WindowTitleBarConfig {
+  /** Enable custom title bar (default: false) */
+  enabled?: boolean;
+
+  /** Title bar height in pixels (platform-dependent defaults) */
+  height?: number;
+
+  /** Background color (CSS color) */
+  color?: string;
+
+  /** Symbol color (CSS color) */
+  symbolColor?: string;
+
+  /**
+   * macOS only: Position of traffic light buttons.
+   * Auto-calculated if not specified (default: { x: 16, y: 16 })
+   */
+  trafficLightPosition?: { x: number; y: number };
+}

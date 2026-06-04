@@ -1,41 +1,78 @@
 <script setup lang="ts">
+import { ref, computed, onMounted } from 'vue';
+import { useContext } from '@renderer/composables/useContext';
 import { AppHero } from './components/app-hero';
 import { IpcCard } from './components/ipc-card';
 import { RuntimeStackCard } from './components/runtime-stack-card';
 import { SystemStateCard } from './components/system-state-card';
 import { WindowBoundsCard } from './components/window-bounds-card';
+import { CustomTitleBar } from './components/custom-title-bar';
+import { MainWindow } from './main.window';
+import type { TitleBarConfig } from '@assemblerjs/electron/universal';
+
+const context = useContext();
+const mainWindow = context.require(MainWindow);
+
+const titleBarConfig = ref<TitleBarConfig | undefined>(undefined);
+
+const hasCustomTitleBar = computed(() => titleBarConfig.value?.enabled === true);
+const windowShellStyle = computed(() => {
+  if (!hasCustomTitleBar.value || !titleBarConfig.value) {
+    return { height: '100vh' };
+  }
+  const height = titleBarConfig.value.height;
+  return {
+    marginTop: `${height}px`,
+    height: `calc(100vh - ${height}px)`,
+  };
+});
+
+onMounted(async () => {
+  titleBarConfig.value = await mainWindow.getTitleBarConfig();
+});
 </script>
 
 <template>
-  <main class="window-shell">
-    <section class="window-shell__hero-row">
-      <AppHero class="window-shell__hero-main" />
-      <RuntimeStackCard class="window-shell__runtime" compact />
-    </section>
+  <div class="window-root">
+    <CustomTitleBar v-if="hasCustomTitleBar" />
+    <main class="window-shell" :style="windowShellStyle">
+      <section class="window-shell__hero-row">
+        <AppHero class="window-shell__hero-main" />
+        <RuntimeStackCard class="window-shell__runtime" compact />
+      </section>
 
-    <section class="window-shell__system-row">
-      <SystemStateCard />
-    </section>
+      <section class="window-shell__system-row">
+        <SystemStateCard />
+      </section>
 
-    <section class="window-shell__cards-grid">
-      <WindowBoundsCard />
-      <IpcCard />
-    </section>
-  </main>
+      <section class="window-shell__cards-grid">
+        <WindowBoundsCard />
+        <IpcCard />
+      </section>
+    </main>
+  </div>
 </template>
 
 <style scoped>
-.window-shell {
+.window-root {
   width: 100vw;
-  max-width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.window-shell {
+  width: 100%;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  height: 100vh;
-  max-height: 100vh;
-  overflow: auto;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
   box-sizing: border-box;
+  transition:
+    margin-top 0.2s ease,
+    height 0.2s ease;
 }
 
 .window-shell__hero-row {
