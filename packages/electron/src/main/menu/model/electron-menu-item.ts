@@ -500,13 +500,13 @@ export class ElectronMenuItem {
       role: this.role as any,
       type: this.type,
       accelerator: this.accelerator,
-      enabled: this.enabled,
+      enabled: this._enabled,
       submenu: this.submenu
         ? this.submenu.map((item) => item.toMenuItemConstructorOptions())
         : undefined,
     };
-    if (this.checked !== undefined) {
-      options.checked = this.checked;
+    if (this._checked !== undefined) {
+      options.checked = this._checked;
     }
     if (typeof this._click === 'function') {
       options.click = this._click as any;

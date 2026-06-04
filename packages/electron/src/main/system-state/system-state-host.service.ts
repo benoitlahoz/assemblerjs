@@ -115,90 +115,193 @@ export class SystemStateHostService {
     }));
   }
 
-  private collectAvailableMemBytes(): number | undefined {
-    if (process.platform === 'darwin') {
-      try {
-        const output = execFileSync(
-          '/usr/sbin/sysctl',
-          [
-            '-n',
-            'vm.pagesize',
-            'vm.page_free_count',
-            'vm.page_speculative_count',
-            'vm.page_purgeable_count',
-          ],
-          {
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'ignore'],
-          },
+  /**
+   * Calculate available memory on macOS using native sysctl.
+   * macOS memory types that can be reclaimed:
+   * - Free: completely unused pages
+   * - Speculative: cached file data that can be discarded
+   * - Purgeable: voluntary purgeable memory from apps
+   * - Pageable external: file cache (file-backed pages)
+   * - Reusable: deactivated volatile memory
+   *
+   * This matches how Activity Monitor and MemoryCleaner calculate available memory.
+   */
+  private getMacOsAvailableMemory(): number | undefined {
+    try {
+      const output = execFileSync(
+        '/usr/sbin/sysctl',
+        [
+          '-n',
+          'vm.pagesize',
+          'vm.page_free_count',
+          'vm.page_speculative_count',
+          'vm.page_purgeable_count',
+          'vm.page_pageable_external_count',
+          'vm.page_reusable_count',
+        ],
+        {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'ignore'],
+        },
+      );
+
+      const values = output
+        .trim()
+        .split(/\s+/)
+        .map((value) => Number.parseInt(value, 10));
+
+      if (values.length === 6 && values.every(Number.isFinite)) {
+        const [
+          pageSize,
+          freePages,
+          speculativePages,
+          purgeablePages,
+          pageableExternalPages,
+          reusablePages,
+        ] = values;
+
+        const availablePages = Math.max(
+          0,
+          freePages +
+            speculativePages +
+            purgeablePages +
+            pageableExternalPages +
+            reusablePages,
         );
 
-        const values = output
-          .trim()
-          .split(/\s+/)
-          .map((value) => Number.parseInt(value, 10));
+        return Math.max(0, Math.round(availablePages * pageSize));
+      }
+    } catch {
+      // Fall through
+    }
 
-        if (
-          values.length === 4 &&
-          values.every((value) => Number.isFinite(value))
-        ) {
-          const [pageSize, freePages, speculativePages, purgeablePages] =
-            values;
-          const availablePages = Math.max(
-            0,
-            freePages + speculativePages + purgeablePages,
-          );
-          return Math.max(0, Math.round(availablePages * pageSize));
-        }
-      } catch {
-        // Fall through to other strategies.
+    return undefined;
+  }
+
+  /**
+   * Get available memory on Linux from /proc/meminfo.
+   * MemAvailable was introduced in kernel 3.14 (2014) and is the standard
+   * metric used by free, htop, and all modern Linux monitoring tools.
+   * It estimates how much memory is available for starting new applications,
+   * including reclaimable cache and buffers.
+   */
+  private getLinuxAvailableMemory(): number | undefined {
+    try {
+      const meminfo = readFileSync('/proc/meminfo', 'utf8');
+      const match = meminfo.match(/^MemAvailable:\s+(\d+)\s+kB$/im);
+      if (match) {
+        return Math.max(0, Number.parseInt(match[1], 10) * 1024);
+      }
+    } catch {
+      // Fall through
+    }
+
+    return undefined;
+  }
+
+  /**
+   * Get system memory info using native Electron/Node.js APIs.
+   * Strategy varies by platform for accurate "available" memory:
+   *
+   * - macOS: sysctl vm statistics (Free + Speculative + Purgeable + File cache + Reusable)
+   *   Matches Activity Monitor calculations
+   *
+   * - Linux: /proc/meminfo MemAvailable (kernel 3.14+)
+   *   Standard metric used by htop, free, and all modern Linux tools
+   *
+   * - Windows: Electron's getSystemMemoryInfo().free
+   *   Uses Windows API GlobalMemoryStatusEx() -> ullAvailPhys
+   *   This is the correct "Available" metric shown in Task Manager
+   *
+   * - Fallback: Node.js availableMemory() (v22+) or os.freemem()
+   */
+  private collectMemorySnapshot(): {
+    totalMemBytes: number;
+    freeMemBytes: number;
+    availableMemBytes?: number;
+    memorySource:
+      | 'electron-native'
+      | 'node-native'
+      | 'platform-sysctl'
+      | 'node-os-fallback';
+  } {
+    // First, try to get total memory from Electron (more accurate)
+    let totalMemBytes = os.totalmem();
+    let freeMemBytes = os.freemem();
+
+    try {
+      const electronMemInfo = process.getSystemMemoryInfo();
+      if (electronMemInfo && Number.isFinite(electronMemInfo.total)) {
+        // Electron reports in KB, convert to bytes
+        totalMemBytes = Math.max(0, Math.round(electronMemInfo.total * 1024));
+        freeMemBytes = Math.max(
+          0,
+          Math.round((electronMemInfo.free || 0) * 1024),
+        );
+      }
+    } catch {
+      // Keep os module values
+    }
+
+    // Platform-specific available memory calculation
+    if (process.platform === 'darwin') {
+      const available = this.getMacOsAvailableMemory();
+      if (available !== undefined) {
+        return {
+          totalMemBytes,
+          freeMemBytes,
+          availableMemBytes: available,
+          memorySource: 'platform-sysctl',
+        };
       }
     }
 
     if (process.platform === 'linux') {
-      try {
-        const meminfo = readFileSync('/proc/meminfo', 'utf8');
-        const match = meminfo.match(/^MemAvailable:\s+(\d+)\s+kB$/im);
-        if (match) {
-          return Math.max(0, Number.parseInt(match[1], 10) * 1024);
-        }
-      } catch {
-        // Fall through to other strategies.
+      const available = this.getLinuxAvailableMemory();
+      if (available !== undefined) {
+        return {
+          totalMemBytes,
+          freeMemBytes,
+          availableMemBytes: available,
+          memorySource: 'platform-sysctl',
+        };
       }
     }
 
-    try {
-      const memoryInfo = process.getSystemMemoryInfo();
-      if (!memoryInfo || !Number.isFinite(memoryInfo.free)) {
-        return undefined;
-      }
-
-      // Electron reports memory values in KB.
-      return Math.max(0, Math.round(memoryInfo.free * 1024));
-    } catch {
-      return undefined;
-    }
-  }
-
-  private collectMemorySnapshot(): {
-    availableMemBytes: number;
-    memorySource: 'platform-estimate' | 'electron-native' | 'node-os-fallback';
-  } {
-    const availableMemBytes = this.collectAvailableMemBytes();
-    if (availableMemBytes !== undefined) {
-      const source =
-        process.platform === 'darwin' || process.platform === 'linux'
-          ? 'platform-estimate'
-          : 'electron-native';
-
+    // On Windows or if platform-specific methods failed, use Electron's native API.
+    // On Windows, getSystemMemoryInfo().free uses GlobalMemoryStatusEx() which
+    // returns the correct "Available" memory metric (Task Manager's value).
+    if (process.platform === 'win32') {
       return {
-        availableMemBytes,
-        memorySource: source,
+        totalMemBytes,
+        freeMemBytes,
+        availableMemBytes: freeMemBytes,
+        memorySource: 'electron-native',
       };
     }
 
+    // Try Node.js 22+ availableMemory() as fallback
+    if (typeof process.availableMemory === 'function') {
+      try {
+        const availableMemBytes = process.availableMemory();
+        if (Number.isFinite(availableMemBytes)) {
+          return {
+            totalMemBytes,
+            freeMemBytes,
+            availableMemBytes: Math.max(0, availableMemBytes),
+            memorySource: 'node-native',
+          };
+        }
+      } catch {
+        // Fall through
+      }
+    }
+
+    // Last resort: use os.freemem() (inaccurate on macOS/Linux)
     return {
-      availableMemBytes: Math.max(0, os.freemem()),
+      totalMemBytes,
+      freeMemBytes,
+      availableMemBytes: freeMemBytes,
       memorySource: 'node-os-fallback',
     };
   }
@@ -237,8 +340,8 @@ export class SystemStateHostService {
       runtime: this.collectRuntime(),
       process: this.collectProcess(),
       os: {
-        totalMemBytes: os.totalmem(),
-        freeMemBytes: os.freemem(),
+        totalMemBytes: memorySnapshot.totalMemBytes,
+        freeMemBytes: memorySnapshot.freeMemBytes,
         availableMemBytes: memorySnapshot.availableMemBytes,
         memorySource: memorySnapshot.memorySource,
         loadAvg1m,
