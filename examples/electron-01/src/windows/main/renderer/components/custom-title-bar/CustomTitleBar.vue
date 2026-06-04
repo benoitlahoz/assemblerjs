@@ -14,6 +14,7 @@ const windowTitle = ref<string | undefined>('');
 const titleInputRef = ref<HTMLInputElement | null>(null);
 const measureSpan = ref<HTMLSpanElement | null>(null);
 const titleBarRef = ref<HTMLDivElement | null>(null);
+const isPinned = ref(false);
 
 // Check if we're on macOS (traffic lights on left)
 const isMacOS = computed(() => config.value?.platform === 'darwin');
@@ -96,9 +97,15 @@ const handleClickOutside = (e: MouseEvent) => {
   }
 };
 
+const togglePin = async () => {
+  isPinned.value = !isPinned.value;
+  await mainWindow.setAlwaysOnTop(isPinned.value);
+};
+
 onMounted(async () => {
   console.log('[RENDERER/CustomTitleBar] Initial config:', config.value);
   windowTitle.value = await mainWindow.getTitle();
+  isPinned.value = await mainWindow.isAlwaysOnTop();
 
   // Listen for title changes from main process
   cleanupTitleChanged = mainWindow.onTitleChanged((newTitle: string) => {
@@ -151,6 +158,31 @@ onUnmounted(() => {
         />
       </div>
     </div>
+
+    <!-- Pin button -->
+    <button
+      class="title-bar-pin-button"
+      :class="{ active: isPinned }"
+      :title="isPinned ? 'Unpin window' : 'Pin window on top'"
+      @click="togglePin"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M12 17v5" />
+        <path
+          d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1z"
+        />
+      </svg>
+    </button>
   </div>
 </template>
 
@@ -222,5 +254,45 @@ onUnmounted(() => {
 .title-bar-title-input:focus {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.25);
+}
+
+.title-bar-pin-button {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.6);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  -webkit-app-region: no-drag;
+}
+
+.title-bar-pin-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.title-bar-pin-button:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.title-bar-pin-button.active {
+  background: rgba(66, 211, 146, 0.15);
+  border-color: rgba(66, 211, 146, 0.3);
+  color: rgba(66, 211, 146, 1);
+}
+
+.title-bar-pin-button.active:hover {
+  background: rgba(66, 211, 146, 0.22);
+  border-color: rgba(66, 211, 146, 0.4);
 }
 </style>

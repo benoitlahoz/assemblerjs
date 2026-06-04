@@ -48,11 +48,11 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     route: MAIN_WINDOW_CONFIG.route,
   },
   titleBar: {
-    enabled: true,
-    height: 52,
-    color: '#1e1e1e',
-    symbolColor: '#ffffff',
-    trafficLightPosition: { x: 16, y: 20 },
+    enabled: true, // All platforms: enable custom title bar
+    height: 52, // All platforms: initial height (macOS: CSS, Windows/Linux: native overlay)
+    color: '#1e1e1e', // Windows/Linux only: overlay background color
+    symbolColor: '#ffffff', // Windows/Linux only: system buttons color
+    trafficLightPosition: { x: 16, y: 20 }, // macOS only: traffic lights position
   },
 })
 @UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
@@ -75,7 +75,7 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
 
   @WindowOn('ready-to-show')
   public onReadyToShow(): void {
-    const title = 'assemblerjs - Electron Example';
+    const title = 'Full-Duplex Electron';
     this.setTitle(title);
     // Emit title change event to renderer
     this.webContents.send(`window:${this.name}.title-changed`, title);
@@ -264,5 +264,16 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     this.focus();
 
     return this.getBounds();
+  }
+
+  @WindowCommand('setAlwaysOnTop')
+  public setAlwaysOnTopCommand(flag: boolean): boolean {
+    this.setAlwaysOnTop(flag);
+    return this.isAlwaysOnTop();
+  }
+
+  @WindowCommand('isAlwaysOnTop')
+  public isAlwaysOnTopCommand(): boolean {
+    return this.isAlwaysOnTop();
   }
 }

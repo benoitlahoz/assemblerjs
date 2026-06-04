@@ -121,12 +121,13 @@ const actionButtons = computed<ActionButton[]>(() => {
 <template>
   <article class="card card--window-bounds" aria-live="polite">
     <header class="card__header">
-      <h2>Window Geometry</h2>
+      <h2>Window Configuration</h2>
       <span class="window-bounds-duplex">Full-duplex</span>
     </header>
 
     <p class="card__description">
-      Real-time geometry stream from the main process, synchronized through decorators.
+      Interactive geometry canvas with live bounds streaming, platform-specific title bar controls,
+      and decorator-based synchronization.
     </p>
 
     <div class="window-bounds-actions">

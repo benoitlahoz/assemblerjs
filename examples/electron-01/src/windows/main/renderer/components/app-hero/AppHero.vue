@@ -1,18 +1,18 @@
 <template>
   <header class="hero">
     <div class="hero__brand">
-      <img alt="logo" class="hero__logo" src="@renderer/assets/electron.svg" />
       <div class="hero__content">
         <p class="hero__eyebrow">AssemblerJS Electron Playground</p>
-        <h1 class="hero__title">Window Geometry + Full-Duplex IPC</h1>
+        <h1 class="hero__title">Full-Duplex Electron</h1>
         <p class="hero__description">
-          Drag and resize the window from the canvas, then monitor bidirectional IPC heartbeat and
-          latency trends in real time.
+          Break the process barrier. Unified DI and decorator-powered IPC across main, renderer, and
+          preload—one architecture, zero friction.
         </p>
         <div class="hero__chips" aria-hidden="true">
-          <span class="hero__chip">Window Bounds Control</span>
-          <span class="hero__chip">Full-Duplex RPC</span>
-          <span class="hero__chip">Live Latency Chart</span>
+          <span class="hero__chip">Unified DI</span>
+          <span class="hero__chip">Type-Safe IPC</span>
+          <span class="hero__chip">Custom Title Bar</span>
+          <span class="hero__chip">Window Control</span>
         </div>
       </div>
     </div>
@@ -28,22 +28,13 @@
 .hero__brand {
   display: flex;
   align-items: center;
-  gap: 18px;
   text-align: left;
   padding: 14px 16px;
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 20%, transparent);
   background:
     radial-gradient(120% 180% at 0% 0%, rgba(88, 166, 255, 0.18), transparent 58%),
-    radial-gradient(120% 180% at 100% 100%, rgba(66, 211, 146, 0.16), transparent 56%),
     color-mix(in srgb, var(--ev-c-black-soft) 45%, transparent);
-}
-
-.hero__logo {
-  width: 64px;
-  height: 64px;
-  flex-shrink: 0;
-  filter: drop-shadow(0 8px 20px rgba(88, 166, 255, 0.22));
 }
 
 .hero__content {
@@ -99,11 +90,6 @@
   .hero__brand {
     align-items: flex-start;
     padding: 12px;
-  }
-
-  .hero__logo {
-    width: 56px;
-    height: 56px;
   }
 
   .hero__title {
