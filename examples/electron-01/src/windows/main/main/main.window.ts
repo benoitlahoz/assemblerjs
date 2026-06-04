@@ -9,6 +9,7 @@ import {
   WindowForward,
 } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
+import { EditMenu } from '@menus/edit';
 import { WindowMenu } from '@menus/window';
 import { DeveloperToolsMenu } from '@menus/developer';
 import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
@@ -46,7 +47,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     route: MAIN_WINDOW_CONFIG.route,
   },
 })
-@UseMenu([AppMenu, WindowMenu, DeveloperToolsMenu])
+@UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
 @Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('preload') preload: string) {

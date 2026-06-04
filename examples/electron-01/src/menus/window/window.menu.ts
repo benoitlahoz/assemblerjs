@@ -10,8 +10,8 @@ export const WindowMenuConfig = {
   Close: { id: 'window.close', order: 40 },
   Sep2: { id: 'window.sep.2', order: 50 },
   Front: { id: 'window.front', order: 60 },
-  SepCustom: { id: 'window.sep.custom', order: 70 },
-  CustomMenu: { id: 'window.custom', order: 80 },
+  SepBounds: { id: 'window.sep.bounds', order: 70 },
+  BoundsMenu: { id: 'window.bounds', order: 80 },
 } as const;
 
 @MenuItem('Window')
@@ -67,15 +67,15 @@ export class WindowMenu {
   private front(): void {}
 
   @MenuItem({
-    id: WindowMenuConfig.SepCustom.id,
+    id: WindowMenuConfig.SepBounds.id,
     type: 'separator',
-    order: WindowMenuConfig.SepCustom.order,
+    order: WindowMenuConfig.SepBounds.order,
   })
   private sepCustom(): void {}
 
   @SubMenu({
-    id: WindowMenuConfig.CustomMenu.id,
-    order: WindowMenuConfig.CustomMenu.order,
+    id: WindowMenuConfig.BoundsMenu.id,
+    order: WindowMenuConfig.BoundsMenu.order,
   })
   private custom(): WindowBoundsMenu {
     return this.boundsMenu;

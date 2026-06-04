@@ -16,18 +16,40 @@ class ComposedElectronMenu extends ElectronMenu {
   public onDispose(): void {}
 }
 
-function filterItemTree(
+function deepCloneMenuItem(item: ElectronMenuItem): ElectronMenuItem {
+  const clonedSubmenu = item.submenu?.length
+    ? item.submenu.map((sub) => deepCloneMenuItem(sub))
+    : undefined;
+  return cloneMenuItem(item, clonedSubmenu);
+}
+
+function applyOverridesToItemTree(
   items: ElectronMenuItem[],
   overrides: Record<string, UseMenuItemOverride>,
 ): ElectronMenuItem[] {
   return items
     .filter((item) => overrides[item.id]?.visible !== false)
     .map((item) => {
-      if (item.submenu && item.submenu.length > 0) {
-        const filteredSubmenu = filterItemTree(item.submenu, overrides);
-        return cloneMenuItem(item, filteredSubmenu);
+      // Deep clone to ensure each window has independent instances
+      const cloned = deepCloneMenuItem(item);
+
+      // Apply enabled/checked overrides directly on the clone
+      const override = overrides[cloned.id];
+      if (override) {
+        if (override.enabled !== undefined) {
+          cloned.enabled = override.enabled;
+        }
+        if (override.checked !== undefined) {
+          cloned.checked = override.checked;
+        }
       }
-      return cloneMenuItem(item);
+
+      // Recursively apply to submenu
+      if (cloned.submenu && cloned.submenu.length > 0) {
+        cloned.submenu = applyOverridesToItemTree(cloned.submenu, overrides);
+      }
+
+      return cloned;
     });
 }
 
@@ -39,9 +61,8 @@ function filterItemTree(
  * - `label`: overrides the root label (e.g. for i18n)
  * - `items`: per-item overrides (`visible`, `enabled`, `checked`)
  *
- * The `visible: false` override removes items from the tree entirely
- * before the native menu is built. `enabled` and `checked` are applied
- * after assembly via the ElectronMenu API.
+ * All overrides are applied during item cloning, before assembly,
+ * ensuring each window has independent menu instances.
  */
 export function assembleMenuFromSlots(
   slots: NormalizedUseMenuSlot[],
@@ -54,9 +75,12 @@ export function assembleMenuFromSlots(
     const instance = resolveInstance(slot.token);
     let { roots } = buildMenuTreeFromMetadata(instance);
 
-    // Filter invisible items before assembling
+    // Always clone items to ensure each window has independent menu state
     if (slot.options?.items) {
-      roots = filterItemTree(roots, slot.options.items);
+      roots = applyOverridesToItemTree(roots, slot.options.items);
+    } else {
+      // Clone even without overrides to prevent state leakage between windows
+      roots = roots.map((root) => deepCloneMenuItem(root));
     }
 
     // Override root ordering: slot order (explicit or by position)
@@ -65,7 +89,7 @@ export function assembleMenuFromSlots(
     // Clone roots if we need to override label
     if (slot.options?.label) {
       roots = roots.map((root) => {
-        const clone = cloneMenuItem(root);
+        const clone = deepCloneMenuItem(root);
         clone.label = slot.options!.label;
         return clone;
       });
@@ -88,30 +112,6 @@ export function assembleMenuFromSlots(
 
   for (const root of merged) {
     menu.registerItem(root);
-  }
-
-  // Apply enabled / checked state overrides after assembly
-  for (const slot of slots) {
-    if (!slot.options?.items) {
-      continue;
-    }
-
-    for (const [itemId, override] of Object.entries(slot.options.items)) {
-      if (override.visible === false) {
-        continue; // already removed from the tree
-      }
-
-      if (override.enabled === false) {
-        menu.setItemEnabled(itemId, false);
-      }
-
-      if (override.checked !== undefined) {
-        const item = menu.itemById(itemId);
-        if (item) {
-          item.checked = override.checked;
-        }
-      }
-    }
   }
 
   return menu;

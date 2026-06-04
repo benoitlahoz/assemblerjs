@@ -1,4 +1,8 @@
 import { ElectronMenuItem } from '../model/electron-menu-item';
+import {
+  getMenuItemOrdering,
+  setMenuItemOrdering,
+} from './build-menu-tree-from-metadata';
 
 export interface CreateMenuItemInput {
   id: string;
@@ -47,6 +51,12 @@ export function cloneMenuItem(
   // Copy click handler
   if (source.click) {
     clone.click = source.click;
+  }
+
+  // Copy ordering metadata to preserve sort order
+  const ordering = getMenuItemOrdering(source);
+  if (ordering) {
+    setMenuItemOrdering(clone, ordering);
   }
 
   if (submenuOverride !== undefined) {
