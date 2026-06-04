@@ -116,6 +116,13 @@ const actionButtons = computed<ActionButton[]>(() => {
     };
   });
 });
+
+const autoCenterItem = computed(() => menuItems.value['window.bounds.autoCenter']);
+const isAutoCenterEnabled = computed(() => menuService.autoCenterAfterRandom.value);
+
+async function toggleAutoCenter() {
+  await menuService.toggleAutoCenter();
+}
 </script>
 
 <template>
@@ -129,6 +136,22 @@ const actionButtons = computed<ActionButton[]>(() => {
       Interactive geometry canvas with live bounds streaming, platform-specific title bar controls,
       and decorator-based synchronization.
     </p>
+
+    <div v-if="autoCenterItem" class="window-bounds-toggle">
+      <label class="toggle-label">
+        <span class="toggle-text">{{ autoCenterItem.label }}</span>
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="isAutoCenterEnabled"
+          class="toggle-switch"
+          :class="{ 'toggle-switch--on': isAutoCenterEnabled }"
+          @click="toggleAutoCenter"
+        >
+          <span class="toggle-slider"></span>
+        </button>
+      </label>
+    </div>
 
     <div class="window-bounds-actions">
       <button
@@ -227,6 +250,77 @@ const actionButtons = computed<ActionButton[]>(() => {
   display: block;
   cursor: grab;
   touch-action: none;
+}
+
+.window-bounds-toggle {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ev-c-black-soft) 72%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 18%, transparent);
+}
+
+.toggle-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ev-c-text-1);
+  line-height: 1.2;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--ev-c-text-3) 30%, transparent);
+  background: color-mix(in srgb, var(--ev-c-bg-soft) 50%, transparent);
+  cursor: pointer;
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toggle-switch:hover {
+  border-color: color-mix(in srgb, var(--ev-c-text-2) 40%, transparent);
+}
+
+.toggle-switch:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--ev-c-text-1) 70%, transparent);
+  outline-offset: 2px;
+}
+
+.toggle-slider {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ev-c-text-3);
+  transition:
+    transform 200ms ease,
+    background-color 200ms ease;
+}
+
+.toggle-switch--on {
+  background: color-mix(in srgb, #58a6ff 25%, transparent);
+  border-color: color-mix(in srgb, #58a6ff 50%, transparent);
+}
+
+.toggle-switch--on .toggle-slider {
+  transform: translateX(18px);
+  background: #58a6ff;
 }
 
 .window-bounds-actions {
