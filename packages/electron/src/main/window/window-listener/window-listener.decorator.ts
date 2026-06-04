@@ -42,7 +42,12 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
             return;
           }
 
-          const eventChannel = buildWindowEventChannel(this.name, emitEvent);
+          // If emitEvent contains ':', treat it as a full channel name (backward compatibility)
+          // Otherwise, treat it as an event name and generate the channel
+          const eventChannel = emitEvent.includes(':')
+            ? emitEvent
+            : buildWindowEventChannel(this.name, emitEvent);
+
           if (typeof payload === 'undefined') {
             this.webContents.send(eventChannel);
           } else {

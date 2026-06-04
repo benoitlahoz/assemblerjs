@@ -4,6 +4,7 @@ import {
   IpcResult,
   WindowCommand,
   Window,
+  WindowOn,
 } from '@assemblerjs/electron/renderer';
 import type { WindowBounds } from '@assemblerjs/electron/renderer';
 import { shallowRef, type ShallowRef } from 'vue';
@@ -13,7 +14,6 @@ import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 @Assemblage()
 export class MainWindow extends AbstractWindowService {
   public readonly bounds: ShallowRef<WindowBounds | undefined> = shallowRef<WindowBounds>();
-  private unsubscribeBoundsChanged?: () => void;
   private boundsStreamInitialized = false;
 
   private cloneBounds(bounds?: WindowBounds): WindowBounds | undefined {
@@ -36,11 +36,6 @@ export class MainWindow extends AbstractWindowService {
 
     this.boundsStreamInitialized = true;
     this.bounds.value = this.cloneBounds(await this.getBounds());
-
-    this.unsubscribeBoundsChanged = this.onBoundsChanged((bounds) => {
-      const next = this.cloneBounds(bounds);
-      this.bounds.value = next;
-    });
   }
 
   public async onInit(): Promise<void> {
@@ -48,14 +43,12 @@ export class MainWindow extends AbstractWindowService {
   }
 
   public onDispose(): void {
-    this.unsubscribeBoundsChanged?.();
-    this.unsubscribeBoundsChanged = undefined;
     this.boundsStreamInitialized = false;
   }
 
-  public override onBoundsChanged(callback: (bounds: WindowBounds) => void): () => void {
-    return super.onBoundsChanged(callback);
-  }
+  // ========================================
+  // Commands (RPC calls to main)
+  // ========================================
 
   @WindowCommand('refreshBounds')
   public async refreshBounds(
@@ -105,5 +98,44 @@ export class MainWindow extends AbstractWindowService {
   ): Promise<WindowBounds | undefined> {
     await this.ensureBoundsStream();
     return bounds;
+  }
+
+  // ========================================
+  // Event Listeners (receive forwards from main)
+  // ========================================
+
+  /**
+   * Receives 'resize' and 'move' events forwarded by @WindowForward on the main side.
+   * Auto-generated channels: 'window:main.resize', 'window:main.move'
+   * Updates the reactive bounds state.
+   */
+  @WindowOn('resize')
+  @WindowOn('move')
+  public onBoundsChangedEvent(bounds: WindowBounds): void {
+    this.bounds.value = this.cloneBounds(bounds);
+  }
+
+  /**
+   * Receives 'enter-full-screen' events forwarded by @WindowForward('enter-full-screen') on the main side.
+   * Auto-generated channel: 'window:main.enter-full-screen'
+   * No payload (void).
+   */
+  @WindowOn('enter-full-screen')
+  public onEnterFullScreenEvent(): void {
+    console.log('[Renderer] enter-full-screen event received', {
+      channel: 'window:main.enter-full-screen',
+    });
+  }
+
+  /**
+   * Receives 'leave-full-screen' events forwarded by @WindowForward('leave-full-screen') on the main side.
+   * Auto-generated channel: 'window:main.leave-full-screen'
+   * No payload (void).
+   */
+  @WindowOn('leave-full-screen')
+  public onLeaveFullScreenEvent(): void {
+    console.log('[Renderer] leave-full-screen event received', {
+      channel: 'window:main.leave-full-screen',
+    });
   }
 }

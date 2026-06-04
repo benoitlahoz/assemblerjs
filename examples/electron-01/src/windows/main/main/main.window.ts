@@ -1,7 +1,13 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
 import { join } from 'path';
-import { ElectronWindow, UseMenu, Window, WindowCommand } from '@assemblerjs/electron';
+import {
+  ElectronWindow,
+  UseMenu,
+  Window,
+  WindowCommand,
+  WindowForward,
+} from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { WindowMenu } from '@menus/window';
 import { DeveloperToolsMenu } from '@menus/developer';
@@ -49,6 +55,11 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
         preload,
       },
     });
+
+    // Center window when ready to show
+    this.on('ready-to-show', () => {
+      this.center();
+    });
   }
 
   public async onInit(): Promise<void> {
@@ -57,6 +68,40 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
       return { action: 'deny' };
     });
   }
+
+  // ========================================
+  // Event Forwarding (Main → Renderer)
+  // ========================================
+
+  @WindowForward('resize')
+  public onResize(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('resized')
+  public onResized(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('move')
+  public onMove(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('moved')
+  public onMoved(): Rectangle {
+    return this.getBounds();
+  }
+
+  @WindowForward('enter-full-screen')
+  public onEnterFullScreen(): void {}
+
+  @WindowForward('leave-full-screen')
+  public onLeaveFullScreen(): void {}
+
+  // ========================================
+  // Window Commands (Renderer → Main RPC)
+  // ========================================
 
   @WindowCommand('getBounds')
   public getBoundsCommand(): Rectangle {
