@@ -1,4 +1,5 @@
 import { Assemblage } from 'assemblerjs';
+import { wait } from '@assemblerjs/core';
 import { AbstractIpcService, unwrapIpcResult } from '@/renderer/ipc/services';
 import {
   buildMenuCommandChannel,
@@ -109,18 +110,49 @@ export class MenuControllerService extends AbstractMenuControllerService {
   public async getSnapshot(
     windowName: string,
   ): Promise<MenuSnapshot | undefined> {
-    const snapshot = await this.invokeMenuCommand<MenuSnapshot>(
-      windowName,
-      'snapshot',
-      [],
-      MenuIpcChannel.GetSnapshot,
-    );
+    try {
+      const snapshot = await this.invokeMenuCommand<MenuSnapshot>(
+        windowName,
+        'snapshot',
+        [],
+        MenuIpcChannel.GetSnapshot,
+      );
 
-    if (snapshot) {
-      this.snapshots.set(windowName, snapshot);
+      if (snapshot) {
+        this.snapshots.set(windowName, snapshot);
+      }
+
+      return snapshot;
+    } catch (error) {
+      // If menu not registered yet or handler not ready, return undefined instead of throwing
+      if (
+        error instanceof Error &&
+        (error.message.includes('No menu registered') ||
+          error.message.includes('No handler registered'))
+      ) {
+        return undefined;
+      }
+      // Re-throw other errors
+      throw error;
     }
+  }
 
-    return snapshot;
+  public async waitForSnapshot(
+    windowName: string,
+    interval = 50,
+    maxAttempts = 10,
+  ): Promise<MenuSnapshot | undefined> {
+    // Wait a bit for scoped handlers to be registered
+    await wait(interval);
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const snapshot = await this.getSnapshot(windowName);
+      if (snapshot) {
+        return snapshot;
+      }
+      await wait(interval);
+    }
+    return undefined;
   }
 
   public async setItemEnabled(
@@ -270,21 +302,23 @@ export class MenuControllerService extends AbstractMenuControllerService {
     const unsubs = [
       this.ipc.on(
         buildMenuEventChannel(windowName, 'templateChanged'),
-        (menuName: string) => {
+        async (menuName: string) => {
           if (!this.shouldHandleEvent(`template:${windowName}:${menuName}`)) {
             return;
           }
 
-          this.updateSnapshot(windowName, (snapshot) => {
-            snapshot.menuName = menuName;
-          });
+          // Fetch complete snapshot when template changes
+          const snapshot = await this.getSnapshot(windowName);
+          if (snapshot) {
+            this.snapshots.set(windowName, snapshot);
+          }
 
           callback(menuName);
         },
       ),
       this.ipc.on(
         MenuIpcChannel.OnTemplateChanged,
-        (eventWindowName: string, menuName: string) => {
+        async (eventWindowName: string, menuName: string) => {
           if (eventWindowName !== windowName) {
             return;
           }
@@ -293,9 +327,11 @@ export class MenuControllerService extends AbstractMenuControllerService {
             return;
           }
 
-          this.updateSnapshot(windowName, (snapshot) => {
-            snapshot.menuName = menuName;
-          });
+          // Fetch complete snapshot when template changes
+          const snapshot = await this.getSnapshot(windowName);
+          if (snapshot) {
+            this.snapshots.set(windowName, snapshot);
+          }
 
           callback(menuName);
         },

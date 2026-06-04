@@ -1,7 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { MenuItem, SubMenu } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
-import { WindowCustomMenu } from './window-custom.menu';
+import { WindowBoundsMenu } from './window-bounds.menu';
 
 export const WindowMenuConfig = {
   Minimize: { id: 'window.minimize', order: 10 },
@@ -16,12 +16,12 @@ export const WindowMenuConfig = {
 
 @MenuItem('Window')
 @Assemblage({
-  provide: [[WindowCustomMenu]],
+  provide: [[WindowBoundsMenu]],
 })
 export class WindowMenu {
   constructor(
     public readonly i18n: I18nService,
-    public readonly customMenu: WindowCustomMenu,
+    public readonly boundsMenu: WindowBoundsMenu,
   ) {}
 
   @MenuItem({
@@ -77,7 +77,7 @@ export class WindowMenu {
     id: WindowMenuConfig.CustomMenu.id,
     order: WindowMenuConfig.CustomMenu.order,
   })
-  private custom(): WindowCustomMenu {
-    return this.customMenu;
+  private custom(): WindowBoundsMenu {
+    return this.boundsMenu;
   }
 }

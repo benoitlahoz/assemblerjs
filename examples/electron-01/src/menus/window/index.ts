@@ -1,2 +1,2 @@
 export * from './window.menu';
-export * from './window-custom.menu';
+export * from './window-bounds.menu';

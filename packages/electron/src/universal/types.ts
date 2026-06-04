@@ -43,6 +43,7 @@ export interface MenuItemState {
   checked?: boolean;
   label?: string;
   visible?: boolean;
+  accelerator?: string;
 }
 
 export interface MenuSnapshot {

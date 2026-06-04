@@ -1,5 +1,6 @@
 import { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
 import type { ElectronMenu } from '@/main/menu';
+import type { ElectronWindow } from '@/main/window/classes';
 import type { MenuSnapshot } from '@/universal/types';
 
 export abstract class AbstractMenuControllerService implements AbstractAssemblage {
@@ -7,6 +8,7 @@ export abstract class AbstractMenuControllerService implements AbstractAssemblag
     windowName: string,
     menu: ElectronMenu,
     menuName?: string,
+    window?: ElectronWindow,
   ): this;
 
   public abstract unregisterMenu(windowName: string): this;

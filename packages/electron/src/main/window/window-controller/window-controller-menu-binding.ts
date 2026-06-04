@@ -63,7 +63,11 @@ function resolveBestWindowNameForBindings(
 }
 
 interface MenuBindingsLike {
-  attach(windowName: string, menu: MenuReference | ElectronMenu): Promise<void>;
+  attach(
+    windowName: string,
+    menu: MenuReference | ElectronMenu,
+    windowInstance?: any,
+  ): Promise<void>;
   detach(windowName: string): void;
   refresh(windowName: string): Promise<void>;
   has?(windowName: string): boolean;
@@ -224,6 +228,7 @@ function createFallbackBindings(controller: any): MenuBindingsLike {
     async attach(
       windowName: string,
       menu: MenuReference | ElectronMenu,
+      windowInstance?: any,
     ): Promise<void> {
       const current = entries.get(windowName);
       if (current && current.menu === menu) {
@@ -236,7 +241,7 @@ function createFallbackBindings(controller: any): MenuBindingsLike {
           ? menu
           : resolveMenuReference(controller, menu as MenuReference);
 
-      menus.registerMenu(windowName, menuInstance);
+      menus.registerMenu(windowName, menuInstance, 'mainMenu', windowInstance);
       await menus.focus(windowName);
 
       entries.set(windowName, {
@@ -310,7 +315,7 @@ export async function attachManagedWindowMenu(
     menuToAttach = definition.menu!;
   }
 
-  await bindings.attach(managed.definition.name, menuToAttach);
+  await bindings.attach(managed.definition.name, menuToAttach, windowInstance);
 
   if (
     windowInstance &&

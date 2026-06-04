@@ -8,7 +8,8 @@
     "src/common/**/*",
     "src/features/**/*",
     "src/menus/**/*",
-    "src/windows/**/*"
+    "src/windows/*/renderer/**/*",
+    "src/windows/*/universal/**/*"
   ],
   "compilerOptions": {
     "composite": true,

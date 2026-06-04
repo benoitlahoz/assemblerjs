@@ -106,6 +106,25 @@ export abstract class AbstractMenuService implements AbstractAssemblage {
     };
   }
 
+  public async waitForSnapshot(
+    interval?: number,
+    maxAttempts?: number,
+  ): Promise<MenuSnapshot | undefined> {
+    const snapshot = await this.menus.waitForSnapshot(
+      this.resolveWindowName(),
+      interval,
+      maxAttempts,
+    );
+    if (!snapshot) {
+      return undefined;
+    }
+
+    return {
+      ...snapshot,
+      menuName: snapshot.menuName || this.resolveMenuName(),
+    };
+  }
+
   public snapshot(): MenuSnapshot | undefined {
     return this.menus.snapshot(this.resolveWindowName());
   }
