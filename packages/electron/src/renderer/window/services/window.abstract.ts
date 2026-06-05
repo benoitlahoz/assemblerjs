@@ -162,12 +162,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
   public async setTitleBarOverlay(options: TitleBarOptions): Promise<void> {
     const windowName = this.resolveWindowName();
     const channel = buildWindowCommandChannel(windowName, 'setTitleBarOverlay');
-    console.log(
-      '[RENDERER/IPC] Invoking setTitleBarOverlay on channel:',
-      channel,
-      'with options:',
-      options,
-    );
+
     const result = await this.windows.ipc.invoke(channel, options);
     console.log('[RENDERER/IPC] setTitleBarOverlay result:', result);
     unwrapIpcResult<void>(channel, result);

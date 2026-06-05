@@ -26,8 +26,8 @@ describe('MenuOrchestrator decorator', () => {
   it('keeps existing provide definition while composing menu lifecycle', async () => {
     const { MenuOrchestrator } =
       await import('../src/main/menu/menu-orchestration/menu-orchestrator.decorator');
-    const { AbstractMenuController } =
-      await import('../src/main/menu/services/menu-controller-support');
+    const { BaseMenuController } =
+      await import('../src/main/menu/services/menu-controller.service');
 
     class DeveloperToolsMenu {}
 
@@ -35,7 +35,7 @@ describe('MenuOrchestrator decorator', () => {
 
     @MenuOrchestrator()
     @Assemblage({ provide: [[DeveloperToolsMenu], [MainMenu]] })
-    class OrchestratedMenuController extends AbstractMenuController {}
+    class OrchestratedMenuController extends BaseMenuController {}
 
     const definition = getAssemblageDefinition(
       OrchestratedMenuController as any,

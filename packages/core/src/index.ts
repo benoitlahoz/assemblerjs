@@ -30,3 +30,6 @@ export * from './collection.types';
 export * from './primitive.types';
 export * from './class.types';
 export * from './function.types';
+
+// Export decorators that may have circular dependencies last
+export * from './decorators/class/compose-decorators';

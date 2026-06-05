@@ -7,10 +7,7 @@ import {
   AbstractMenuRegistryService,
   MenuRegistryService,
 } from '@/main/window-menu/services';
-import {
-  AbstractMenuControllerService,
-  MenuControllerService,
-} from '@/main/menu/services';
+import { BaseMenuController } from '@/main/menu/services';
 import type { MenuReference } from '@/main/window-menu/contracts';
 import type { ManagedWindowDefinition } from './window-controller.types';
 
@@ -81,14 +78,12 @@ type WindowMenuBindings = Pick<
   has?(windowName: string): boolean;
 };
 
-function resolveMenuController(controller: any): AbstractMenuControllerService {
+function resolveMenuController(controller: any): BaseMenuController {
   if (
     controller[resolvedMenuControllerSymbol] &&
     typeof controller[resolvedMenuControllerSymbol].registerMenu === 'function'
   ) {
-    return controller[
-      resolvedMenuControllerSymbol
-    ] as AbstractMenuControllerService;
+    return controller[resolvedMenuControllerSymbol] as BaseMenuController;
   }
 
   if (
@@ -97,43 +92,18 @@ function resolveMenuController(controller: any): AbstractMenuControllerService {
     typeof controller.menus.unregisterMenu === 'function'
   ) {
     controller[resolvedMenuControllerSymbol] =
-      controller.menus as AbstractMenuControllerService;
-    return controller[
-      resolvedMenuControllerSymbol
-    ] as AbstractMenuControllerService;
+      controller.menus as BaseMenuController;
+    return controller[resolvedMenuControllerSymbol] as BaseMenuController;
   }
 
-  const context = getAssemblageContext(controller.constructor);
-
-  try {
-    controller[resolvedMenuControllerSymbol] = context.require(
-      AbstractMenuControllerService,
-    );
-    return controller[
-      resolvedMenuControllerSymbol
-    ] as AbstractMenuControllerService;
-  } catch {
-    try {
-      controller[resolvedMenuControllerSymbol] = context.require(
-        MenuControllerService,
-      );
-      return controller[
-        resolvedMenuControllerSymbol
-      ] as AbstractMenuControllerService;
-    } catch {
-      if (
-        !controller[fallbackMenuControllerSymbol] ||
-        typeof controller[fallbackMenuControllerSymbol].registerMenu !==
-          'function'
-      ) {
-        controller[fallbackMenuControllerSymbol] = new MenuControllerService();
-      }
-
-      return controller[
-        fallbackMenuControllerSymbol
-      ] as AbstractMenuControllerService;
-    }
+  if (
+    !controller[fallbackMenuControllerSymbol] ||
+    typeof controller[fallbackMenuControllerSymbol].registerMenu !== 'function'
+  ) {
+    controller[fallbackMenuControllerSymbol] = new BaseMenuController();
   }
+
+  return controller[fallbackMenuControllerSymbol] as BaseMenuController;
 }
 
 function resolveMenuReference(controller: any, reference: MenuReference): any {

@@ -2,10 +2,7 @@ import { Assemblage, getAssemblageContext } from 'assemblerjs';
 import { MapNamedRegistry } from '@assemblerjs/common';
 import { ElectronWindow } from '@/main/window/classes';
 import { ElectronMenu } from '@/main/menu/model/electron-menu';
-import {
-  AbstractMenuControllerService,
-  MenuControllerService,
-} from '@/main/menu/services';
+import { BaseMenuController } from '@/main/menu/services';
 import { AbstractMenuRegistryService } from './menu-registry.abstract';
 import { MenuRegistryService } from './menu-registry.service';
 import {
@@ -135,18 +132,8 @@ export class WindowMenuBindingRegistryService
     await this.focusMenuSafely(windowName);
   }
 
-  private resolveMenuController(): AbstractMenuControllerService {
-    const context = getAssemblageContext(this.constructor);
-
-    try {
-      return context.require(AbstractMenuControllerService);
-    } catch {
-      try {
-        return context.require(MenuControllerService);
-      } catch {
-        return new MenuControllerService();
-      }
-    }
+  private resolveMenuController(): BaseMenuController {
+    return new BaseMenuController();
   }
 
   private resolveMenuRegistry(): AbstractMenuRegistryService {

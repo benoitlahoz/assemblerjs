@@ -1,7 +1,7 @@
-import { Assemblage } from 'assemblerjs';
+import type { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
 import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
-import { ElectronMenu, ElectronMenuItem } from '@/main/menu';
+import { ElectronMenu, ElectronMenuItem } from '@/main/menu/model';
 import { registerCleanup } from '@/universal/lifecycle';
 import {
   buildMenuCommandChannel,
@@ -9,7 +9,6 @@ import {
   MenuIpcChannel,
 } from '@/universal';
 import type { IpcReturnType, MenuItemState, MenuSnapshot } from '@/universal';
-import { AbstractMenuControllerService } from './menu-controller.abstract';
 
 interface MenuRegistration {
   windowName: string;
@@ -18,14 +17,23 @@ interface MenuRegistration {
   window?: ElectronWindow;
 }
 
-@Assemblage()
-export class MenuControllerService extends AbstractMenuControllerService {
+/**
+ * Base menu controller for main process.
+ * Users should extend this class to create their own menu controller.
+ *
+ * @example
+ * ```typescript
+ * @MenuOrchestrator()
+ * @Assemblage({ provide: [[AppMenu], [EditMenu]] })
+ * export class MenuController extends BaseMenuController {}
+ * ```
+ */
+export class BaseMenuController implements AbstractAssemblage {
   private readonly registrations = new Map<string, MenuRegistration>();
   private globalHandlersRegistered = false;
   private readonly scopedHandlers = new Set<string>();
 
   constructor() {
-    super();
     this.registerGlobalHandlers();
   }
 
@@ -308,7 +316,10 @@ export class MenuControllerService extends AbstractMenuControllerService {
     };
   }
 
-  public onDispose(): void {
+  public onDispose(
+    _context: AssemblerContext,
+    _configuration?: Record<string, any>,
+  ): void {
     this.registrations.clear();
     this.scopedHandlers.clear();
     this.globalHandlersRegistered = false;

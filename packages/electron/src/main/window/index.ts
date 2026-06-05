@@ -1,12 +1,14 @@
+// Export abstracts FIRST to avoid TDZ issues
+export * from './window-controller/window-controller.abstract';
+
 export * from './classes';
 export * from './common/window-channels';
 export * from './window-command/window-command.decorator';
 export * from './window-controller/window-controller.decorator';
 export * from './window-controller/window-controller.types';
-export * from './window-controller/window-controller.abstract';
 export * from './window-definition/window.decorator';
 export * from './window-listener/window-listener.decorator';
 export * from './window-listener/window-on.decorator';
 export * from './window-listener/window-emit.decorator';
 export * from './window-listener/window-forward.decorator';
-export * from './window-orchestration/window-orchestrator.decorator';
+// NOTE: window-orchestrator is exported from main/index.ts to avoid circular dependency

@@ -1,10 +1,7 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { getAssemblageContext, getAssemblageDefinition } from 'assemblerjs';
 import type { Identifier } from 'assemblerjs';
-import {
-  AbstractMenuControllerService,
-  MenuControllerService,
-} from '@/main/menu/services';
+import { BaseMenuController } from '@/main/menu/services';
 import { getMenuDefinition } from '@/main/menu/menu-definition/menu.decorator';
 import {
   AbstractMenuRegistryService,
@@ -64,28 +61,16 @@ function listManagedMenus(controller: any): ManagedMenuDefinition[] {
   return managedMenus;
 }
 
-function resolveMenuControllerService(
-  controller: any,
-): AbstractMenuControllerService {
+function resolveMenuControllerService(controller: any): BaseMenuController {
   if (
     controller.menus &&
     typeof controller.menus.registerMenu === 'function' &&
     typeof controller.menus.unregisterMenu === 'function'
   ) {
-    return controller.menus as AbstractMenuControllerService;
+    return controller.menus as BaseMenuController;
   }
 
-  const context = getAssemblageContext(controller.constructor);
-
-  try {
-    return context.require(AbstractMenuControllerService);
-  } catch {
-    try {
-      return context.require(MenuControllerService);
-    } catch {
-      return new MenuControllerService();
-    }
-  }
+  return new BaseMenuController();
 }
 
 function resolveMenuRegistryService(

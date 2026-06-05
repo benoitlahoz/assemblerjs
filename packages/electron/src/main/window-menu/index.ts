@@ -1,3 +1,3 @@
 export * from './contracts';
 export * from './decorators';
-export * from './services';
+// NOTE: services are exported from main/index.ts FIRST to avoid TDZ issues

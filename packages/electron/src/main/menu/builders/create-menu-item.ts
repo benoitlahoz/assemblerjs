@@ -2,7 +2,7 @@ import { ElectronMenuItem } from '../model/electron-menu-item';
 import {
   getMenuItemOrdering,
   setMenuItemOrdering,
-} from './build-menu-tree-from-metadata';
+} from './build-menu-tree-from-metadata/ordering';
 
 export interface CreateMenuItemInput {
   id: string;

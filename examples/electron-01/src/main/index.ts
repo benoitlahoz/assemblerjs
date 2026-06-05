@@ -7,7 +7,7 @@ import { AbstractWindowController, SystemStateHostService } from '@assemblerjs/e
 import { ElectronAppModule } from '@features/app/main/app.module';
 import { I18nService } from '@features/i18n/main';
 import { IpcListenerService } from '@features/ipc/main/ipc.listener';
-import { MenuControllerService } from '@menus/menu.controller';
+import { MenuController } from '@menus/menu.controller';
 import { WindowControllerService } from '@windows/window.controller';
 
 // In this file you can include the rest of your app's specific main process
@@ -18,7 +18,7 @@ import { WindowControllerService } from '@windows/window.controller';
     [ElectronAppModule],
     [I18nService],
     [IpcListenerService],
-    [MenuControllerService],
+    [MenuController],
     [AbstractWindowController, WindowControllerService],
     [SystemStateHostService],
   ],
@@ -35,7 +35,7 @@ class MainApp implements AbstractAssemblage {
     public electron: ElectronAppModule,
     public ipc: IpcListenerService,
     public windows: AbstractWindowController,
-    public menus: MenuControllerService,
+    public menus: MenuController,
     public systemState: SystemStateHostService,
   ) {}
 }
