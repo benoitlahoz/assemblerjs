@@ -2,7 +2,7 @@ import type {
   DefaultIpcContractMap,
   IpcContractMap,
   KnownIpcChannel,
-} from '../universal/types';
+} from '../common/types';
 
 export type RendererListener = (...args: any[]) => void;
 export type ElectronListener = (_event: unknown, ...args: any[]) => void;

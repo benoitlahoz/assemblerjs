@@ -2,8 +2,8 @@ import {
   MenuIpcChannel,
   RpcIpcChannel,
   WindowIpcChannel,
-} from '../universal/channels';
-import type { KnownIpcChannel } from '../universal/types';
+} from '../common/channels';
+import type { KnownIpcChannel } from '../common/types';
 import type { AutoWhitelistRule } from './types';
 
 export { RpcIpcChannel };

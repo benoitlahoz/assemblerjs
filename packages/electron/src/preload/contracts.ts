@@ -1,7 +1,7 @@
 import type {
   IpcChannelDefinition,
   IpcContractMap,
-} from '../universal/types';
+} from '../common/types';
 
 export function ipcContract<
   Args extends unknown[] = unknown[],
