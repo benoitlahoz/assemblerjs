@@ -1,7 +1,4 @@
-import {
-  getIpcChannelParameterIndices,
-  getIpcResultParameterIndices,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 /**
  * Invokes an IPC handler from the renderer process and waits for the response.
@@ -32,7 +29,7 @@ export function IpcInvoke<C extends string = string>(
     const originalMethod = descriptor.value as Function;
 
     descriptor.value = async function (...args: any[]): Promise<any> {
-      const channelParameters = getIpcChannelParameterIndices(
+      const channelParameters = ElectronMetadata.ipc.getChannelParameterIndices(
         target,
         propertyKey,
       );
@@ -66,10 +63,8 @@ export function IpcInvoke<C extends string = string>(
         );
       }
 
-      const ipcResultParameters = getIpcResultParameterIndices(
-        target,
-        propertyKey,
-      );
+      const ipcResultParameters =
+        ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
       const excludedParameters = new Set([
         ...channelParameters,
         ...ipcResultParameters,

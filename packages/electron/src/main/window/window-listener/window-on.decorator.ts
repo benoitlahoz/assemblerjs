@@ -1,4 +1,4 @@
-import { addWindowMainSubscriptionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 export function WindowOn(channel: string): MethodDecorator {
   return function (
@@ -6,6 +6,6 @@ export function WindowOn(channel: string): MethodDecorator {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addWindowMainSubscriptionMetadata(target, propertyKey, channel);
+    ElectronMetadata.window.addMainSubscription(target, propertyKey, channel);
   } as MethodDecorator;
 }

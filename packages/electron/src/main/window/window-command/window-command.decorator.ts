@@ -1,11 +1,10 @@
-import {
-  ElectronMetadataStorage,
-  addWindowCommandMetadata,
-  getWindowCommandMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 
-export const WindowCommandMethods =
-  ElectronMetadataStorage.getKey('WindowCommand');
+export const WindowCommandMethods = buildMetadataKey(
+  'electron:window',
+  'WindowCommand',
+);
 
 export interface WindowCommandMetadata {
   method: string;
@@ -18,10 +17,10 @@ export function WindowCommand(command: string): MethodDecorator {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addWindowCommandMetadata(target, propertyKey, command);
+    ElectronMetadata.window.addCommand(target, propertyKey, command);
   } as MethodDecorator;
 }
 
 export function getWindowCommands(target: Function): WindowCommandMetadata[] {
-  return getWindowCommandMetadata(target);
+  return ElectronMetadata.window.getCommands(target);
 }

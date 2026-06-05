@@ -1,4 +1,4 @@
-import { addWindowRendererSubscriptionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 export const WindowOn = (event: string): MethodDecorator => {
   return function (
@@ -6,6 +6,11 @@ export const WindowOn = (event: string): MethodDecorator => {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addWindowRendererSubscriptionMetadata(target, propertyKey, event, 'on');
+    ElectronMetadata.window.addRendererSubscription(
+      target,
+      propertyKey,
+      event,
+      'on',
+    );
   } as MethodDecorator;
 };

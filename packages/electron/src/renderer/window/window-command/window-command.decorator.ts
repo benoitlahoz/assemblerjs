@@ -1,6 +1,6 @@
 import { createChannelBuilder } from '@assemblerjs/common';
 import { resolveWindowRendererName } from '../window-definition/window-definition';
-import { getIpcResultParameterIndices } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 const buildWindowChannel = createChannelBuilder('window');
 
@@ -16,10 +16,8 @@ export const WindowCommand = (command: string): MethodDecorator => {
       this: { windowName?: unknown },
       ...args: any[]
     ): Promise<any> {
-      const ipcResultParameters = getIpcResultParameterIndices(
-        target,
-        propertyKey,
-      );
+      const ipcResultParameters =
+        ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
 
       const windowName = resolveWindowRendererName(this);
       if (!windowName || typeof windowName !== 'string') {

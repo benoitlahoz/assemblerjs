@@ -1,5 +1,5 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import { getWindowMainSubscriptionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import { bindMainEventListeners } from '@/universal/runtime';
 import { getWindowEmitEvent } from './window-emit.decorator';
 import { createChannelBuilder } from '@assemblerjs/common';
@@ -12,7 +12,7 @@ const buildWindowChannel = createChannelBuilder('window');
 export const WindowSubMethods = '__legacy:window-main-submethods__';
 
 function getWindowSubMethods(target: Function): Map<string, string> {
-  const entries = getWindowMainSubscriptionMetadata(target);
+  const entries = ElectronMetadata.window.getMainSubscriptions(target);
   const subMethods = new Map<string, string>();
 
   for (const entry of entries) {

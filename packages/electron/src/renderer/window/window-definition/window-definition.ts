@@ -1,14 +1,14 @@
-import {
-  ElectronMetadataStorage,
-  getWindowRendererDefinitionMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 
 export interface WindowRendererDefinition {
   name: string;
 }
 
-export const WindowRendererDefinitionMetadataKey =
-  ElectronMetadataStorage.getKey('WindowRendererDefinition');
+export const WindowRendererDefinitionMetadataKey = buildMetadataKey(
+  'electron:window',
+  'WindowRendererDefinition',
+);
 
 export function normalizeWindowRendererDefinition(
   definition: string | WindowRendererDefinition,
@@ -32,9 +32,9 @@ export function getWindowRendererDefinition(
   let current: any = target;
 
   while (current && current !== Function.prototype) {
-    const definition = getWindowRendererDefinitionMetadata(current) as
-      | WindowRendererDefinition
-      | undefined;
+    const definition = ElectronMetadata.window.getRendererDefinition(
+      current,
+    ) as WindowRendererDefinition | undefined;
 
     if (definition?.name) {
       return definition;

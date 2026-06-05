@@ -1,14 +1,13 @@
-import {
-  ElectronMetadataStorage,
-  getMenuRendererDefinitionMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 import { resolveWindowRendererName } from '@/renderer/window/window-definition/window-definition';
 
 export interface MenuRendererDefinition {
   name: string;
 }
 
-export const MenuRendererDefinitionMetadataKey = ElectronMetadataStorage.getKey(
+export const MenuRendererDefinitionMetadataKey = buildMetadataKey(
+  'electron:menu',
   'MenuRendererDefinition',
 );
 
@@ -46,7 +45,7 @@ export function getMenuRendererDefinition(
   let current: any = target;
 
   while (current && current !== Function.prototype) {
-    const definition = getMenuRendererDefinitionMetadata(current) as
+    const definition = ElectronMetadata.menu.getRendererDefinition(current) as
       | MenuRendererDefinition
       | undefined;
 

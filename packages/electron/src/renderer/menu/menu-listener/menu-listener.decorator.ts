@@ -1,6 +1,6 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import {
-  getMenuRendererSubscriptionMetadata,
+  ElectronMetadata,
   type MenuRendererSubscriptionMetadata,
 } from '@/universal/metadata';
 import {
@@ -34,7 +34,7 @@ function getMenuSubMethods(
 ): Map<string, MenuRendererSubscriptionMetadata> {
   const subMethods = new Map<string, MenuRendererSubscriptionMetadata>();
 
-  for (const entry of getMenuRendererSubscriptionMetadata(target)) {
+  for (const entry of ElectronMetadata.menu.getRendererSubscriptions(target)) {
     subMethods.set(entry.method, entry);
   }
 

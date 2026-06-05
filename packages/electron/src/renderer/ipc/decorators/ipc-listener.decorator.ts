@@ -1,5 +1,5 @@
 import { createIpcListener } from '@/universal/decorators/create-ipc-listener';
-import { getIpcResultParameterIndices } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import type { TypedIpcBridge } from '@/universal/types';
 
 /**
@@ -21,7 +21,10 @@ export const IpcListener = createIpcListener<TypedIpcBridge>({
     }
 
     // Get parameter indices that should be filtered out (@IpcResult decorators)
-    const ipcResultParameters = getIpcResultParameterIndices(instance, method);
+    const ipcResultParameters = ElectronMetadata.ipc.getResultParameterIndices(
+      instance,
+      method,
+    );
 
     // Create wrapped method that filters IpcResult parameters
     const newMethod = async (...args: any[]) => {

@@ -1,7 +1,4 @@
-import {
-  getIpcResultParameterIndices,
-  setIpcResultParameterIndices,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '../metadata';
 
 export const IpcResult = () => {
   return (
@@ -9,12 +6,10 @@ export const IpcResult = () => {
     propertyKey: string | symbol,
     parameterIndex: number,
   ) => {
-    const existingBodyParameters = getIpcResultParameterIndices(
-      target,
-      propertyKey,
-    );
+    const existingBodyParameters =
+      ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
 
-    setIpcResultParameterIndices(target, propertyKey, [
+    ElectronMetadata.ipc.setResultParameterIndices(target, propertyKey, [
       ...existingBodyParameters,
       parameterIndex,
     ]);

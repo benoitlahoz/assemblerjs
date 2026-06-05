@@ -1,10 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { BrowserWindow, ipcMain } from 'electron';
 import { RpcIpcChannel } from '@/universal/channels';
-import {
-  getIpcChannelParameterIndices,
-  getIpcResultParameterIndices,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 interface MainIpcInvokeOptions {
   name?: string;
@@ -164,7 +161,7 @@ export function IpcInvoke<C extends string = string>(
     descriptor.value = async function (...args: any[]): Promise<any> {
       ensureRpcResponseListener();
 
-      const channelParameters = getIpcChannelParameterIndices(
+      const channelParameters = ElectronMetadata.ipc.getChannelParameterIndices(
         target,
         propertyKey,
       );
@@ -198,10 +195,8 @@ export function IpcInvoke<C extends string = string>(
         );
       }
 
-      const ipcResultParameters = getIpcResultParameterIndices(
-        target,
-        propertyKey,
-      );
+      const ipcResultParameters =
+        ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
       const excludedParameters = new Set([
         ...channelParameters,
         ...ipcResultParameters,

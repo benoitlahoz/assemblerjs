@@ -1,6 +1,6 @@
 import { createChannelBuilder } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/universal';
-import { getIpcResultParameterIndices } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
 const buildMenuChannel = createChannelBuilder('menu');
@@ -33,10 +33,8 @@ export const MenuCommand = (command: string): MethodDecorator => {
       this: any,
       ...args: any[]
     ): Promise<any> {
-      const ipcResultParameters = getIpcResultParameterIndices(
-        target,
-        propertyKey,
-      );
+      const ipcResultParameters =
+        ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
 
       const windowName = resolveMenuWindowName(this);
       if (!windowName || typeof windowName !== 'string') {

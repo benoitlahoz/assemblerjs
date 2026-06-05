@@ -1,4 +1,4 @@
-import { addMenuRendererSubscriptionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 export const MenuOn = (event: string): MethodDecorator => {
   return function (
@@ -6,6 +6,11 @@ export const MenuOn = (event: string): MethodDecorator => {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addMenuRendererSubscriptionMetadata(target, propertyKey, event, 'on');
+    ElectronMetadata.menu.addRendererSubscription(
+      target,
+      propertyKey,
+      event,
+      'on',
+    );
   } as MethodDecorator;
 };

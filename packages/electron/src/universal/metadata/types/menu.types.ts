@@ -1,24 +1,20 @@
-export interface ElectronWindowDefinitionMetadata {
-  name: string;
-  multiple: boolean;
-  router?: {
-    file?: string;
-    dev?: string;
-    route?: string;
-  };
-  options: unknown;
-}
+/**
+ * Menu-specific metadata types.
+ */
 
-export interface ElectronMenuDefinitionMetadata {
+import type { RendererIpcSubscriptionType } from './window.types';
+
+// Re-export shared type
+export type { RendererIpcSubscriptionType };
+
+export interface MenuDefinitionMetadata {
   window?: string;
   name: string;
 }
 
-export interface WindowUseMenuDefinitionMetadata {
-  menu?: unknown;
-  slots?: unknown;
-  layout?: unknown;
-  state?: unknown;
+export interface MenuRendererDefinitionMetadata {
+  window?: string;
+  name: string;
 }
 
 export interface MenuItemLabelResolverContext {
@@ -33,7 +29,7 @@ export type MenuItemLabelValue =
   | string
   | ((this: any, context?: MenuItemLabelResolverContext) => string | undefined);
 
-export interface MenuItemMetadataEntry {
+export interface MenuItemMetadata {
   method: string;
   id: string;
   label?: MenuItemLabelValue;
@@ -50,21 +46,8 @@ export interface MenuItemMetadataEntry {
   _submenuPath?: string; // Internal: generated from @MenuItem class labels and @SubMenu hierarchy
 }
 
-export type RendererIpcSubscriptionType = 'on' | 'once';
-
-export interface WindowRendererSubscriptionMetadata {
-  method: string;
-  event: string;
-  type: RendererIpcSubscriptionType;
-}
-
 export interface MenuRendererSubscriptionMetadata {
   method: string;
   event: string;
   type: RendererIpcSubscriptionType;
-}
-
-export interface WindowMainSubscriptionMetadata {
-  method: string;
-  channel: string;
 }

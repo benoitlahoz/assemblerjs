@@ -69,6 +69,7 @@ export default defineConfig(() => ({
       // External packages that should not be bundled into your library.
       external: [
         // Monorepo dependencies
+        '@assemblerjs/common',
         '@assemblerjs/core',
         'assemblerjs',
         '@assemblerjs/dto',

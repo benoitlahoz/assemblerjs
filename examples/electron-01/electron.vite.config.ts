@@ -14,6 +14,16 @@ export default defineConfig({
         '@preload': resolve('src/preload'),
       },
     },
+    build: {
+      rollupOptions: {
+        external: [
+          '@assemblerjs/common',
+          '@assemblerjs/core',
+          '@assemblerjs/electron',
+          'assemblerjs',
+        ],
+      },
+    },
     plugins: [swcPlugin()],
   },
   preload: {

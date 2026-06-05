@@ -1,8 +1,7 @@
 import {
-  addMenuItemMetadata,
-  getMenuItemMetadata,
+  ElectronMetadata,
   type MenuItemLabelValue,
-  type MenuItemMetadataEntry,
+  type MenuItemMetadata,
 } from '@/universal/metadata';
 import {
   getMenuDslSubmenus,
@@ -37,7 +36,7 @@ function assertNonEmptyString(value: unknown, field: string): string {
 
 export function normalizeMenuItemDefinition(
   definition: MenuItemDefinition,
-): Omit<MenuItemMetadataEntry, 'method'> {
+): Omit<MenuItemMetadata, 'method'> {
   const id = assertNonEmptyString(definition.id, 'id');
 
   if (
@@ -68,7 +67,7 @@ export function normalizeMenuItemDefinition(
   };
 }
 
-function assertNoDuplicateIds(entries: MenuItemMetadataEntry[]): void {
+function assertNoDuplicateIds(entries: MenuItemMetadata[]): void {
   const seen = new Map<string, string>();
 
   for (const entry of entries) {
@@ -83,7 +82,7 @@ function assertNoDuplicateIds(entries: MenuItemMetadataEntry[]): void {
   }
 }
 
-function assertAnchorsExist(entries: MenuItemMetadataEntry[]): void {
+function assertAnchorsExist(entries: MenuItemMetadata[]): void {
   const ids = new Set(entries.map((entry) => entry.id));
 
   for (const entry of entries) {
@@ -101,7 +100,7 @@ function assertAnchorsExist(entries: MenuItemMetadataEntry[]): void {
   }
 }
 
-function assertNoOrderingCycles(entries: MenuItemMetadataEntry[]): void {
+function assertNoOrderingCycles(entries: MenuItemMetadata[]): void {
   const adjacency = new Map<string, Set<string>>();
 
   for (const entry of entries) {
@@ -158,8 +157,8 @@ function assertNoOrderingCycles(entries: MenuItemMetadataEntry[]): void {
 }
 
 export function validateMenuItemMetadata(
-  entries: MenuItemMetadataEntry[],
-): MenuItemMetadataEntry[] {
+  entries: MenuItemMetadata[],
+): MenuItemMetadata[] {
   assertNoDuplicateIds(entries);
   assertAnchorsExist(entries);
   assertNoOrderingCycles(entries);
@@ -186,7 +185,7 @@ export function MenuItem(
       throw new Error('@MenuItem supports string method names only.');
     }
 
-    addMenuItemMetadata(
+    ElectronMetadata.menu.addItem(
       target,
       propertyKey,
       normalizeMenuItemDefinition(definitionOrGroup),
@@ -264,7 +263,7 @@ function resolveSubmenuTarget(
 const SUBMENU_ORDER_SCALE_FACTOR = 1_000;
 
 function applyBranchOrder(
-  entry: MenuItemMetadataEntry,
+  entry: MenuItemMetadata,
   branchOrderBase: number,
   branchOrderScale: number,
 ): number | undefined {
@@ -291,20 +290,20 @@ function collectDslMenuItems(
   pathSegments: string[],
   branchOrderBase: number,
   branchOrderScale: number,
-  out: MenuItemMetadataEntry[],
+  out: MenuItemMetadata[],
   visited: Set<Function>,
 ): void {
   const sourceInstance = instance as Record<string, unknown> | undefined;
   const submenuPath =
     pathSegments.length > 0 ? pathSegments.join('/') : undefined;
 
-  for (const entry of getMenuItemMetadata(target)) {
+  for (const entry of ElectronMetadata.menu.getItems(target)) {
     out.push({
       ...entry,
       source: sourceInstance,
       order: applyBranchOrder(entry, branchOrderBase, branchOrderScale),
       _submenuPath: submenuPath,
-    } as MenuItemMetadataEntry);
+    } as MenuItemMetadata);
   }
 
   if (visited.has(target)) {
@@ -334,17 +333,17 @@ function collectDslMenuItems(
 
 export function getMenuItems(
   targetOrInstance: Function | object,
-): MenuItemMetadataEntry[] {
+): MenuItemMetadata[] {
   const target =
     typeof targetOrInstance === 'function'
       ? targetOrInstance
       : targetOrInstance.constructor;
 
   if (!hasMenuDslMetadata(target)) {
-    return validateMenuItemMetadata(getMenuItemMetadata(target));
+    return validateMenuItemMetadata(ElectronMetadata.menu.getItems(target));
   }
 
-  const dslEntries: MenuItemMetadataEntry[] = [];
+  const dslEntries: MenuItemMetadata[] = [];
   const classLabel = getMenuNodeLabel(target);
   const rootPath = classLabel ? [classLabel] : [];
 
