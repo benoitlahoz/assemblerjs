@@ -6,7 +6,7 @@ import type {
   IpcContractMap,
   KnownIpcChannel,
   TypedIpcBridge,
-} from '../universal/types';
+} from '../common/types';
 import type {
   BridgeContracts,
   ElectronListener,
