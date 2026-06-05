@@ -1,65 +1,52 @@
-import { createConstructorDecorator } from 'assemblerjs';
-import { IpcType, IpcSubMethods } from '@/universal/decorators';
-import { registerCleanup } from '@/universal/lifecycle';
+import { createIpcListener } from '@/universal/decorators/create-ipc-listener';
 import { getIpcResultParameterIndices } from '@/universal/metadata';
+import type { TypedIpcBridge } from '@/universal/types';
 
 /**
  * Class decorator to allow using preload scripts IPC API decorators.
  * @see https://stackoverflow.com/a/61448736/1060921
  */
-export const IpcListener = createConstructorDecorator(function (this: any) {
-  const bridge = window.ipc;
-  if (!bridge) {
-    throw new Error('IpcRenderer is not available in the current context.');
-  }
+export const IpcListener = createIpcListener<TypedIpcBridge>({
+  getApi: () => window.ipc,
 
-  // Since the class returned by this decorator is a wrapper of `Assemblage` get the constructor methods.
-  const subMethods = this.constructor.prototype[IpcSubMethods];
+  apiErrorMessage: 'IpcRenderer is not available in the current context.',
 
-  if (subMethods) {
-    try {
-      subMethods.forEach(
-        (handler: { channel: string; type: IpcType }, method: string) => {
-          const originalMethod = this[method];
-          if (typeof originalMethod !== 'function') {
-            throw new Error(
-              `Method ${method} is not a function on the target class.`,
-            );
-          }
-          const ipcResultParameters = getIpcResultParameterIndices(
-            this,
-            method,
-          );
+  setupHandler: (api, instance, method, handler) => {
+    const originalMethod = instance[method];
 
-          const newMethod = async (...args: any[]) => {
-            const newArgs = args.filter(
-              (_, i) => !ipcResultParameters.includes(i),
-            );
-            const result = await originalMethod.apply(this, newArgs);
-
-            return result;
-          };
-
-          if (handler.type === 'handle') {
-            const unsubscribe = bridge.handle(
-              handler.channel as any,
-              newMethod,
-            );
-            registerCleanup(this, () => {
-              unsubscribe();
-              bridge.removeHandler(handler.channel as any);
-            });
-            return;
-          }
-
-          bridge[handler.type](handler.channel as any, newMethod);
-          registerCleanup(this, () => {
-            bridge.off(handler.channel as any, newMethod);
-          });
-        },
+    if (typeof originalMethod !== 'function') {
+      throw new Error(
+        `Method ${method} is not a function on the target class.`,
       );
-    } catch (error) {
-      console.error('Error while setting up IPC listeners:', error);
     }
-  }
+
+    // Get parameter indices that should be filtered out (@IpcResult decorators)
+    const ipcResultParameters = getIpcResultParameterIndices(instance, method);
+
+    // Create wrapped method that filters IpcResult parameters
+    const newMethod = async (...args: any[]) => {
+      const newArgs = args.filter((_, i) => !ipcResultParameters.includes(i));
+      const result = await originalMethod.apply(instance, newArgs);
+      return result;
+    };
+
+    // Register handler with bridge
+    if (handler.type === 'handle') {
+      const unsubscribe = api.handle(handler.channel as any, newMethod);
+
+      // Cleanup function
+      return () => {
+        unsubscribe();
+        api.removeHandler(handler.channel as any);
+      };
+    }
+
+    // Register on/once listener
+    api[handler.type](handler.channel as any, newMethod);
+
+    // Cleanup function
+    return () => {
+      api.off(handler.channel as any, newMethod);
+    };
+  },
 });

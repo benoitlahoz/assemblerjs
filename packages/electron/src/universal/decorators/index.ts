@@ -1,3 +1,4 @@
+export * from './create-ipc-listener';
 export * from './ipc-channel.decorator';
 export * from './ipc-decorators.types';
 export * from './ipc-handle.decorator';
