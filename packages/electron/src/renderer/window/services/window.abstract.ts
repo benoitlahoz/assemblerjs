@@ -16,11 +16,10 @@ import {
 } from './window-controller.abstract';
 import { WindowControllerService } from './window-controller.service';
 import { IpcService } from '@/renderer/ipc/services';
-import {
-  buildWindowCommandChannel,
-  buildWindowEventChannel,
-} from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
 import { unwrapIpcResult } from '@/renderer/ipc/services/ipc-result.utils';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 /**
  * Base class for window-specific renderer services.
@@ -150,7 +149,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async getTitleBarConfig(): Promise<TitleBarConfig | undefined> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'getTitleBarConfig');
+    const channel = buildWindowChannel(windowName, 'getTitleBarConfig');
     const result = await this.windows.ipc.invoke(channel);
     return unwrapIpcResult<TitleBarConfig | undefined>(channel, result);
   }
@@ -161,7 +160,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async setTitleBarOverlay(options: TitleBarOptions): Promise<void> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'setTitleBarOverlay');
+    const channel = buildWindowChannel(windowName, 'setTitleBarOverlay');
 
     const result = await this.windows.ipc.invoke(channel, options);
     console.log('[RENDERER/IPC] setTitleBarOverlay result:', result);
@@ -176,10 +175,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
     { x: number; y: number } | undefined
   > {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(
-      windowName,
-      'getWindowButtonPosition',
-    );
+    const channel = buildWindowChannel(windowName, 'getWindowButtonPosition');
     const result = await this.windows.ipc.invoke(channel);
     return unwrapIpcResult<{ x: number; y: number } | undefined>(
       channel,
@@ -196,10 +192,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
     y: number;
   }): Promise<void> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(
-      windowName,
-      'setWindowButtonPosition',
-    );
+    const channel = buildWindowChannel(windowName, 'setWindowButtonPosition');
     const result = await this.windows.ipc.invoke(channel, position);
     unwrapIpcResult<void>(channel, result);
   }
@@ -209,7 +202,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async getTitle(): Promise<string | undefined> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'getTitle');
+    const channel = buildWindowChannel(windowName, 'getTitle');
     const result = await this.windows.ipc.invoke(channel);
     return unwrapIpcResult<string | undefined>(channel, result);
   }
@@ -219,7 +212,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async setTitle(title: string): Promise<void> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'setTitle');
+    const channel = buildWindowChannel(windowName, 'setTitle');
     const result = await this.windows.ipc.invoke(channel, title);
     unwrapIpcResult<void>(channel, result);
   }
@@ -229,7 +222,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async setAlwaysOnTop(flag: boolean): Promise<boolean> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'setAlwaysOnTop');
+    const channel = buildWindowChannel(windowName, 'setAlwaysOnTop');
     const result = await this.windows.ipc.invoke(channel, flag);
     return unwrapIpcResult<boolean>(channel, result) ?? false;
   }
@@ -239,7 +232,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public async isAlwaysOnTop(): Promise<boolean> {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowCommandChannel(windowName, 'isAlwaysOnTop');
+    const channel = buildWindowChannel(windowName, 'isAlwaysOnTop');
     const result = await this.windows.ipc.invoke(channel);
     return unwrapIpcResult<boolean>(channel, result) ?? false;
   }
@@ -250,7 +243,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
    */
   public onTitleChanged(callback: (title: string) => void): () => void {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowEventChannel(windowName, 'title-changed');
+    const channel = buildWindowChannel(windowName, 'title-changed');
     return this.windows.ipc.on(channel, callback);
   }
 
@@ -262,7 +255,7 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
     callback: (config: TitleBarConfig) => void,
   ): () => void {
     const windowName = this.resolveWindowName();
-    const channel = buildWindowEventChannel(windowName, 'titlebar-changed');
+    const channel = buildWindowChannel(windowName, 'titlebar-changed');
     const handler = (_event: any, config: TitleBarConfig) => {
       callback(config);
     };

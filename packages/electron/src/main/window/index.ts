@@ -2,7 +2,6 @@
 export * from './window-controller/window-controller.abstract';
 
 export * from './classes';
-export * from './common/window-channels';
 export * from './window-command/window-command.decorator';
 export * from './window-controller/window-controller.decorator';
 export * from './window-controller/window-controller.types';

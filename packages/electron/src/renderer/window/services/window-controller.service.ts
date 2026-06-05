@@ -1,6 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { AbstractIpcService, unwrapIpcResult } from '@/renderer/ipc/services';
 import { WindowIpcChannel } from '@/universal/channels';
+import { createChannelBuilder } from '@assemblerjs/common';
 import type {
   ManagedWindowDescriptor,
   WindowBounds,
@@ -11,13 +12,7 @@ import {
   type WindowSnapshot,
 } from './window-controller.abstract';
 
-function buildWindowCommandChannel(name: string, command: string): string {
-  return `window:${name}.${command}`;
-}
-
-function buildWindowEventChannel(name: string, event: string): string {
-  return `window:${name}.${event}`;
-}
+const buildWindowChannel = createChannelBuilder('window');
 
 @Assemblage()
 export class WindowControllerService extends AbstractWindowControllerService {
@@ -91,7 +86,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     command: string,
     args: unknown[],
   ): Promise<T | undefined> {
-    const channel = buildWindowCommandChannel(name, command);
+    const channel = buildWindowChannel(name, command);
     const result = await this._ipc.invoke(channel, ...args);
     return unwrapIpcResult<T>(channel, result);
   }
@@ -204,7 +199,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     callback: (bounds: WindowBounds) => void,
   ): () => void {
-    const channel = buildWindowEventChannel(name, 'resize');
+    const channel = buildWindowChannel(name, 'resize');
 
     return this.subscribeChannels<WindowBounds>(
       [channel],
@@ -222,7 +217,7 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     callback: (state: WindowState) => void,
   ): () => void {
-    const channel = buildWindowEventChannel(name, 'stateChanged');
+    const channel = buildWindowChannel(name, 'stateChanged');
 
     return this.subscribeChannels<WindowState>([channel], (state) => {
       this.updateSnapshot(name, (snapshot) => {
@@ -237,8 +232,8 @@ export class WindowControllerService extends AbstractWindowControllerService {
     name: string,
     callback: (active: boolean) => void,
   ): () => void {
-    const enterChannel = buildWindowEventChannel(name, 'enter-full-screen');
-    const leaveChannel = buildWindowEventChannel(name, 'leave-full-screen');
+    const enterChannel = buildWindowChannel(name, 'enter-full-screen');
+    const leaveChannel = buildWindowChannel(name, 'leave-full-screen');
 
     const unsubEnter = this.subscribeChannels<void>([enterChannel], () => {
       this.updateSnapshot(name, (snapshot) => {

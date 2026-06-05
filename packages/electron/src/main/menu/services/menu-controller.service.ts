@@ -3,12 +3,11 @@ import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
 import { ElectronMenu, ElectronMenuItem } from '@/main/menu/model';
 import { registerCleanup } from '@/universal/lifecycle';
-import {
-  buildMenuCommandChannel,
-  buildMenuEventChannel,
-  MenuIpcChannel,
-} from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import type { IpcReturnType, MenuItemState, MenuSnapshot } from '@/universal';
+
+const buildMenuChannel = createChannelBuilder('menu');
 
 interface MenuRegistration {
   windowName: string;
@@ -127,7 +126,7 @@ export class BaseMenuController implements AbstractAssemblage {
     const emitEvents = (): void => {
       this.emit(
         windowName,
-        buildMenuEventChannel(windowName, 'templateChanged'),
+        buildMenuChannel(windowName, 'templateChanged'),
         registration.menuName,
       );
       this.emit(
@@ -150,11 +149,7 @@ export class BaseMenuController implements AbstractAssemblage {
   }
 
   private emitStateChanged(windowName: string, state: MenuItemState): void {
-    this.emit(
-      windowName,
-      buildMenuEventChannel(windowName, 'stateChanged'),
-      state,
-    );
+    this.emit(windowName, buildMenuChannel(windowName, 'stateChanged'), state);
     this.emit(windowName, MenuIpcChannel.OnItemStateChanged, windowName, state);
   }
 
@@ -205,18 +200,18 @@ export class BaseMenuController implements AbstractAssemblage {
       [string, (_event: unknown, ...args: any[]) => any]
     > = [
       [
-        buildMenuCommandChannel(windowName, 'snapshot'),
+        buildMenuChannel(windowName, 'snapshot'),
         () => this.toIpcResult(() => this.snapshot(windowName)),
       ],
       [
-        buildMenuCommandChannel(windowName, 'setItemEnabled'),
+        buildMenuChannel(windowName, 'setItemEnabled'),
         (_event, itemId: string, enabled: boolean) =>
           this.toIpcResult(() =>
             this.setItemEnabled(windowName, itemId, enabled),
           ),
       ],
       [
-        buildMenuCommandChannel(windowName, 'setItemChecked'),
+        buildMenuChannel(windowName, 'setItemChecked'),
         (_event, itemId: string, checked: boolean) =>
           this.toIpcResult(() =>
             this.setItemChecked(windowName, itemId, checked),

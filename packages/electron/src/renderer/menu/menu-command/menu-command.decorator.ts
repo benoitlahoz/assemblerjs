@@ -1,6 +1,9 @@
-import { buildMenuCommandChannel, MenuIpcChannel } from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import { getIpcResultParameterIndices } from '@/universal/metadata';
 import { resolveMenuWindowName } from '../menu-definition/menu-definition';
+
+const buildMenuChannel = createChannelBuilder('menu');
 
 function resolveFallbackChannel(command: string): string | undefined {
   if (command === 'snapshot') {
@@ -52,7 +55,7 @@ export const MenuCommand = (command: string): MethodDecorator => {
       const payload = args.filter(
         (_, index) => !ipcResultParameters.includes(index),
       );
-      const scopedChannel = buildMenuCommandChannel(windowName, command);
+      const scopedChannel = buildMenuChannel(windowName, command);
       const fallbackChannel = resolveFallbackChannel(command);
 
       let result: unknown;

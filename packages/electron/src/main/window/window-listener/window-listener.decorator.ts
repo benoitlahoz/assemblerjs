@@ -2,7 +2,9 @@ import { createConstructorDecorator } from 'assemblerjs';
 import { getWindowMainSubscriptionMetadata } from '@/universal/metadata';
 import { bindMainEventListeners } from '@/universal/runtime';
 import { getWindowEmitEvent } from './window-emit.decorator';
-import { buildWindowEventChannel } from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 /**
  * @deprecated Backward compatibility token. Prefer metadata/runtime binders.
@@ -46,7 +48,7 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
           // Otherwise, treat it as an event name and generate the channel
           const eventChannel = emitEvent.includes(':')
             ? emitEvent
-            : buildWindowEventChannel(this.name, emitEvent);
+            : buildWindowChannel(this.name, emitEvent);
 
           if (typeof payload === 'undefined') {
             this.webContents.send(eventChannel);

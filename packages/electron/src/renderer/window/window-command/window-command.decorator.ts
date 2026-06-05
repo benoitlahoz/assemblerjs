@@ -1,6 +1,8 @@
-import { buildWindowCommandChannel } from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
 import { resolveWindowRendererName } from '../window-definition/window-definition';
 import { getIpcResultParameterIndices } from '@/universal/metadata';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 export const WindowCommand = (command: string): MethodDecorator => {
   return (
@@ -33,7 +35,7 @@ export const WindowCommand = (command: string): MethodDecorator => {
         throw new Error('IpcRenderer is not available in the current context.');
       }
 
-      const channel = buildWindowCommandChannel(windowName, command);
+      const channel = buildWindowChannel(windowName, command);
       const result = await bridge.invoke(
         channel,
         ...args.filter((_, i) => !ipcResultParameters.includes(i)),

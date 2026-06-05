@@ -7,13 +7,16 @@ import {
   bindRendererEventListeners,
   createEventDeduplicator,
 } from '@/universal/runtime';
-import { buildMenuEventChannel, MenuIpcChannel } from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import type { MenuItemClickedEvent, MenuItemState } from '@/universal/types';
 import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
+const buildMenuChannel = createChannelBuilder('menu');
+
 function resolveMenuEventChannels(windowName: string, event: string): string[] {
   const channels = new Set<string>();
-  channels.add(buildMenuEventChannel(windowName, event));
+  channels.add(buildMenuChannel(windowName, event));
 
   if (event === 'itemClicked') {
     channels.add(MenuIpcChannel.OnItemClicked);
