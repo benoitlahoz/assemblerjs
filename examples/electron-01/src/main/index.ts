@@ -23,7 +23,11 @@ import { WindowControllerService } from '@windows/window.controller';
     [SystemStateHostService],
   ],
   global: {
-    preload: join(__dirname, '../preload/index.js'),
+    env: {
+      preload: join(__dirname, '../preload/index.js'),
+      file: join(__dirname, '../renderer/index.html'),
+      dev: process.env['ELECTRON_RENDERER_URL'],
+    },
   },
 })
 class MainApp implements AbstractAssemblage {

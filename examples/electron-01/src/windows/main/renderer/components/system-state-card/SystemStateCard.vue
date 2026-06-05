@@ -78,6 +78,14 @@ const formattedUptime = computed(() => {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`;
 });
 
+const displaysLabel = computed(() => {
+  if (!snapshot.value) {
+    return 'DISPLAY';
+  }
+  const count = snapshot.value.displays.length;
+  return count === 1 ? 'DISPLAY' : 'DISPLAYS';
+});
+
 async function startMonitoring(): Promise<void> {
   await system.startMonitoring({
     intervalMs: intervalMs.value,
@@ -220,7 +228,7 @@ onBeforeUnmount(async () => {
         </dd>
       </div>
       <div class="metric">
-        <dt>{{ compact ? 'Disp' : 'CPU Usage' }}</dt>
+        <dt>{{ compact ? displaysLabel : 'CPU Usage' }}</dt>
         <dd>
           {{ compact ? (snapshot ? snapshot.displays.length : '—') : (cpuPercentLabel ?? '—') }}
         </dd>
@@ -279,7 +287,6 @@ onBeforeUnmount(async () => {
 
 .card--compact {
   padding: 10px 12px;
-  width: 320px;
   min-height: auto;
 }
 
@@ -355,6 +362,7 @@ onBeforeUnmount(async () => {
 
 .card--compact .metric {
   padding: 6px 8px;
+  min-height: auto;
 }
 
 .metric dt {

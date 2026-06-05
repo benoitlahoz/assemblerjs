@@ -8,9 +8,9 @@ import {
 } from '@assemblerjs/electron/renderer';
 import type { WindowBounds } from '@assemblerjs/electron/renderer';
 import { shallowRef, type ShallowRef } from 'vue';
-import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
+import { MainWindowConfig } from '../universal/window.config';
 
-@Window({ name: MAIN_WINDOW_CONFIG.name })
+@Window({ name: MainWindowConfig.name })
 @Assemblage()
 export class MainWindow extends AbstractWindowService {
   public readonly bounds: ShallowRef<WindowBounds | undefined> = shallowRef<WindowBounds>();

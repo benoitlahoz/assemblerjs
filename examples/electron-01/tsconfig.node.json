@@ -14,6 +14,7 @@
     "src/common/**/*",
     "src/features/**/*",
     "src/menus/**/*",
+    "src/windows/*.ts",
     "src/windows/*/main/**/*",
     "src/windows/*/universal/**/*",
     "src/windows/*/index.ts"

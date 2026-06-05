@@ -76,7 +76,6 @@ onMounted(async () => {
 
 .runtime-card--compact {
   padding: 10px 12px;
-  width: 260px;
   min-height: auto;
 }
 
@@ -163,6 +162,14 @@ onMounted(async () => {
 .runtime-card--compact .runtime-card__metric dd {
   font-size: 12px;
   margin-top: 4px;
+}
+
+@media (max-width: 1100px) {
+  .runtime-card--compact {
+    width: 100%;
+    min-width: 260px;
+    max-width: none;
+  }
 }
 
 @media (max-width: 620px) {

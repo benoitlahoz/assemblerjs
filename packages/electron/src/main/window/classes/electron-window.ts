@@ -2,6 +2,7 @@ import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
 import type { TitleBarConfig, TitleBarOptions } from '@/universal/types';
 import { getWindowDefinition } from '@/main/window/window-definition/window.decorator';
+import type { WindowRouterDefinition } from '@/main/window/window-definition/window.decorator';
 import { WindowCommand } from '../window-command/window-command.decorator';
 import { buildWindowEventChannel } from '../common/window-channels';
 
@@ -9,6 +10,7 @@ export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   definition: {
     name: string;
   };
+  router?: WindowRouterDefinition;
 }
 
 type ElectronWindowOptionsOverrides = Partial<ElectronWindowOptions>;
@@ -31,6 +33,10 @@ const mergeWindowOptions = (
     webPreferences: {
       ...(base.webPreferences || {}),
       ...(overrides.webPreferences || {}),
+    },
+    router: {
+      ...(base.router || {}),
+      ...(overrides.router || {}),
     },
   };
 };
@@ -98,6 +104,7 @@ export class ElectronWindow extends BrowserWindow {
           definition: {
             name: definition.name,
           },
+          router: definition.router,
           ...definition.options,
         }
       : undefined;
@@ -166,6 +173,13 @@ export class ElectronWindow extends BrowserWindow {
    */
   public get name(): string {
     return this.options.definition.name;
+  }
+
+  /**
+   * The router configuration of the window.
+   */
+  public get router(): WindowRouterDefinition | undefined {
+    return this.options.router;
   }
 
   /**
@@ -257,8 +271,18 @@ export class ElectronWindow extends BrowserWindow {
     if (process.platform !== 'darwin') {
       return undefined;
     }
-    const position = this.getWindowButtonPosition();
-    return position ?? undefined;
+
+    // Return configured position from window definition
+    // (BrowserWindow.getWindowButtonPosition() doesn't reliably return the configured value)
+    const definition = getWindowDefinition(this.constructor as Function);
+    const configured = definition?.titleBar?.trafficLightPosition;
+
+    if (configured) {
+      return configured;
+    }
+
+    // Fallback to BrowserWindow API if no configuration
+    return this.getWindowButtonPosition() ?? undefined;
   }
 
   /**
