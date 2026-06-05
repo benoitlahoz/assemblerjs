@@ -1,7 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { AbstractWindowController, MenuItem } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
-import { ABOUT_WINDOW_CONFIG } from '@windows/about/universal/window.config';
+import { AboutWindowConfig } from '@windows/about/universal/window.config';
 
 const AppMenuConfig = {
   About: { id: 'app.about', order: 5 },
@@ -32,7 +32,7 @@ export class AppMenu {
     handleInMain: true,
   })
   private async openAboutWindow(): Promise<void> {
-    const aboutWindow = await this.windowsController.openWindow(ABOUT_WINDOW_CONFIG.name);
+    const aboutWindow = await this.windowsController.openWindow(AboutWindowConfig.name);
     aboutWindow.center();
     aboutWindow.show();
     aboutWindow.focus();

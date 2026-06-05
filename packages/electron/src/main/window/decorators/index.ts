@@ -7,4 +7,4 @@ export * from '../window-definition/window.decorator';
 export * from '../window-command/window-command.decorator';
 export * from '../window-listener/window-emit.decorator';
 export * from '../common/window-channels';
-export * from '../window-controller/window-controller-support';
+export * from '../window-controller/window-controller.abstract';

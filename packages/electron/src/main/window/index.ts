@@ -3,7 +3,7 @@ export * from './common/window-channels';
 export * from './window-command/window-command.decorator';
 export * from './window-controller/window-controller.decorator';
 export * from './window-controller/window-controller.types';
-export * from './window-controller/window-controller-support';
+export * from './window-controller/window-controller.abstract';
 export * from './window-definition/window.decorator';
 export * from './window-listener/window-listener.decorator';
 export * from './window-listener/window-on.decorator';

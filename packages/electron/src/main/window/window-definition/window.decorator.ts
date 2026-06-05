@@ -6,7 +6,7 @@ import {
   getWindowDefinitionMetadata,
   setWindowDefinitionMetadata,
 } from '@/universal/metadata';
-import { WindowListener } from '../window-listener/decorators/window-listener.decorator';
+import { WindowListener } from '../window-listener/window-listener.decorator';
 
 export interface WindowRouterDefinition {
   file?: string;
@@ -18,8 +18,6 @@ export interface WindowDefinition extends BrowserWindowConstructorOptions {
   name: string;
   multiple?: boolean;
   router?: WindowRouterDefinition;
-  /** @deprecated Use router.route instead. */
-  route?: string;
   /**
    * Custom title bar configuration (unified API).
    * Automatically adapted to the current platform.
@@ -41,16 +39,14 @@ export const WindowDefinitionMetadataKey =
 export function normalizeWindowDefinition(
   definition: WindowDefinition,
 ): NormalizedWindowDefinition {
-  const { name, multiple, route, router, titleBar, ...windowOptions } =
-    definition;
+  const { name, multiple, router, titleBar, ...windowOptions } = definition;
 
-  const normalizedRouter =
-    router || route
-      ? {
-          ...(router || {}),
-          route: router?.route ?? route ?? '/',
-        }
-      : undefined;
+  const normalizedRouter = router
+    ? {
+        ...router,
+        route: router.route ?? '/',
+      }
+    : undefined;
 
   return {
     name,

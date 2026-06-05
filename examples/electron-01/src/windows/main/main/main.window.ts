@@ -1,6 +1,6 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { shell, type Rectangle } from 'electron';
-import { join } from 'path';
+
 import {
   ElectronWindow,
   UseMenu,
@@ -13,12 +13,8 @@ import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
 import { WindowMenu } from '@menus/window';
 import { DeveloperToolsMenu } from '@menus/developer';
-import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
-
-const MAIN_WINDOW_INITIAL_WIDTH = 1280;
-const MAIN_WINDOW_INITIAL_HEIGHT = 900;
-const MAIN_WINDOW_MIN_WIDTH = 520;
-const MAIN_WINDOW_MIN_HEIGHT = 360;
+import { MainWindowConfig } from '../universal/window.config';
+import type { WindowEnv } from '../../window.env';
 
 function randomInt(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -34,34 +30,36 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
 }
 
 @Window({
-  name: MAIN_WINDOW_CONFIG.name,
-  width: MAIN_WINDOW_INITIAL_WIDTH,
-  height: MAIN_WINDOW_INITIAL_HEIGHT,
-  show: false,
-  autoHideMenuBar: true,
+  name: MainWindowConfig.name,
+  width: MainWindowConfig.initialWidth,
+  height: MainWindowConfig.initialHeight,
+  show: MainWindowConfig.show,
+  autoHideMenuBar: MainWindowConfig.autoHideMenuBar,
   webPreferences: {
-    sandbox: false,
+    sandbox: MainWindowConfig.webPreferences.sandbox,
   },
   router: {
-    file: join(__dirname, '../renderer/index.html'),
-    dev: process.env['ELECTRON_RENDERER_URL'],
-    route: MAIN_WINDOW_CONFIG.route,
+    route: MainWindowConfig.route,
   },
   titleBar: {
-    enabled: true, // All platforms: enable custom title bar
-    height: 52, // All platforms: initial height (macOS: CSS, Windows/Linux: native overlay)
-    color: '#1e1e1e', // Windows/Linux only: overlay background color
-    symbolColor: '#ffffff', // Windows/Linux only: system buttons color
-    trafficLightPosition: { x: 25, y: 20 }, // macOS only: traffic lights position
+    enabled: MainWindowConfig.titleBar.enabled,
+    height: MainWindowConfig.titleBar.height,
+    color: MainWindowConfig.titleBar.color,
+    symbolColor: MainWindowConfig.titleBar.symbolColor,
+    trafficLightPosition: MainWindowConfig.titleBar.trafficLightPosition,
   },
 })
 @UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
 @Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
-  constructor(@Global('preload') preload: string) {
+  constructor(@Global('env') env: WindowEnv) {
     super({
       webPreferences: {
-        preload,
+        preload: env.preload,
+      },
+      router: {
+        file: env.file,
+        dev: env.dev,
       },
     });
   }
@@ -152,8 +150,8 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     const workArea = this.currentDisplay.workArea;
     const [minWindowWidth, minWindowHeight] = this.getMinimumSize();
 
-    const minWidth = Math.max(MAIN_WINDOW_MIN_WIDTH, minWindowWidth || 0);
-    const minHeight = Math.max(MAIN_WINDOW_MIN_HEIGHT, minWindowHeight || 0);
+    const minWidth = Math.max(MainWindowConfig.minWidth, minWindowWidth || 0);
+    const minHeight = Math.max(MainWindowConfig.minHeight, minWindowHeight || 0);
     const maxWidth = Math.max(minWidth, Math.floor(workArea.width * 0.92));
     const maxHeight = Math.max(minHeight, Math.floor(workArea.height * 0.9));
 
@@ -205,7 +203,7 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
       this.unmaximize();
     }
 
-    this.setSize(MAIN_WINDOW_INITIAL_WIDTH, MAIN_WINDOW_INITIAL_HEIGHT, false);
+    this.setSize(MainWindowConfig.initialWidth, MainWindowConfig.initialHeight, false);
     this.center();
     this.moveTop();
     this.focus();
@@ -240,8 +238,8 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     }
 
     const [minWindowWidth, minWindowHeight] = this.getMinimumSize();
-    const minWidth = Math.max(MAIN_WINDOW_MIN_WIDTH, minWindowWidth || 0);
-    const minHeight = Math.max(MAIN_WINDOW_MIN_HEIGHT, minWindowHeight || 0);
+    const minWidth = Math.max(MainWindowConfig.minWidth, minWindowWidth || 0);
+    const minHeight = Math.max(MainWindowConfig.minHeight, minWindowHeight || 0);
 
     const normalized = normalizeBounds(nextBounds, minWidth, minHeight);
     const before = this.getBounds();

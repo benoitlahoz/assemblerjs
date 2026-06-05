@@ -1,29 +1,28 @@
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
-import { join } from 'path';
+
 import { ElectronWindow, UseMenu, Window } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
 import { WindowMenu } from '@menus/window';
 import { WindowBoundsMenuConfig } from '@menus/window/window-bounds.menu';
 import { DeveloperToolsMenu } from '@menus/developer';
-import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
+import { AboutWindowConfig } from '../universal/window.config';
+import type { WindowEnv } from '../../window.env';
 
 @Window({
-  name: ABOUT_WINDOW_CONFIG.name,
-  width: 480,
-  height: 480,
-  show: false,
-  maximizable: false,
-  minimizable: false,
-  resizable: false,
-  autoHideMenuBar: true,
+  name: AboutWindowConfig.name,
+  width: AboutWindowConfig.width,
+  height: AboutWindowConfig.height,
+  show: AboutWindowConfig.show,
+  maximizable: AboutWindowConfig.maximizable,
+  minimizable: AboutWindowConfig.minimizable,
+  resizable: AboutWindowConfig.resizable,
+  autoHideMenuBar: AboutWindowConfig.autoHideMenuBar,
   webPreferences: {
-    sandbox: false,
+    sandbox: AboutWindowConfig.webPreferences.sandbox,
   },
   router: {
-    file: join(__dirname, '../renderer/index.html'),
-    dev: process.env['ELECTRON_RENDERER_URL'],
-    route: ABOUT_WINDOW_CONFIG.route,
+    route: AboutWindowConfig.route,
   },
 })
 @UseMenu([
@@ -45,10 +44,14 @@ import { ABOUT_WINDOW_CONFIG } from '../universal/window.config';
 ])
 @Assemblage()
 export class AboutWindow extends ElectronWindow implements AbstractAssemblage {
-  constructor(@Global('preload') preload: string) {
+  constructor(@Global('env') env: WindowEnv) {
     super({
       webPreferences: {
-        preload,
+        preload: env.preload,
+      },
+      router: {
+        file: env.file,
+        dev: env.dev,
       },
     });
   }

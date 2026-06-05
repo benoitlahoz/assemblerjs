@@ -8,6 +8,12 @@ import type {
   WindowRuntimeHandle,
 } from './window-controller.types';
 
+interface WindowRouterDefinition {
+  file?: string;
+  dev?: string;
+  route?: string;
+}
+
 export function isWindowContentTarget(
   instance: WindowRuntimeHandle,
 ): instance is WindowRuntimeHandle & WindowContentTarget {
@@ -53,7 +59,14 @@ export async function loadManagedWindowContent(
   managed: ManagedWindowDefinition,
   instance: WindowRuntimeHandle,
 ): Promise<void> {
-  const router = managed.definition.router;
+  // Prioritize router from instance (passed via super()), then from decorator definition
+  const instanceRouter =
+    'router' in instance && typeof instance.router !== 'undefined'
+      ? instance.router
+      : undefined;
+  const router: WindowRouterDefinition | undefined =
+    instanceRouter || managed.definition.router;
+
   if (!router) {
     return;
   }
