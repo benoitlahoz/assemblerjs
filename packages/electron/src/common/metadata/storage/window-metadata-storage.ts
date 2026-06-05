@@ -124,11 +124,12 @@ export class WindowMetadataStorage extends BaseScopedMetadataStorage {
 
   /**
    * Retrieve all @WindowEmit metadata entries.
+   * Note: Does NOT deduplicate by method - a single method can emit multiple events.
    */
   public getEmits<T extends { method: string; event: string }>(
     target: Function,
   ): T[] {
-    return uniqueByMethod(this.getMethodEntries<T>('emit', target));
+    return this.getMethodEntries<T>('emit', target);
   }
 
   /**
@@ -161,15 +162,14 @@ export class WindowMetadataStorage extends BaseScopedMetadataStorage {
 
   /**
    * Retrieve all @WindowRendererSubscription metadata entries.
+   * Note: Does NOT deduplicate by method - a single method can listen to multiple events.
    */
   public getRendererSubscriptions(
     target: Function,
   ): WindowRendererSubscriptionMetadata[] {
-    return uniqueByMethod(
-      this.getMethodEntries<WindowRendererSubscriptionMetadata>(
-        'renderer.subscription',
-        target,
-      ),
+    return this.getMethodEntries<WindowRendererSubscriptionMetadata>(
+      'renderer.subscription',
+      target,
     );
   }
 
@@ -189,15 +189,14 @@ export class WindowMetadataStorage extends BaseScopedMetadataStorage {
 
   /**
    * Retrieve all @WindowMainSubscription metadata entries.
+   * Note: Does NOT deduplicate by method - a single method can listen to multiple channels.
    */
   public getMainSubscriptions(
     target: Function,
   ): WindowMainSubscriptionMetadata[] {
-    return uniqueByMethod(
-      this.getMethodEntries<WindowMainSubscriptionMetadata>(
-        'main.subscription',
-        target,
-      ),
+    return this.getMethodEntries<WindowMainSubscriptionMetadata>(
+      'main.subscription',
+      target,
     );
   }
 }

@@ -1,8 +1,5 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import {
-  ElectronMetadata,
-  type WindowRendererSubscriptionMetadata,
-} from '@/common/metadata';
+import { ElectronMetadata } from '@/common/metadata';
 import { bindRendererEventListeners } from '@/common/runtime';
 import { createChannelBuilder } from '@assemblerjs/common';
 import { resolveWindowRendererName } from '../window-definition/window-definition';
@@ -14,20 +11,6 @@ function resolveWindowEventChannels(
   event: string,
 ): string[] {
   return [buildWindowChannel(windowName, event)];
-}
-
-function getWindowSubMethods(
-  target: Function,
-): Map<string, WindowRendererSubscriptionMetadata> {
-  const subMethods = new Map<string, WindowRendererSubscriptionMetadata>();
-
-  for (const entry of ElectronMetadata.window.getRendererSubscriptions(
-    target,
-  )) {
-    subMethods.set(entry.method, entry);
-  }
-
-  return subMethods;
 }
 
 /**
@@ -47,17 +30,19 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
     );
   }
 
-  const subMethods = getWindowSubMethods(this.constructor);
-  if (subMethods.size === 0) {
+  const subscriptions = ElectronMetadata.window.getRendererSubscriptions(
+    this.constructor,
+  );
+  if (subscriptions.length === 0) {
     return;
   }
 
   bindRendererEventListeners(
     this,
     bridge,
-    [...subMethods.values()],
+    subscriptions,
     (event: string) => resolveWindowEventChannels(windowName, event),
-    (method: string, _channel: string, args: any[]) => {
+    (method: string, _event: string, _channel: string, args: any[]) => {
       const originalMethod = this[method];
       if (typeof originalMethod !== 'function') {
         throw new Error(

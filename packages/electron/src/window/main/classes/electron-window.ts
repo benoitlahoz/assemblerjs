@@ -1,6 +1,11 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
-import type { TitleBarConfig, TitleBarOptions } from '@/common/types';
+import type {
+  TitleBarConfig,
+  TitleBarOptions,
+  DisplayState,
+  WindowBounds,
+} from '@/common/types';
 import { getWindowDefinition } from '@/window/main/window-definition/window.decorator';
 import type { WindowRouterDefinition } from '@/window/main/window-definition/window.decorator';
 import { WindowCommand } from '../window-command/window-command.decorator';
@@ -42,6 +47,31 @@ const mergeWindowOptions = (
     },
   };
 };
+
+/**
+ * Convert an Electron Display to a simplified DisplayState.
+ */
+function toDisplayState(display: Display): DisplayState {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  return {
+    id: display.id,
+    label: display.label,
+    isPrimary: display.id === primaryDisplay.id,
+    bounds: {
+      x: display.bounds.x,
+      y: display.bounds.y,
+      width: display.bounds.width,
+      height: display.bounds.height,
+    },
+    workArea: {
+      x: display.workArea.x,
+      y: display.workArea.y,
+      width: display.workArea.width,
+      height: display.workArea.height,
+    },
+    scaleFactor: display.scaleFactor,
+  };
+}
 
 /**
  * Base window class for all Electron windows.
@@ -191,6 +221,113 @@ export class ElectronWindow extends BrowserWindow {
   public get currentDisplay(): Display {
     const windowBounds = this.getBounds();
     return screen.getDisplayMatching(windowBounds);
+  }
+
+  /**
+   * Get all available displays.
+   * @returns { DisplayState[] } Array of all displays.
+   */
+  @WindowCommand('getAllDisplays')
+  public getAllDisplaysCommand(): DisplayState[] {
+    return screen.getAllDisplays().map(toDisplayState);
+  }
+
+  /**
+   * Get the current display where the window is located.
+   * @returns { DisplayState } The current display.
+   */
+  @WindowCommand('getCurrentDisplay')
+  public getCurrentDisplayCommand(): DisplayState {
+    return toDisplayState(this.currentDisplay);
+  }
+
+  /**
+   * Get the primary display.
+   * @returns { DisplayState } The primary display.
+   */
+  @WindowCommand('getPrimaryDisplay')
+  public getPrimaryDisplayCommand(): DisplayState {
+    return toDisplayState(screen.getPrimaryDisplay());
+  }
+
+  /**
+   * Get a display by its ID.
+   * @param { number } displayId - The display ID.
+   * @returns { DisplayState | undefined } The display if found, undefined otherwise.
+   */
+  @WindowCommand('getDisplayById')
+  public getDisplayByIdCommand(displayId: number): DisplayState | undefined {
+    const displays = screen.getAllDisplays();
+    const display = displays.find((d) => d.id === displayId);
+    return display ? toDisplayState(display) : undefined;
+  }
+
+  /**
+   * Move and center the window on a specific display.
+   *
+   * @param {number} displayId - The ID of the target display.
+   * @returns {WindowBounds} The new window bounds after moving.
+   */
+  @WindowCommand('moveToDisplay')
+  public moveToDisplayCommand(displayId: number): WindowBounds {
+    const display = screen.getAllDisplays().find((d) => d.id === displayId);
+
+    if (!display) {
+      throw new Error(`Display with id ${displayId} not found`);
+    }
+
+    // Ensure window fits within target display and calculate proper bounds
+    const adjustedBounds = this.ensureWindowWithinDisplay(display);
+
+    // Move window to adjusted position and size
+    this.setBounds(adjustedBounds);
+
+    return this.getBounds();
+  }
+
+  /**
+   * Ensure window bounds fit within a display's work area.
+   * Adjusts size and position to prevent the window from exceeding the display bounds.
+   *
+   * @param {Display} display - The target display.
+   * @returns {WindowBounds} Adjusted bounds that fit within the display's work area.
+   */
+  @WindowCommand('ensureWindowWithinDisplay')
+  private ensureWindowWithinDisplay(display: Display): WindowBounds {
+    const bounds = this.getBounds();
+    const currentDisplay = this.currentDisplay;
+    const { workArea } = display;
+
+    // Only resize if window is actually too large for the target display
+    // Otherwise preserve current size to avoid triggering Stage Manager miniaturization
+    let width = bounds.width;
+    let height = bounds.height;
+
+    if (bounds.width > workArea.width - 40) {
+      width = Math.max(400, workArea.width - 40);
+    }
+    if (bounds.height > workArea.height - 40) {
+      height = Math.max(300, workArea.height - 40);
+    }
+
+    // Try to preserve relative position from current display to target display
+    // Calculate position relative to current display's work area
+    const currentWorkArea = currentDisplay.workArea;
+    const relativeX = bounds.x - currentWorkArea.x;
+    const relativeY = bounds.y - currentWorkArea.y;
+
+    // Apply same relative position to target display
+    let x = workArea.x + relativeX;
+    let y = workArea.y + relativeY;
+
+    // Clamp position to ensure window stays within work area
+    x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width));
+    y = Math.max(
+      workArea.y,
+      Math.min(y, workArea.y + workArea.height - height),
+    );
+
+    return { x, y, width, height };
   }
 
   /**
@@ -391,16 +528,7 @@ export class ElectronWindow extends BrowserWindow {
   private emitTitleBarChanged(): void {
     if (this.titleBarConfig) {
       const channel = buildWindowChannel(this.name, 'titlebar-changed');
-      console.log('[MAIN] emitTitleBarChanged - channel:', channel);
-      console.log(
-        '[MAIN] emitTitleBarChanged - titleBarConfig:',
-        JSON.stringify(this.titleBarConfig, null, 2),
-      );
       this.webContents.send(channel, this.titleBarConfig);
-    } else {
-      console.error(
-        '[MAIN] emitTitleBarChanged called but titleBarConfig is undefined!',
-      );
     }
   }
 }

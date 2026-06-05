@@ -8,7 +8,9 @@ import {
   type Ref,
   type ComputedRef,
 } from 'vue';
+import type { DisplayState } from '@assemblerjs/electron/renderer';
 import type { MainWindow } from '../../main.window';
+import type { MainMenuService } from '../../main.menu';
 
 export interface RectBounds {
   x: number;
@@ -54,6 +56,8 @@ export interface UseWindowBoundsCardReturn {
 export function useWindowBoundsCard(
   mainWindow: MainWindow,
   bounds: ShallowRef<{ x: number; y: number; width: number; height: number } | undefined>,
+  menuService: MainMenuService,
+  selectedDisplay: ComputedRef<DisplayState | undefined>,
 ): UseWindowBoundsCardReturn {
   const canvasRef = ref<HTMLCanvasElement | null>(null);
   const draftBounds = ref<RectBounds | undefined>(undefined);
@@ -73,6 +77,7 @@ export function useWindowBoundsCard(
 
   let dragState: DragState | undefined;
   let frameRequestId: number | undefined;
+  let resizeObserver: ResizeObserver | undefined;
 
   const windowBoundsCanvasStyle = computed(() => {
     const ratioWidth = Math.max(
@@ -196,8 +201,15 @@ export function useWindowBoundsCard(
       return;
     }
 
-    canvas.width = width;
-    canvas.height = height;
+    // Get device pixel ratio for HiDPI displays
+    const dpr = window.devicePixelRatio || 1;
+
+    // Set canvas resolution to match display pixel density
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    // Scale context to maintain logical coordinate system
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     ctx.clearRect(0, 0, width, height);
 
@@ -514,10 +526,39 @@ export function useWindowBoundsCard(
   }
 
   const syncDisplayWorkArea = async (): Promise<void> => {
-    const [workArea, displayBounds] = await Promise.all([
-      mainWindow.getDisplayWorkArea(),
-      mainWindow.getDisplayBounds(),
-    ]);
+    // Use selected display if available, otherwise fall back to window's current display
+    const display = selectedDisplay.value;
+    if (!display) {
+      const [workArea, displayBounds] = await Promise.all([
+        mainWindow.getDisplayWorkArea(),
+        mainWindow.getDisplayBounds(),
+      ]);
+
+      if (!workArea?.width || !workArea?.height) {
+        return;
+      }
+
+      screenWorkArea.value = {
+        x: Math.round(workArea.x || 0),
+        y: Math.round(workArea.y || 0),
+        width: Math.max(1, Math.round(workArea.width)),
+        height: Math.max(1, Math.round(workArea.height)),
+      };
+
+      if (displayBounds?.width && displayBounds?.height) {
+        screenDisplayBounds.value = {
+          x: Math.round(displayBounds.x || 0),
+          y: Math.round(displayBounds.y || 0),
+          width: Math.max(1, Math.round(displayBounds.width)),
+          height: Math.max(1, Math.round(displayBounds.height)),
+        };
+      }
+      return;
+    }
+
+    // Use selected display
+    const workArea = display.workArea;
+    const displayBounds = display.bounds;
 
     if (!workArea?.width || !workArea?.height) {
       return;
@@ -542,6 +583,9 @@ export function useWindowBoundsCard(
 
   const randomizeBounds = async (): Promise<void> => {
     await mainWindow.randomBounds();
+    if (menuService.autoCenterAfterRandom.value) {
+      await mainWindow.centerWindow();
+    }
     await syncDisplayWorkArea();
   };
 
@@ -556,9 +600,18 @@ export function useWindowBoundsCard(
   };
 
   onMounted(async () => {
-    await mainWindow.refreshBounds();
+    // Get current bounds without modifying window state
+    await mainWindow.getBounds();
     await syncDisplayWorkArea();
     drawBoundsCanvas();
+
+    // Watch canvas size changes to ensure it always redraws with correct resolution
+    if (canvasRef.value) {
+      resizeObserver = new ResizeObserver(() => {
+        scheduleDraw();
+      });
+      resizeObserver.observe(canvasRef.value);
+    }
   });
 
   onBeforeUnmount(() => {
@@ -567,6 +620,10 @@ export function useWindowBoundsCard(
       window.cancelAnimationFrame(frameRequestId);
       frameRequestId = undefined;
     }
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+      resizeObserver = undefined;
+    }
   });
 
   // Watch the ShallowRef directly — most reliable way to track bounds changes from IPC events.
@@ -574,11 +631,32 @@ export function useWindowBoundsCard(
     if (!dragState) {
       draftBounds.value = undefined;
     }
-    drawBoundsCanvas();
+    // Use scheduleDraw to ensure DOM has updated before redrawing
+    scheduleDraw();
   });
 
   watch(screenWorkArea, () => scheduleDraw(), { deep: true });
   watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
+
+  // Watch selected display to move window and update work area
+  watch(selectedDisplay, async (newDisplay, oldDisplay) => {
+    if (!newDisplay) {
+      return;
+    }
+
+    // Only move window if display actually changed (not initial load)
+    if (oldDisplay && newDisplay.id !== oldDisplay.id) {
+      await mainWindow.moveToDisplay(newDisplay.id);
+      // No need to call refreshBounds - moveToDisplay already updates bounds
+      // and the bounds watcher will trigger automatically
+    }
+
+    await syncDisplayWorkArea();
+
+    // Use nextTick to ensure DOM has updated with new aspect-ratio before drawing
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    scheduleDraw();
+  });
 
   return {
     canvasRef,

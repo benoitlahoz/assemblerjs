@@ -8,6 +8,7 @@ import type {
   WindowState,
   TitleBarConfig,
   TitleBarOptions,
+  DisplayState,
 } from '@/common/types';
 import { resolveWindowRendererName } from '@/window/renderer/window-definition/window-definition';
 import {
@@ -97,6 +98,69 @@ export abstract class AbstractWindowService implements AbstractAssemblage {
 
   public async getBounds(): Promise<WindowBounds | undefined> {
     return await this.windows.getBounds(this.resolveWindowName());
+  }
+
+  /**
+   * Get all available displays.
+   */
+  public async getAllDisplays(): Promise<DisplayState[]> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowChannel(windowName, 'getAllDisplays');
+    const result = await this.windows.ipc.invoke(channel);
+    return unwrapIpcResult<DisplayState[]>(channel, result) ?? [];
+  }
+
+  /**
+   * Get the current display where the window is located.
+   */
+  public async getCurrentDisplay(): Promise<DisplayState> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowChannel(windowName, 'getCurrentDisplay');
+    const result = await this.windows.ipc.invoke(channel);
+    const display = unwrapIpcResult<DisplayState>(channel, result);
+    if (!display) {
+      throw new Error('Failed to get current display');
+    }
+    return display;
+  }
+
+  /**
+   * Get the primary display.
+   */
+  public async getPrimaryDisplay(): Promise<DisplayState | undefined> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowChannel(windowName, 'getPrimaryDisplay');
+    const result = await this.windows.ipc.invoke(channel);
+    return unwrapIpcResult<DisplayState | undefined>(channel, result);
+  }
+
+  /**
+   * Get a display by its ID.
+   */
+  public async getDisplayById(
+    displayId: number,
+  ): Promise<DisplayState | undefined> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowChannel(windowName, 'getDisplayById');
+    const result = await this.windows.ipc.invoke(channel, displayId);
+    return unwrapIpcResult<DisplayState | undefined>(channel, result);
+  }
+
+  /**
+   * Move and center the window on a specific display.
+   */
+  public async moveToDisplay(displayId: number): Promise<WindowBounds> {
+    const windowName = this.resolveWindowName();
+    const channel = buildWindowChannel(windowName, 'moveToDisplay');
+    const result = await this.windows.ipc.invoke(channel, displayId);
+    return (
+      unwrapIpcResult<WindowBounds>(channel, result) ?? {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+      }
+    );
   }
 
   public async focus(): Promise<void> {

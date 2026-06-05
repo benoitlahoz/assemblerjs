@@ -32,3 +32,11 @@ export function getWindowEmitEvent(
 export function getWindowEmitEvents(target: Function): WindowEmitMetadata[] {
   return ElectronMetadata.window.getEmits(target);
 }
+
+export function getWindowEmitEventsForMethod(
+  target: Function,
+  method: string,
+): string[] {
+  const all = ElectronMetadata.window.getEmits<WindowEmitMetadata>(target);
+  return all.filter((e) => e.method === method).map((e) => e.event);
+}

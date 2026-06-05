@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
-import type { MenuItemState } from '@assemblerjs/electron/renderer';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import type { MenuItemState, DisplayState } from '@assemblerjs/electron/renderer';
 import { useContext } from '@renderer/composables/useContext';
 import { SystemStateModule } from '@features/system/renderer/system-state.module';
 import { MainWindow } from '../../main.window';
@@ -16,6 +16,8 @@ const bounds = mainWindow.bounds;
 
 const menuItems = ref<Record<string, MenuItemState>>({});
 const platform = ref<string>('');
+const availableDisplays = ref<DisplayState[]>([]);
+const selectedDisplayId = ref<number | undefined>(undefined);
 
 onMounted(async () => {
   // Subscribe to updates
@@ -36,6 +38,23 @@ onMounted(async () => {
   if (systemSnapshot) {
     platform.value = systemSnapshot.runtime.platform;
   }
+
+  // Load available displays
+  const displays = await mainWindow.getAllDisplays();
+  availableDisplays.value = displays;
+
+  // Set initial selected display to current display (where window is located)
+  const current = await mainWindow.getCurrentDisplay();
+  if (current) {
+    selectedDisplayId.value = current.id;
+  }
+});
+
+const selectedDisplay = computed(() => {
+  if (selectedDisplayId.value === undefined) {
+    return undefined;
+  }
+  return availableDisplays.value.find((d) => d.id === selectedDisplayId.value);
 });
 
 const {
@@ -50,7 +69,7 @@ const {
   randomizeBounds,
   refreshBounds,
   centerWindow,
-} = useWindowBoundsCard(mainWindow, bounds);
+} = useWindowBoundsCard(mainWindow, bounds, menuService, selectedDisplay);
 
 function acceleratorToKeys(accelerator: string): string[] {
   // Use platform from system state runtime stack
@@ -143,7 +162,7 @@ async function copyBounds() {
   <article class="card card--window-bounds" aria-live="polite">
     <header class="card__header">
       <h2>Window Configuration</h2>
-      <span class="window-bounds-duplex">Full-duplex</span>
+      <span class="window-bounds-duplex">Seamless</span>
     </header>
 
     <p class="card__description">
@@ -189,43 +208,57 @@ async function copyBounds() {
 
     <div class="canvas-wrapper">
       <div class="canvas-container">
-        <button
-          type="button"
-          class="copy-bounds-btn"
-          :class="{ 'copy-bounds-btn--copied': isCopied }"
-          :title="isCopied ? 'Copied!' : 'Copy bounds to clipboard'"
-          @click="copyBounds"
-        >
-          <svg
-            v-if="!isCopied"
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+        <div class="canvas-toolbar">
+          <select
+            v-if="availableDisplays.length > 1"
+            v-model="selectedDisplayId"
+            class="display-select"
+            title="Select display"
           >
-            <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-            <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-          </svg>
-          <svg
-            v-else
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+            <option v-for="display in availableDisplays" :key="display.id" :value="display.id">
+              {{ display.label || `Display ${display.id}` }}
+              {{ display.isPrimary ? ' (Primary)' : '' }}
+              — {{ display.bounds.width }}×{{ display.bounds.height }}
+            </option>
+          </select>
+          <button
+            type="button"
+            class="copy-bounds-btn"
+            :class="{ 'copy-bounds-btn--copied': isCopied }"
+            :title="isCopied ? 'Copied!' : 'Copy bounds to clipboard'"
+            @click="copyBounds"
           >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
-        </button>
+            <svg
+              v-if="!isCopied"
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+            </svg>
+            <svg
+              v-else
+              xmlns="http://www.w3.org/2000/svg"
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </button>
+        </div>
         <canvas
           ref="canvasRef"
           class="window-bounds-canvas"
@@ -307,11 +340,51 @@ async function copyBounds() {
   flex-direction: column;
 }
 
-.copy-bounds-btn {
+.canvas-toolbar {
   position: absolute;
   top: 16px;
+  left: 16px;
   right: 16px;
   z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.display-select {
+  height: 26px;
+  padding: 0 28px 0 10px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, #58a6ff 30%, transparent);
+  background: color-mix(in srgb, var(--ev-c-black-soft) 80%, transparent);
+  color: rgba(235, 245, 255, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='rgba(88,166,255,0.7)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+  max-width: 280px;
+}
+
+.display-select:hover {
+  background: color-mix(in srgb, #58a6ff 12%, var(--ev-c-black-soft));
+  border-color: color-mix(in srgb, #58a6ff 50%, transparent);
+  color: #ebf5ff;
+  box-shadow: 0 2px 6px rgba(88, 166, 255, 0.15);
+}
+
+.display-select:focus {
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #58a6ff 15%, transparent);
+}
+
+.copy-bounds-btn {
   width: 24px;
   height: 24px;
   border-radius: 6px;
@@ -324,6 +397,7 @@ async function copyBounds() {
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
 .copy-bounds-btn:hover {

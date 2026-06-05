@@ -1,4 +1,4 @@
-# electron-01
+# seamless-electron
 
 AssemblerJS Electron example showcasing:
 
@@ -39,12 +39,12 @@ yarn install
 Run the example in development mode:
 
 ```bash
-yarn workspace electron-01 dev
+yarn workspace seamless-electron dev
 ```
 
 ## Scripts
 
-From `examples/electron-01`:
+From `examples/seamless-electron`:
 
 ```bash
 yarn dev
@@ -78,10 +78,10 @@ Renderer side:
 
 - `MainWindow extends AbstractWindowService`
 - `@Window({ name: 'main' })` to bind the service to the window identity
-- `@WindowCommand(...)` and `@WindowOn(...)` for full-duplex commands/events
+- `@WindowCommand(...)` and `@WindowOn(...)` for seamless bidirectional commands/events
 
 Cross-window orchestration in renderer uses `AbstractWindowControllerService`.
 
 ## Why This Example Exists
 
-`electron-01` is designed to validate developer experience patterns before they are adopted in package documentation and production apps.
+`seamless-electron` is designed to validate developer experience patterns before they are adopted in package documentation and production apps.
