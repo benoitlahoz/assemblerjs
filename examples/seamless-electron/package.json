@@ -2,9 +2,15 @@
   "name": "seamless-electron",
   "version": "1.0.0",
   "description": "A seamless Electron application with unified DI and decorator-powered IPC",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "license": "MIT",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

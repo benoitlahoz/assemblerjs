@@ -1,6 +1,23 @@
 {
   "name": "@assemblerjs/mongo",
+  "description": "MongoDB integration for AssemblerJS with Mongoose.",
   "version": "0.9.2",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "keywords": [
+    "assemblerjs",
+    "mongodb",
+    "mongoose",
+    "database",
+    "decorator",
+    "typescript"
+  ],
+  "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

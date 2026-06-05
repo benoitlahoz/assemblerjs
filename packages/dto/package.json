@@ -1,6 +1,23 @@
 {
   "name": "@assemblerjs/dto",
+  "description": "Data Transfer Object decorators for AssemblerJS with validation and transformation.",
   "version": "1.0.1",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "keywords": [
+    "assemblerjs",
+    "dto",
+    "validation",
+    "transformation",
+    "decorator",
+    "typescript"
+  ],
+  "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

@@ -1,6 +1,24 @@
 {
   "name": "@assemblerjs/core",
+  "description": "Core dependency injection library for AssemblerJS.",
   "version": "0.9.9",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "keywords": [
+    "assemblerjs",
+    "core",
+    "dependency-injection",
+    "di",
+    "ioc",
+    "typescript",
+    "decorator"
+  ],
+  "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",

@@ -1,6 +1,24 @@
 {
   "name": "@assemblerjs/electron",
+  "description": "Electron integration for AssemblerJS with type-safe IPC communication between main, renderer, and preload processes.",
   "version": "0.9.6",
+  "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
+  "keywords": [
+    "assemblerjs",
+    "electron",
+    "ipc",
+    "dependency-injection",
+    "di",
+    "typescript",
+    "decorator"
+  ],
+  "license": "MIT",
   "main": "./dist/main-process.cjs",
   "module": "./dist/main-process.mjs",
   "types": "./dist/main-process.d.ts",
