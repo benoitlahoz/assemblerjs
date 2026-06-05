@@ -19,7 +19,7 @@
     "dependencies": "assemblerjs dependencies not used for the time being, but we want to keep them in case we need to use them in the future. Also, we want to keep the versions in sync with the rest of the packages."
   },
   "dependencies": {
-    "@assemblerjs/core": "0.9.8",
+    "@assemblerjs/core": "0.9.9",
     "assemblerjs": "1.2.1",
     "mongoose": "^8.14.1",
     "reflect-metadata": "^0.2.2",

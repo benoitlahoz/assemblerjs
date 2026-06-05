@@ -1,4 +1,3 @@
-export * from '../common/window-channels';
 export * from '../window-command/window-command.decorator';
 export * from '../window-definition/window-decorators.types';
 export * from '../window-listener/window-listener.decorator';

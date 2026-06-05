@@ -5,7 +5,7 @@ import {
   getWindowRendererDefinition,
   resolveWindowRendererName,
 } from './window-definition';
-import { setWindowRendererDefinitionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import { WindowListener } from '../window-listener/window-listener.decorator';
 
 /**
@@ -21,7 +21,7 @@ export function Window(
   const listenerDecorator = WindowListener();
 
   return (target: Function) => {
-    setWindowRendererDefinitionMetadata(
+    ElectronMetadata.window.setRendererDefinition(
       target,
       normalizeWindowRendererDefinition(definition),
     );

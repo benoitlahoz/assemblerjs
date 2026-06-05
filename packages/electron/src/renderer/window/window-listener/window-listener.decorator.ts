@@ -1,17 +1,19 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import {
-  getWindowRendererSubscriptionMetadata,
+  ElectronMetadata,
   type WindowRendererSubscriptionMetadata,
 } from '@/universal/metadata';
 import { bindRendererEventListeners } from '@/universal/runtime';
-import { buildWindowEventChannel } from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
 import { resolveWindowRendererName } from '../window-definition/window-definition';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 function resolveWindowEventChannels(
   windowName: string,
   event: string,
 ): string[] {
-  return [buildWindowEventChannel(windowName, event)];
+  return [buildWindowChannel(windowName, event)];
 }
 
 function getWindowSubMethods(
@@ -19,7 +21,9 @@ function getWindowSubMethods(
 ): Map<string, WindowRendererSubscriptionMetadata> {
   const subMethods = new Map<string, WindowRendererSubscriptionMetadata>();
 
-  for (const entry of getWindowRendererSubscriptionMetadata(target)) {
+  for (const entry of ElectronMetadata.window.getRendererSubscriptions(
+    target,
+  )) {
     subMethods.set(entry.method, entry);
   }
 

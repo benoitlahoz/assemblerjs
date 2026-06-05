@@ -4,7 +4,9 @@ import type { TitleBarConfig, TitleBarOptions } from '@/universal/types';
 import { getWindowDefinition } from '@/main/window/window-definition/window.decorator';
 import type { WindowRouterDefinition } from '@/main/window/window-definition/window.decorator';
 import { WindowCommand } from '../window-command/window-command.decorator';
-import { buildWindowEventChannel } from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 export interface ElectronWindowOptions extends BrowserWindowConstructorOptions {
   definition: {
@@ -319,7 +321,7 @@ export class ElectronWindow extends BrowserWindow {
     this.setTitle(title);
     // Emit title-changed event to renderer
     this.webContents.send(
-      buildWindowEventChannel(this.name, 'title-changed'),
+      buildWindowChannel(this.name, 'title-changed'),
       title,
     );
   }
@@ -388,7 +390,7 @@ export class ElectronWindow extends BrowserWindow {
    */
   private emitTitleBarChanged(): void {
     if (this.titleBarConfig) {
-      const channel = buildWindowEventChannel(this.name, 'titlebar-changed');
+      const channel = buildWindowChannel(this.name, 'titlebar-changed');
       console.log('[MAIN] emitTitleBarChanged - channel:', channel);
       console.log(
         '[MAIN] emitTitleBarChanged - titleBarConfig:',

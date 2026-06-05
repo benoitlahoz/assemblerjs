@@ -1,6 +1,8 @@
-import { AppListener } from '@/main/app/app-listener.decorator';
-import { MenuController } from '@/main/menu/menu-controller/menu-controller.decorator';
-import { WindowController } from '@/main/window/window-controller/window-controller.decorator';
+import { composeDecorators } from '@assemblerjs/core';
+// Direct imports to avoid barrel circular dependencies
+import { AppListener } from '../../app/app-listener.decorator';
+import { MenuController } from '../../menu/menu-controller/menu-controller.decorator';
+import { WindowController } from '../window-controller/window-controller.decorator';
 
 /**
  * Compose main-process lifecycle decorators used by a window controller:
@@ -8,23 +10,5 @@ import { WindowController } from '@/main/window/window-controller/window-control
  * - menu registration/focus
  * - window registry + IPC commands
  */
-export function WindowOrchestrator(): ClassDecorator {
-  const windowController = WindowController();
-  const menuController = MenuController();
-  const appListener = AppListener();
-
-  return (target: Function) => {
-    const withWindowController =
-      (windowController(target as any) as Function | void) || target;
-    const withMenuController =
-      (menuController(withWindowController as any) as Function | void) ||
-      withWindowController;
-    const withAppListener =
-      (appListener(withMenuController as any) as Function | void) ||
-      withMenuController;
-
-    if (withAppListener !== target) {
-      return withAppListener as any;
-    }
-  };
-}
+export const WindowOrchestrator = (): ClassDecorator =>
+  composeDecorators(WindowController(), MenuController(), AppListener());

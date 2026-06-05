@@ -1,10 +1,10 @@
 import type {
   MenuItemLabelResolverContext,
-  MenuItemMetadataEntry,
-} from '@/universal/metadata/electron-metadata.types';
+  MenuItemMetadata,
+} from '@/universal/metadata';
 import type { ElectronMenuItem } from '../../model/electron-menu-item';
 
-export interface IndexedMenuItemMetadataEntry extends MenuItemMetadataEntry {
+export interface IndexedMenuItemMetadataEntry extends MenuItemMetadata {
   declarationIndex: number;
   source?: Record<string, unknown>;
   _submenuPath: string; // Generated hierarchy path
@@ -44,6 +44,6 @@ export interface MenuItemOrderingMetadata extends OrderingKey {
 
 export type {
   MenuItemLabelResolverContext,
-  MenuItemMetadataEntry,
+  MenuItemMetadata,
   ElectronMenuItem,
 };

@@ -3,15 +3,14 @@ import { ElectronWindow } from '@/main/window/classes/electron-window';
 import { getWindowDefinition } from '../window-definition/window.decorator';
 import { getWindowCommands } from '../window-command/window-command.decorator';
 import { getWindowEmitEvents } from '../window-listener/window-emit.decorator';
-import {
-  buildWindowCommandChannel,
-  buildWindowEventChannel,
-} from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
 import type {
   ManagedWindowDefinition,
   WindowControllerState,
   WindowToken,
 } from './window-controller.types';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 const stateSymbol = Symbol('__WindowControllerState__');
 
@@ -66,14 +65,11 @@ export function listManagedDefinitions(
       definition: windowDefinition,
       commands: getWindowCommands(concrete).map((metadata) => ({
         ...metadata,
-        channel: buildWindowCommandChannel(
-          windowDefinition.name,
-          metadata.command,
-        ),
+        channel: buildWindowChannel(windowDefinition.name, metadata.command),
       })),
       events: getWindowEmitEvents(concrete).map((metadata) => ({
         ...metadata,
-        channel: buildWindowEventChannel(windowDefinition.name, metadata.event),
+        channel: buildWindowChannel(windowDefinition.name, metadata.event),
       })),
     });
   }

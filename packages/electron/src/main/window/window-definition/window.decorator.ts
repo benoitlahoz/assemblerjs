@@ -1,11 +1,8 @@
 import { getAssemblageDefinition } from 'assemblerjs';
 import type { BrowserWindowConstructorOptions } from 'electron';
 import type { WindowTitleBarConfig } from '@/universal/types';
-import {
-  ElectronMetadataStorage,
-  getWindowDefinitionMetadata,
-  setWindowDefinitionMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 import { WindowListener } from '../window-listener/window-listener.decorator';
 
 export interface WindowRouterDefinition {
@@ -33,8 +30,10 @@ export interface NormalizedWindowDefinition {
   options: BrowserWindowConstructorOptions;
 }
 
-export const WindowDefinitionMetadataKey =
-  ElectronMetadataStorage.getKey('WindowDefinition');
+export const WindowDefinitionMetadataKey = buildMetadataKey(
+  'electron:window',
+  'WindowDefinition',
+);
 
 export function normalizeWindowDefinition(
   definition: WindowDefinition,
@@ -82,7 +81,10 @@ export function Window(definition: WindowDefinition): ClassDecorator {
   const listenerDecorator = WindowListener();
 
   return (target: Function) => {
-    setWindowDefinitionMetadata(target, normalizeWindowDefinition(definition));
+    ElectronMetadata.window.setDefinition(
+      target,
+      normalizeWindowDefinition(definition),
+    );
 
     // Best-effort: enforce non-singleton when metadata is already available.
     const assemblageDefinition = getAssemblageDefinition(target as any);
@@ -99,7 +101,7 @@ export function Window(definition: WindowDefinition): ClassDecorator {
 export function getWindowDefinition(
   target: Function,
 ): NormalizedWindowDefinition | undefined {
-  return getWindowDefinitionMetadata(target) as
+  return ElectronMetadata.window.getDefinition(target) as
     | NormalizedWindowDefinition
     | undefined;
 }

@@ -1,7 +1,4 @@
-import {
-  getIpcChannelParameterIndices,
-  setIpcChannelParameterIndices,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '../metadata';
 
 export const IpcChannel = () => {
   return (
@@ -9,12 +6,10 @@ export const IpcChannel = () => {
     propertyKey: string | symbol,
     parameterIndex: number,
   ) => {
-    const existingChannelParameters = getIpcChannelParameterIndices(
-      target,
-      propertyKey,
-    );
+    const existingChannelParameters =
+      ElectronMetadata.ipc.getChannelParameterIndices(target, propertyKey);
 
-    setIpcChannelParameterIndices(target, propertyKey, [
+    ElectronMetadata.ipc.setChannelParameterIndices(target, propertyKey, [
       ...existingChannelParameters,
       parameterIndex,
     ]);

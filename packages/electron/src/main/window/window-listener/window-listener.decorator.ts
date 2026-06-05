@@ -1,8 +1,10 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import { getWindowMainSubscriptionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import { bindMainEventListeners } from '@/universal/runtime';
 import { getWindowEmitEvent } from './window-emit.decorator';
-import { buildWindowEventChannel } from '../common/window-channels';
+import { createChannelBuilder } from '@assemblerjs/common';
+
+const buildWindowChannel = createChannelBuilder('window');
 
 /**
  * @deprecated Backward compatibility token. Prefer metadata/runtime binders.
@@ -10,7 +12,7 @@ import { buildWindowEventChannel } from '../common/window-channels';
 export const WindowSubMethods = '__legacy:window-main-submethods__';
 
 function getWindowSubMethods(target: Function): Map<string, string> {
-  const entries = getWindowMainSubscriptionMetadata(target);
+  const entries = ElectronMetadata.window.getMainSubscriptions(target);
   const subMethods = new Map<string, string>();
 
   for (const entry of entries) {
@@ -46,7 +48,7 @@ export const WindowListener = createConstructorDecorator(function (this: any) {
           // Otherwise, treat it as an event name and generate the channel
           const eventChannel = emitEvent.includes(':')
             ? emitEvent
-            : buildWindowEventChannel(this.name, emitEvent);
+            : buildWindowChannel(this.name, emitEvent);
 
           if (typeof payload === 'undefined') {
             this.webContents.send(eventChannel);

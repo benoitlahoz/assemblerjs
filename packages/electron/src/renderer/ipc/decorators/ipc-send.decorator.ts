@@ -1,7 +1,4 @@
-import {
-  getIpcChannelParameterIndices,
-  getIpcResultParameterIndices,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 
 /**
  * Sends an IPC message from the renderer process to the main process.
@@ -31,7 +28,7 @@ export function IpcSend<C extends string = string>(
     const originalMethod = descriptor.value as Function;
 
     descriptor.value = function (...args: any[]): void {
-      const channelParameters = getIpcChannelParameterIndices(
+      const channelParameters = ElectronMetadata.ipc.getChannelParameterIndices(
         target,
         propertyKey,
       );
@@ -65,10 +62,8 @@ export function IpcSend<C extends string = string>(
         );
       }
 
-      const ipcResultParameters = getIpcResultParameterIndices(
-        target,
-        propertyKey,
-      );
+      const ipcResultParameters =
+        ElectronMetadata.ipc.getResultParameterIndices(target, propertyKey);
       const excludedParameters = new Set([
         ...channelParameters,
         ...ipcResultParameters,

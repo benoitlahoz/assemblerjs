@@ -8,11 +8,8 @@ import {
   resolveMenuTranslate,
 } from '@/main/menu/builders/compose-menu-roots';
 import type { ElectronMenuItem } from '@/main/menu/model/electron-menu-item';
-import {
-  ElectronMetadataStorage,
-  getMenuDefinitionMetadata,
-  setMenuDefinitionMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 
 export interface MenuDefinition {
   name?: string;
@@ -22,8 +19,10 @@ export interface NormalizedMenuDefinition {
   name: string;
 }
 
-export const MenuDefinitionMetadataKey =
-  ElectronMetadataStorage.getKey('MenuDefinition');
+export const MenuDefinitionMetadataKey = buildMetadataKey(
+  'electron:menu',
+  'MenuDefinition',
+);
 
 const MenuAutoBootstrap = createConstructorDecorator(function (this: any) {
   if (typeof this.getItems === 'function' && this.getItems().length > 0) {
@@ -88,9 +87,9 @@ export function Menu(definition: string | MenuDefinition): ClassDecorator {
     const decoratedTarget =
       (autoBootstrapDecorator(target as any) as Function | void) || target;
 
-    setMenuDefinitionMetadata(target, normalized);
+    ElectronMetadata.menu.setDefinition(target, normalized);
     if (decoratedTarget !== target) {
-      setMenuDefinitionMetadata(decoratedTarget, normalized);
+      ElectronMetadata.menu.setDefinition(decoratedTarget, normalized);
     }
 
     const targets =
@@ -113,7 +112,7 @@ export function Menu(definition: string | MenuDefinition): ClassDecorator {
 export function getMenuDefinition(
   target: Function,
 ): NormalizedMenuDefinition | undefined {
-  return getMenuDefinitionMetadata(target) as
+  return ElectronMetadata.menu.getDefinition(target) as
     | NormalizedMenuDefinition
     | undefined;
 }

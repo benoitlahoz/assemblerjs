@@ -1,8 +1,10 @@
 import { Event, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
 import { ElectronWindow } from '@/main';
-import { buildMenuEventChannel } from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/universal';
 import type { MenuItemClickedEvent } from '@/universal';
+
+const buildMenuChannel = createChannelBuilder('menu');
 
 export class ElectronMenuItem {
   private _id = 'ElectronMenuItem';
@@ -480,7 +482,7 @@ export class ElectronMenuItem {
       };
 
       targetWindow.webContents.send(
-        buildMenuEventChannel(windowName, 'itemClicked'),
+        buildMenuChannel(windowName, 'itemClicked'),
         scopedPayload,
       );
 

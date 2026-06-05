@@ -1,12 +1,11 @@
 import type { WindowIpcChannel } from '@/universal/channels';
-import {
-  ElectronMetadataStorage,
-  addWindowEmitMetadata,
-  getWindowEmitMetadata,
-  getWindowEmitMetadataForMethod,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 
-export const WindowEmitMethods = ElectronMetadataStorage.getKey('WindowEmit');
+export const WindowEmitMethods = buildMetadataKey(
+  'electron:window',
+  'WindowEmit',
+);
 
 export interface WindowEmitMetadata {
   method: string;
@@ -19,7 +18,7 @@ export function WindowEmit(event: WindowIpcChannel | string): MethodDecorator {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addWindowEmitMetadata(target, propertyKey, event);
+    ElectronMetadata.window.addEmit(target, propertyKey, event);
   } as MethodDecorator;
 }
 
@@ -27,9 +26,9 @@ export function getWindowEmitEvent(
   target: object,
   method: string,
 ): string | undefined {
-  return getWindowEmitMetadataForMethod(target, method)?.event;
+  return ElectronMetadata.window.getEmitForMethod(target, method)?.event;
 }
 
 export function getWindowEmitEvents(target: Function): WindowEmitMetadata[] {
-  return getWindowEmitMetadata(target);
+  return ElectronMetadata.window.getEmits(target);
 }

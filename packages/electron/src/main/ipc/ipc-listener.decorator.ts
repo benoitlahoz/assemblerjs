@@ -1,7 +1,5 @@
-import { ipcMain } from 'electron';
-import { createConstructorDecorator } from 'assemblerjs';
-import { type IpcType, IpcSubMethods } from '@/universal/decorators';
-import { registerCleanup } from '@/universal/lifecycle';
+import { ipcMain, type IpcMain } from 'electron';
+import { createIpcListener } from '@/universal/decorators/create-ipc-listener';
 
 const activeHandleListeners = new Map<string, (...args: any[]) => any>();
 
@@ -9,44 +7,42 @@ const activeHandleListeners = new Map<string, (...args: any[]) => any>();
  * Class decorator to allow using 'ipcMain' decorators.
  * @see https://stackoverflow.com/a/61448736/1060921
  */
-export const IpcListener = createConstructorDecorator(function (this: any) {
-  // Since the class returned by this decorator is a wrapper of `Assemblage` get the constructor methods.
-  const subMethods = this.constructor.prototype[IpcSubMethods];
-  if (subMethods) {
-    subMethods.forEach(
-      (
-        handler: { channel: string; type: IpcType; withEvent: boolean },
-        method: string
-      ) => {
-        if (handler.type === 'handle') {
-          ipcMain.removeHandler(handler.channel as any);
-        }
+export const IpcListener = createIpcListener<IpcMain>({
+  getApi: () => ipcMain,
 
-        const listener = (...args: any[]) => {
-          if (!handler.withEvent) {
-            return this[method](...args.slice(1));
-          }
+  setupHandler: (api, instance, method, handler) => {
+    // Remove existing handler to avoid duplicates
+    if (handler.type === 'handle') {
+      api.removeHandler(handler.channel as any);
+    }
 
-          return this[method](...args);
-        };
-
-        if (handler.type === 'handle') {
-          activeHandleListeners.set(handler.channel, listener);
-          ipcMain.handle(handler.channel as any, listener);
-
-          registerCleanup(this, () => {
-            if (activeHandleListeners.get(handler.channel) === listener) {
-              ipcMain.removeHandler(handler.channel as any);
-              activeHandleListeners.delete(handler.channel);
-            }
-          });
-        } else {
-          ipcMain[handler.type](handler.channel as any, listener);
-          registerCleanup(this, () => {
-            ipcMain.off(handler.channel as any, listener);
-          });
-        }
+    // Create listener that optionally filters out the event parameter
+    const listener = (...args: any[]) => {
+      if (!handler.withEvent) {
+        return instance[method](...args.slice(1));
       }
-    );
-  }
+      return instance[method](...args);
+    };
+
+    // Register the listener
+    if (handler.type === 'handle') {
+      activeHandleListeners.set(handler.channel, listener);
+      api.handle(handler.channel as any, listener);
+
+      // Cleanup function
+      return () => {
+        if (activeHandleListeners.get(handler.channel) === listener) {
+          api.removeHandler(handler.channel as any);
+          activeHandleListeners.delete(handler.channel);
+        }
+      };
+    } else {
+      api[handler.type](handler.channel as any, listener);
+
+      // Cleanup function
+      return () => {
+        api.off(handler.channel as any, listener);
+      };
+    }
+  },
 });

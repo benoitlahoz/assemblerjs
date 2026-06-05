@@ -1,19 +1,22 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import {
-  getMenuRendererSubscriptionMetadata,
+  ElectronMetadata,
   type MenuRendererSubscriptionMetadata,
 } from '@/universal/metadata';
 import {
   bindRendererEventListeners,
   createEventDeduplicator,
 } from '@/universal/runtime';
-import { buildMenuEventChannel, MenuIpcChannel } from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import type { MenuItemClickedEvent, MenuItemState } from '@/universal/types';
 import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
+const buildMenuChannel = createChannelBuilder('menu');
+
 function resolveMenuEventChannels(windowName: string, event: string): string[] {
   const channels = new Set<string>();
-  channels.add(buildMenuEventChannel(windowName, event));
+  channels.add(buildMenuChannel(windowName, event));
 
   if (event === 'itemClicked') {
     channels.add(MenuIpcChannel.OnItemClicked);
@@ -31,7 +34,7 @@ function getMenuSubMethods(
 ): Map<string, MenuRendererSubscriptionMetadata> {
   const subMethods = new Map<string, MenuRendererSubscriptionMetadata>();
 
-  for (const entry of getMenuRendererSubscriptionMetadata(target)) {
+  for (const entry of ElectronMetadata.menu.getRendererSubscriptions(target)) {
     subMethods.set(entry.method, entry);
   }
 

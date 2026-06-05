@@ -1,7 +1,4 @@
-import {
-  getWindowUseMenuDefinitionMetadata,
-  setWindowUseMenuDefinitionMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import {
   normalizeUseMenuDefinition,
   type MenuReference,
@@ -18,7 +15,7 @@ export function UseMenu(
   definition: MenuReference | UseMenuDefinition | UseMenuSlot[],
 ): ClassDecorator {
   return (target: Function) => {
-    setWindowUseMenuDefinitionMetadata(
+    ElectronMetadata.window.setUseMenuDefinition(
       target,
       normalizeUseMenuDefinition(definition),
     );
@@ -28,7 +25,7 @@ export function UseMenu(
 export function getUseMenuDefinition(
   target: Function,
 ): NormalizedUseMenuDefinition | undefined {
-  return getWindowUseMenuDefinitionMetadata(target) as
+  return ElectronMetadata.window.getUseMenuDefinition(target) as
     | NormalizedUseMenuDefinition
     | undefined;
 }

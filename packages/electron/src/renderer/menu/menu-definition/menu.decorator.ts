@@ -5,7 +5,7 @@ import {
   getMenuRendererDefinition,
   resolveMenuRendererDefinition,
 } from './menu-definition';
-import { setMenuRendererDefinitionMetadata } from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
 import { MenuListener } from '../menu-listener/menu-listener.decorator';
 
 export function Menu(
@@ -14,7 +14,7 @@ export function Menu(
   const listenerDecorator = MenuListener();
 
   return (target: Function) => {
-    setMenuRendererDefinitionMetadata(
+    ElectronMetadata.menu.setRendererDefinition(
       target,
       normalizeMenuRendererDefinition(definition),
     );

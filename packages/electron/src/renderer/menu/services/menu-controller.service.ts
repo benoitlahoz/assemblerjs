@@ -1,17 +1,16 @@
 import { Assemblage } from 'assemblerjs';
 import { wait } from '@assemblerjs/core';
 import { AbstractIpcService, unwrapIpcResult } from '@/renderer/ipc/services';
-import {
-  buildMenuCommandChannel,
-  buildMenuEventChannel,
-  MenuIpcChannel,
-} from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import type {
   MenuItemClickedEvent,
   MenuItemState,
   MenuSnapshot,
 } from '@/universal/types';
 import { AbstractMenuControllerService } from './menu-controller.abstract';
+
+const buildMenuChannel = createChannelBuilder('menu');
 
 @Assemblage()
 export class MenuControllerService extends AbstractMenuControllerService {
@@ -91,7 +90,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
     args: unknown[],
     fallbackChannel: MenuIpcChannel,
   ): Promise<T | undefined> {
-    const scopedChannel = buildMenuCommandChannel(windowName, command);
+    const scopedChannel = buildMenuChannel(windowName, command);
 
     try {
       const scopedResult = await this.ipc.invoke(scopedChannel, ...args);
@@ -195,7 +194,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
   ): () => void {
     const unsubs = [
       this.ipc.on(
-        buildMenuEventChannel(windowName, 'itemClicked'),
+        buildMenuChannel(windowName, 'itemClicked'),
         (event: MenuItemClickedEvent) => {
           if (!this.shouldHandleEvent(`click:${windowName}:${event.itemId}`)) {
             return;
@@ -241,7 +240,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
   ): () => void {
     const unsubs = [
       this.ipc.on(
-        buildMenuEventChannel(windowName, 'stateChanged'),
+        buildMenuChannel(windowName, 'stateChanged'),
         (state: MenuItemState) => {
           if (
             !this.shouldHandleEvent(
@@ -301,7 +300,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
   ): () => void {
     const unsubs = [
       this.ipc.on(
-        buildMenuEventChannel(windowName, 'templateChanged'),
+        buildMenuChannel(windowName, 'templateChanged'),
         async (menuName: string) => {
           if (!this.shouldHandleEvent(`template:${windowName}:${menuName}`)) {
             return;

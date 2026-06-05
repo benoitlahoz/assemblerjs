@@ -1,15 +1,13 @@
-import { Assemblage } from 'assemblerjs';
+import type { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
 import { ipcMain } from 'electron';
 import { ElectronWindow } from '@/main/window/classes/electron-window';
-import { ElectronMenu, ElectronMenuItem } from '@/main/menu';
+import { ElectronMenu, ElectronMenuItem } from '@/main/menu/model';
 import { registerCleanup } from '@/universal/lifecycle';
-import {
-  buildMenuCommandChannel,
-  buildMenuEventChannel,
-  MenuIpcChannel,
-} from '@/universal';
+import { createChannelBuilder } from '@assemblerjs/common';
+import { MenuIpcChannel } from '@/universal';
 import type { IpcReturnType, MenuItemState, MenuSnapshot } from '@/universal';
-import { AbstractMenuControllerService } from './menu-controller.abstract';
+
+const buildMenuChannel = createChannelBuilder('menu');
 
 interface MenuRegistration {
   windowName: string;
@@ -18,14 +16,23 @@ interface MenuRegistration {
   window?: ElectronWindow;
 }
 
-@Assemblage()
-export class MenuControllerService extends AbstractMenuControllerService {
+/**
+ * Base menu controller for main process.
+ * Users should extend this class to create their own menu controller.
+ *
+ * @example
+ * ```typescript
+ * @MenuOrchestrator()
+ * @Assemblage({ provide: [[AppMenu], [EditMenu]] })
+ * export class MenuController extends BaseMenuController {}
+ * ```
+ */
+export class BaseMenuController implements AbstractAssemblage {
   private readonly registrations = new Map<string, MenuRegistration>();
   private globalHandlersRegistered = false;
   private readonly scopedHandlers = new Set<string>();
 
   constructor() {
-    super();
     this.registerGlobalHandlers();
   }
 
@@ -119,7 +126,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
     const emitEvents = (): void => {
       this.emit(
         windowName,
-        buildMenuEventChannel(windowName, 'templateChanged'),
+        buildMenuChannel(windowName, 'templateChanged'),
         registration.menuName,
       );
       this.emit(
@@ -142,11 +149,7 @@ export class MenuControllerService extends AbstractMenuControllerService {
   }
 
   private emitStateChanged(windowName: string, state: MenuItemState): void {
-    this.emit(
-      windowName,
-      buildMenuEventChannel(windowName, 'stateChanged'),
-      state,
-    );
+    this.emit(windowName, buildMenuChannel(windowName, 'stateChanged'), state);
     this.emit(windowName, MenuIpcChannel.OnItemStateChanged, windowName, state);
   }
 
@@ -197,18 +200,18 @@ export class MenuControllerService extends AbstractMenuControllerService {
       [string, (_event: unknown, ...args: any[]) => any]
     > = [
       [
-        buildMenuCommandChannel(windowName, 'snapshot'),
+        buildMenuChannel(windowName, 'snapshot'),
         () => this.toIpcResult(() => this.snapshot(windowName)),
       ],
       [
-        buildMenuCommandChannel(windowName, 'setItemEnabled'),
+        buildMenuChannel(windowName, 'setItemEnabled'),
         (_event, itemId: string, enabled: boolean) =>
           this.toIpcResult(() =>
             this.setItemEnabled(windowName, itemId, enabled),
           ),
       ],
       [
-        buildMenuCommandChannel(windowName, 'setItemChecked'),
+        buildMenuChannel(windowName, 'setItemChecked'),
         (_event, itemId: string, checked: boolean) =>
           this.toIpcResult(() =>
             this.setItemChecked(windowName, itemId, checked),
@@ -308,7 +311,10 @@ export class MenuControllerService extends AbstractMenuControllerService {
     };
   }
 
-  public onDispose(): void {
+  public onDispose(
+    _context: AssemblerContext,
+    _configuration?: Record<string, any>,
+  ): void {
     this.registrations.clear();
     this.scopedHandlers.clear();
     this.globalHandlersRegistered = false;

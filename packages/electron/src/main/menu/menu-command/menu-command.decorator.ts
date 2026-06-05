@@ -1,10 +1,10 @@
-import {
-  ElectronMetadataStorage,
-  addMenuCommandMetadata,
-  getMenuCommandMetadata,
-} from '@/universal/metadata';
+import { ElectronMetadata } from '@/universal/metadata';
+import { buildMetadataKey } from '@assemblerjs/common';
 
-export const MenuCommandMethods = ElectronMetadataStorage.getKey('MenuCommand');
+export const MenuCommandMethods = buildMetadataKey(
+  'electron:menu',
+  'MenuCommand',
+);
 
 export interface MenuCommandMetadata {
   method: string;
@@ -17,10 +17,10 @@ export function MenuCommand(command: string): MethodDecorator {
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    addMenuCommandMetadata(target, propertyKey, command);
+    ElectronMetadata.menu.addCommand(target, propertyKey, command);
   } as MethodDecorator;
 }
 
 export function getMenuCommands(target: Function): MenuCommandMetadata[] {
-  return getMenuCommandMetadata(target);
+  return ElectronMetadata.menu.getCommands(target);
 }
