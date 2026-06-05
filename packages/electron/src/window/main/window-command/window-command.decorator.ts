@@ -11,13 +11,15 @@ export interface WindowCommandMetadata {
   command: string;
 }
 
-export function WindowCommand(command: string): MethodDecorator {
+export function WindowCommand(command?: string): MethodDecorator {
   return function (
     target: object,
     propertyKey: string,
     _descriptor: PropertyDescriptor,
   ) {
-    ElectronMetadata.window.addCommand(target, propertyKey, command);
+    // Infer command name from method name if not provided
+    const commandName = command ?? propertyKey;
+    ElectronMetadata.window.addCommand(target, propertyKey, commandName);
   } as MethodDecorator;
 }
 

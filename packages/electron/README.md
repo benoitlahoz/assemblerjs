@@ -283,6 +283,28 @@ class MainWindowService extends AbstractWindowService {
 }
 ```
 
+**Convention over configuration**: The `@WindowCommand` decorator can infer the command name from the method name when no parameter is provided:
+
+```typescript
+@Window({ name: 'main' })
+@Assemblage()
+class MainWindowService extends AbstractWindowService {
+  // Infers command name as 'getBounds'
+  @WindowCommand()
+  async getBounds() {
+    // ...
+  }
+
+  // Explicit command name (useful for custom naming)
+  @WindowCommand('refresh-bounds')
+  async refreshBounds() {
+    return await this.getBounds();
+  }
+}
+```
+
+This reduces boilerplate while maintaining backward compatibility. Both approaches can coexist in the same class.
+
 Notes:
 
 - prefer `@Window` on renderer window services
