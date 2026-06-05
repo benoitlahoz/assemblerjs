@@ -2,7 +2,7 @@
   <main class="about-window">
     <section class="about-card">
       <p class="about-card__eyebrow">AssemblerJS Electron Playground</p>
-      <h1 class="about-card__title">Full-Duplex Electron</h1>
+      <h1 class="about-card__title">Seamless Electron</h1>
       <p class="about-card__body">
         Break the process barrier. This example demonstrates unified dependency injection and
         decorator-powered IPC across main, renderer, and preload processes.

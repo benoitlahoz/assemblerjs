@@ -4,7 +4,7 @@
       <div class="hero__content">
         <div class="hero__text">
           <p class="hero__eyebrow">AssemblerJS Electron Playground</p>
-          <h1 class="hero__title">Full-Duplex Electron</h1>
+          <h1 class="hero__title">Seamless Electron</h1>
         </div>
         <p class="hero__description">
           A comprehensive AssemblerJS playground demonstrating unified dependency injection,

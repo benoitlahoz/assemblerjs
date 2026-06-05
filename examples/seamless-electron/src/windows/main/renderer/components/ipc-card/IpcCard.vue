@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
   <article class="card" aria-live="polite">
     <header class="card__header">
       <h2>IPC</h2>
-      <span class="ipc-duplex">Full-duplex</span>
+      <span class="ipc-duplex">Seamless</span>
     </header>
     <p class="card__description">
       Bidirectional renderer &lt;-&gt; main health panel with heartbeat and latency time-series.

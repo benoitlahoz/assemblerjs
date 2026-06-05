@@ -30,14 +30,14 @@
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-ci",
+			"label": "build-seamless-electron-ci",
 			"type": "shell",
 			"command": "CI=1",
 			"args": [
 				"npx",
 				"nx",
 				"build",
-				"electron-01",
+				"seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -199,7 +199,7 @@
 				"-t",
 				"build",
 				"--all",
-				"--exclude=electron-01",
+				"--exclude=seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -277,7 +277,7 @@
 				"-t",
 				"build",
 				"--all",
-				"--exclude=electron-01",
+				"--exclude=seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -369,7 +369,7 @@
 				"-t",
 				"build",
 				"--all",
-				"--exclude=electron-01",
+				"--exclude=seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -415,7 +415,7 @@
 				"-t",
 				"build",
 				"--all",
-				"--exclude=electron-01",
+				"--exclude=seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -446,7 +446,7 @@
 				"-t",
 				"build",
 				"--all",
-				"--exclude=electron-01",
+				"--exclude=seamless-electron",
 				"--skip-nx-cache",
 				"--output-style=stream"
 			],
@@ -557,51 +557,51 @@
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-after-convention-fix",
+			"label": "build-seamless-electron-after-convention-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-after-cycle-fix",
+			"label": "build-seamless-electron-after-cycle-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-after-submenu-fix",
+			"label": "build-seamless-electron-after-submenu-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-submenu-method-api",
+			"label": "build-seamless-electron-submenu-method-api",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-menu-focus-regression-fix",
+			"label": "build-seamless-electron-menu-focus-regression-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-shared-app-menu",
+			"label": "build-seamless-electron-shared-app-menu",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-after-menu-barrels",
+			"label": "build-seamless-electron-after-menu-barrels",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-no-fragments-no-path",
+			"label": "build-seamless-electron-no-fragments-no-path",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
@@ -611,39 +611,39 @@
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-no-fragments-final",
+			"label": "build-seamless-electron-no-fragments-final",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-no-fragments-final",
+			"label": "build-seamless-electron-no-fragments-final",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-menu-race-fix",
+			"label": "build-seamless-electron-menu-race-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-developer-root-menu",
+			"label": "build-seamless-electron-developer-root-menu",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-submenu-order-fix",
+			"label": "build-seamless-electron-submenu-order-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		},
 		{
-			"label": "build-electron-01-submenu-local-order-fix",
+			"label": "build-seamless-electron-submenu-local-order-fix",
 			"type": "shell",
-			"command": "CI=1 npx nx build electron-01 --skip-nx-cache --output-style=stream",
+			"command": "CI=1 npx nx build seamless-electron --skip-nx-cache --output-style=stream",
 			"isBackground": false
 		}
 	]

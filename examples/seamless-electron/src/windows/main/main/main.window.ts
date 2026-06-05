@@ -73,7 +73,7 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
 
   @WindowOn('ready-to-show')
   public onReadyToShow(): void {
-    const title = 'Full-Duplex Electron';
+    const title = 'Seamless Electron';
     this.setTitle(title);
     // Emit title change event to renderer
     this.webContents.send(`window:${this.name}.title-changed`, title);

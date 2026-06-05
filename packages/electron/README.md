@@ -40,7 +40,7 @@ import {} from /* ... */ '@assemblerjs/electron/preload';
 
 ## Quick Start
 
-The recommended usage follows the `examples/electron-01/src/windows` architecture:
+The recommended usage follows the `examples/seamless-electron/src/windows` architecture:
 
 - main bootstrap wires a window controller module
 - each real window is a class in `src/windows/*/main`
@@ -161,7 +161,7 @@ const mainWindow = useContext().require(MainWindow);
 await mainWindow.refreshBounds();
 ```
 
-This is the pattern used in `examples/electron-01/src/windows`.
+This is the pattern used in `examples/seamless-electron/src/windows`.
 
 ## IPC Communication Example
 

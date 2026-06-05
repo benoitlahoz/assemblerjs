@@ -1,24 +1,33 @@
 {
-  "extends": "@electron-toolkit/tsconfig/tsconfig.web.json",
+  "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
+  "files": [
+    "src/renderer/src/composables/useContext.ts",
+    "src/renderer/src/composables/useIpc.ts",
+    "src/renderer/src/composables/useSystem.ts",
+    "src/renderer/src/composables/useWindows.ts"
+  ],
   "include": [
-    "src/renderer/src/env.d.ts",
-    "src/renderer/src/**/*",
-    "src/renderer/src/**/*.vue",
-    "src/preload/*.d.ts",
+    "electron.vite.config.*",
+    "src/main/**/*",
+    "src/preload/**/*",
+    "src/renderer/src/composables/**/*",
     "src/common/**/*",
     "src/features/**/*",
     "src/menus/**/*",
-    "src/windows/*/renderer/**/*",
-    "src/windows/*/universal/**/*"
+    "src/windows/*.ts",
+    "src/windows/*/main/**/*",
+    "src/windows/*/universal/**/*",
+    "src/windows/*/index.ts"
   ],
   "compilerOptions": {
     "composite": true,
     "baseUrl": ".",
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "noImplicitAny": false,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noUnusedLocals": false,
+    "types": ["electron-vite/node"],
     "paths": {
       "@renderer/*": ["src/renderer/src/*"],
       "@common/*": ["src/common/*"],
