@@ -85,6 +85,7 @@ export interface OsState {
 
 export interface DisplayState {
   id: number;
+  label: string;
   isPrimary: boolean;
   bounds: WindowBounds;
   workArea: WindowBounds;

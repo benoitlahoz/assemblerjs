@@ -98,6 +98,7 @@ export class SystemStateHostService {
 
     return screen.getAllDisplays().map((display) => ({
       id: display.id,
+      label: display.label,
       isPrimary: display.id === screen.getPrimaryDisplay().id,
       bounds: {
         x: display.bounds.x,

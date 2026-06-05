@@ -1,6 +1,11 @@
 import type { BrowserWindowConstructorOptions, Display } from 'electron';
 import { BrowserWindow, screen } from 'electron';
-import type { TitleBarConfig, TitleBarOptions } from '@/common/types';
+import type {
+  TitleBarConfig,
+  TitleBarOptions,
+  DisplayState,
+  WindowBounds,
+} from '@/common/types';
 import { getWindowDefinition } from '@/window/main/window-definition/window.decorator';
 import type { WindowRouterDefinition } from '@/window/main/window-definition/window.decorator';
 import { WindowCommand } from '../window-command/window-command.decorator';
@@ -42,6 +47,31 @@ const mergeWindowOptions = (
     },
   };
 };
+
+/**
+ * Convert an Electron Display to a simplified DisplayState.
+ */
+function toDisplayState(display: Display): DisplayState {
+  const primaryDisplay = screen.getPrimaryDisplay();
+  return {
+    id: display.id,
+    label: display.label,
+    isPrimary: display.id === primaryDisplay.id,
+    bounds: {
+      x: display.bounds.x,
+      y: display.bounds.y,
+      width: display.bounds.width,
+      height: display.bounds.height,
+    },
+    workArea: {
+      x: display.workArea.x,
+      y: display.workArea.y,
+      width: display.workArea.width,
+      height: display.workArea.height,
+    },
+    scaleFactor: display.scaleFactor,
+  };
+}
 
 /**
  * Base window class for all Electron windows.
@@ -191,6 +221,79 @@ export class ElectronWindow extends BrowserWindow {
   public get currentDisplay(): Display {
     const windowBounds = this.getBounds();
     return screen.getDisplayMatching(windowBounds);
+  }
+
+  /**
+   * Get all available displays.
+   * @returns { DisplayState[] } Array of all displays.
+   */
+  @WindowCommand('getAllDisplays')
+  public getAllDisplaysCommand(): DisplayState[] {
+    return screen.getAllDisplays().map(toDisplayState);
+  }
+
+  /**
+   * Get the current display where the window is located.
+   * @returns { DisplayState } The current display.
+   */
+  @WindowCommand('getCurrentDisplay')
+  public getCurrentDisplayCommand(): DisplayState {
+    return toDisplayState(this.currentDisplay);
+  }
+
+  /**
+   * Get the primary display.
+   * @returns { DisplayState } The primary display.
+   */
+  @WindowCommand('getPrimaryDisplay')
+  public getPrimaryDisplayCommand(): DisplayState {
+    return toDisplayState(screen.getPrimaryDisplay());
+  }
+
+  /**
+   * Get a display by its ID.
+   * @param { number } displayId - The display ID.
+   * @returns { DisplayState | undefined } The display if found, undefined otherwise.
+   */
+  @WindowCommand('getDisplayById')
+  public getDisplayByIdCommand(displayId: number): DisplayState | undefined {
+    const displays = screen.getAllDisplays();
+    const display = displays.find((d) => d.id === displayId);
+    return display ? toDisplayState(display) : undefined;
+  }
+
+  /**
+   * Move and center the window on a specific display.
+   *
+   * @param {number} displayId - The ID of the target display.
+   * @returns {WindowBounds} The new window bounds after moving.
+   */
+  @WindowCommand('moveToDisplay')
+  public moveToDisplayCommand(displayId: number): WindowBounds {
+    const display = screen.getAllDisplays().find((d) => d.id === displayId);
+
+    if (!display) {
+      throw new Error(`Display with id ${displayId} not found`);
+    }
+
+    const windowBounds = this.getBounds();
+    const { workArea } = display;
+
+    // Calculate center position on the target display
+    const x =
+      workArea.x + Math.floor((workArea.width - windowBounds.width) / 2);
+    const y =
+      workArea.y + Math.floor((workArea.height - windowBounds.height) / 2);
+
+    // Move window to calculated position
+    this.setBounds({
+      x,
+      y,
+      width: windowBounds.width,
+      height: windowBounds.height,
+    });
+
+    return this.getBounds();
   }
 
   /**

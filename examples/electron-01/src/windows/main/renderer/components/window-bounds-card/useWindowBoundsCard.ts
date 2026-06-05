@@ -8,6 +8,7 @@ import {
   type Ref,
   type ComputedRef,
 } from 'vue';
+import type { DisplayState } from '@assemblerjs/electron/renderer';
 import type { MainWindow } from '../../main.window';
 import type { MainMenuService } from '../../main.menu';
 
@@ -56,6 +57,7 @@ export function useWindowBoundsCard(
   mainWindow: MainWindow,
   bounds: ShallowRef<{ x: number; y: number; width: number; height: number } | undefined>,
   menuService: MainMenuService,
+  selectedDisplay: ComputedRef<DisplayState | undefined>,
 ): UseWindowBoundsCardReturn {
   const canvasRef = ref<HTMLCanvasElement | null>(null);
   const draftBounds = ref<RectBounds | undefined>(undefined);
@@ -516,10 +518,39 @@ export function useWindowBoundsCard(
   }
 
   const syncDisplayWorkArea = async (): Promise<void> => {
-    const [workArea, displayBounds] = await Promise.all([
-      mainWindow.getDisplayWorkArea(),
-      mainWindow.getDisplayBounds(),
-    ]);
+    // Use selected display if available, otherwise fall back to window's current display
+    const display = selectedDisplay.value;
+    if (!display) {
+      const [workArea, displayBounds] = await Promise.all([
+        mainWindow.getDisplayWorkArea(),
+        mainWindow.getDisplayBounds(),
+      ]);
+
+      if (!workArea?.width || !workArea?.height) {
+        return;
+      }
+
+      screenWorkArea.value = {
+        x: Math.round(workArea.x || 0),
+        y: Math.round(workArea.y || 0),
+        width: Math.max(1, Math.round(workArea.width)),
+        height: Math.max(1, Math.round(workArea.height)),
+      };
+
+      if (displayBounds?.width && displayBounds?.height) {
+        screenDisplayBounds.value = {
+          x: Math.round(displayBounds.x || 0),
+          y: Math.round(displayBounds.y || 0),
+          width: Math.max(1, Math.round(displayBounds.width)),
+          height: Math.max(1, Math.round(displayBounds.height)),
+        };
+      }
+      return;
+    }
+
+    // Use selected display
+    const workArea = display.workArea;
+    const displayBounds = display.bounds;
 
     if (!workArea?.width || !workArea?.height) {
       return;
@@ -584,6 +615,21 @@ export function useWindowBoundsCard(
 
   watch(screenWorkArea, () => scheduleDraw(), { deep: true });
   watch(screenDisplayBounds, () => scheduleDraw(), { deep: true });
+
+  // Watch selected display to move window and update work area
+  watch(selectedDisplay, async (newDisplay, oldDisplay) => {
+    if (!newDisplay) {
+      return;
+    }
+
+    // Only move window if display actually changed (not initial load)
+    if (oldDisplay && newDisplay.id !== oldDisplay.id) {
+      await mainWindow.moveToDisplay(newDisplay.id);
+    }
+
+    await syncDisplayWorkArea();
+    scheduleDraw();
+  });
 
   return {
     canvasRef,
