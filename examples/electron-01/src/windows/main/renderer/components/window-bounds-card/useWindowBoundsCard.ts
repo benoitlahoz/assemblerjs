@@ -9,6 +9,7 @@ import {
   type ComputedRef,
 } from 'vue';
 import type { MainWindow } from '../../main.window';
+import type { MainMenuService } from '../../main.menu';
 
 export interface RectBounds {
   x: number;
@@ -54,6 +55,7 @@ export interface UseWindowBoundsCardReturn {
 export function useWindowBoundsCard(
   mainWindow: MainWindow,
   bounds: ShallowRef<{ x: number; y: number; width: number; height: number } | undefined>,
+  menuService: MainMenuService,
 ): UseWindowBoundsCardReturn {
   const canvasRef = ref<HTMLCanvasElement | null>(null);
   const draftBounds = ref<RectBounds | undefined>(undefined);
@@ -542,6 +544,9 @@ export function useWindowBoundsCard(
 
   const randomizeBounds = async (): Promise<void> => {
     await mainWindow.randomBounds();
+    if (menuService.autoCenterAfterRandom.value) {
+      await mainWindow.centerWindow();
+    }
     await syncDisplayWorkArea();
   };
 

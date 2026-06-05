@@ -50,7 +50,7 @@ const {
   randomizeBounds,
   refreshBounds,
   centerWindow,
-} = useWindowBoundsCard(mainWindow, bounds);
+} = useWindowBoundsCard(mainWindow, bounds, menuService);
 
 function acceleratorToKeys(accelerator: string): string[] {
   // Use platform from system state runtime stack
