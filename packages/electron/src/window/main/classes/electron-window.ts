@@ -276,24 +276,58 @@ export class ElectronWindow extends BrowserWindow {
       throw new Error(`Display with id ${displayId} not found`);
     }
 
-    const windowBounds = this.getBounds();
-    const { workArea } = display;
+    // Ensure window fits within target display and calculate proper bounds
+    const adjustedBounds = this.ensureWindowWithinDisplay(display);
 
-    // Calculate center position on the target display
-    const x =
-      workArea.x + Math.floor((workArea.width - windowBounds.width) / 2);
-    const y =
-      workArea.y + Math.floor((workArea.height - windowBounds.height) / 2);
-
-    // Move window to calculated position
-    this.setBounds({
-      x,
-      y,
-      width: windowBounds.width,
-      height: windowBounds.height,
-    });
+    // Move window to adjusted position and size
+    this.setBounds(adjustedBounds);
 
     return this.getBounds();
+  }
+
+  /**
+   * Ensure window bounds fit within a display's work area.
+   * Adjusts size and position to prevent the window from exceeding the display bounds.
+   *
+   * @param {Display} display - The target display.
+   * @returns {WindowBounds} Adjusted bounds that fit within the display's work area.
+   */
+  @WindowCommand('ensureWindowWithinDisplay')
+  private ensureWindowWithinDisplay(display: Display): WindowBounds {
+    const bounds = this.getBounds();
+    const currentDisplay = this.currentDisplay;
+    const { workArea } = display;
+
+    // Only resize if window is actually too large for the target display
+    // Otherwise preserve current size to avoid triggering Stage Manager miniaturization
+    let width = bounds.width;
+    let height = bounds.height;
+
+    if (bounds.width > workArea.width - 40) {
+      width = Math.max(400, workArea.width - 40);
+    }
+    if (bounds.height > workArea.height - 40) {
+      height = Math.max(300, workArea.height - 40);
+    }
+
+    // Try to preserve relative position from current display to target display
+    // Calculate position relative to current display's work area
+    const currentWorkArea = currentDisplay.workArea;
+    const relativeX = bounds.x - currentWorkArea.x;
+    const relativeY = bounds.y - currentWorkArea.y;
+
+    // Apply same relative position to target display
+    let x = workArea.x + relativeX;
+    let y = workArea.y + relativeY;
+
+    // Clamp position to ensure window stays within work area
+    x = Math.max(workArea.x, Math.min(x, workArea.x + workArea.width - width));
+    y = Math.max(
+      workArea.y,
+      Math.min(y, workArea.y + workArea.height - height),
+    );
+
+    return { x, y, width, height };
   }
 
   /**
@@ -494,16 +528,7 @@ export class ElectronWindow extends BrowserWindow {
   private emitTitleBarChanged(): void {
     if (this.titleBarConfig) {
       const channel = buildWindowChannel(this.name, 'titlebar-changed');
-      console.log('[MAIN] emitTitleBarChanged - channel:', channel);
-      console.log(
-        '[MAIN] emitTitleBarChanged - titleBarConfig:',
-        JSON.stringify(this.titleBarConfig, null, 2),
-      );
       this.webContents.send(channel, this.titleBarConfig);
-    } else {
-      console.error(
-        '[MAIN] emitTitleBarChanged called but titleBarConfig is undefined!',
-      );
     }
   }
 }

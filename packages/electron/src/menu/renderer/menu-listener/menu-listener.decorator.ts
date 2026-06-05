@@ -1,8 +1,5 @@
 import { createConstructorDecorator } from 'assemblerjs';
-import {
-  ElectronMetadata,
-  type MenuRendererSubscriptionMetadata,
-} from '@/common/metadata';
+import { ElectronMetadata } from '@/common/metadata';
 import {
   bindRendererEventListeners,
   createEventDeduplicator,
@@ -27,18 +24,6 @@ function resolveMenuEventChannels(windowName: string, event: string): string[] {
   }
 
   return [...channels];
-}
-
-function getMenuSubMethods(
-  target: Function,
-): Map<string, MenuRendererSubscriptionMetadata> {
-  const subMethods = new Map<string, MenuRendererSubscriptionMetadata>();
-
-  for (const entry of ElectronMetadata.menu.getRendererSubscriptions(target)) {
-    subMethods.set(entry.method, entry);
-  }
-
-  return subMethods;
 }
 
 function normalizeArgs(
@@ -128,8 +113,10 @@ export const MenuListener = createConstructorDecorator(function (this: any) {
     );
   }
 
-  const subMethods = getMenuSubMethods(this.constructor);
-  if (subMethods.size === 0) {
+  const subscriptions = ElectronMetadata.menu.getRendererSubscriptions(
+    this.constructor,
+  );
+  if (subscriptions.length === 0) {
     return;
   }
 
@@ -138,9 +125,9 @@ export const MenuListener = createConstructorDecorator(function (this: any) {
   bindRendererEventListeners(
     this,
     bridge,
-    [...subMethods.values()],
+    subscriptions,
     (event: string) => resolveMenuEventChannels(windowName, event),
-    (method: string, channel: string, args: any[]) => {
+    (method: string, event: string, channel: string, args: any[]) => {
       const originalMethod = this[method];
       if (typeof originalMethod !== 'function') {
         throw new Error(
@@ -148,9 +135,8 @@ export const MenuListener = createConstructorDecorator(function (this: any) {
         );
       }
 
-      const event = subMethods.get(method)?.event;
       const normalized = normalizeArgs(channel, windowName, args);
-      if (normalized.length === 0 || !event) {
+      if (normalized.length === 0) {
         return;
       }
 

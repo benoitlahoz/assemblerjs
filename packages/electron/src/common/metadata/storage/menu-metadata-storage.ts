@@ -133,15 +133,14 @@ export class MenuMetadataStorage extends BaseScopedMetadataStorage {
 
   /**
    * Retrieve all @MenuRendererSubscription metadata entries.
+   * Note: Does NOT deduplicate by method - a single method can listen to multiple events.
    */
   public getRendererSubscriptions(
     target: Function,
   ): MenuRendererSubscriptionMetadata[] {
-    return uniqueByMethod(
-      this.getMethodEntries<MenuRendererSubscriptionMetadata>(
-        'renderer.subscription',
-        target,
-      ),
+    return this.getMethodEntries<MenuRendererSubscriptionMetadata>(
+      'renderer.subscription',
+      target,
     );
   }
 }

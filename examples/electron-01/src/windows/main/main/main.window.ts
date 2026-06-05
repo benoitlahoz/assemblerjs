@@ -85,32 +85,14 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   // ========================================
 
   @WindowForward('resize')
-  public onResize(): Rectangle {
-    return this.getBounds();
-  }
-
-  @WindowForward('resized')
-  public onResized(): Rectangle {
-    return this.getBounds();
-  }
-
   @WindowForward('move')
-  public onMove(): Rectangle {
-    return this.getBounds();
-  }
-
-  @WindowForward('moved')
-  public onMoved(): Rectangle {
+  public onBoundsChanged(): Rectangle {
     return this.getBounds();
   }
 
   @WindowForward('enter-full-screen')
-  public onEnterFullScreen(): Rectangle {
-    return this.getBounds();
-  }
-
   @WindowForward('leave-full-screen')
-  public onLeaveFullScreen(): Rectangle {
+  public onFullScreenChanged(): Rectangle {
     return this.getBounds();
   }
 

@@ -60,14 +60,16 @@ export function bindRendererEventListeners(
   },
   subscriptions: Array<{ method: string; event: string; type: 'on' | 'once' }>,
   resolveChannels: (event: string) => string[],
-  invoke: (method: string, channel: string, args: any[]) => any,
+  invoke: (method: string, event: string, channel: string, args: any[]) => any,
 ): void {
   for (const sub of subscriptions) {
     const channels = resolveChannels(sub.event);
     const listenerByChannel = new Map<string, (...args: any[]) => any>();
 
     for (const channel of channels) {
-      const listener = (...args: any[]) => invoke(sub.method, channel, args);
+      const listener = (...args: any[]) => {
+        return invoke(sub.method, sub.event, channel, args);
+      };
       listenerByChannel.set(channel, listener);
       bridge[sub.type](channel, listener);
     }
