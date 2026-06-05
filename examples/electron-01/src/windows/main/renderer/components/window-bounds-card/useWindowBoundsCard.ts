@@ -200,8 +200,15 @@ export function useWindowBoundsCard(
       return;
     }
 
-    canvas.width = width;
-    canvas.height = height;
+    // Get scale factor from selected display (or use 1 as fallback)
+    const scaleFactor = selectedDisplay.value?.scaleFactor ?? 1;
+
+    // Set canvas resolution to match display pixel density
+    canvas.width = width * scaleFactor;
+    canvas.height = height * scaleFactor;
+
+    // Scale context to maintain logical coordinate system
+    ctx.scale(scaleFactor, scaleFactor);
 
     ctx.clearRect(0, 0, width, height);
 
@@ -595,6 +602,18 @@ export function useWindowBoundsCard(
     await mainWindow.refreshBounds();
     await syncDisplayWorkArea();
     drawBoundsCanvas();
+
+    // Watch canvas size changes to ensure it always redraws with correct resolution
+    if (canvasRef.value) {
+      const resizeObserver = new ResizeObserver(() => {
+        scheduleDraw();
+      });
+      resizeObserver.observe(canvasRef.value);
+
+      onBeforeUnmount(() => {
+        resizeObserver.disconnect();
+      });
+    }
   });
 
   onBeforeUnmount(() => {
