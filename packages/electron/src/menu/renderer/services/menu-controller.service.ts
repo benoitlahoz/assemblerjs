@@ -1,7 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { wait } from '@assemblerjs/core';
 import { AbstractIpcService, unwrapIpcResult } from '@/ipc/renderer/services';
-import { createChannelBuilder } from '@assemblerjs/common';
+import { createChannelBuilder, createSnapshotStore } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/common';
 import type {
   MenuItemClickedEvent,
@@ -14,7 +14,11 @@ const buildMenuChannel = createChannelBuilder('menu');
 
 @Assemblage()
 export class MenuControllerService extends AbstractMenuControllerService {
-  private readonly snapshots = new Map<string, MenuSnapshot>();
+  private readonly snapshots = createSnapshotStore<string, MenuSnapshot>({
+    touch: (snapshot) => {
+      snapshot.updatedAt = Date.now();
+    },
+  });
   private readonly subscriptions = new Set<() => void>();
   private readonly recentlyHandledEvents = new Map<string, number>();
 
@@ -22,30 +26,16 @@ export class MenuControllerService extends AbstractMenuControllerService {
     super();
   }
 
-  private ensureSnapshot(windowName: string): MenuSnapshot {
-    const existing = this.snapshots.get(windowName);
-    if (existing) {
-      return existing;
-    }
-
-    const created: MenuSnapshot = {
-      windowName,
-      menuName: 'mainMenu',
-      items: {},
-      updatedAt: Date.now(),
-    };
-
-    this.snapshots.set(windowName, created);
-    return created;
-  }
-
   private updateSnapshot(
     windowName: string,
     updater: (snapshot: MenuSnapshot) => void,
   ): void {
-    const snapshot = this.ensureSnapshot(windowName);
-    updater(snapshot);
-    snapshot.updatedAt = Date.now();
+    this.snapshots.update(windowName, updater, (key) => ({
+      windowName: key,
+      menuName: 'mainMenu',
+      items: {},
+      updatedAt: Date.now(),
+    }));
   }
 
   private registerSubscription(unsubscribe: () => void): () => void {
