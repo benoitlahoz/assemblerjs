@@ -1,4 +1,4 @@
 export * from './create-menu-item';
-export * from './build-menu-tree-from-metadata';
-export * from './compose-menu-roots';
+export * from './menu-tree';
+export * from './menu-roots';
 export { assembleMenuFromSlots } from './assemble-menu-from-slots';

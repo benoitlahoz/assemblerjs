@@ -48,7 +48,7 @@ export function buildMenuTreeFromMetadata(
     };
   }
 
-  const root = buildGroupHierarchy(metadata, behavior.translate);
+  const root = buildGroupHierarchy(metadata);
   const itemsById = new Map<string, ElectronMenuItem>();
 
   const roots = sortMenuItemsByOrdering(

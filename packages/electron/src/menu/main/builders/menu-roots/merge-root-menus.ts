@@ -1,4 +1,4 @@
-import { sortMenuItemsByOrdering } from '../build-menu-tree-from-metadata';
+import { sortMenuItemsByOrdering } from '../menu-tree';
 import type { ElectronMenuItem } from './types';
 import { mergeSubmenu } from './merge-submenu';
 
