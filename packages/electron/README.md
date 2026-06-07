@@ -1,52 +1,64 @@
 # @assemblerjs/electron
 
-Electron integration for AssemblerJS with type-safe IPC communication between main process, renderer process, and preload scripts.
+Electron integration for AssemblerJS with type-safe IPC communication between main, renderer, and preload processes.
 
 ## Overview
 
-`@assemblerjs/electron` brings the power of AssemblerJS dependency injection to Electron applications, providing a unified architecture across all Electron processes with type-safe inter-process communication (IPC).
+`@assemblerjs/electron` brings AssemblerJS dependency injection to Electron applications with a single architecture style across all process boundaries.
+
+It provides:
+
+- typed process-specific entry points (`main`, `renderer`, `preload`)
+- decorator-based IPC contracts
+- renderer window services and multi-window orchestration utilities
+- strict preload bridge configuration for safer IPC access
 
 ## Features
 
-- 🔌 **Main Process Integration** - Use AssemblerJS DI in Electron's main process
-- 🖥️ **Renderer Process Support** - DI for renderer processes
-- 🔗 **Preload Scripts** - Bridge main and renderer with type-safety
-- 🎯 **Type-safe IPC** - Full TypeScript support for IPC communication
-- 🏗️ **Unified Architecture** - Same patterns across all processes
-- ♻️ **Lifecycle Management** - Proper cleanup and resource management
+- **Main Process Integration** - Use AssemblerJS DI inside Electron main services and window modules.
+- **Renderer Process Integration** - Build renderer-side services around explicit window identities.
+- **Preload Bridge** - Expose a controlled IPC API to renderer code.
+- **Type-safe IPC** - Keep channel usage and payloads typed with TypeScript.
+- **Symmetric RPC Support** - Support both `renderer -> main` and `main -> renderer` flows.
+- **Lifecycle Management** - Use AssemblerJS lifecycle hooks for registration and cleanup.
 
 ## Installation
 
+Install runtime dependencies:
+
 ```bash
 npm install @assemblerjs/electron assemblerjs electron reflect-metadata
-# or
+```
+
+```bash
 yarn add @assemblerjs/electron assemblerjs electron reflect-metadata
 ```
 
 ## Package Exports
 
-The package provides three entry points for different Electron contexts:
+The package exposes three process-specific entry points:
 
 ```typescript
-// Main process
-import {} from /* ... */ '@assemblerjs/electron';
+// Main process API
+import {} from '@assemblerjs/electron';
 
-// Renderer process
-import {} from /* ... */ '@assemblerjs/electron/renderer';
+// Renderer process API
+import {} from '@assemblerjs/electron/renderer';
 
-// Preload script
-import {} from /* ... */ '@assemblerjs/electron/preload';
+// Preload API
+import {} from '@assemblerjs/electron/preload';
 ```
 
 ## Quick Start
 
-The recommended usage follows the `examples/seamless-electron/src/windows` architecture:
+The recommended architecture (used in `examples/seamless-electron`) is:
 
-- main bootstrap wires a window controller module
-- each real window is a class in `src/windows/*/main`
-- renderer uses one scoped service per window in `src/windows/*/renderer`
+- one main bootstrap assemblage
+- one main-side window class per real window
+- one renderer-side window service per window identity
+- one preload bridge that explicitly whitelists channels
 
-### Main Process (`src/main/index.ts` + `src/windows/main`)
+### Main Process Bootstrap
 
 ```typescript
 import 'reflect-metadata';
@@ -69,11 +81,10 @@ class MainApp implements AbstractAssemblage {
   ) {}
 }
 
-// Bootstrap
 Assembler.build(MainApp).catch(() => app.quit());
 ```
 
-Main window class (from `src/windows/main/main/main.window.ts`):
+### Main Window Class
 
 ```typescript
 import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
@@ -93,7 +104,7 @@ class MainWindow extends ElectronWindow implements AbstractAssemblage {
 }
 ```
 
-### Preload Script
+### Preload Bridge
 
 ```typescript
 import { setupIpcBridge } from '@assemblerjs/electron/preload';
@@ -104,9 +115,9 @@ setupIpcBridge({
 });
 ```
 
-This exposes `window.ipc` in the renderer process.
+This exposes `window.ipc` to renderer code.
 
-For diagnostics during integration, enable debug mode:
+To troubleshoot integration:
 
 ```typescript
 setupIpcBridge({
@@ -116,17 +127,9 @@ setupIpcBridge({
 });
 ```
 
-Debug mode logs:
+Debug mode logs merged channels, auto-whitelist rules, and strict-mode rejections.
 
-- merged allowed channels
-- active auto-whitelist rules
-- rejected channels in strict mode
-
-Importing the preload entry point exposes the following global in the renderer:
-
-- `window.ipc` for the AssemblerJS IPC bridge
-
-### Renderer Process (`src/windows/main/renderer/main.window.ts`)
+### Renderer Window Service
 
 ```typescript
 import { Assemblage } from 'assemblerjs';
@@ -141,7 +144,7 @@ import { MAIN_WINDOW_CONFIG } from '../universal/window.config';
 
 @Window({ name: MAIN_WINDOW_CONFIG.name })
 @Assemblage()
-class MainWindow extends AbstractWindowService {
+class MainWindowService extends AbstractWindowService {
   @WindowCommand('refreshBounds')
   async refreshBounds(
     @IpcResult() bounds?: WindowBounds,
@@ -151,68 +154,31 @@ class MainWindow extends AbstractWindowService {
 }
 ```
 
-In Vue components, inject this service instead of calling `window.ipc` directly.
+Prefer calling IPC through renderer services/gateways rather than directly from UI components.
 
 ```typescript
 import { useContext } from 'assemblerjs';
-import { MainWindow } from '@windows/main/renderer';
+import { MainWindowService } from '@windows/main/renderer';
 
-const mainWindow = useContext().require(MainWindow);
+const mainWindow = useContext().require(MainWindowService);
 await mainWindow.refreshBounds();
 ```
 
-This is the pattern used in `examples/seamless-electron/src/windows`.
+## IPC Communication
 
-## IPC Communication Example
+### Renderer to Main
 
-### Main Process - IPC Handler
+Use native `invoke/handle` semantics with typed wrappers:
 
-```typescript
-import { ipcMain } from 'electron';
-import { Assemblage, AbstractAssemblage } from 'assemblerjs';
+- renderer side: `@IpcSend`, `@IpcInvoke`
+- main side: listeners and handlers
 
-@Assemblage()
-class IpcService implements AbstractAssemblage {
-  onInit() {
-    ipcMain.on('message', (event, data) => {
-      console.log('Received from renderer:', data);
-      event.reply('response', { status: 'ok', data });
-    });
+### Main to Renderer (Symmetric RPC)
 
-    ipcMain.handle('get-data', async () => {
-      return { result: 'Some data' };
-    });
-  }
-
-  onDispose() {
-    ipcMain.removeAllListeners('message');
-    ipcMain.removeHandler('get-data');
-  }
-}
-```
-
-### Renderer - IPC Client
-
-```typescript
-@Assemblage()
-class DataService implements AbstractAssemblage {
-  async getData() {
-    const result = await window.ipc.invoke('get-data');
-    return result;
-  }
-}
-```
-
-## Symmetric RPC (Main <-> Renderer)
-
-`renderer -> main` uses native `invoke/handle`.
-
-`main -> renderer` is supported through the package RPC bridge using the same decorators:
+`main -> renderer` can be implemented with:
 
 - main side: `@IpcInvoke(...)`
 - renderer side: `@IpcHandle(...)`
-
-### Main invokes renderer
 
 ```typescript
 import { Assemblage, AbstractAssemblage } from 'assemblerjs';
@@ -228,8 +194,6 @@ class MainDiagnostics implements AbstractAssemblage {
   }
 }
 ```
-
-### Renderer handles main invocation
 
 ```typescript
 import { Assemblage, AbstractAssemblage } from 'assemblerjs';
@@ -248,209 +212,63 @@ class RendererDiagnostics implements AbstractAssemblage {
 }
 ```
 
-Notes:
+## Renderer Window Pattern
 
-- this flow is opt-in and backward compatible with existing event and invoke patterns
-- `setupIpcBridge` strict mode and channel whitelist still apply
-- for maintainability, keep IPC calls inside services/gateways rather than UI components
+The renderer window layer is split into:
 
-## Architecture Patterns
+- `AbstractWindowControllerService` for global renderer window orchestration
+- `WindowControllerService` as the default implementation
+- `AbstractWindowService` for one service bound to one window
+- `@Window({ name })` for window binding and listener metadata
 
-### Renderer Window Services
-
-The renderer window layer uses a controller + scoped service split:
-
-- `AbstractWindowControllerService`: global multi-window controller in renderer
-- `WindowControllerService`: default renderer implementation using IPC
-- `AbstractWindowService`: base class for one window service bound to a window name
-- `@Window({ name })`: binds a renderer service to a window and auto-applies listener metadata
-
-```typescript
-import { Assemblage } from 'assemblerjs';
-import {
-  AbstractWindowService,
-  Window,
-  WindowCommand,
-} from '@assemblerjs/electron/renderer';
-
-@Window({ name: 'main' })
-@Assemblage()
-class MainWindowService extends AbstractWindowService {
-  @WindowCommand('refresh-bounds')
-  async refreshBounds() {
-    return await this.getBounds();
-  }
-}
-```
-
-**Convention over configuration**: The `@WindowCommand` decorator can infer the command name from the method name when no parameter is provided:
+`@WindowCommand` supports convention over configuration:
 
 ```typescript
 @Window({ name: 'main' })
 @Assemblage()
 class MainWindowService extends AbstractWindowService {
-  // Infers command name as 'getBounds'
   @WindowCommand()
   async getBounds() {
-    // ...
+    // command name inferred as "getBounds"
   }
 
-  // Explicit command name (useful for custom naming)
   @WindowCommand('refresh-bounds')
   async refreshBounds() {
-    return await this.getBounds();
-  }
-}
-```
-
-This reduces boilerplate while maintaining backward compatibility. Both approaches can coexist in the same class.
-
-Notes:
-
-- prefer `@Window` on renderer window services
-- keep one service per window for clear ownership
-- inject `AbstractWindowControllerService` when you need to orchestrate multiple windows
-
-### Service Layer
-
-```typescript
-// Main process
-@Assemblage()
-class DatabaseService implements AbstractAssemblage {
-  private db: any;
-
-  async onInit() {
-    this.db = await this.connect();
-  }
-
-  async query(sql: string) {
-    return this.db.query(sql);
-  }
-
-  async onDispose() {
-    await this.db.close();
-  }
-}
-
-@Assemblage({
-  provide: [[DatabaseService]],
-})
-class UserRepository implements AbstractAssemblage {
-  constructor(private db: DatabaseService) {}
-
-  async findById(id: string) {
-    return this.db.query(`SELECT * FROM users WHERE id = ${id}`);
-  }
-}
-```
-
-### Window Management
-
-```typescript
-@Assemblage()
-class MultiWindowManager implements AbstractAssemblage {
-  private windows = new Map<string, BrowserWindow>();
-
-  createWindow(id: string, options: BrowserWindowConstructorOptions) {
-    const window = new BrowserWindow(options);
-    this.windows.set(id, window);
-    return window;
-  }
-
-  getWindow(id: string) {
-    return this.windows.get(id);
-  }
-
-  closeWindow(id: string) {
-    const window = this.windows.get(id);
-    window?.close();
-    this.windows.delete(id);
-  }
-
-  async onDispose() {
-    for (const window of this.windows.values()) {
-      window.close();
-    }
-    this.windows.clear();
+    return this.getBounds();
   }
 }
 ```
 
 ## Best Practices
 
-### 1. **Process Separation**
+1. Keep process responsibilities clear.
+2. Route IPC calls through services/gateways.
+3. Keep preload bridge strict and explicit.
+4. Enable `contextIsolation` and disable `nodeIntegration`.
+5. Use lifecycle hooks (`onInit`, `onDispose`) for cleanup.
 
-Keep main and renderer logic separated. Use IPC for communication:
+## Documentation
 
-```typescript
-// ✅ Good - Separate concerns
-// Main: File system, native APIs
-// Renderer: UI logic
-```
-
-### 1.1 **Integration Simplicity (Recommended)**
-
-Use a renderer service/gateway as the single IPC access point.
-
-```typescript
-// ✅ Recommended
-// UI component -> service/gateway -> window.ipc
-
-// Avoid calling window.ipc directly from UI components.
-```
-
-### 2. **Security**
-
-Always use `contextIsolation` and disable `nodeIntegration`:
-
-```typescript
-webPreferences: {
-  nodeIntegration: false,
-  contextIsolation: true,
-  preload: path.join(__dirname, 'preload.js')
-}
-```
-
-### 3. **Resource Cleanup**
-
-Use lifecycle hooks for proper cleanup:
-
-```typescript
-@Assemblage()
-class ResourceManager implements AbstractAssemblage {
-  async onDispose() {
-    // Clean up resources
-    await this.cleanup();
-  }
-}
-```
+- Electron docs (detailed): `docs/assemblerjs-electron`
+- Working example: `examples/seamless-electron`
 
 ## Requirements
 
-- **Node.js:** ≥ 18.12.0
-- **Electron:** ≥ 28.0.0
-- **TypeScript:** ≥ 5.0
-- **reflect-metadata:** Required
+- **Node.js:** >= 18.12.0
+- **Electron:** >= 30.0.0
+- **TypeScript:** >= 5.0
+- **reflect-metadata:** required
 
-## For Contributors
-
-### Development
+## Contributor Commands
 
 ```bash
-# Build the package
 npx nx build assemblerjs-electron
-
-# Run tests
 npx nx test assemblerjs-electron
-
-# Lint
 npx nx lint assemblerjs-electron
 ```
 
 ## License
 
 MIT
-
----
 
 Part of the [AssemblerJS monorepo](../../README.md)

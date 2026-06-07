@@ -162,7 +162,7 @@ async function copyBounds() {
   <article class="card card--window-bounds" aria-live="polite">
     <header class="card__header">
       <h2>Window Configuration</h2>
-      <span class="window-bounds-duplex">Seamless</span>
+      <span class="window-bounds-duplex">full-duplex</span>
     </header>
 
     <p class="card__description">

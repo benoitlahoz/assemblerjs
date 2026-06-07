@@ -4,7 +4,7 @@
 
 **A modern, type-safe, and lightweight ecosystem for building scalable TypeScript applications**
 
-[Documentation](./docs/assemblerjs/index.md) • [Quick Start](#quick-start) • [Packages](#packages) • [Examples](#examples)
+[Documentation](./docs/assemblerjs/index.md) • [Electron Docs](./docs/assemblerjs-electron/index.md) • [Quick Start](#quick-start) • [Packages](#packages) • [Examples](#examples)
 
 </div>
 
@@ -86,10 +86,12 @@ const app = Assembler.build(App);
 
 ### Core Package
 
-#### [**assemblerjs**](./packages/assemblerjs) 
+#### [**assemblerjs**](./packages/assemblerjs)
+
 The core dependency injection system with support for lifecycle hooks, events, and tags.
 
 **Features:**
+
 - Type-safe dependency injection with decorators
 - Lifecycle hooks (`onRegister`, `onInit`, `onDispose`)
 - Built-in event system
@@ -105,6 +107,7 @@ The core dependency injection system with support for lifecycle hooks, events, a
 ### Integration Packages
 
 #### [**@assemblerjs/rest**](./packages/rest)
+
 REST framework for Express.js with type-safe decorators for controllers, routes, and middleware.
 
 **Use case:** Create REST APIs with Express.js in a declarative way
@@ -131,6 +134,7 @@ class UserController {
 ---
 
 #### [**@assemblerjs/fetch**](./packages/fetch)
+
 HTTP decorators to simplify fetch calls with parameters, queries, and automatic parsing.
 
 **Use case:** Create declarative HTTP clients
@@ -144,7 +148,7 @@ class UserApiClient {
   async getUsers(
     @Query('limit') limit: number,
     @Query('skip') skip: number,
-    data?: any
+    data?: any,
   ) {
     return data;
   }
@@ -161,15 +165,17 @@ class UserApiClient {
 ---
 
 #### [**@assemblerjs/electron**](./packages/electron)
+
 Electron integration with type-safe IPC between main process, renderer, and preload.
 
 **Use case:** Build Electron applications with AssemblerJS
 
-[README](./packages/electron/README.md)
+[📖 Detailed Docs](./docs/assemblerjs-electron/index.md) • [README](./packages/electron/README.md)
 
 ---
 
 #### [**@assemblerjs/mongo**](./packages/mongo)
+
 MongoDB integration with Mongoose and decorators to define schemas and models.
 
 **Use case:** Work with MongoDB in AssemblerJS
@@ -194,6 +200,7 @@ const UserModel = Model(User);
 ---
 
 #### [**@assemblerjs/dto**](./packages/dto)
+
 DTO validation and transformation using class-validator and class-transformer.
 
 **Use case:** Validate and transform data transfer objects
@@ -211,11 +218,13 @@ class CreateUserDto {
   email: string;
 }
 ```
+
 [README](./packages/dto/README.md)
 
 ---
 
 #### [**@assemblerjs/common**](./packages/common)
+
 Shared metadata key builders and cross-package conventions used by `@assemblerjs/fetch`, `@assemblerjs/rest`, and `@assemblerjs/dto`.
 
 **Use case:** Keep shared conventions in one place across the monorepo
@@ -225,6 +234,7 @@ Shared metadata key builders and cross-package conventions used by `@assemblerjs
 ---
 
 #### [**@assemblerjs/openapi**](./packages/openapi)
+
 Automatic OpenAPI 3.1 spec generation from your AssemblerJS REST controllers — zero config, runtime-based, fully integrated with `@assemblerjs/rest` and `@assemblerjs/dto`.
 
 **Use case:** Generate a live OpenAPI spec and serve it at `GET /openapi/json`.
@@ -257,6 +267,7 @@ class UsersController implements AbstractAssemblage {
 ### Internal Package
 
 #### [**@assemblerjs/core**](./packages/core)
+
 Shared internal utilities (types, collections, errors). Automatically installed with `assemblerjs`.
 
 [README](./packages/core/README.md)
@@ -294,7 +305,12 @@ class DatabaseService implements AbstractAssemblage {
 ### Event System
 
 ```typescript
-import { EventManager, Assemblage, Context, AssemblerContext } from 'assemblerjs';
+import {
+  EventManager,
+  Assemblage,
+  Context,
+  AssemblerContext,
+} from 'assemblerjs';
 
 const Events = {
   USER_CREATED: 'app:user:created',
@@ -317,7 +333,7 @@ class UserService extends EventManager {
 class NotificationService {
   constructor(
     private userService: UserService,
-    @Context() private context: AssemblerContext
+    @Context() private context: AssemblerContext,
   ) {
     // Subscribe to events via context
     this.context.on(Events.USER_CREATED, (user) => {
@@ -350,12 +366,16 @@ class UserController {
 ```typescript
 @Assemblage({ tags: ['plugin', 'logger'] })
 class ConsoleLogger implements AbstractAssemblage {
-  log(msg: string) { console.log(msg); }
+  log(msg: string) {
+    console.log(msg);
+  }
 }
 
 @Assemblage({ tags: ['plugin', 'logger'] })
 class FileLogger implements AbstractAssemblage {
-  log(msg: string) { /* write to file */ }
+  log(msg: string) {
+    /* write to file */
+  }
 }
 
 @Assemblage()
@@ -365,7 +385,7 @@ class App {
   onInit() {
     // Get all loggers
     const loggers = this.context.getByTag<AbstractAssemblage>('logger');
-    loggers.forEach(logger => logger.log('Hello'));
+    loggers.forEach((logger) => logger.log('Hello'));
   }
 }
 ```
@@ -374,7 +394,13 @@ class App {
 
 ```typescript
 import 'reflect-metadata';
-import { Assemblage, Assembler, AbstractAssemblage, Context, AssemblerContext } from 'assemblerjs';
+import {
+  Assemblage,
+  Assembler,
+  AbstractAssemblage,
+  Context,
+  AssemblerContext,
+} from 'assemblerjs';
 
 // Configuration
 @Assemblage()
@@ -400,7 +426,9 @@ class Database implements AbstractAssemblage {
 
   private async connect() {
     // Connect to database
-    return { /* connection */ };
+    return {
+      /* connection */
+    };
   }
 
   async query(sql: string) {
@@ -449,7 +477,7 @@ class App implements AbstractAssemblage {
   constructor(
     private config: Config,
     private userService: UserService,
-    @Context() private context: AssemblerContext
+    @Context() private context: AssemblerContext,
   ) {
     // Subscribe to events
     this.context.on('app:user:created', (user) => {
@@ -459,11 +487,11 @@ class App implements AbstractAssemblage {
 
   async onInit() {
     console.log(`✓ App started on port ${this.config.port}`);
-    
+
     // Create a user
     await this.userService.createUser({
       name: 'John Doe',
-      email: 'john@example.com'
+      email: 'john@example.com',
     });
   }
 
