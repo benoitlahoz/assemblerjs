@@ -5,7 +5,6 @@ import { AboutWindowConfig } from '@windows/about/universal/window.config';
 
 const AppMenuConfig = {
   About: { id: 'app.about', order: 5 },
-  SeparatorAboutServices: { id: 'app.separator.about-services', order: 10 },
   Services: { id: 'app.services', order: 20 },
   Hide: { id: 'app.hide', order: 40 },
   HideOthers: { id: 'app.hideOthers', order: 50 },
@@ -36,13 +35,7 @@ export class AppMenu {
     aboutWindow.focus();
   }
 
-  @MenuItem({
-    id: AppMenuConfig.SeparatorAboutServices.id,
-    type: 'separator',
-    order: AppMenuConfig.SeparatorAboutServices.order,
-  })
-  private separatorAboutServices(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: AppMenuConfig.Services.id,
     role: 'services',
