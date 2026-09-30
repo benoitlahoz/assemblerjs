@@ -1,7 +1,7 @@
 {
   "name": "@assemblerjs/electron",
   "description": "Electron integration for AssemblerJS with type-safe IPC communication between main, renderer, and preload processes.",
-  "version": "0.9.8",
+  "version": "0.9.9",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
   "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
   "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
