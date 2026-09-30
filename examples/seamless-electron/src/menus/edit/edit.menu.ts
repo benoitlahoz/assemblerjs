@@ -1,17 +1,15 @@
 import { Assemblage } from 'assemblerjs';
-import { MenuItem } from '@assemblerjs/electron';
+import { MenuItem, MenuSeparator } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
 
 export const EditMenuConfig = {
   Undo: { id: 'edit.undo', order: 10 },
   Redo: { id: 'edit.redo', order: 20 },
-  SeparatorUndoClipboard: { id: 'edit.separator.undo-clipboard', order: 30 },
   Cut: { id: 'edit.cut', order: 40 },
   Copy: { id: 'edit.copy', order: 50 },
   Paste: { id: 'edit.paste', order: 60 },
   PasteAndMatchStyle: { id: 'edit.pasteAndMatchStyle', order: 70 },
   Delete: { id: 'edit.delete', order: 80 },
-  SeparatorClipboardSelect: { id: 'edit.separator.clipboard-select', order: 90 },
   SelectAll: { id: 'edit.selectAll', order: 100 },
 } as const;
 
@@ -42,13 +40,7 @@ export class EditMenu {
   })
   private redo(): void {}
 
-  @MenuItem({
-    id: EditMenuConfig.SeparatorUndoClipboard.id,
-    type: 'separator',
-    order: EditMenuConfig.SeparatorUndoClipboard.order,
-  })
-  private separatorUndoClipboard(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: EditMenuConfig.Cut.id,
     label(this: EditMenu) {
@@ -103,13 +95,7 @@ export class EditMenu {
   })
   private delete(): void {}
 
-  @MenuItem({
-    id: EditMenuConfig.SeparatorClipboardSelect.id,
-    type: 'separator',
-    order: EditMenuConfig.SeparatorClipboardSelect.order,
-  })
-  private separatorClipboardSelect(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: EditMenuConfig.SelectAll.id,
     label(this: EditMenu) {

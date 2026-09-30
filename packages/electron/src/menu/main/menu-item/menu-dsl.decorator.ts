@@ -1,5 +1,8 @@
 const menuNodeLabelKey = Symbol('electron:menu:dsl:node-label');
 const menuNodeSubmenusKey = Symbol('electron:menu:dsl:submenus');
+// Stores the names of the members (methods/properties) that must be preceded
+// by a separator.
+const menuSeparatorKey = Symbol('electron:menu:dsl:separators');
 
 type SubMenuLabelValue =
   | string
@@ -38,6 +41,14 @@ function getStoredSubmenus(target: Function): DslSubmenuMetadata[] {
   );
 }
 
+// Returns the members flagged with @MenuSeparator as a Set for fast lookups.
+function getStoredSeparators(target: Function): Set<string> {
+  return new Set(
+    (Reflect.getMetadata(menuSeparatorKey, target) as string[] | undefined) ??
+      [],
+  );
+}
+
 export function setMenuNodeLabel(target: Function, label: string): void {
   if (typeof label !== 'string' || label.trim().length === 0) {
     throw new Error(
@@ -61,7 +72,10 @@ export function getMenuNodeLabel(target: Function): string | undefined {
 export function hasMenuDslMetadata(target: Function): boolean {
   return (
     typeof getMenuNodeLabel(target) === 'string' ||
-    getStoredSubmenus(target).length > 0
+    getStoredSubmenus(target).length > 0 ||
+    // A class that only uses @MenuSeparator must still go through the DSL
+    // path, otherwise its separators would be silently ignored.
+    hasMenuSeparators(target)
   );
 }
 
@@ -138,6 +152,52 @@ export function SubMenu(
 
     Reflect.defineMetadata(menuNodeSubmenusKey, submenus, ctor);
   };
+}
+
+/**
+ * Inserts a separator right above the decorated @MenuItem or @SubMenu.
+ *
+ * The decorator only records the member name; the actual separator entry is
+ * generated when the menu items are collected (see `collectDslMenuItems`).
+ * Because of that, the stacking order with @MenuItem / @SubMenu does not
+ * matter.
+ *
+ * @example
+ * ```ts
+ * @MenuSeparator()
+ * @MenuItem({ id: 'file.quit', label: 'Quit', role: 'quit' })
+ * quit() {}
+ * ```
+ */
+export function MenuSeparator(): MethodDecorator & PropertyDecorator {
+  return (
+    target: object,
+    propertyKey: string | symbol,
+    _descriptor?: PropertyDescriptor,
+  ) => {
+    if (typeof propertyKey !== 'string') {
+      throw new Error('@MenuSeparator supports string member names only.');
+    }
+
+    const ctor = getTargetCtor(target);
+    const members = getStoredSeparators(ctor);
+    members.add(propertyKey);
+
+    Reflect.defineMetadata(menuSeparatorKey, [...members], ctor);
+  };
+}
+
+/** Whether the given member must be preceded by a separator. */
+export function hasMenuSeparatorBefore(
+  target: Function,
+  member: string,
+): boolean {
+  return getStoredSeparators(target).has(member);
+}
+
+/** Whether at least one member of the class is flagged with @MenuSeparator. */
+export function hasMenuSeparators(target: Function): boolean {
+  return getStoredSeparators(target).size > 0;
 }
 
 export function getMenuDslSubmenus(target: Function): DslSubmenuMetadata[] {
