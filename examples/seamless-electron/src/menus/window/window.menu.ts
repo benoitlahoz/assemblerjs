@@ -6,6 +6,8 @@ import { WindowBoundsMenu } from './window-bounds.menu';
 export const WindowMenuConfig = {
   Minimize: { id: 'window.minimize', order: 10 },
   Zoom: { id: 'window.zoom', order: 20 },
+
+  // TODO: Separator should be a decorator to put above the MenuItem decorator.
   Sep1: { id: 'window.sep.1', order: 30 },
   Close: { id: 'window.close', order: 40 },
   Sep2: { id: 'window.sep.2', order: 50 },
