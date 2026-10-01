@@ -339,6 +339,71 @@ window directly instead of looking it up by type name or passing its native ID
 through application code. A global-menu action with no open window receives
 `undefined` for `targetWindow`.
 
+### Dynamic Submenus
+
+Declare a stable item as the submenu anchor. After loading or changing the
+recent list, create `ElectronMenuItem`s and replace the children on the menu
+instance registered for the target window. Pass `undefined` for the global
+fallback menu. The active menu is reapplied immediately; inactive window menus
+use the updated tree the next time they are focused.
+
+```typescript
+import {
+  BaseMenuController,
+  createMenuItem,
+  ElectronWindow,
+  MenuItem,
+} from '@assemblerjs/electron';
+import { Assemblage } from 'assemblerjs';
+
+@MenuItem('File')
+@Assemblage()
+class FileMenu {
+  @MenuItem({ id: 'file.openRecent', label: 'Open Recent', order: 50 })
+  private openRecentAnchor(): void {}
+}
+
+interface RecentFile {
+  path: string;
+  label: string;
+}
+
+async function updateRecentMenu(
+  menus: BaseMenuController,
+  window: ElectronWindow | undefined,
+  recents: RecentFile[],
+  openRecent: (path: string, target?: ElectronWindow) => Promise<void>,
+): Promise<void> {
+  const items = recents.map((recent, index) =>
+    createMenuItem({
+      id: `file.openRecent.${index}`,
+      label: recent.label,
+      click: (_item, clickedWindow) => {
+        void openRecent(recent.path, clickedWindow ?? window);
+      },
+    }),
+  );
+
+  if (items.length === 0) {
+    items.push(
+      createMenuItem({
+        id: 'file.openRecent.empty',
+        label: 'No recent files',
+        enabled: false,
+      }),
+    );
+  }
+
+  await menus.replaceSubmenuItems(window, 'file.openRecent', items);
+}
+```
+
+Inject the application's concrete menu controller (a subclass of
+`BaseMenuController`) alongside the recent-files store. Call this helper for
+each open window to update its menu, and once with `undefined` to update the
+global fallback. The update targets the menu composed by `@UseMenu`; the source
+menu assemblages remain injected and do not need to be rebuilt.
+
 ## IPC Communication
 
 ### Renderer to Main

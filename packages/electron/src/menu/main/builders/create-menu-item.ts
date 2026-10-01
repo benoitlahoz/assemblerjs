@@ -9,6 +9,7 @@ export interface CreateMenuItemInput {
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
   enabled?: boolean;
+  click?: ElectronMenuItem['click'];
 }
 
 export function createMenuItem(input: CreateMenuItemInput): ElectronMenuItem {

@@ -333,6 +333,12 @@ export class ElectronMenuItem {
     return this._submenu;
   }
 
+  public replaceSubmenuItems(items: ElectronMenuItem[]): this {
+    this._submenu = [...items];
+    this._type = 'submenu';
+    return this;
+  }
+
   /**
    * Gets the click handler for the menu item.
    * @returns The click handler function.

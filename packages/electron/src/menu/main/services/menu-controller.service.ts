@@ -322,6 +322,43 @@ export class BaseMenuController implements AbstractAssemblage {
     return true;
   }
 
+  public async replaceSubmenuItems(
+    window: ElectronWindow | undefined,
+    parentItemId: string,
+    items: ElectronMenuItem[],
+  ): Promise<boolean> {
+    const registration = window
+      ? BaseMenuController.registrations.get(String(window.id))
+      : BaseMenuController.globalRegistration;
+
+    if (
+      !registration ||
+      (window &&
+        (!('window' in registration) || registration.window !== window))
+    ) {
+      return false;
+    }
+
+    const parent = registration.menu.itemById(parentItemId);
+    if (!parent) {
+      return false;
+    }
+
+    parent.replaceSubmenuItems(items);
+
+    if (window) {
+      const focusedWindow =
+        ElectronWindow.getFocusedWindow() as ElectronWindow | null;
+      if (focusedWindow?.id === window.id) {
+        await registration.menu.focus();
+      }
+    } else if (BaseMenuController.registrations.size === 0) {
+      await registration.menu.focus();
+    }
+
+    return true;
+  }
+
   public unregisterGlobalMenu(): this {
     BaseMenuController.globalRegistration = undefined;
     if (BaseMenuController.registrations.size === 0) {
