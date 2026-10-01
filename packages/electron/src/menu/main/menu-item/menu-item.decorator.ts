@@ -8,10 +8,15 @@ import {
   getMenuDslSubmenus,
   getMenuNodeLabel,
   hasMenuDslMetadata,
+  getMenuHeaderBefore,
   hasMenuSeparatorBefore,
+  isMenuHeaderSupported,
+  MenuHeader,
+  MenuHeaderOrSeparator,
   MenuSeparator,
   setMenuNodeLabel,
   SubMenu,
+  usesMenuHeaderSeparatorFallback,
 } from './menu-dsl.decorator';
 
 export type MenuItemRole = NonNullable<MenuItemConstructorOptions['role']>;
@@ -323,6 +328,24 @@ function collectDslMenuItems(
       } as MenuItemMetadata);
     }
 
+    const headerLabel = getMenuHeaderBefore(target, entry.method);
+    if (headerLabel) {
+      const supported = isMenuHeaderSupported();
+      if (supported || usesMenuHeaderSeparatorFallback(target, entry.method)) {
+        out.push({
+          id: `${entry.id}:header`,
+          label: supported ? headerLabel : undefined,
+          type: supported ? 'header' : 'separator',
+          method: entry.method,
+          order,
+          before: entry.id,
+          after: entry.after,
+          source: sourceInstance,
+          _submenuPath: submenuPath,
+        } as MenuItemMetadata);
+      }
+    }
+
     out.push({
       ...entry,
       source: sourceInstance,
@@ -357,6 +380,25 @@ function collectDslMenuItems(
         // Belongs to the parent menu, not to the submenu itself.
         _submenuPath: submenuPath,
       } as MenuItemMetadata);
+    }
+
+    const headerLabel = getMenuHeaderBefore(target, submenu.member);
+    if (headerLabel) {
+      const supported = isMenuHeaderSupported();
+      if (
+        supported ||
+        usesMenuHeaderSeparatorFallback(target, submenu.member)
+      ) {
+        out.push({
+          id: `${submenuPath ?? 'root'}/${submenu.member}:header`,
+          label: supported ? headerLabel : undefined,
+          type: supported ? 'header' : 'separator',
+          method: submenu.member,
+          order: childBase - childScale / 2,
+          source: sourceInstance,
+          _submenuPath: submenuPath,
+        } as MenuItemMetadata);
+      }
     }
 
     collectDslMenuItems(
@@ -400,4 +442,4 @@ export function getMenuItems(
   return validateMenuItemMetadata(dslEntries);
 }
 
-export { SubMenu, MenuSeparator };
+export { SubMenu, MenuSeparator, MenuHeader, MenuHeaderOrSeparator };

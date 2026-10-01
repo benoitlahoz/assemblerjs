@@ -6,7 +6,7 @@ export interface CreateMenuItemInput {
   label?: string;
   role?: string;
   accelerator?: string;
-  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header';
   checked?: boolean;
   enabled?: boolean;
   click?: ElectronMenuItem['click'];

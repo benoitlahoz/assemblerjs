@@ -1,8 +1,14 @@
+import { release } from 'node:os';
+
 const menuNodeLabelKey = Symbol('electron:menu:dsl:node-label');
 const menuNodeSubmenusKey = Symbol('electron:menu:dsl:submenus');
 // Stores the names of the members (methods/properties) that must be preceded
 // by a separator.
 const menuSeparatorKey = Symbol('electron:menu:dsl:separators');
+const menuHeaderKey = Symbol('electron:menu:dsl:headers');
+const menuHeaderSeparatorFallbackKey = Symbol(
+  'electron:menu:dsl:header-separator-fallbacks',
+);
 
 type SubMenuLabelValue =
   | string
@@ -49,6 +55,36 @@ function getStoredSeparators(target: Function): Set<string> {
   );
 }
 
+function getStoredHeaders(target: Function): Map<string, string> {
+  return new Map(
+    (Reflect.getMetadata(menuHeaderKey, target) as
+      | Array<[string, string]>
+      | undefined) ?? [],
+  );
+}
+
+function getStoredHeaderSeparatorFallbacks(target: Function): Set<string> {
+  return new Set(
+    (Reflect.getMetadata(menuHeaderSeparatorFallbackKey, target) as
+      | string[]
+      | undefined) ?? [],
+  );
+}
+
+export function isMenuHeaderSupported(
+  platform: NodeJS.Platform = process.platform,
+  systemVersion?: string,
+): boolean {
+  if (platform !== 'darwin') {
+    return false;
+  }
+
+  const majorVersion = systemVersion
+    ? Number.parseInt(systemVersion.split('.')[0] ?? '', 10)
+    : Number.parseInt(release().split('.')[0] ?? '', 10) - 9;
+  return Number.isFinite(majorVersion) && majorVersion >= 14;
+}
+
 export function setMenuNodeLabel(target: Function, label: string): void {
   if (typeof label !== 'string' || label.trim().length === 0) {
     throw new Error(
@@ -75,7 +111,8 @@ export function hasMenuDslMetadata(target: Function): boolean {
     getStoredSubmenus(target).length > 0 ||
     // A class that only uses @MenuSeparator must still go through the DSL
     // path, otherwise its separators would be silently ignored.
-    hasMenuSeparators(target)
+    hasMenuSeparators(target) ||
+    hasMenuHeaders(target)
   );
 }
 
@@ -187,6 +224,58 @@ export function MenuSeparator(): MethodDecorator & PropertyDecorator {
   };
 }
 
+/**
+ * Inserts a native macOS section header right above the decorated item or submenu.
+ * The header is omitted unless running on macOS 14 or newer.
+ */
+function createMenuHeaderDecorator(
+  label: string,
+  separatorFallback: boolean,
+): MethodDecorator & PropertyDecorator {
+  const normalizedLabel = label.trim();
+  if (!normalizedLabel) {
+    throw new Error('@MenuHeader requires a non-empty label.');
+  }
+
+  return (
+    target: object,
+    propertyKey: string | symbol,
+    _descriptor?: PropertyDescriptor,
+  ) => {
+    if (typeof propertyKey !== 'string') {
+      throw new Error('@MenuHeader supports string method names only.');
+    }
+
+    const ctor = getTargetCtor(target);
+    const headers = getStoredHeaders(ctor);
+    headers.set(propertyKey, normalizedLabel);
+
+    Reflect.defineMetadata(menuHeaderKey, [...headers.entries()], ctor);
+
+    if (separatorFallback) {
+      const fallbacks = getStoredHeaderSeparatorFallbacks(ctor);
+      fallbacks.add(propertyKey);
+      Reflect.defineMetadata(
+        menuHeaderSeparatorFallbackKey,
+        [...fallbacks],
+        ctor,
+      );
+    }
+  };
+}
+
+/** Adds a native section header before the decorated member when supported. */
+export function MenuHeader(label: string): MethodDecorator & PropertyDecorator {
+  return createMenuHeaderDecorator(label, false);
+}
+
+/** Adds a native section header when supported, otherwise a separator. */
+export function MenuHeaderOrSeparator(
+  label: string,
+): MethodDecorator & PropertyDecorator {
+  return createMenuHeaderDecorator(label, true);
+}
+
 /** Whether the given member must be preceded by a separator. */
 export function hasMenuSeparatorBefore(
   target: Function,
@@ -198,6 +287,24 @@ export function hasMenuSeparatorBefore(
 /** Whether at least one member of the class is flagged with @MenuSeparator. */
 export function hasMenuSeparators(target: Function): boolean {
   return getStoredSeparators(target).size > 0;
+}
+
+export function getMenuHeaderBefore(
+  target: Function,
+  member: string,
+): string | undefined {
+  return getStoredHeaders(target).get(member);
+}
+
+export function hasMenuHeaders(target: Function): boolean {
+  return getStoredHeaders(target).size > 0;
+}
+
+export function usesMenuHeaderSeparatorFallback(
+  target: Function,
+  member: string,
+): boolean {
+  return getStoredHeaderSeparatorFallbacks(target).has(member);
 }
 
 export function getMenuDslSubmenus(target: Function): DslSubmenuMetadata[] {

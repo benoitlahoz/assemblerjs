@@ -3,6 +3,9 @@ import { Assemblage } from 'assemblerjs';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('electron', () => ({
+  app: {
+    getSystemVersion: () => '14.0.0',
+  },
   BrowserWindow: class BrowserWindow {},
   screen: {
     getDisplayMatching: () => ({
@@ -21,6 +24,9 @@ vi.mock('electron', () => ({
     on: () => undefined,
     once: () => undefined,
     off: () => undefined,
+  },
+  systemPreferences: {
+    getSystemVersion: () => '14.0.0',
   },
 }));
 
@@ -96,6 +102,19 @@ let SubMenu: (options: {
   before?: string;
   after?: string;
 }) => MethodDecorator;
+let MenuHeader: (label: string) => MethodDecorator & PropertyDecorator;
+let MenuHeaderOrSeparator: (
+  label: string,
+) => MethodDecorator & PropertyDecorator;
+let getMenuItems: (targetOrInstance: Function | object) => Array<{
+  id: string;
+  label?: string;
+  type?: string;
+}>;
+let isMenuHeaderSupported: (
+  platform?: NodeJS.Platform,
+  systemVersion?: string,
+) => boolean;
 
 let buildMenuTreeFromMetadata: (
   targetOrInstance: (new (...args: unknown[]) => object) | object,
@@ -117,13 +136,85 @@ let buildMenuTreeFromMetadata: (
 };
 
 beforeAll(async () => {
-  ({ MenuItem, SubMenu } =
+  ({ MenuHeader, MenuHeaderOrSeparator, MenuItem, SubMenu, getMenuItems } =
     await import('../src/menu/main/menu-item/menu-item.decorator'));
+  ({ isMenuHeaderSupported } =
+    await import('../src/menu/main/menu-item/menu-dsl.decorator'));
   ({ buildMenuTreeFromMetadata } =
     await import('../src/menu/main/builders/menu-tree'));
 });
 
 describe('buildMenuTreeFromMetadata', () => {
+  it('supports MenuHeader only on macOS 14 or newer', () => {
+    expect(isMenuHeaderSupported('darwin', '14.0.0')).toBe(true);
+    expect(isMenuHeaderSupported('darwin', '13.6.1')).toBe(false);
+    expect(isMenuHeaderSupported('win32', '14.0.0')).toBe(false);
+  });
+
+  it('adds a native header only when MenuHeader is supported', () => {
+    @MenuItem('File')
+    @Assemblage()
+    class FileMenu {
+      @MenuHeader('Open Recent')
+      @MenuItem({ id: 'file.recent.project', label: 'Project' })
+      public openRecentProject(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(new FileMenu());
+    const itemMetadata = getMenuItems(new FileMenu());
+    const header = itemMetadata.find(
+      (item) => item.id === 'file.recent.project:header',
+    );
+
+    if (isMenuHeaderSupported()) {
+      expect(header).toMatchObject({
+        id: 'file.recent.project:header',
+        label: 'Open Recent',
+        type: 'header',
+      });
+    } else {
+      expect(header).toBeUndefined();
+    }
+  });
+
+  it('chooses a header or separator before a decorated submenu with MenuHeaderOrSeparator', () => {
+    @MenuItem('Bounds')
+    @Assemblage()
+    class BoundsMenu {
+      @MenuItem({ id: 'bounds.center', label: 'Center Window' })
+      public center(): void {}
+    }
+
+    @MenuItem('Window')
+    @Assemblage()
+    class WindowMenu {
+      @MenuHeaderOrSeparator('BOUNDS')
+      @SubMenu({ id: 'window.bounds', order: 10 })
+      public bounds(): BoundsMenu {
+        return new BoundsMenu();
+      }
+    }
+
+    const items = getMenuItems(new WindowMenu());
+    const header = items.find((item) => item.id === 'Window/bounds:header');
+    const firstSubmenuItemIndex = items.findIndex(
+      (item) => item.id === 'bounds.center',
+    );
+    const headerIndex = items.findIndex(
+      (item) => item.id === 'Window/bounds:header',
+    );
+
+    expect(header).toBeDefined();
+    expect(headerIndex).toBeGreaterThanOrEqual(0);
+    expect(headerIndex).toBeLessThan(firstSubmenuItemIndex);
+    if (isMenuHeaderSupported()) {
+      expect(header?.label).toBe('BOUNDS');
+      expect(header?.type).toBe('header');
+    } else {
+      expect(header?.type).toBe('separator');
+    }
+  });
+
   it('builds root groups and leaf item map from MenuItem metadata', () => {
     @Assemblage()
     class MenuDef {

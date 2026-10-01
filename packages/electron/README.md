@@ -316,6 +316,21 @@ When no window is open, a global menu action has no target window.
 `handleInMain` still runs, and its `windowName` argument is `undefined`;
 renderer forwarding is available only when a target window exists.
 
+`MenuSeparator()` always inserts a separator. `MenuHeader(label)` inserts a
+native section header only on macOS 14 and newer; elsewhere it inserts nothing.
+Use `MenuHeaderOrSeparator(label)` when the desired behavior is a native header
+on supported macOS and a separator everywhere else. Exactly one item is generated:
+
+```typescript
+import { MenuHeaderOrSeparator, MenuItem } from '@assemblerjs/electron';
+
+@MenuHeaderOrSeparator('Open Recent')
+@MenuItem({ id: 'file.recent.project', label: 'Project' })
+private openRecentProject(): void {
+  // Open the selected project.
+}
+```
+
 For a menu action that needs to own a native dialog or target the exact
 document window, `handleInMain` can receive the clicked `ElectronWindow` as its
 third optional argument. Existing handlers that only accept the item ID and
