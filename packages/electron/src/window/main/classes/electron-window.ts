@@ -513,13 +513,28 @@ export class ElectronWindow extends BrowserWindow {
     left: number;
   } {
     if (platform === 'darwin') {
-      // macOS: Reserve space for traffic lights on the left
+      const position = this.getWindowButtonPositionCommand();
+
+      if (position) {
+        return {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: position.x + 70,
+        };
+      }
+
       return { top: 0, right: 0, bottom: 0, left: 80 };
-    } else {
-      // Windows/Linux: Reserve space for window controls on the right
-      const controlsWidth = platform === 'win32' ? 138 : 120;
-      return { top: 0, right: controlsWidth, bottom: 0, left: 0 };
     }
+
+    const controlsWidth = platform === 'win32' ? 138 : 120;
+
+    return {
+      top: 0,
+      right: controlsWidth,
+      bottom: 0,
+      left: 0,
+    };
   }
 
   /**

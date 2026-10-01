@@ -1,23 +1,41 @@
 import { Event, Menu, MenuItem, MenuItemConstructorOptions } from 'electron';
-import { ElectronWindow } from '@/main';
+import { ElectronWindow } from '@/window/main/classes/electron-window';
 import { createChannelBuilder } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/common';
 import type { MenuItemClickedEvent } from '@/common';
 
 const buildMenuChannel = createChannelBuilder('menu');
 
+type ElectronMenuItemType =
+  | 'normal'
+  | 'separator'
+  | 'submenu'
+  | 'checkbox'
+  | 'radio'
+  | 'header'
+  | 'palette';
+
+interface ElectronMenuItemInitialState {
+  id?: string;
+  label?: string;
+  role?: string;
+  type?: ElectronMenuItemType;
+  accelerator?: string;
+  checked?: boolean;
+  enabled?: boolean;
+  submenu?: ElectronMenuItem[] | null;
+  click?: (
+    menuItem: MenuItem,
+    browserWindow: ElectronWindow | undefined,
+    event: Event,
+  ) => void;
+}
+
 export class ElectronMenuItem {
   private _id = 'ElectronMenuItem';
   private _label?: string;
   private _role?: string;
-  private _type?:
-    | 'normal'
-    | 'separator'
-    | 'submenu'
-    | 'checkbox'
-    | 'radio'
-    | 'header'
-    | 'palette' = undefined;
+  private _type?: ElectronMenuItemType = undefined;
   private _accelerator?: string;
   private _checked?: boolean;
   private _enabled = true;
@@ -27,6 +45,18 @@ export class ElectronMenuItem {
     browserWindow: ElectronWindow | undefined,
     event: Event,
   ) => void;
+
+  constructor(initialState: ElectronMenuItemInitialState = {}) {
+    this._id = initialState.id ?? this._id;
+    this._label = initialState.label;
+    this._role = initialState.role;
+    this._type = initialState.type;
+    this._accelerator = initialState.accelerator;
+    this._checked = initialState.checked;
+    this._enabled = initialState.enabled ?? true;
+    this._submenu = initialState.submenu ?? null;
+    this._click = initialState.click;
+  }
 
   private resolveTargetWindow(
     browserWindow: ElectronWindow | undefined,
@@ -58,6 +88,7 @@ export class ElectronMenuItem {
    * @param value True if checked, false otherwise.
    */
   public set checked(value: boolean | undefined) {
+    this._checked = value;
     const item = this.getItem();
     if (item) {
       try {
@@ -65,10 +96,7 @@ export class ElectronMenuItem {
       } catch {
         // Some Electron MenuItem instances expose readonly checked.
       }
-      this._checked = item.checked ?? value;
-      return;
     }
-    this._checked = value;
   }
 
   /**
@@ -220,17 +248,8 @@ export class ElectronMenuItem {
    * Sets the type of the menu item.
    * @param value The type of the menu item.
    */
-  public set type(
-    value:
-      | 'normal'
-      | 'separator'
-      | 'submenu'
-      | 'checkbox'
-      | 'radio'
-      | 'header'
-      | 'palette'
-      | undefined,
-  ) {
+  public set type(value: ElectronMenuItemType | undefined) {
+    this._type = value;
     const item = this.getItem();
     if (item) {
       try {
@@ -240,31 +259,14 @@ export class ElectronMenuItem {
       } catch {
         // Some role-driven Electron MenuItem instances expose readonly type.
       }
-
-      this._type = (item.type as any) ?? value;
-      return;
     }
-    this._type = value;
   }
 
   /**
    * Gets the type of the menu item.
    * @returns {'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header' | 'palette' | undefined} The type of the menu item.
    */
-  public get type():
-    | 'normal'
-    | 'separator'
-    | 'submenu'
-    | 'checkbox'
-    | 'radio'
-    | 'header'
-    | 'palette'
-    | undefined {
-    const item = this.getItem();
-    if (item) {
-      this._type = item.type;
-      return this._type;
-    }
+  public get type(): ElectronMenuItemType | undefined {
     return this._type;
   }
 
@@ -355,6 +357,25 @@ export class ElectronMenuItem {
       return;
     }
     this._click = value;
+  }
+
+  public clone(submenuOverride?: ElectronMenuItem[]): ElectronMenuItem {
+    return new ElectronMenuItem({
+      id: this._id,
+      label: this._label,
+      role: this._role,
+      type: this._type,
+      accelerator: this._accelerator,
+      checked: this._checked,
+      enabled: this._enabled,
+      click: this._click,
+      submenu:
+        submenuOverride !== undefined
+          ? submenuOverride
+          : this._submenu && this._submenu.length > 0
+            ? this._submenu
+            : null,
+    });
   }
 
   /**
@@ -497,14 +518,14 @@ export class ElectronMenuItem {
    */
   public toMenuItemConstructorOptions(): MenuItemConstructorOptions {
     const options: MenuItemConstructorOptions = {
-      id: this.id,
-      label: this.label,
-      role: this.role as any,
-      type: this.type,
-      accelerator: this.accelerator,
+      id: this._id,
+      label: this._label,
+      role: this._role as any,
+      type: this._type,
+      accelerator: this._accelerator,
       enabled: this._enabled,
-      submenu: this.submenu
-        ? this.submenu.map((item) => item.toMenuItemConstructorOptions())
+      submenu: this._submenu
+        ? this._submenu.map((item) => item.toMenuItemConstructorOptions())
         : undefined,
     };
     if (this._checked !== undefined) {
