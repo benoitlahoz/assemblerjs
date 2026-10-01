@@ -128,6 +128,20 @@ export class ElectronWindow extends BrowserWindow {
     return this.getOpenWindows().find((window) => window.name === name);
   }
 
+  public static getById(id: number): ElectronWindow | undefined {
+    const window = BrowserWindow.fromId(id) as ElectronWindow | undefined;
+    return window && !window.isDestroyed() ? window : undefined;
+  }
+
+  public static getByWebContents(
+    webContents: Electron.WebContents,
+  ): ElectronWindow | undefined {
+    const window = BrowserWindow.fromWebContents(webContents) as
+      | ElectronWindow
+      | undefined;
+    return window && !window.isDestroyed() ? window : undefined;
+  }
+
   constructor(optionsOverrides?: ElectronWindowOptionsOverrides) {
     const definition = getWindowDefinition(new.target as Function);
 

@@ -7,7 +7,10 @@ import {
   AbstractMenuRegistryService,
   MenuRegistryService,
 } from '@/window-menu/main/services';
-import { BaseMenuController } from '@/menu/main/services';
+import {
+  BaseMenuController,
+  resolveBaseMenuController,
+} from '@/menu/main/services';
 import type { MenuReference } from '@/window-menu/main/contracts';
 import type { ManagedWindowDefinition } from './window-controller.types';
 
@@ -15,14 +18,14 @@ const boundMenuFocusWindows = new WeakSet<object>();
 const fallbackBindingsSymbol = Symbol(
   '__WindowControllerFallbackMenuBindings__',
 );
-const resolvedMenuControllerSymbol = Symbol(
-  '__WindowControllerResolvedMenuController__',
-);
-const fallbackMenuControllerSymbol = Symbol(
-  '__WindowControllerFallbackMenuController__',
-);
 
-function resolveBestWindowNameForBindings(
+function getWindowMenuScope(windowName: string, windowInstance?: any): string {
+  return typeof windowInstance?.id === 'number'
+    ? String(windowInstance.id)
+    : windowName;
+}
+
+function resolveBestWindowScopeForBindings(
   bindings: WindowMenuBindings,
 ): string | undefined {
   const focusedWindow =
@@ -38,10 +41,8 @@ function resolveBestWindowNameForBindings(
         ).getFocusedWindow()
       : null;
 
-  const focusedWindowName =
-    (focusedWindow as ElectronWindow & { name?: string })?.name || undefined;
-  if (focusedWindowName && bindings.has?.(focusedWindowName)) {
-    return focusedWindowName;
+  if (focusedWindow && bindings.has?.(String(focusedWindow.id))) {
+    return String(focusedWindow.id);
   }
 
   const listNames =
@@ -49,10 +50,13 @@ function resolveBestWindowNameForBindings(
       ? (bindings as MenuBindingsLike).listNames!()
       : [];
 
-  for (const windowName of listNames) {
-    const candidate = ElectronWindow.getByName(windowName);
+  for (const scope of listNames) {
+    const numericId = Number(scope);
+    const candidate = Number.isInteger(numericId)
+      ? ElectronWindow.getById(numericId)
+      : ElectronWindow.getByName(scope);
     if (candidate && !candidate.isDestroyed()) {
-      return windowName;
+      return scope;
     }
   }
 
@@ -79,31 +83,7 @@ type WindowMenuBindings = Pick<
 };
 
 function resolveMenuController(controller: any): BaseMenuController {
-  if (
-    controller[resolvedMenuControllerSymbol] &&
-    typeof controller[resolvedMenuControllerSymbol].registerMenu === 'function'
-  ) {
-    return controller[resolvedMenuControllerSymbol] as BaseMenuController;
-  }
-
-  if (
-    controller.menus &&
-    typeof controller.menus.registerMenu === 'function' &&
-    typeof controller.menus.unregisterMenu === 'function'
-  ) {
-    controller[resolvedMenuControllerSymbol] =
-      controller.menus as BaseMenuController;
-    return controller[resolvedMenuControllerSymbol] as BaseMenuController;
-  }
-
-  if (
-    !controller[fallbackMenuControllerSymbol] ||
-    typeof controller[fallbackMenuControllerSymbol].registerMenu !== 'function'
-  ) {
-    controller[fallbackMenuControllerSymbol] = new BaseMenuController();
-  }
-
-  return controller[fallbackMenuControllerSymbol] as BaseMenuController;
+  return resolveBaseMenuController(controller);
 }
 
 function resolveMenuReference(controller: any, reference: MenuReference): any {
@@ -285,7 +265,8 @@ export async function attachManagedWindowMenu(
     menuToAttach = definition.menu!;
   }
 
-  await bindings.attach(managed.definition.name, menuToAttach, windowInstance);
+  const menuScope = getWindowMenuScope(managed.definition.name, windowInstance);
+  await bindings.attach(menuScope, menuToAttach, windowInstance);
 
   if (
     windowInstance &&
@@ -293,17 +274,17 @@ export async function attachManagedWindowMenu(
     !boundMenuFocusWindows.has(windowInstance)
   ) {
     const refreshMenu = () => {
-      void bindings.refresh(managed.definition.name).catch(() => undefined);
+      void bindings.refresh(menuScope).catch(() => undefined);
     };
 
     const refreshAfterTransition = () => {
       queueMicrotask(() => {
-        const bestWindowName = resolveBestWindowNameForBindings(bindings);
-        if (!bestWindowName) {
+        const bestWindowScope = resolveBestWindowScopeForBindings(bindings);
+        if (!bestWindowScope) {
           return;
         }
 
-        void bindings.refresh(bestWindowName).catch(() => undefined);
+        void bindings.refresh(bestWindowScope).catch(() => undefined);
       });
     };
 
@@ -318,11 +299,12 @@ export async function attachManagedWindowMenu(
 export function detachManagedWindowMenu(
   controller: any,
   managed: ManagedWindowDefinition,
+  windowInstance?: any,
 ): void {
   const bindings = resolveWindowMenuBindings(controller);
   if (!bindings) {
     return;
   }
 
-  bindings.detach(managed.definition.name);
+  bindings.detach(getWindowMenuScope(managed.definition.name, windowInstance));
 }

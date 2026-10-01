@@ -417,7 +417,7 @@ export class ElectronMenuItem {
    * ```
    */
   public handleInMain(
-    callback: (itemId: string, windowName: string) => void,
+    callback: (itemId: string, windowName?: string) => void,
   ): this {
     // CRITICAL: Capture ID NOW to avoid closure issues when cloning
     const capturedId = this.id;
@@ -429,9 +429,7 @@ export class ElectronMenuItem {
       event: Event,
     ) => {
       const targetWindow = this.resolveTargetWindow(browserWindow);
-      if (!targetWindow) return;
-
-      const windowName = targetWindow.name;
+      const windowName = targetWindow?.name;
 
       // Execute the main handler
       callback(capturedId, windowName);
@@ -480,14 +478,14 @@ export class ElectronMenuItem {
       event: Event,
     ) => {
       const targetWindow = this.resolveTargetWindow(browserWindow);
-      if (!targetWindow) return;
-
-      const windowName = targetWindow.name;
+      const windowName = targetWindow?.name ?? '';
 
       // Call any previously configured click handler (e.g., from handleInMain)
       if (previousClick) {
         previousClick(menuItem, targetWindow, event);
       }
+
+      if (!targetWindow) return;
 
       // Forward to renderer
       const payload = payloadFactory

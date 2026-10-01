@@ -18,6 +18,7 @@ export abstract class AbstractWindowController<
   declare public closeWindow: TypedWindowControllerRegistry<Windows>['closeWindow'];
   declare public closeAllWindows: TypedWindowControllerRegistry<Windows>['closeAllWindows'];
   declare public getWindow: TypedWindowControllerRegistry<Windows>['getWindow'];
+  declare public getWindowById: TypedWindowControllerRegistry<Windows>['getWindowById'];
   declare public hasWindow: TypedWindowControllerRegistry<Windows>['hasWindow'];
   declare public requireWindow: TypedWindowControllerRegistry<Windows>['requireWindow'];
 }

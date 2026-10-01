@@ -38,6 +38,19 @@ export class WindowControllerService
 
   @AppOn(ElectronAppEvent.Activate, true)
   private async onActivate(): Promise<void> {
+    const existingMainWindow = this.listWindows().find(
+      (window) => window.name === MainWindowConfig.name && !window.isDestroyed(),
+    );
+
+    if (existingMainWindow) {
+      if (existingMainWindow.isMinimized()) {
+        existingMainWindow.restore();
+      }
+      existingMainWindow.show();
+      existingMainWindow.focus();
+      return;
+    }
+
     const mainWindow = await this.openWindow(MainWindowConfig.name);
     mainWindow.center();
     mainWindow.show();

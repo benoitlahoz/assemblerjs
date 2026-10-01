@@ -21,7 +21,7 @@ export function buildMenuItemFromEntry(
   });
 
   if (entry.handleInMain) {
-    item.handleInMain((itemId: string, windowName: string) => {
+    item.handleInMain((itemId: string, windowName?: string) => {
       const source = entry.source ?? behavior.instance;
       const method = source?.[entry.method];
       if (typeof method === 'function') {

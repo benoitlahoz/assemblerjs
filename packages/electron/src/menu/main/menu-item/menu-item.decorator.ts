@@ -1,3 +1,4 @@
+import type { MenuItemConstructorOptions } from 'electron';
 import {
   ElectronMetadata,
   type MenuItemLabelValue,
@@ -13,13 +14,15 @@ import {
   SubMenu,
 } from './menu-dsl.decorator';
 
+export type MenuItemRole = NonNullable<MenuItemConstructorOptions['role']>;
+
 export interface MenuItemDefinition {
   id: string;
   label?: MenuItemLabelValue;
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
   enabled?: boolean;
-  role?: string;
+  role?: MenuItemRole;
   accelerator?: string;
   order?: number;
   before?: string;

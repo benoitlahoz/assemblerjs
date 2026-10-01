@@ -13,10 +13,12 @@ import { buildMetadataKey } from '@assemblerjs/common';
 
 export interface MenuDefinition {
   name?: string;
+  global?: boolean;
 }
 
 export interface NormalizedMenuDefinition {
   name: string;
+  global: boolean;
 }
 
 export const MenuDefinitionMetadataKey = buildMetadataKey(
@@ -74,6 +76,7 @@ export function normalizeMenuDefinition(
       definition.name && typeof definition.name === 'string'
         ? definition.name
         : 'mainMenu',
+    global: definition.global === true,
   };
 }
 

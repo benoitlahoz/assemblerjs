@@ -3,6 +3,7 @@ import { AbstractAssemblage, Assemblage, Global } from 'assemblerjs';
 import { ElectronWindow, UseMenu, Window } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
+import { FileMenu } from '@menus/file';
 import { WindowMenu } from '@menus/window';
 import { WindowBoundsMenuConfig } from '@menus/window/window-bounds.menu';
 import { DeveloperToolsMenu } from '@menus/developer';
@@ -27,6 +28,7 @@ import type { WindowEnv } from '../../window.env';
 })
 @UseMenu([
   AppMenu,
+  FileMenu,
   EditMenu,
   [
     WindowMenu,

@@ -164,6 +164,158 @@ const mainWindow = useContext().require(MainWindowService);
 await mainWindow.refreshBounds();
 ```
 
+## Multi-Window Orchestration
+
+`name` identifies a window type; it is not an instance identifier. By default,
+opening a managed window type reuses its existing instance. Set `multiple: true`
+to create another `BrowserWindow` each time `openWindow` is called:
+
+```typescript
+import { AbstractAssemblage, Assemblage } from 'assemblerjs';
+import { ElectronWindow, Window } from '@assemblerjs/electron';
+
+@Window({ name: 'document', multiple: true, width: 1100, height: 760 })
+@Assemblage()
+class DocumentWindow extends ElectronWindow implements AbstractAssemblage {}
+```
+
+`@Window` marks the assemblage as non-singleton for DI. `multiple` controls the
+window controller's reuse policy; setting only `singleton: false` does not make
+`openWindow('document')` create another window.
+
+The main-process window controller maintains the open-window registry. Resolve
+it from the Assembler context when targeting windows outside the controller
+class:
+
+```typescript
+import { useContext } from 'assemblerjs';
+import { AbstractWindowController } from '@assemblerjs/electron';
+
+const windows = useContext().require(AbstractWindowController);
+const first = await windows.openWindow('document');
+const second = await windows.openWindow('document');
+
+const openWindows = windows.listWindows();
+const sameTypeWindow = windows.getWindow('document');
+const exactWindow = windows.getWindowById(second.id);
+
+windows.closeWindow('document', second.id);
+windows.closeAllWindows('document');
+```
+
+`getWindow(name)` returns one live instance of that type. `listWindowNames()`
+can contain the same name more than once. Use the native `BrowserWindow.id` with
+`getWindowById` and `closeWindow(name, id)` when the operation must target an
+exact instance. Calling `closeWindow(name)` without an ID retains the
+first-live-instance behavior.
+
+### Window-Scoped IPC
+
+Renderer window services and `@WindowCommand` declarations keep the same API
+when multiple instances share a name. The command handler resolves the
+originating `BrowserWindow` from the IPC sender internally, so the command runs
+on the window whose renderer invoked it; applications do not need to pass a
+window ID as an extra command argument.
+
+```typescript
+import { Assemblage } from 'assemblerjs';
+import {
+  ElectronWindow,
+  Window as MainWindow,
+  WindowCommand as MainWindowCommand,
+} from '@assemblerjs/electron';
+import {
+  AbstractWindowService,
+  IpcResult,
+  Window as RendererWindow,
+  WindowCommand as RendererWindowCommand,
+} from '@assemblerjs/electron/renderer';
+
+// Main process
+@MainWindow({ name: 'document', multiple: true })
+@Assemblage()
+class DocumentWindow extends ElectronWindow {
+  @MainWindowCommand()
+  getDocumentTitle(): string {
+    return this.getTitle();
+  }
+}
+
+// Renderer process
+@RendererWindow({ name: 'document' })
+@Assemblage()
+class DocumentService extends AbstractWindowService {
+  @RendererWindowCommand()
+  async getDocumentTitle(
+    @IpcResult() title?: string,
+  ): Promise<string | undefined> {
+    return title;
+  }
+}
+```
+
+The renderer decorator invokes `window:document.getDocumentTitle`; the main
+handler resolves the `BrowserWindow` from the IPC sender and invokes that
+instance's method. No instance ID is added to the decorator or method arguments.
+
+Main-process window events can be forwarded in the same way with `@WindowForward`.
+The event is sent to that window's `webContents`; another window with the same
+type does not receive it.
+
+## Window and Global Menus
+
+Bind a normal menu to each window with `@UseMenu`. The active window's menu is
+installed when it is focused; menu registrations are tracked per window
+instance, so two windows of the same type can have independent menu state.
+
+An application can declare a global fallback menu with `@Menu({ global: true })`.
+It is installed when no window-specific menu is active and restored when the
+last window closes. Declare shared menu assemblages once in the root menu
+controller's `provide` list; do not provide them again from `GlobalMenu`, or DI
+will attempt to register the same assemblage identifier twice.
+
+```typescript
+import { AbstractAssemblage, Assemblage } from 'assemblerjs';
+import {
+  BaseMenuController,
+  ElectronMenu,
+  Menu,
+  MenuOrchestrator,
+  SubMenu,
+} from '@assemblerjs/electron';
+import { AppMenu } from './app.menu';
+import { FileMenu } from './file.menu';
+
+@Menu({ name: 'globalMenu', global: true })
+@Assemblage()
+class GlobalMenu extends ElectronMenu implements AbstractAssemblage {
+  constructor(
+    public readonly appMenu: AppMenu,
+    public readonly fileMenu: FileMenu,
+  ) {
+    super();
+  }
+
+  @SubMenu({ id: 'global.app', order: 10 })
+  private app(): AppMenu {
+    return this.appMenu;
+  }
+
+  @SubMenu({ id: 'global.file', order: 20 })
+  private file(): FileMenu {
+    return this.fileMenu;
+  }
+}
+
+@MenuOrchestrator()
+@Assemblage({ provide: [[AppMenu], [FileMenu], [GlobalMenu]] })
+class MenuController extends BaseMenuController implements AbstractAssemblage {}
+```
+
+When no window is open, a global menu action has no target window.
+`handleInMain` still runs, and its `windowName` argument is `undefined`;
+renderer forwarding is available only when a target window exists.
+
 ## IPC Communication
 
 ### Renderer to Main

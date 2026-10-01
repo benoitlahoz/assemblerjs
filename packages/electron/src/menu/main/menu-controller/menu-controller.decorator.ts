@@ -1,7 +1,11 @@
 import { createConstructorDecorator } from 'assemblerjs';
 import { getAssemblageContext, getAssemblageDefinition } from 'assemblerjs';
 import type { Identifier } from 'assemblerjs';
-import { BaseMenuController } from '@/menu/main/services';
+import type { ElectronMenu } from '@/menu/main/model/electron-menu';
+import {
+  BaseMenuController,
+  resolveBaseMenuController,
+} from '@/menu/main/services';
 import { getMenuDefinition } from '@/menu/main/menu-definition/menu.decorator';
 import {
   AbstractMenuRegistryService,
@@ -15,6 +19,7 @@ interface ManagedMenuDefinition {
   concrete: Function;
   definition: {
     name: string;
+    global: boolean;
   };
 }
 
@@ -62,15 +67,7 @@ function listManagedMenus(controller: any): ManagedMenuDefinition[] {
 }
 
 function resolveMenuControllerService(controller: any): BaseMenuController {
-  if (
-    controller.menus &&
-    typeof controller.menus.registerMenu === 'function' &&
-    typeof controller.menus.unregisterMenu === 'function'
-  ) {
-    return controller.menus as BaseMenuController;
-  }
-
-  return new BaseMenuController();
+  return resolveBaseMenuController(controller);
 }
 
 function resolveMenuRegistryService(
@@ -105,7 +102,11 @@ export const MenuController = createConstructorDecorator(function (this: any) {
     const menuRegistry = resolveMenuRegistryService(this);
 
     for (const entry of managedMenus) {
-      context.require(entry.token as any);
+      const menu = context.require(entry.token as any) as ElectronMenu;
+
+      if (entry.definition.global) {
+        await menus.registerGlobalMenu(menu, entry.definition.name);
+      }
 
       if (
         menuRegistry &&
@@ -126,7 +127,19 @@ export const MenuController = createConstructorDecorator(function (this: any) {
       : undefined;
 
   this.onDispose = async (...args: any[]) => {
-    if (typeof this.listWindowNames === 'function') {
+    menus.unregisterGlobalMenu();
+
+    if (typeof this.listWindows === 'function') {
+      const windows = this.listWindows() as Array<{
+        id?: number;
+        name: string;
+      }>;
+      for (const window of windows) {
+        menus.unregisterMenu(
+          typeof window.id === 'number' ? String(window.id) : window.name,
+        );
+      }
+    } else if (typeof this.listWindowNames === 'function') {
       const names = this.listWindowNames() as string[];
       for (const windowName of names) {
         menus.unregisterMenu(windowName);

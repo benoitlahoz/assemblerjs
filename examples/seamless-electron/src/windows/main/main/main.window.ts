@@ -11,6 +11,7 @@ import {
 } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
+import { FileMenu } from '@menus/file';
 import { WindowMenu } from '@menus/window';
 import { DeveloperToolsMenu } from '@menus/developer';
 import { MainWindowConfig } from '../universal/window.config';
@@ -31,6 +32,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
 
 @Window({
   name: MainWindowConfig.name,
+  multiple: true,
   width: MainWindowConfig.initialWidth,
   height: MainWindowConfig.initialHeight,
   show: MainWindowConfig.show,
@@ -49,7 +51,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     trafficLightPosition: MainWindowConfig.titleBar.trafficLightPosition,
   },
 })
-@UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
+@UseMenu([AppMenu, FileMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
 @Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('env') env: WindowEnv) {
@@ -78,6 +80,7 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     // Emit title change event to renderer
     this.webContents.send(`window:${this.name}.title-changed`, title);
     this.center();
+    this.show();
   }
 
   // ========================================
