@@ -1,4 +1,5 @@
 import { createMenuItem } from '../create-menu-item';
+import type { ElectronWindow } from '@/window/main/classes/electron-window';
 import { resolveLabel } from './labels';
 import type {
   BuildBehaviorContext,
@@ -21,13 +22,15 @@ export function buildMenuItemFromEntry(
   });
 
   if (entry.handleInMain) {
-    item.handleInMain((itemId: string, windowName?: string) => {
-      const source = entry.source ?? behavior.instance;
-      const method = source?.[entry.method];
-      if (typeof method === 'function') {
-        method.call(source, itemId, windowName);
-      }
-    });
+    item.handleInMain(
+      (itemId: string, windowName?: string, window?: ElectronWindow) => {
+        const source = entry.source ?? behavior.instance;
+        const method = source?.[entry.method];
+        if (typeof method === 'function') {
+          method.call(source, itemId, windowName, window);
+        }
+      },
+    );
   }
 
   if (entry.forwardToRenderer) {

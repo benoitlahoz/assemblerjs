@@ -32,7 +32,7 @@ vi.mock('../src/main/index.ts', () => ({
   },
 }));
 
-vi.mock('../src/main/menu/builders/create-menu-item', () => ({
+vi.mock('../src/menu/main/builders/create-menu-item', () => ({
   createMenuItem(input: {
     id: string;
     label?: string;
@@ -46,10 +46,20 @@ vi.mock('../src/main/menu/builders/create-menu-item', () => ({
       ...input,
       submenu: null,
       _handleInMain: undefined as
-        | ((itemId: string, windowName: string) => void)
+        | ((
+            itemId: string,
+            windowName?: string,
+            window?: { id: number },
+          ) => void)
         | undefined,
       _forwardToRenderer: false,
-      handleInMain(callback: (itemId: string, windowName: string) => void) {
+      handleInMain(
+        callback: (
+          itemId: string,
+          windowName?: string,
+          window?: { id: number },
+        ) => void,
+      ) {
         this._handleInMain = callback;
         return this;
       },
@@ -96,7 +106,11 @@ let buildMenuTreeFromMetadata: (
     {
       id: string;
       label?: string;
-      _handleInMain?: (itemId: string, windowName: string) => void;
+      _handleInMain?: (
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ) => void;
       _forwardToRenderer?: boolean;
     }
   >;
@@ -104,9 +118,9 @@ let buildMenuTreeFromMetadata: (
 
 beforeAll(async () => {
   ({ MenuItem, SubMenu } =
-    await import('../src/main/menu/menu-item/menu-item.decorator'));
+    await import('../src/menu/main/menu-item/menu-item.decorator'));
   ({ buildMenuTreeFromMetadata } =
-    await import('../src/main/menu/builders/build-menu-tree-from-metadata'));
+    await import('../src/menu/main/builders/menu-tree'));
 });
 
 describe('buildMenuTreeFromMetadata', () => {
@@ -249,7 +263,11 @@ describe('buildMenuTreeFromMetadata', () => {
   it('wires handleInMain and forwardToRenderer from @MenuItem options', () => {
     @Assemblage()
     class MenuDef {
-      public calls: Array<{ itemId: string; windowName: string }> = [];
+      public calls: Array<{
+        itemId: string;
+        windowName?: string;
+        window?: { id: number };
+      }> = [];
 
       @MenuItem({
         id: 'main.menu.autoCenter',
@@ -258,8 +276,12 @@ describe('buildMenuTreeFromMetadata', () => {
         handleInMain: true,
         forwardToRenderer: true,
       })
-      public autoCenter(itemId: string, windowName: string): void {
-        this.calls.push({ itemId, windowName });
+      public autoCenter(
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ): void {
+        this.calls.push({ itemId, windowName, window });
       }
     }
 
@@ -270,9 +292,14 @@ describe('buildMenuTreeFromMetadata', () => {
     expect(item?._forwardToRenderer).toBe(true);
     expect(typeof item?._handleInMain).toBe('function');
 
-    item?._handleInMain?.('main.menu.autoCenter', 'main');
+    const clickedWindow = { id: 42 };
+    item?._handleInMain?.('main.menu.autoCenter', 'main', clickedWindow);
     expect(instance.calls).toEqual([
-      { itemId: 'main.menu.autoCenter', windowName: 'main' },
+      {
+        itemId: 'main.menu.autoCenter',
+        windowName: 'main',
+        window: clickedWindow,
+      },
     ]);
   });
 
@@ -280,15 +307,23 @@ describe('buildMenuTreeFromMetadata', () => {
     @MenuItem('App')
     @Assemblage()
     class AppMenu {
-      public calls: Array<{ itemId: string; windowName: string }> = [];
+      public calls: Array<{
+        itemId: string;
+        windowName?: string;
+        window?: { id: number };
+      }> = [];
 
       @MenuItem({
         id: 'app.about',
         label: 'About',
         handleInMain: true,
       })
-      public openAboutWindow(itemId: string, windowName: string): void {
-        this.calls.push({ itemId, windowName });
+      public openAboutWindow(
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ): void {
+        this.calls.push({ itemId, windowName, window });
       }
     }
 
@@ -310,7 +345,7 @@ describe('buildMenuTreeFromMetadata', () => {
 
     item?._handleInMain?.('app.about', 'main');
     expect(appMenu.calls).toEqual([
-      { itemId: 'app.about', windowName: 'main' },
+      { itemId: 'app.about', windowName: 'main', window: undefined },
     ]);
   });
 

@@ -406,18 +406,22 @@ export class ElectronMenuItem {
    * Configures a handler to process click events in the main process.
    * Can be chained with forwardClickToRenderer() for dual handling.
    *
-   * @param callback Handler function receiving itemId and windowName.
+   * @param callback Handler receiving the item ID, window type name, and clicked window.
    * @returns {this} The current instance.
    *
    * @example
    * ```ts
    * menuItem
-   *   .handleInMain((id, win) => console.log('Main:', id))
+   *   .handleInMain((id, name, window) => console.log('Main:', id, window?.id))
    *   .forwardClickToRenderer();
    * ```
    */
   public handleInMain(
-    callback: (itemId: string, windowName?: string) => void,
+    callback: (
+      itemId: string,
+      windowName?: string,
+      window?: ElectronWindow,
+    ) => void,
   ): this {
     // CRITICAL: Capture ID NOW to avoid closure issues when cloning
     const capturedId = this.id;
@@ -432,7 +436,7 @@ export class ElectronMenuItem {
       const windowName = targetWindow?.name;
 
       // Execute the main handler
-      callback(capturedId, windowName);
+      callback(capturedId, windowName, targetWindow);
 
       // Call any previously configured click handler
       if (previousClick) {

@@ -316,6 +316,29 @@ When no window is open, a global menu action has no target window.
 `handleInMain` still runs, and its `windowName` argument is `undefined`;
 renderer forwarding is available only when a target window exists.
 
+For a menu action that needs to own a native dialog or target the exact
+document window, `handleInMain` can receive the clicked `ElectronWindow` as its
+third optional argument. Existing handlers that only accept the item ID and
+window name remain compatible:
+
+```typescript
+@MenuItem({ id: 'file.open', label: 'Open Folder', handleInMain: true })
+async openFolder(
+  _itemId: string,
+  _windowName?: string,
+  targetWindow?: ElectronWindow,
+): Promise<void> {
+  const selection = targetWindow
+    ? await dialog.showOpenDialog(targetWindow, { properties: ['openDirectory'] })
+    : await dialog.showOpenDialog({ properties: ['openDirectory'] });
+}
+```
+
+This is useful when several windows share the same `name`: use the supplied
+window directly instead of looking it up by type name or passing its native ID
+through application code. A global-menu action with no open window receives
+`undefined` for `targetWindow`.
+
 ## IPC Communication
 
 ### Renderer to Main

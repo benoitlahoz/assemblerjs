@@ -79,7 +79,6 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     this.setTitle(title);
     // Emit title change event to renderer
     this.webContents.send(`window:${this.name}.title-changed`, title);
-    this.center();
     this.show();
   }
 
