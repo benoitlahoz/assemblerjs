@@ -1,7 +1,11 @@
 import type { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
-import { ipcMain } from 'electron';
+import { app, ipcMain, Menu } from 'electron';
 import { ElectronWindow } from '@/window/main/classes/electron-window';
 import { ElectronMenu, ElectronMenuItem } from '@/menu/main/model';
+import {
+  MenuLifecycleEvent,
+  type MenuRegisteredEvent,
+} from '../menu-lifecycle';
 import { registerCleanup } from '@/common/lifecycle';
 import { createChannelBuilder } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/common';
@@ -28,7 +32,11 @@ interface MenuRegistration {
  * ```
  */
 export class BaseMenuController implements AbstractAssemblage {
-  private readonly registrations = new Map<string, MenuRegistration>();
+  private static readonly registrations = new Map<string, MenuRegistration>();
+  private static globalRegistration?: Omit<
+    MenuRegistration,
+    'windowName' | 'window'
+  >;
   private globalHandlersRegistered = false;
   private readonly scopedHandlers = new Set<string>();
 
@@ -36,8 +44,37 @@ export class BaseMenuController implements AbstractAssemblage {
     this.registerGlobalHandlers();
   }
 
-  private requireRegistration(windowName: string): MenuRegistration {
-    const registration = this.registrations.get(windowName);
+  private requireRegistration(
+    windowName: string,
+    event?: unknown,
+  ): MenuRegistration {
+    const sender = (event as { sender?: Electron.WebContents } | undefined)
+      ?.sender;
+    const senderWindow = sender
+      ? ElectronWindow.getByWebContents(sender)
+      : undefined;
+    const senderRegistration = senderWindow
+      ? BaseMenuController.registrations.get(String(senderWindow.id))
+      : undefined;
+    const focusedWindow =
+      ElectronWindow.getFocusedWindow() as ElectronWindow | null;
+    const focusedRegistration = focusedWindow
+      ? BaseMenuController.registrations.get(String(focusedWindow.id))
+      : undefined;
+    const matchingRegistrations = [
+      ...BaseMenuController.registrations.values(),
+    ].filter((candidate) => candidate.windowName === windowName);
+    const registration =
+      (senderRegistration?.windowName === windowName
+        ? senderRegistration
+        : undefined) ||
+      BaseMenuController.registrations.get(windowName) ||
+      (focusedRegistration?.windowName === windowName
+        ? focusedRegistration
+        : undefined) ||
+      (matchingRegistrations.length === 1
+        ? matchingRegistrations[0]
+        : undefined);
     if (!registration) {
       throw new Error(`No menu registered for window '${windowName}'.`);
     }
@@ -94,8 +131,13 @@ export class BaseMenuController implements AbstractAssemblage {
     return states;
   }
 
-  private emit(windowName: string, channel: string, ...args: any[]): void {
-    const window = ElectronWindow.getByName(windowName);
+  private emit(
+    registration: MenuRegistration,
+    channel: string,
+    ...args: any[]
+  ): void {
+    const window =
+      registration.window || ElectronWindow.getByName(registration.windowName);
     if (!window || window.isDestroyed()) {
       return;
     }
@@ -110,8 +152,9 @@ export class BaseMenuController implements AbstractAssemblage {
 
   private emitTemplateChanged(windowName: string): void {
     const registration = this.requireRegistration(windowName);
-    // Use stored instance if available, otherwise fallback to lookup
-    const window = registration.window || ElectronWindow.getByName(windowName);
+    const registeredWindowName = registration.windowName;
+    const window =
+      registration.window || ElectronWindow.getByName(registration.windowName);
 
     if (!window || window.isDestroyed()) {
       return;
@@ -125,14 +168,14 @@ export class BaseMenuController implements AbstractAssemblage {
     // Helper to emit the events
     const emitEvents = (): void => {
       this.emit(
-        windowName,
-        buildMenuChannel(windowName, 'templateChanged'),
+        registration,
+        buildMenuChannel(registeredWindowName, 'templateChanged'),
         registration.menuName,
       );
       this.emit(
-        windowName,
+        registration,
         MenuIpcChannel.OnTemplateChanged,
-        windowName,
+        registeredWindowName,
         registration.menuName,
       );
     };
@@ -148,9 +191,21 @@ export class BaseMenuController implements AbstractAssemblage {
     }
   }
 
-  private emitStateChanged(windowName: string, state: MenuItemState): void {
-    this.emit(windowName, buildMenuChannel(windowName, 'stateChanged'), state);
-    this.emit(windowName, MenuIpcChannel.OnItemStateChanged, windowName, state);
+  private emitStateChanged(
+    registration: MenuRegistration,
+    state: MenuItemState,
+  ): void {
+    this.emit(
+      registration,
+      buildMenuChannel(registration.windowName, 'stateChanged'),
+      state,
+    );
+    this.emit(
+      registration,
+      MenuIpcChannel.OnItemStateChanged,
+      registration.windowName,
+      state,
+    );
   }
 
   private registerHandler(
@@ -172,23 +227,23 @@ export class BaseMenuController implements AbstractAssemblage {
 
     this.registerHandler(
       MenuIpcChannel.GetSnapshot,
-      (_event, windowName: string) =>
-        this.toIpcResult(() => this.snapshot(windowName)),
+      (event, windowName: string) =>
+        this.toIpcResult(() => this.snapshot(windowName, event)),
     );
 
     this.registerHandler(
       MenuIpcChannel.SetItemEnabled,
-      (_event, windowName: string, itemId: string, enabled: boolean) =>
+      (event, windowName: string, itemId: string, enabled: boolean) =>
         this.toIpcResult(() =>
-          this.setItemEnabled(windowName, itemId, enabled),
+          this.setItemEnabled(windowName, itemId, enabled, event),
         ),
     );
 
     this.registerHandler(
       MenuIpcChannel.SetItemChecked,
-      (_event, windowName: string, itemId: string, checked: boolean) =>
+      (event, windowName: string, itemId: string, checked: boolean) =>
         this.toIpcResult(() =>
-          this.setItemChecked(windowName, itemId, checked),
+          this.setItemChecked(windowName, itemId, checked, event),
         ),
     );
 
@@ -201,20 +256,20 @@ export class BaseMenuController implements AbstractAssemblage {
     > = [
       [
         buildMenuChannel(windowName, 'snapshot'),
-        () => this.toIpcResult(() => this.snapshot(windowName)),
+        (event) => this.toIpcResult(() => this.snapshot(windowName, event)),
       ],
       [
         buildMenuChannel(windowName, 'setItemEnabled'),
-        (_event, itemId: string, enabled: boolean) =>
+        (event, itemId: string, enabled: boolean) =>
           this.toIpcResult(() =>
-            this.setItemEnabled(windowName, itemId, enabled),
+            this.setItemEnabled(windowName, itemId, enabled, event),
           ),
       ],
       [
         buildMenuChannel(windowName, 'setItemChecked'),
-        (_event, itemId: string, checked: boolean) =>
+        (event, itemId: string, checked: boolean) =>
           this.toIpcResult(() =>
-            this.setItemChecked(windowName, itemId, checked),
+            this.setItemChecked(windowName, itemId, checked, event),
           ),
       ],
     ];
@@ -236,20 +291,111 @@ export class BaseMenuController implements AbstractAssemblage {
     window?: ElectronWindow,
   ): this {
     this.registerGlobalHandlers();
-    this.registerScopedHandlers(windowName);
+    const registeredWindowName = window?.name ?? windowName;
+    this.registerScopedHandlers(registeredWindowName);
 
-    this.registrations.set(windowName, {
-      windowName,
+    const scope = window ? String(window.id) : windowName;
+    BaseMenuController.registrations.set(scope, {
+      windowName: registeredWindowName,
       menuName,
       menu,
       window,
     });
 
+    app.emit(MenuLifecycleEvent.Registered, {
+      menu,
+      menuName,
+      window,
+      windowName: registeredWindowName,
+      global: false,
+    } satisfies MenuRegisteredEvent);
+
     return this;
   }
 
-  public unregisterMenu(windowName: string): this {
-    this.registrations.delete(windowName);
+  public async registerGlobalMenu(
+    menu: ElectronMenu,
+    menuName = 'globalMenu',
+  ): Promise<this> {
+    BaseMenuController.globalRegistration = { menuName, menu };
+    app.emit(MenuLifecycleEvent.Registered, {
+      menu,
+      menuName,
+      global: true,
+    } satisfies MenuRegisteredEvent);
+    if (BaseMenuController.registrations.size === 0) {
+      await this.focusGlobal();
+    }
+    return this;
+  }
+
+  public async focusGlobal(): Promise<boolean> {
+    const globalRegistration = BaseMenuController.globalRegistration;
+    if (!globalRegistration) {
+      return false;
+    }
+
+    await globalRegistration.menu.focus();
+    return true;
+  }
+
+  public async replaceSubmenuItems(
+    window: ElectronWindow | undefined,
+    parentItemId: string,
+    items: ElectronMenuItem[],
+  ): Promise<boolean> {
+    const registration = window
+      ? BaseMenuController.registrations.get(String(window.id))
+      : BaseMenuController.globalRegistration;
+
+    if (
+      !registration ||
+      (window &&
+        (!('window' in registration) || registration.window !== window))
+    ) {
+      return false;
+    }
+
+    const parent = registration.menu.itemById(parentItemId);
+    if (!parent) {
+      return false;
+    }
+
+    parent.replaceSubmenuItems(items);
+
+    if (window) {
+      const focusedWindow =
+        ElectronWindow.getFocusedWindow() as ElectronWindow | null;
+      if (focusedWindow?.id === window.id || registration.menu.isActive()) {
+        await registration.menu.focus();
+      }
+    } else if (
+      BaseMenuController.registrations.size === 0 ||
+      registration.menu.isActive()
+    ) {
+      await registration.menu.focus();
+    }
+
+    return true;
+  }
+
+  public unregisterGlobalMenu(): this {
+    BaseMenuController.globalRegistration = undefined;
+    if (BaseMenuController.registrations.size === 0) {
+      Menu.setApplicationMenu(null);
+    }
+    return this;
+  }
+
+  public unregisterMenu(windowScope: string): this {
+    BaseMenuController.registrations.delete(windowScope);
+    if (BaseMenuController.registrations.size === 0) {
+      if (BaseMenuController.globalRegistration) {
+        void this.focusGlobal();
+      } else {
+        Menu.setApplicationMenu(null);
+      }
+    }
     return this;
   }
 
@@ -264,8 +410,9 @@ export class BaseMenuController implements AbstractAssemblage {
     windowName: string,
     itemId: string,
     enabled: boolean,
+    event?: unknown,
   ): boolean {
-    const registration = this.requireRegistration(windowName);
+    const registration = this.requireRegistration(windowName, event);
     const item = registration.menu.itemById(itemId);
     if (!item) {
       return false;
@@ -276,7 +423,7 @@ export class BaseMenuController implements AbstractAssemblage {
     }
 
     item.enabled = enabled;
-    this.emitStateChanged(windowName, this.getState(item));
+    this.emitStateChanged(registration, this.getState(item));
     return true;
   }
 
@@ -284,8 +431,9 @@ export class BaseMenuController implements AbstractAssemblage {
     windowName: string,
     itemId: string,
     checked: boolean,
+    event?: unknown,
   ): boolean {
-    const registration = this.requireRegistration(windowName);
+    const registration = this.requireRegistration(windowName, event);
     const item = registration.menu.itemById(itemId);
     if (!item) {
       return false;
@@ -296,12 +444,12 @@ export class BaseMenuController implements AbstractAssemblage {
     }
 
     item.checked = checked;
-    this.emitStateChanged(windowName, this.getState(item));
+    this.emitStateChanged(registration, this.getState(item));
     return true;
   }
 
-  public snapshot(windowName: string): MenuSnapshot {
-    const registration = this.requireRegistration(windowName);
+  public snapshot(windowName: string, event?: unknown): MenuSnapshot {
+    const registration = this.requireRegistration(windowName, event);
     const items = this.collectItemStates(registration.menu.getItems());
     return {
       windowName,
@@ -315,8 +463,35 @@ export class BaseMenuController implements AbstractAssemblage {
     _context: AssemblerContext,
     _configuration?: Record<string, any>,
   ): void {
-    this.registrations.clear();
+    BaseMenuController.registrations.clear();
+    BaseMenuController.globalRegistration = undefined;
     this.scopedHandlers.clear();
     this.globalHandlersRegistered = false;
   }
+}
+
+const baseMenuControllerKey = Symbol.for(
+  'assemblerjs.electron.baseMenuController',
+);
+
+export function resolveBaseMenuController(owner: any): BaseMenuController {
+  const injected = owner?.menus;
+  if (
+    injected &&
+    typeof injected.registerMenu === 'function' &&
+    typeof injected.unregisterMenu === 'function'
+  ) {
+    return injected as BaseMenuController;
+  }
+
+  if (owner?.[baseMenuControllerKey]) {
+    return owner[baseMenuControllerKey] as BaseMenuController;
+  }
+
+  const controller = new BaseMenuController();
+  Object.defineProperty(owner, baseMenuControllerKey, {
+    configurable: true,
+    value: controller,
+  });
+  return controller;
 }

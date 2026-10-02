@@ -1,5 +1,6 @@
 import type { MutableNamedRegistry } from '@assemblerjs/common';
 import type { ElectronMenu } from '@/menu/main/model/electron-menu';
+import type { ElectronWindow } from '@/window/main/classes/electron-window';
 import type { MenuReference } from '../contracts';
 
 export interface WindowMenuBindingEntry {
@@ -28,6 +29,7 @@ export abstract class AbstractWindowMenuBindingRegistryService implements Mutabl
   public abstract attach(
     windowName: string,
     menu: MenuReference | ElectronMenu,
+    windowInstance?: ElectronWindow,
   ): Promise<void>;
 
   public abstract detach(windowName: string): void;

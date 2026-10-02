@@ -601,7 +601,7 @@ export function useWindowBoundsCard(
 
   onMounted(async () => {
     // Get current bounds without modifying window state
-    await mainWindow.getBounds();
+    await mainWindow.getCurrentBounds();
     await syncDisplayWorkArea();
     drawBoundsCanvas();
 

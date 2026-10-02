@@ -35,7 +35,7 @@ export class MainWindow extends AbstractWindowService {
     }
 
     this.boundsStreamInitialized = true;
-    this.bounds.value = this.cloneBounds(await this.getBounds());
+    this.bounds.value = this.cloneBounds(await this.getCurrentBounds());
   }
 
   public async onInit(): Promise<void> {
@@ -49,8 +49,17 @@ export class MainWindow extends AbstractWindowService {
   // ========================================
   // Commands (RPC calls to main)
   // ========================================
+  // Using @WindowCommand() without parameter infers command name from method name
 
-  @WindowCommand('refreshBounds')
+  @WindowCommand() // Infers 'getCurrentBounds'
+  public async getCurrentBounds(
+    @IpcResult() bounds?: WindowBounds,
+  ): Promise<WindowBounds | undefined> {
+    await this.ensureBoundsStream();
+    return this.cloneBounds(bounds);
+  }
+
+  @WindowCommand() // Infers 'refreshBounds'
   public async refreshBounds(
     @IpcResult() bounds?: WindowBounds,
   ): Promise<WindowBounds | undefined> {
@@ -59,21 +68,21 @@ export class MainWindow extends AbstractWindowService {
     return this.bounds.value;
   }
 
-  @WindowCommand('randomBounds')
+  @WindowCommand() // Infers 'randomBounds'
   public async randomBounds(@IpcResult() bounds?: WindowBounds): Promise<WindowBounds | undefined> {
     await this.ensureBoundsStream();
     this.bounds.value = this.cloneBounds(bounds);
     return this.bounds.value;
   }
 
-  @WindowCommand('centerWindow')
+  @WindowCommand() // Infers 'centerWindow'
   public async centerWindow(@IpcResult() bounds?: WindowBounds): Promise<WindowBounds | undefined> {
     await this.ensureBoundsStream();
     this.bounds.value = this.cloneBounds(bounds);
     return this.bounds.value;
   }
 
-  @WindowCommand('setBounds')
+  @WindowCommand('setBounds') // Explicit name to match main process
   public async setBounds(
     nextBounds: WindowBounds,
     @IpcResult() bounds?: WindowBounds,
@@ -84,7 +93,7 @@ export class MainWindow extends AbstractWindowService {
     return this.bounds.value;
   }
 
-  @WindowCommand('getDisplayWorkArea')
+  @WindowCommand() // Infers 'getDisplayWorkArea'
   public async getDisplayWorkArea(
     @IpcResult() workArea?: WindowBounds,
   ): Promise<WindowBounds | undefined> {
@@ -92,7 +101,7 @@ export class MainWindow extends AbstractWindowService {
     return workArea;
   }
 
-  @WindowCommand('getDisplayBounds')
+  @WindowCommand() // Infers 'getDisplayBounds'
   public async getDisplayBounds(
     @IpcResult() bounds?: WindowBounds,
   ): Promise<WindowBounds | undefined> {

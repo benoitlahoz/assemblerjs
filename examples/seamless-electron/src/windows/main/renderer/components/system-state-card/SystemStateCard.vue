@@ -187,7 +187,7 @@ onBeforeUnmount(async () => {
           </svg>
         </button>
       </div>
-      <span v-if="!compact" class="system-duplex">Seamless</span>
+      <span v-if="!compact" class="system-duplex">full-duplex</span>
     </header>
 
     <p v-if="!compact" class="card__description">

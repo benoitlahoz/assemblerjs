@@ -4,13 +4,16 @@ import { ElectronMetadata } from '@/common/metadata';
 
 const buildWindowChannel = createChannelBuilder('window');
 
-export const WindowCommand = (command: string): MethodDecorator => {
+export const WindowCommand = (command?: string): MethodDecorator => {
   return (
     target: object,
     propertyKey: string | symbol,
     descriptor: PropertyDescriptor,
   ) => {
     const originalMethod = descriptor.value as Function;
+
+    // Infer command name from method name if not provided
+    const commandName = command ?? String(propertyKey);
 
     descriptor.value = async function (
       this: { windowName?: unknown },
@@ -33,7 +36,7 @@ export const WindowCommand = (command: string): MethodDecorator => {
         throw new Error('IpcRenderer is not available in the current context.');
       }
 
-      const channel = buildWindowChannel(windowName, command);
+      const channel = buildWindowChannel(windowName, commandName);
       const result = await bridge.invoke(
         channel,
         ...args.filter((_, i) => !ipcResultParameters.includes(i)),

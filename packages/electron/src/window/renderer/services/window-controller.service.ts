@@ -1,7 +1,7 @@
 import { Assemblage } from 'assemblerjs';
 import { AbstractIpcService, unwrapIpcResult } from '@/ipc/renderer/services';
 import { WindowIpcChannel } from '@/common/channels';
-import { createChannelBuilder } from '@assemblerjs/common';
+import { createChannelBuilder, createSnapshotStore } from '@assemblerjs/common';
 import type {
   ManagedWindowDescriptor,
   WindowBounds,
@@ -16,7 +16,11 @@ const buildWindowChannel = createChannelBuilder('window');
 
 @Assemblage()
 export class WindowControllerService extends AbstractWindowControllerService {
-  private readonly snapshots = new Map<string, WindowSnapshot>();
+  private readonly snapshots = createSnapshotStore<string, WindowSnapshot>({
+    touch: (snapshot) => {
+      snapshot.updatedAt = Date.now();
+    },
+  });
   private readonly subscriptions = new Set<() => void>();
 
   constructor(private readonly _ipc: AbstractIpcService) {
@@ -27,28 +31,14 @@ export class WindowControllerService extends AbstractWindowControllerService {
     return this._ipc;
   }
 
-  private ensureSnapshot(name: string): WindowSnapshot {
-    const existing = this.snapshots.get(name);
-    if (existing) {
-      return existing;
-    }
-
-    const created: WindowSnapshot = {
-      name,
-      updatedAt: Date.now(),
-    };
-
-    this.snapshots.set(name, created);
-    return created;
-  }
-
   private updateSnapshot(
     name: string,
     updater: (snapshot: WindowSnapshot) => void,
   ): void {
-    const snapshot = this.ensureSnapshot(name);
-    updater(snapshot);
-    snapshot.updatedAt = Date.now();
+    this.snapshots.update(name, updater, (key) => ({
+      name: key,
+      updatedAt: Date.now(),
+    }));
   }
 
   private registerSubscription(unsubscribe: () => void): () => void {

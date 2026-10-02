@@ -11,6 +11,7 @@ import {
 } from '@assemblerjs/electron';
 import { AppMenu } from '@menus/app';
 import { EditMenu } from '@menus/edit';
+import { FileMenu } from '@menus/file';
 import { WindowMenu } from '@menus/window';
 import { DeveloperToolsMenu } from '@menus/developer';
 import { MainWindowConfig } from '../universal/window.config';
@@ -31,6 +32,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
 
 @Window({
   name: MainWindowConfig.name,
+  multiple: true,
   width: MainWindowConfig.initialWidth,
   height: MainWindowConfig.initialHeight,
   show: MainWindowConfig.show,
@@ -49,7 +51,7 @@ function normalizeBounds(input: Rectangle, minWidth: number, minHeight: number):
     trafficLightPosition: MainWindowConfig.titleBar.trafficLightPosition,
   },
 })
-@UseMenu([AppMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
+@UseMenu([AppMenu, FileMenu, EditMenu, WindowMenu, DeveloperToolsMenu])
 @Assemblage()
 export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   constructor(@Global('env') env: WindowEnv) {
@@ -77,7 +79,7 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     this.setTitle(title);
     // Emit title change event to renderer
     this.webContents.send(`window:${this.name}.title-changed`, title);
-    this.center();
+    this.show();
   }
 
   // ========================================
@@ -99,24 +101,25 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
   // ========================================
   // Window Commands (Renderer → Main RPC)
   // ========================================
+  // Using @WindowCommand() without parameter infers command name from method name
 
-  @WindowCommand('getBounds')
-  public getBoundsCommand(): Rectangle {
+  @WindowCommand() // Infers 'getCurrentBounds'
+  public getCurrentBounds(): Rectangle {
     return this.getBounds();
   }
 
-  @WindowCommand('getDisplayWorkArea')
-  public getDisplayWorkAreaCommand(): Rectangle {
+  @WindowCommand() // Infers 'getDisplayWorkArea'
+  public getDisplayWorkArea(): Rectangle {
     return this.currentDisplay.workArea;
   }
 
-  @WindowCommand('getDisplayBounds')
-  public getDisplayBoundsCommand(): Rectangle {
+  @WindowCommand() // Infers 'getDisplayBounds'
+  public getDisplayBounds(): Rectangle {
     return this.currentDisplay.bounds;
   }
 
-  @WindowCommand('randomBounds')
-  public randomBoundsCommand(): Rectangle {
+  @WindowCommand() // Infers 'randomBounds'
+  public randomBounds(): Rectangle {
     if (this.isFullScreen()) {
       this.setFullScreen(false);
     }
@@ -171,8 +174,8 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     return this.getBounds();
   }
 
-  @WindowCommand('refreshBounds')
-  public refreshBoundsCommand(): Rectangle {
+  @WindowCommand() // Infers 'refreshBounds'
+  public refreshBounds(): Rectangle {
     if (this.isFullScreen()) {
       this.setFullScreen(false);
     }
@@ -193,8 +196,8 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     return this.getBounds();
   }
 
-  @WindowCommand('centerWindow')
-  public centerWindowCommand(): Rectangle {
+  @WindowCommand() // Infers 'centerWindow'
+  public centerWindow(): Rectangle {
     if (this.isMinimized()) {
       this.restore();
     }
@@ -205,8 +208,8 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     return this.getBounds();
   }
 
-  @WindowCommand('setBounds')
-  public setBoundsCommand(nextBounds: Rectangle): Rectangle {
+  @WindowCommand('setBounds') // Explicit name to avoid conflict with native method
+  public updateBounds(nextBounds: Rectangle): Rectangle {
     if (this.isFullScreen()) {
       this.setFullScreen(false);
     }
@@ -246,14 +249,14 @@ export class MainWindow extends ElectronWindow implements AbstractAssemblage {
     return this.getBounds();
   }
 
-  @WindowCommand('setAlwaysOnTop')
-  public setAlwaysOnTopCommand(flag: boolean): boolean {
+  @WindowCommand('setAlwaysOnTop') // Explicit name to avoid conflict with native method
+  public toggleAlwaysOnTop(flag: boolean): boolean {
     this.setAlwaysOnTop(flag);
     return this.isAlwaysOnTop();
   }
 
-  @WindowCommand('isAlwaysOnTop')
-  public isAlwaysOnTopCommand(): boolean {
+  @WindowCommand('isAlwaysOnTop') // Explicit name to avoid conflict with native method
+  public checkAlwaysOnTop(): boolean {
     return this.isAlwaysOnTop();
   }
 }

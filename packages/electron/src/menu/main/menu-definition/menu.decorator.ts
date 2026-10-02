@@ -2,21 +2,23 @@ import {
   createConstructorDecorator,
   getAssemblageDefinition,
 } from 'assemblerjs';
-import { buildMenuTreeFromMetadata } from '@/menu/main/builders/build-menu-tree-from-metadata';
+import { buildMenuTreeFromMetadata } from '@/menu/main/builders/menu-tree';
 import {
   mergeRootMenus,
   resolveMenuTranslate,
-} from '@/menu/main/builders/compose-menu-roots';
+} from '@/menu/main/builders/menu-roots';
 import type { ElectronMenuItem } from '@/menu/main/model/electron-menu-item';
 import { ElectronMetadata } from '@/common/metadata';
 import { buildMetadataKey } from '@assemblerjs/common';
 
 export interface MenuDefinition {
   name?: string;
+  global?: boolean;
 }
 
 export interface NormalizedMenuDefinition {
   name: string;
+  global: boolean;
 }
 
 export const MenuDefinitionMetadataKey = buildMetadataKey(
@@ -74,6 +76,7 @@ export function normalizeMenuDefinition(
       definition.name && typeof definition.name === 'string'
         ? definition.name
         : 'mainMenu',
+    global: definition.global === true,
   };
 }
 

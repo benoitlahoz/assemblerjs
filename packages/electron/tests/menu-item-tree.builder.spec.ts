@@ -3,6 +3,9 @@ import { Assemblage } from 'assemblerjs';
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 vi.mock('electron', () => ({
+  app: {
+    getSystemVersion: () => '14.0.0',
+  },
   BrowserWindow: class BrowserWindow {},
   screen: {
     getDisplayMatching: () => ({
@@ -22,6 +25,9 @@ vi.mock('electron', () => ({
     once: () => undefined,
     off: () => undefined,
   },
+  systemPreferences: {
+    getSystemVersion: () => '14.0.0',
+  },
 }));
 
 vi.mock('../src/main/index.ts', () => ({
@@ -32,7 +38,7 @@ vi.mock('../src/main/index.ts', () => ({
   },
 }));
 
-vi.mock('../src/main/menu/builders/create-menu-item', () => ({
+vi.mock('../src/menu/main/builders/create-menu-item', () => ({
   createMenuItem(input: {
     id: string;
     label?: string;
@@ -46,10 +52,20 @@ vi.mock('../src/main/menu/builders/create-menu-item', () => ({
       ...input,
       submenu: null,
       _handleInMain: undefined as
-        | ((itemId: string, windowName: string) => void)
+        | ((
+            itemId: string,
+            windowName?: string,
+            window?: { id: number },
+          ) => void)
         | undefined,
       _forwardToRenderer: false,
-      handleInMain(callback: (itemId: string, windowName: string) => void) {
+      handleInMain(
+        callback: (
+          itemId: string,
+          windowName?: string,
+          window?: { id: number },
+        ) => void,
+      ) {
         this._handleInMain = callback;
         return this;
       },
@@ -86,6 +102,19 @@ let SubMenu: (options: {
   before?: string;
   after?: string;
 }) => MethodDecorator;
+let MenuHeader: (label: string) => MethodDecorator & PropertyDecorator;
+let MenuHeaderOrSeparator: (
+  label: string,
+) => MethodDecorator & PropertyDecorator;
+let getMenuItems: (targetOrInstance: Function | object) => Array<{
+  id: string;
+  label?: string;
+  type?: string;
+}>;
+let isMenuHeaderSupported: (
+  platform?: NodeJS.Platform,
+  systemVersion?: string,
+) => boolean;
 
 let buildMenuTreeFromMetadata: (
   targetOrInstance: (new (...args: unknown[]) => object) | object,
@@ -96,20 +125,96 @@ let buildMenuTreeFromMetadata: (
     {
       id: string;
       label?: string;
-      _handleInMain?: (itemId: string, windowName: string) => void;
+      _handleInMain?: (
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ) => void;
       _forwardToRenderer?: boolean;
     }
   >;
 };
 
 beforeAll(async () => {
-  ({ MenuItem, SubMenu } =
-    await import('../src/main/menu/menu-item/menu-item.decorator'));
+  ({ MenuHeader, MenuHeaderOrSeparator, MenuItem, SubMenu, getMenuItems } =
+    await import('../src/menu/main/menu-item/menu-item.decorator'));
+  ({ isMenuHeaderSupported } =
+    await import('../src/menu/main/menu-item/menu-dsl.decorator'));
   ({ buildMenuTreeFromMetadata } =
-    await import('../src/main/menu/builders/build-menu-tree-from-metadata'));
+    await import('../src/menu/main/builders/menu-tree'));
 });
 
 describe('buildMenuTreeFromMetadata', () => {
+  it('supports MenuHeader only on macOS 14 or newer', () => {
+    expect(isMenuHeaderSupported('darwin', '14.0.0')).toBe(true);
+    expect(isMenuHeaderSupported('darwin', '13.6.1')).toBe(false);
+    expect(isMenuHeaderSupported('win32', '14.0.0')).toBe(false);
+  });
+
+  it('adds a native header only when MenuHeader is supported', () => {
+    @MenuItem('File')
+    @Assemblage()
+    class FileMenu {
+      @MenuHeader('Open Recent')
+      @MenuItem({ id: 'file.recent.project', label: 'Project' })
+      public openRecentProject(): void {}
+    }
+
+    const built = buildMenuTreeFromMetadata(new FileMenu());
+    const itemMetadata = getMenuItems(new FileMenu());
+    const header = itemMetadata.find(
+      (item) => item.id === 'file.recent.project:header',
+    );
+
+    if (isMenuHeaderSupported()) {
+      expect(header).toMatchObject({
+        id: 'file.recent.project:header',
+        label: 'Open Recent',
+        type: 'header',
+      });
+    } else {
+      expect(header).toBeUndefined();
+    }
+  });
+
+  it('chooses a header or separator before a decorated submenu with MenuHeaderOrSeparator', () => {
+    @MenuItem('Bounds')
+    @Assemblage()
+    class BoundsMenu {
+      @MenuItem({ id: 'bounds.center', label: 'Center Window' })
+      public center(): void {}
+    }
+
+    @MenuItem('Window')
+    @Assemblage()
+    class WindowMenu {
+      @MenuHeaderOrSeparator('BOUNDS')
+      @SubMenu({ id: 'window.bounds', order: 10 })
+      public bounds(): BoundsMenu {
+        return new BoundsMenu();
+      }
+    }
+
+    const items = getMenuItems(new WindowMenu());
+    const header = items.find((item) => item.id === 'Window/bounds:header');
+    const firstSubmenuItemIndex = items.findIndex(
+      (item) => item.id === 'bounds.center',
+    );
+    const headerIndex = items.findIndex(
+      (item) => item.id === 'Window/bounds:header',
+    );
+
+    expect(header).toBeDefined();
+    expect(headerIndex).toBeGreaterThanOrEqual(0);
+    expect(headerIndex).toBeLessThan(firstSubmenuItemIndex);
+    if (isMenuHeaderSupported()) {
+      expect(header?.label).toBe('BOUNDS');
+      expect(header?.type).toBe('header');
+    } else {
+      expect(header?.type).toBe('separator');
+    }
+  });
+
   it('builds root groups and leaf item map from MenuItem metadata', () => {
     @Assemblage()
     class MenuDef {
@@ -249,7 +354,11 @@ describe('buildMenuTreeFromMetadata', () => {
   it('wires handleInMain and forwardToRenderer from @MenuItem options', () => {
     @Assemblage()
     class MenuDef {
-      public calls: Array<{ itemId: string; windowName: string }> = [];
+      public calls: Array<{
+        itemId: string;
+        windowName?: string;
+        window?: { id: number };
+      }> = [];
 
       @MenuItem({
         id: 'main.menu.autoCenter',
@@ -258,8 +367,12 @@ describe('buildMenuTreeFromMetadata', () => {
         handleInMain: true,
         forwardToRenderer: true,
       })
-      public autoCenter(itemId: string, windowName: string): void {
-        this.calls.push({ itemId, windowName });
+      public autoCenter(
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ): void {
+        this.calls.push({ itemId, windowName, window });
       }
     }
 
@@ -270,9 +383,14 @@ describe('buildMenuTreeFromMetadata', () => {
     expect(item?._forwardToRenderer).toBe(true);
     expect(typeof item?._handleInMain).toBe('function');
 
-    item?._handleInMain?.('main.menu.autoCenter', 'main');
+    const clickedWindow = { id: 42 };
+    item?._handleInMain?.('main.menu.autoCenter', 'main', clickedWindow);
     expect(instance.calls).toEqual([
-      { itemId: 'main.menu.autoCenter', windowName: 'main' },
+      {
+        itemId: 'main.menu.autoCenter',
+        windowName: 'main',
+        window: clickedWindow,
+      },
     ]);
   });
 
@@ -280,15 +398,23 @@ describe('buildMenuTreeFromMetadata', () => {
     @MenuItem('App')
     @Assemblage()
     class AppMenu {
-      public calls: Array<{ itemId: string; windowName: string }> = [];
+      public calls: Array<{
+        itemId: string;
+        windowName?: string;
+        window?: { id: number };
+      }> = [];
 
       @MenuItem({
         id: 'app.about',
         label: 'About',
         handleInMain: true,
       })
-      public openAboutWindow(itemId: string, windowName: string): void {
-        this.calls.push({ itemId, windowName });
+      public openAboutWindow(
+        itemId: string,
+        windowName?: string,
+        window?: { id: number },
+      ): void {
+        this.calls.push({ itemId, windowName, window });
       }
     }
 
@@ -310,7 +436,7 @@ describe('buildMenuTreeFromMetadata', () => {
 
     item?._handleInMain?.('app.about', 'main');
     expect(appMenu.calls).toEqual([
-      { itemId: 'app.about', windowName: 'main' },
+      { itemId: 'app.about', windowName: 'main', window: undefined },
     ]);
   });
 

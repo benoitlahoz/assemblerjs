@@ -3,6 +3,12 @@
   "version": "0.1.2",
   "description": "Vite plugin for seamless AssemblerJS integration with auto-configuration",
   "author": "Benoît LAHOZ <info@benoitlahoz.io>",
+  "bugs": "https://github.com/benoitlahoz/assemblerjs/issues",
+  "homepage": "https://github.com/benoitlahoz/assemblerjs#README",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benoitlahoz/assemblerjs.git"
+  },
   "license": "MIT",
   "keywords": [
     "vite",

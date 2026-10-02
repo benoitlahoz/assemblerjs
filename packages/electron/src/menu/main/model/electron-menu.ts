@@ -6,6 +6,7 @@ import { ElectronMenuItem } from './electron-menu-item';
 export abstract class ElectronMenu implements AbstractAssemblage {
   protected ready = true;
   protected items: ElectronMenuItem[] = [];
+  private nativeMenu?: Menu;
 
   /**
    * Applies the current menu to the Electron application.
@@ -16,8 +17,16 @@ export abstract class ElectronMenu implements AbstractAssemblage {
     const menuItems = this.items.map((item) =>
       item.toMenuItemConstructorOptions(),
     );
-    Menu.setApplicationMenu(Menu.buildFromTemplate(menuItems));
+    this.nativeMenu = Menu.buildFromTemplate(menuItems);
+    Menu.setApplicationMenu(this.nativeMenu);
     return this;
+  }
+
+  public isActive(): boolean {
+    return (
+      this.nativeMenu !== undefined &&
+      Menu.getApplicationMenu() === this.nativeMenu
+    );
   }
 
   /**

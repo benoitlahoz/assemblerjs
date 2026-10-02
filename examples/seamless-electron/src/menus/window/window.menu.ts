@@ -1,16 +1,13 @@
 import { Assemblage } from 'assemblerjs';
-import { MenuItem, SubMenu } from '@assemblerjs/electron';
+import { MenuHeaderOrSeparator, MenuItem, SubMenu, MenuSeparator } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
 import { WindowBoundsMenu } from './window-bounds.menu';
 
 export const WindowMenuConfig = {
   Minimize: { id: 'window.minimize', order: 10 },
   Zoom: { id: 'window.zoom', order: 20 },
-  Sep1: { id: 'window.sep.1', order: 30 },
   Close: { id: 'window.close', order: 40 },
-  Sep2: { id: 'window.sep.2', order: 50 },
   Front: { id: 'window.front', order: 60 },
-  SepBounds: { id: 'window.sep.bounds', order: 70 },
   BoundsMenu: { id: 'window.bounds', order: 80 },
 } as const;
 
@@ -38,13 +35,7 @@ export class WindowMenu {
   })
   private zoom(): void {}
 
-  @MenuItem({
-    id: WindowMenuConfig.Sep1.id,
-    type: 'separator',
-    order: WindowMenuConfig.Sep1.order,
-  })
-  private sep1(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: WindowMenuConfig.Close.id,
     role: 'close',
@@ -52,13 +43,7 @@ export class WindowMenu {
   })
   private close(): void {}
 
-  @MenuItem({
-    id: WindowMenuConfig.Sep2.id,
-    type: 'separator',
-    order: WindowMenuConfig.Sep2.order,
-  })
-  private sep2(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: WindowMenuConfig.Front.id,
     role: 'front',
@@ -66,13 +51,7 @@ export class WindowMenu {
   })
   private front(): void {}
 
-  @MenuItem({
-    id: WindowMenuConfig.SepBounds.id,
-    type: 'separator',
-    order: WindowMenuConfig.SepBounds.order,
-  })
-  private sepCustom(): void {}
-
+  @MenuHeaderOrSeparator('BOUNDS')
   @SubMenu({
     id: WindowMenuConfig.BoundsMenu.id,
     order: WindowMenuConfig.BoundsMenu.order,

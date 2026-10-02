@@ -122,7 +122,7 @@ export const WindowController = createConstructorDecorator(function (
         if (typeof instance?.once === 'function') {
           instance.once('closed', () => {
             removeOpenedInstance(this, managed.definition.name, instance);
-            detachManagedWindowMenu(this, managed);
+            detachManagedWindowMenu(this, managed, instance);
           });
         }
 
@@ -152,12 +152,22 @@ export const WindowController = createConstructorDecorator(function (
   }
 
   if (typeof this.closeWindow !== 'function') {
-    this.closeWindow = (tokenOrName: WindowToken | string): boolean => {
+    this.closeWindow = (
+      tokenOrName: WindowToken | string,
+      windowId?: number,
+    ): boolean => {
       const managed = resolveManagedDefinition(this, tokenOrName);
       const openedSet = getOpenedSet(this, managed.definition.name);
-      const instance = [...openedSet].find(
-        (window) => !window?.isDestroyed || !window.isDestroyed(),
-      );
+      const instance =
+        windowId === undefined
+          ? [...openedSet].find(
+              (window) => !window?.isDestroyed || !window.isDestroyed(),
+            )
+          : [...openedSet].find(
+              (window) =>
+                window.id === windowId &&
+                (!window?.isDestroyed || !window.isDestroyed()),
+            );
 
       if (!instance) {
         return false;
@@ -168,7 +178,7 @@ export const WindowController = createConstructorDecorator(function (
       }
 
       removeOpenedInstance(this, managed.definition.name, instance);
-      detachManagedWindowMenu(this, managed);
+      detachManagedWindowMenu(this, managed, instance);
       return true;
     };
   }
@@ -195,7 +205,7 @@ export const WindowController = createConstructorDecorator(function (
           }
 
           removeOpenedInstance(this, managed.definition.name, instance);
-          detachManagedWindowMenu(this, managed);
+          detachManagedWindowMenu(this, managed, instance);
           closedCount += 1;
         }
       }
@@ -209,6 +219,11 @@ export const WindowController = createConstructorDecorator(function (
       (this.listWindows() as ElectronWindow[]).find(
         (window) => window.name === name,
       );
+  }
+
+  if (typeof this.getWindowById !== 'function') {
+    this.getWindowById = (id: number): ElectronWindow | undefined =>
+      ElectronWindow.getById(id);
   }
 
   if (typeof this.hasWindow !== 'function') {

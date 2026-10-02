@@ -1,3 +1,4 @@
+import type { MenuItemConstructorOptions } from 'electron';
 import {
   ElectronMetadata,
   type MenuItemLabelValue,
@@ -7,9 +8,18 @@ import {
   getMenuDslSubmenus,
   getMenuNodeLabel,
   hasMenuDslMetadata,
+  getMenuHeaderBefore,
+  hasMenuSeparatorBefore,
+  isMenuHeaderSupported,
+  MenuHeader,
+  MenuHeaderOrSeparator,
+  MenuSeparator,
   setMenuNodeLabel,
   SubMenu,
+  usesMenuHeaderSeparatorFallback,
 } from './menu-dsl.decorator';
+
+export type MenuItemRole = NonNullable<MenuItemConstructorOptions['role']>;
 
 export interface MenuItemDefinition {
   id: string;
@@ -17,7 +27,7 @@ export interface MenuItemDefinition {
   type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   checked?: boolean;
   enabled?: boolean;
-  role?: string;
+  role?: MenuItemRole;
   accelerator?: string;
   order?: number;
   before?: string;
@@ -298,10 +308,48 @@ function collectDslMenuItems(
     pathSegments.length > 0 ? pathSegments.join('/') : undefined;
 
   for (const entry of ElectronMetadata.menu.getItems(target)) {
+    const order = applyBranchOrder(entry, branchOrderBase, branchOrderScale);
+
+    // @MenuSeparator on a menu item: emit a separator entry right before it.
+    if (hasMenuSeparatorBefore(target, entry.method)) {
+      out.push({
+        id: `${entry.id}:separator`,
+        type: 'separator',
+        // Kept only to satisfy the MenuItemMetadata shape: the menu builder
+        // should not try to bind a handler on separators.
+        method: entry.method,
+        order,
+        // Always stick right above the item it belongs to...
+        before: entry.id,
+        // ...and follow the item's own 'after' anchor, if any.
+        after: entry.after,
+        source: sourceInstance,
+        _submenuPath: submenuPath,
+      } as MenuItemMetadata);
+    }
+
+    const headerLabel = getMenuHeaderBefore(target, entry.method);
+    if (headerLabel) {
+      const supported = isMenuHeaderSupported();
+      if (supported || usesMenuHeaderSeparatorFallback(target, entry.method)) {
+        out.push({
+          id: `${entry.id}:header`,
+          label: supported ? headerLabel : undefined,
+          type: supported ? 'header' : 'separator',
+          method: entry.method,
+          order,
+          before: entry.id,
+          after: entry.after,
+          source: sourceInstance,
+          _submenuPath: submenuPath,
+        } as MenuItemMetadata);
+      }
+    }
+
     out.push({
       ...entry,
       source: sourceInstance,
-      order: applyBranchOrder(entry, branchOrderBase, branchOrderScale),
+      order,
       _submenuPath: submenuPath,
     } as MenuItemMetadata);
   }
@@ -318,6 +366,40 @@ function collectDslMenuItems(
     const childScale = branchOrderScale / SUBMENU_ORDER_SCALE_FACTOR;
     const submenuOrder = typeof submenu.order === 'number' ? submenu.order : 0;
     const childBase = branchOrderBase + submenuOrder * childScale;
+
+    // @MenuSeparator on a submenu: emit a separator entry in the parent menu,
+    // placed just before the order range occupied by the submenu. A submenu
+    // has no anchor id, so the placement relies on 'order' only.
+    if (hasMenuSeparatorBefore(target, submenu.member)) {
+      out.push({
+        id: `${submenuPath ?? 'root'}/${submenu.member}:separator`,
+        type: 'separator',
+        method: submenu.member,
+        order: childBase - childScale / 2,
+        source: sourceInstance,
+        // Belongs to the parent menu, not to the submenu itself.
+        _submenuPath: submenuPath,
+      } as MenuItemMetadata);
+    }
+
+    const headerLabel = getMenuHeaderBefore(target, submenu.member);
+    if (headerLabel) {
+      const supported = isMenuHeaderSupported();
+      if (
+        supported ||
+        usesMenuHeaderSeparatorFallback(target, submenu.member)
+      ) {
+        out.push({
+          id: `${submenuPath ?? 'root'}/${submenu.member}:header`,
+          label: supported ? headerLabel : undefined,
+          type: supported ? 'header' : 'separator',
+          method: submenu.member,
+          order: childBase - childScale / 2,
+          source: sourceInstance,
+          _submenuPath: submenuPath,
+        } as MenuItemMetadata);
+      }
+    }
 
     collectDslMenuItems(
       resolved.ctor,
@@ -360,4 +442,4 @@ export function getMenuItems(
   return validateMenuItemMetadata(dslEntries);
 }
 
-export { SubMenu };
+export { SubMenu, MenuSeparator, MenuHeader, MenuHeaderOrSeparator };

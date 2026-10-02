@@ -35,7 +35,7 @@ export class WindowMenuBindingRegistryService
     }
   }
 
-  private resolveFocusedWindowName(): string | undefined {
+  private resolveFocusedWindowScope(): string | undefined {
     const focusedWindow =
       typeof (
         ElectronWindow as typeof ElectronWindow & {
@@ -49,12 +49,12 @@ export class WindowMenuBindingRegistryService
           ).getFocusedWindow()
         : null;
 
-    const focusedWindowName = (
-      focusedWindow as ElectronWindow & { name?: string }
-    )?.name;
+    const focusedWindowScope = focusedWindow
+      ? String(focusedWindow.id)
+      : undefined;
 
-    if (focusedWindowName && this.has(focusedWindowName)) {
-      return focusedWindowName;
+    if (focusedWindowScope && this.has(focusedWindowScope)) {
+      return focusedWindowScope;
     }
 
     return undefined;
@@ -62,7 +62,10 @@ export class WindowMenuBindingRegistryService
 
   private resolveFallbackWindowName(): string | undefined {
     for (const entry of this.list()) {
-      const candidate = ElectronWindow.getByName(entry.name);
+      const numericId = Number(entry.name);
+      const candidate = Number.isInteger(numericId)
+        ? ElectronWindow.getById(numericId)
+        : ElectronWindow.getByName(entry.name);
       if (candidate && !candidate.isDestroyed()) {
         return entry.name;
       }
@@ -73,7 +76,7 @@ export class WindowMenuBindingRegistryService
 
   private refreshBestAvailableWindowMenu(): void {
     const target =
-      this.resolveFocusedWindowName() || this.resolveFallbackWindowName();
+      this.resolveFocusedWindowScope() || this.resolveFallbackWindowName();
 
     if (!target) {
       return;
@@ -85,8 +88,10 @@ export class WindowMenuBindingRegistryService
   public async attach(
     windowName: string,
     menu: MenuReference | ElectronMenu,
+    windowInstance?: ElectronWindow,
   ): Promise<void> {
-    const current = this.get(windowName);
+    const scope = windowInstance ? String(windowInstance.id) : windowName;
+    const current = this.get(scope);
     if (current && current.menu === menu) {
       return;
     }
@@ -101,35 +106,35 @@ export class WindowMenuBindingRegistryService
       menuInstance = menuRegistry.resolveMenu(menu as MenuReference);
     }
 
-    menus.registerMenu(windowName, menuInstance);
-    await menus.focus(windowName);
+    menus.registerMenu(scope, menuInstance, 'mainMenu', windowInstance);
+    await menus.focus(scope);
 
     // For composed menus we store the window name as sentinel; for token menus store the reference.
-    this.register(windowName, {
-      menu: menu instanceof ElectronMenu ? windowName : (menu as MenuReference),
+    this.register(scope, {
+      menu: menu instanceof ElectronMenu ? scope : (menu as MenuReference),
     });
   }
 
-  public detach(windowName: string): void {
-    const current = this.get(windowName);
+  public detach(windowScope: string): void {
+    const current = this.get(windowScope);
     if (!current) {
       return;
     }
 
     const menus = this.resolveMenuController();
-    menus.unregisterMenu(windowName);
+    menus.unregisterMenu(windowScope);
 
-    this.unregister(windowName);
+    this.unregister(windowScope);
 
     this.refreshBestAvailableWindowMenu();
   }
 
-  public async refresh(windowName: string): Promise<void> {
-    if (!this.has(windowName)) {
+  public async refresh(windowScope: string): Promise<void> {
+    if (!this.has(windowScope)) {
       return;
     }
 
-    await this.focusMenuSafely(windowName);
+    await this.focusMenuSafely(windowScope);
   }
 
   private resolveMenuController(): BaseMenuController {

@@ -39,7 +39,6 @@ function createGroupNode(pathKey: string, label: string): GroupNode {
  */
 export function buildGroupHierarchy(
   entries: IndexedMenuItemMetadataEntry[],
-  translate: (key: string) => string,
 ): GroupNode {
   const root = createGroupNode('root', 'root');
 

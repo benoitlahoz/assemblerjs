@@ -1,17 +1,14 @@
 import { Assemblage } from 'assemblerjs';
-import { AbstractWindowController, MenuItem } from '@assemblerjs/electron';
+import { AbstractWindowController, MenuItem, MenuSeparator } from '@assemblerjs/electron';
 import { I18nService } from '@features/i18n/main';
 import { AboutWindowConfig } from '@windows/about/universal/window.config';
 
 const AppMenuConfig = {
   About: { id: 'app.about', order: 5 },
-  SeparatorAboutServices: { id: 'app.separator.about-services', order: 10 },
   Services: { id: 'app.services', order: 20 },
-  SeparatorServicesVisibility: { id: 'app.separator.services-visibility', order: 30 },
   Hide: { id: 'app.hide', order: 40 },
   HideOthers: { id: 'app.hideOthers', order: 50 },
   Unhide: { id: 'app.unhide', order: 60 },
-  SeparatorVisibilityQuit: { id: 'app.separator.visibility-quit', order: 70 },
   Quit: { id: 'app.quit', order: 80 },
 } as const;
 
@@ -38,13 +35,7 @@ export class AppMenu {
     aboutWindow.focus();
   }
 
-  @MenuItem({
-    id: AppMenuConfig.SeparatorAboutServices.id,
-    type: 'separator',
-    order: AppMenuConfig.SeparatorAboutServices.order,
-  })
-  private separatorAboutServices(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: AppMenuConfig.Services.id,
     role: 'services',
@@ -52,13 +43,7 @@ export class AppMenu {
   })
   private services(): void {}
 
-  @MenuItem({
-    id: AppMenuConfig.SeparatorServicesVisibility.id,
-    type: 'separator',
-    order: AppMenuConfig.SeparatorServicesVisibility.order,
-  })
-  private separatorServicesVisibility(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: AppMenuConfig.Hide.id,
     role: 'hide',
@@ -80,13 +65,7 @@ export class AppMenu {
   })
   private unhide(): void {}
 
-  @MenuItem({
-    id: AppMenuConfig.SeparatorVisibilityQuit.id,
-    type: 'separator',
-    order: AppMenuConfig.SeparatorVisibilityQuit.order,
-  })
-  private separatorVisibilityQuit(): void {}
-
+  @MenuSeparator()
   @MenuItem({
     id: AppMenuConfig.Quit.id,
     role: 'quit',

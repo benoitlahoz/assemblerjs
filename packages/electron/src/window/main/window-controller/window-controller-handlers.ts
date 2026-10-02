@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { WindowIpcChannel } from '@/common/channels';
 import { registerCleanup } from '@/common/lifecycle';
+import { ElectronWindow } from '@/window/main/classes/electron-window';
 import {
   getActiveWindowInstance,
   getOrCreateState,
@@ -20,8 +21,16 @@ export function registerManagedCommandHandlers(controller: any): void {
 
       ipcMain.removeHandler(command.channel as any);
 
-      const handler = async (_event: unknown, ...args: any[]) => {
-        const existing = getActiveWindowInstance(controller, managed);
+      const handler = async (event: unknown, ...args: any[]) => {
+        const sender = (event as { sender?: Electron.WebContents } | undefined)
+          ?.sender;
+        const senderWindow = sender
+          ? ElectronWindow.getByWebContents(sender)
+          : undefined;
+        const existing =
+          senderWindow?.name === managed.definition.name
+            ? senderWindow
+            : getActiveWindowInstance(controller, managed);
         const instance =
           (existing as WindowRuntimeHandle | undefined) ||
           ((await controller.openWindow(
@@ -81,7 +90,17 @@ export function registerWindowRegistryHandlers(controller: any): void {
     ],
     [
       WindowIpcChannel.CloseWindow,
-      async (_event, name: string) => controller.closeWindow(name),
+      async (event, name: string) => {
+        const sender = (event as { sender?: Electron.WebContents } | undefined)
+          ?.sender;
+        const senderWindow = sender
+          ? ElectronWindow.getByWebContents(sender)
+          : undefined;
+        return controller.closeWindow(
+          name,
+          senderWindow?.name === name ? senderWindow.id : undefined,
+        );
+      },
     ],
   ];
 

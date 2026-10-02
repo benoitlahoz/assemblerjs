@@ -66,13 +66,15 @@ export interface WindowControllerRegistry {
   ): Promise<any>;
   closeWindow<TWindow extends ElectronWindow>(
     token: TypedWindowToken<TWindow>,
+    windowId?: number,
   ): boolean;
-  closeWindow(tokenOrName: WindowToken | string): boolean;
+  closeWindow(tokenOrName: WindowToken | string, windowId?: number): boolean;
   closeAllWindows<TWindow extends ElectronWindow>(
     token: TypedWindowToken<TWindow>,
   ): number;
   closeAllWindows(tokenOrName?: WindowToken | string): number;
   getWindow(name: string): ElectronWindow | undefined;
+  getWindowById(id: number): ElectronWindow | undefined;
   hasWindow(name: string): boolean;
   requireWindow(name: string): ElectronWindow;
 }
@@ -85,6 +87,7 @@ export type TypedWindowControllerRegistry<
   | 'closeWindow'
   | 'closeAllWindows'
   | 'getWindow'
+  | 'getWindowById'
   | 'hasWindow'
   | 'requireWindow'
 > & {
@@ -101,11 +104,15 @@ export type TypedWindowControllerRegistry<
     configuration?: Record<string, any>,
   ): Promise<any>;
 
-  closeWindow<Name extends keyof Windows & string>(name: Name): boolean;
+  closeWindow<Name extends keyof Windows & string>(
+    name: Name,
+    windowId?: number,
+  ): boolean;
   closeWindow<TWindow extends ElectronWindow>(
     token: TypedWindowToken<TWindow>,
+    windowId?: number,
   ): boolean;
-  closeWindow(tokenOrName: WindowToken | string): boolean;
+  closeWindow(tokenOrName: WindowToken | string, windowId?: number): boolean;
 
   closeAllWindows<Name extends keyof Windows & string>(name?: Name): number;
   closeAllWindows<TWindow extends ElectronWindow>(
@@ -117,6 +124,7 @@ export type TypedWindowControllerRegistry<
     name: Name,
   ): Windows[Name] | undefined;
   getWindow(name: string): ElectronWindow | undefined;
+  getWindowById(id: number): ElectronWindow | undefined;
 
   hasWindow<Name extends keyof Windows & string>(name: Name): boolean;
   hasWindow(name: string): boolean;

@@ -33,7 +33,7 @@ export interface MenuItemMetadata {
   method: string;
   id: string;
   label?: MenuItemLabelValue;
-  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header';
   checked?: boolean;
   enabled?: boolean;
   role?: string;

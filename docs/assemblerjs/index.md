@@ -48,6 +48,7 @@ app.start();
 ### [🚀 Getting Started](./getting-started/installation.md)
 
 Learn the basics and get your first application running:
+
 - [Installation](./getting-started/installation.md)
 - [Quick Start Guide](./getting-started/quick-start.md)
 - [TypeScript Setup](./getting-started/typescript-setup.md)
@@ -55,6 +56,7 @@ Learn the basics and get your first application running:
 ### [📖 Core Concepts](./core-concepts/assemblage.md)
 
 Understand the fundamental concepts:
+
 - [Assemblage](./core-concepts/assemblage.md) - Building blocks of the DI container
 - [Dependency Injection](./core-concepts/dependency-injection.md) - Injection patterns
 - [Abstraction Pattern](./core-concepts/abstraction-pattern.md) - Interface-based design
@@ -64,6 +66,7 @@ Understand the fundamental concepts:
 ### [🎨 Decorators](./decorators/parameter-decorators.md)
 
 Master the decorator system:
+
 - [Parameter Decorators](./decorators/parameter-decorators.md) - Built-in decorators (`@Context()`, `@Configuration()`, etc.)
 - [Custom Parameter Decorators](./decorators/custom-parameter.md) - Create your own parameter decorators
 - [Custom Class Decorators](./decorators/custom-class.md) - Type-safe class decorators
@@ -72,13 +75,16 @@ Master the decorator system:
 ### [✨ Features](./features/events.md)
 
 Explore advanced features:
+
 - [Event System](./features/events.md) - Event-driven architecture with EventManager
 - [Tags](./features/tags.md) - Group and retrieve assemblages by category
 - [Singleton vs Transient](./features/singleton-transient.md) - Control instance lifecycle
 - [Debug Logging](./guides/debug-logging.md) - Built-in debug logging system with cycle detection
 
 ### [📚 API Reference](./api/assembler.md)
+
 Complete API documentation:
+
 - [Assembler API](./api/assembler.md) - Container bootstrap methods
 - [AssemblerContext API](./api/context.md) - Context interface for dependency management
 - [TransversalWeaver API](./api/transversal-weaver.md) - Caller tracking and context management
@@ -87,9 +93,11 @@ Complete API documentation:
 ### [📘 Guides](./guides/advanced-examples.md)
 
 Real-world examples and optimization:
+
 - [Advanced Examples](./guides/advanced-examples.md) - Multi-module apps, plugin systems, factories
 - [Caller Tracking](./guides/caller-tracking.md) - Audit logging, authorization, and request tracing with transversals
 - [Tree-Shaking Guide](./guides/tree-shaking.md) - Bundle optimization strategies
+
 ## Installation
 
 ```sh
@@ -121,7 +129,7 @@ class AuditTransversal {
   }
 }
 
-// In Vue or external code
+// In UI or external code
 await TransversalWeaver.withCaller('UserEditComponent', async () => {
   await userService.save(data);
   // Logs: "UserEditComponent called save"
@@ -141,6 +149,7 @@ await TransversalWeaver.withCaller('UserEditComponent', async () => {
 ### Inspired by the Best
 
 `assembler.js` combines ideas from leading DI frameworks:
+
 - **DIOD** - Lightweight and modular approach
 - **NestJS** - Powerful decorator system and lifecycle management
 

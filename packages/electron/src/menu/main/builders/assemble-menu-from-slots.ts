@@ -4,8 +4,8 @@ import {
   buildMenuTreeFromMetadata,
   getMenuItemOrdering,
   setMenuItemOrdering,
-} from './build-menu-tree-from-metadata';
-import { mergeRootMenus } from './compose-menu-roots';
+} from './menu-tree';
+import { mergeRootMenus } from './menu-roots';
 import { cloneMenuItem } from './create-menu-item';
 import type {
   NormalizedUseMenuSlot,

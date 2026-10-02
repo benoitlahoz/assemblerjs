@@ -1,33 +1,19 @@
 import { ElectronMenuItem } from '../model/electron-menu-item';
-import {
-  getMenuItemOrdering,
-  setMenuItemOrdering,
-} from './build-menu-tree-from-metadata/ordering';
+import { getMenuItemOrdering, setMenuItemOrdering } from './menu-tree/ordering';
 
 export interface CreateMenuItemInput {
   id: string;
   label?: string;
   role?: string;
   accelerator?: string;
-  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio' | 'header';
   checked?: boolean;
   enabled?: boolean;
+  click?: ElectronMenuItem['click'];
 }
 
 export function createMenuItem(input: CreateMenuItemInput): ElectronMenuItem {
-  const item = new ElectronMenuItem();
-  item.id = input.id;
-  item.label = input.label;
-  if (input.role) {
-    item.role = input.role;
-  }
-  item.accelerator = input.accelerator;
-  item.type = input.type;
-  item.checked = input.checked;
-  if (typeof input.enabled === 'boolean') {
-    item.enabled = input.enabled;
-  }
-  return item;
+  return new ElectronMenuItem(input);
 }
 
 /**
@@ -37,32 +23,12 @@ export function cloneMenuItem(
   source: ElectronMenuItem,
   submenuOverride?: ElectronMenuItem[],
 ): ElectronMenuItem {
-  const clone = new ElectronMenuItem();
-  clone.id = source.id;
-  clone.label = source.label;
-  if (source.role) {
-    clone.role = source.role;
-  }
-  clone.accelerator = source.accelerator;
-  clone.type = source.type;
-  clone.checked = source.checked;
-  clone.enabled = source.enabled;
-
-  // Copy click handler
-  if (source.click) {
-    clone.click = source.click;
-  }
+  const clone = source.clone(submenuOverride);
 
   // Copy ordering metadata to preserve sort order
   const ordering = getMenuItemOrdering(source);
   if (ordering) {
     setMenuItemOrdering(clone, ordering);
-  }
-
-  if (submenuOverride !== undefined) {
-    clone.submenu = submenuOverride;
-  } else if (source.submenu && source.submenu.length > 0) {
-    clone.submenu = source.submenu; // Shallow copy submenu reference
   }
 
   return clone;
