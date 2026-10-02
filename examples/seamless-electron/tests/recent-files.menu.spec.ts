@@ -24,7 +24,9 @@ vi.mock('electron', async () => {
 
 vi.mock('@assemblerjs/electron', async () => ({
   AbstractWindowController: class {},
-  ElectronWindow: (await import('../../../packages/electron/src/window/main/classes/electron-window')).ElectronWindow,
+  ElectronWindow: (
+    await import('../../../packages/electron/src/window/main/classes/electron-window')
+  ).ElectronWindow,
   ...(await import('../../../packages/electron/src/app/main/app-listener.decorator')),
   ...(await import('../../../packages/electron/src/app/main/app-on.decorator')),
   ...(await import('../../../packages/electron/src/menu/main/menu-item/menu-item.decorator')),
@@ -33,14 +35,20 @@ vi.mock('@assemblerjs/electron', async () => ({
 }));
 
 vi.mock('../src/menus/menu.controller', async () => ({
-  MenuController: (await import('../../../packages/electron/src/menu/main/services/menu-controller.service')).BaseMenuController,
+  MenuController: (
+    await import('../../../packages/electron/src/menu/main/services/menu-controller.service')
+  ).BaseMenuController,
 }));
 
 const { app, Menu } = await import('electron');
-const { BaseMenuController } = await import('../../../packages/electron/src/menu/main/services/menu-controller.service');
-const { ElectronMenu } = await import('../../../packages/electron/src/menu/main/model/electron-menu');
-const { MenuLifecycleEvent } = await import('../../../packages/electron/src/menu/main/menu-lifecycle');
-const { buildMenuTreeFromMetadata } = await import('../../../packages/electron/src/menu/main/builders/menu-tree');
+const { BaseMenuController } =
+  await import('../../../packages/electron/src/menu/main/services/menu-controller.service');
+const { ElectronMenu } =
+  await import('../../../packages/electron/src/menu/main/model/electron-menu');
+const { MenuLifecycleEvent } =
+  await import('../../../packages/electron/src/menu/main/menu-lifecycle');
+const { buildMenuTreeFromMetadata } =
+  await import('../../../packages/electron/src/menu/main/builders/menu-tree');
 const { Assembler, getAssemblageContext } = await import('assemblerjs');
 const { RecentFilesMenu } = await import('../src/menus/file/recent-files.menu');
 const { FileMenu } = await import('../src/menus/file/file.menu');
