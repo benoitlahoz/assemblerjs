@@ -20,6 +20,7 @@ It provides:
 - **Preload Bridge** - Expose a controlled IPC API to renderer code.
 - **Type-safe IPC** - Keep channel usage and payloads typed with TypeScript.
 - **Symmetric RPC Support** - Support both `renderer -> main` and `main -> renderer` flows.
+- **Native Menus** - Compose window menus with decorators, handle actions in main or renderer, and update submenus at runtime.
 - **Lifecycle Management** - Use AssemblerJS lifecycle hooks for registration and cleanup.
 
 ## Installation
@@ -264,6 +265,153 @@ type does not receive it.
 
 ## Window and Global Menus
 
+Menus are declared in the **main process**. Use these building blocks:
+
+| API                                           | Responsibility                                                         |
+| --------------------------------------------- | ---------------------------------------------------------------------- |
+| `@MenuItem('File')` on a class                | Declare a reusable top-level menu block.                               |
+| `@MenuItem({ id, ... })` on a method          | Declare an action, native role, checkbox, or submenu anchor.           |
+| `@SubMenu({ id, order })` on a method         | Compose an injected menu block returned by that method.                |
+| `@UseMenu([...])` on a window                 | Compose and bind that window's menu.                                   |
+| `@MenuOrchestrator()` on a controller         | Discover menu assemblages provided through DI.                         |
+| `@Menu({ name, global: true })`               | Declare the application fallback menu.                                 |
+| `createMenuItem(...)`                         | Create runtime items, including custom click handlers.                 |
+| `BaseMenuController.replaceSubmenuItems(...)` | Replace an existing anchor's children for a window or the global menu. |
+
+### Declare and Bind a Window Menu
+
+```typescript
+import { Assemblage } from 'assemblerjs';
+import { dialog } from 'electron';
+import {
+  BaseMenuController,
+  ElectronWindow,
+  MenuItem,
+  MenuOrchestrator,
+  MenuSeparator,
+  SubMenu,
+  UseMenu,
+  Window,
+} from '@assemblerjs/electron';
+import { RecentFilesMenu, RecentFilesStore } from './recent-files.menu';
+
+@MenuItem('File')
+@Assemblage()
+class FileMenu {
+  constructor(private readonly recentFiles: RecentFilesMenu) {}
+
+  @MenuItem({
+    id: 'file.open',
+    label: 'Open...',
+    accelerator: 'CmdOrCtrl+O',
+    order: 10,
+    handleInMain: true,
+  })
+  async open(
+    _itemId: string,
+    _windowName?: string,
+    targetWindow?: ElectronWindow,
+  ): Promise<void> {
+    const options = { properties: ['openFile'] as Array<'openFile'> };
+    const result = targetWindow
+      ? await dialog.showOpenDialog(targetWindow, options)
+      : await dialog.showOpenDialog(options);
+    if (!result.canceled) {
+      console.log(result.filePaths);
+    }
+  }
+
+  @SubMenu({ order: 20 })
+  private submenu(): RecentFilesMenu {
+    return this.recentFiles;
+  }
+
+  @MenuSeparator()
+  @MenuItem({ id: 'file.close', role: 'close', order: 30 })
+  private close(): void {}
+}
+
+@MenuItem('Edit')
+@Assemblage()
+class EditMenu {
+  @MenuItem({ id: 'edit.copy', role: 'copy', order: 10 })
+  private copy(): void {}
+
+  @MenuItem({ id: 'edit.paste', role: 'paste', order: 20 })
+  private paste(): void {}
+}
+
+@MenuOrchestrator()
+@Assemblage({
+  provide: [[RecentFilesStore], [RecentFilesMenu], [FileMenu], [EditMenu]],
+})
+class MenuController extends BaseMenuController {}
+
+@Window({ name: 'main', width: 1100, height: 760 })
+@UseMenu([FileMenu, EditMenu])
+@Assemblage()
+class MainWindow extends ElectronWindow {}
+```
+
+Provide `MenuController` in the main bootstrap alongside your window controller.
+Keep the normal preload, routing, and window-controller configuration from the
+Quick Start; `@UseMenu` declares the binding, it does not open the window itself.
+Provide each shared menu block once through the menu controller, not again from
+every window or parent menu.
+
+Use stable, unique item IDs across the composed tree: state changes and dynamic
+updates target IDs, not labels. `order` orders siblings; `before` and `after`
+can position an action relative to another action in the same menu block.
+Native `role` actions such as `copy`, `paste`, and `close` are handled by Electron.
+Use `type: 'checkbox'` with `checked` for toggle items, or `enabled: false` for
+unavailable actions.
+
+### Action Routing and Renderer State
+
+For custom decorated actions, `handleInMain: true` invokes the main method.
+Without it, the action is forwarded to the target renderer. Set
+`forwardToRenderer: true` together with `handleInMain: true` when both processes
+need to receive the action. The main handler receives the item ID, window name,
+and exact target window as shown above.
+
+The renderer can listen for actions and update item state through a menu service:
+
+```typescript
+import { Assemblage } from 'assemblerjs';
+import {
+  AbstractMenuService,
+  Menu,
+  MenuOn,
+  type MenuItemClickedEvent,
+} from '@assemblerjs/electron/renderer';
+
+@Menu({ name: 'mainMenu' })
+@Assemblage()
+class MainMenuService extends AbstractMenuService {
+  @MenuOn('itemClicked')
+  onItemClicked(event: MenuItemClickedEvent): void {
+    console.log('Menu action:', event.itemId);
+  }
+
+  async setCopyAvailable(available: boolean): Promise<void> {
+    await this.setItemEnabled('edit.copy', available);
+  }
+
+  async readCopyState(): Promise<boolean | undefined> {
+    const snapshot = await this.getSnapshot();
+    return snapshot?.items['edit.copy']?.enabled;
+  }
+}
+```
+
+Provide this service in the renderer assemblage for the window. The `Menu`
+decorator here is the **renderer entry point's** decorator; it does not create
+a native menu. `setItemChecked(itemId, checked)` updates checkbox/radio state.
+Use these state methods for existing items; structural changes such as a recent
+files list belong in the main process with `replaceSubmenuItems`.
+
+### Global Fallback and Focus
+
 Bind a normal menu to each window with `@UseMenu`. The active window's menu is
 installed when it is focused; menu registrations are tracked per window
 instance, so two windows of the same type can have independent menu state.
@@ -356,68 +504,153 @@ through application code. A global-menu action with no open window receives
 
 ### Dynamic Submenus
 
-Declare a stable item as the submenu anchor. After loading or changing the
-recent list, create `ElectronMenuItem`s and replace the children on the menu
-instance registered for the target window. Pass `undefined` for the global
-fallback menu. The active menu is reapplied immediately; inactive window menus
-use the updated tree the next time they are focused.
+Keep the recent-files list in its own menu block. In the example above,
+`FileMenu.submenu()` is decorated with `@SubMenu` and returns an injected
+`RecentFilesMenu`, itself decorated with `@MenuItem('Open Recent')`. Build the
+runtime entries **inside that returned block**, not inside `FileMenu` or the
+menu controller.
+
+The following is the `recent-files.menu.ts` module imported above. A decorated
+placeholder ensures the submenu exists even before the list is loaded:
 
 ```typescript
 import {
   BaseMenuController,
   createMenuItem,
+  type ElectronMenuItem,
   ElectronWindow,
   MenuItem,
 } from '@assemblerjs/electron';
 import { Assemblage } from 'assemblerjs';
-
-@MenuItem('File')
-@Assemblage()
-class FileMenu {
-  @MenuItem({ id: 'file.openRecent', label: 'Open Recent', order: 50 })
-  private openRecentAnchor(): void {}
-}
 
 interface RecentFile {
   path: string;
   label: string;
 }
 
-async function updateRecentMenu(
-  menus: BaseMenuController,
-  window: ElectronWindow | undefined,
-  recents: RecentFile[],
-  openRecent: (path: string, target?: ElectronWindow) => Promise<void>,
-): Promise<void> {
-  const items = recents.map((recent, index) =>
-    createMenuItem({
-      id: `file.openRecent.${index}`,
-      label: recent.label,
-      click: (_item, clickedWindow) => {
-        void openRecent(recent.path, clickedWindow ?? window);
-      },
-    }),
-  );
+@Assemblage()
+export class RecentFilesStore {
+  entries: RecentFile[] = [];
 
-  if (items.length === 0) {
-    items.push(
+  remember(recent: RecentFile): void {
+    this.entries = [
+      recent,
+      ...this.entries.filter((entry) => entry.path !== recent.path),
+    ].slice(0, 10);
+  }
+
+  clear(): void {
+    this.entries = [];
+  }
+}
+
+@MenuItem('Open Recent')
+@Assemblage()
+export class RecentFilesMenu {
+  constructor(private readonly store: RecentFilesStore) {}
+
+  @MenuItem({
+    id: 'file.openRecent.empty',
+    label: 'No recent files',
+    enabled: false,
+  })
+  private empty(): void {}
+
+  buildItems(
+    target: ElectronWindow | undefined,
+    openRecent: (path: string, target?: ElectronWindow) => Promise<void>,
+  ): ElectronMenuItem[] {
+    if (this.store.entries.length === 0) {
+      return [
+        createMenuItem({
+          id: 'file.openRecent.empty',
+          label: 'No recent files',
+          enabled: false,
+        }),
+      ];
+    }
+
+    return this.store.entries.map((recent) =>
       createMenuItem({
-        id: 'file.openRecent.empty',
-        label: 'No recent files',
-        enabled: false,
+        id: `file.openRecent:${recent.path}`,
+        label: recent.label,
+        click: (_item, clickedWindow) => {
+          void openRecent(recent.path, clickedWindow ?? target);
+        },
       }),
     );
   }
 
-  await menus.replaceSubmenuItems(window, 'file.openRecent', items);
+  async refresh(
+    menus: BaseMenuController,
+    targets: Array<ElectronWindow | undefined>,
+    openRecent: (path: string, target?: ElectronWindow) => Promise<void>,
+  ): Promise<void> {
+    for (const target of targets) {
+      const updated = await menus.replaceSubmenuItems(
+        target,
+        'menu.file.open.recent',
+        this.buildItems(target, openRecent),
+      );
+      if (!updated) {
+        throw new Error(
+          'Recent menu is not registered or its anchor is missing.',
+        );
+      }
+    }
+  }
 }
 ```
 
-Inject the application's concrete menu controller (a subclass of
-`BaseMenuController`) alongside the recent-files store. Call this helper for
-each open window to update its menu, and once with `undefined` to update the
-global fallback. The update targets the menu composed by `@UseMenu`; the source
-menu assemblages remain injected and do not need to be rebuilt.
+The current builder derives submenu group IDs from the class-label hierarchy:
+`File / Open Recent` becomes `menu.file.open.recent`. That is the parent ID
+passed to `replaceSubmenuItems`, not the placeholder's ID. Keep these labels
+stable when targeting this group; a different hierarchy has a different ID.
+
+`@SubMenu` resolves the returned instance while composing the menu. It does
+not treat a method's returned array as runtime items, call `buildItems`
+automatically, or observe changes in the store. Explicitly call `refresh`
+after a mutation and after binding a new window. Your document-opening service
+can inject `RecentFilesStore`, `RecentFilesMenu`, and the concrete
+`MenuController`, then use them as follows:
+
+```typescript
+store.remember({ path: openedPath, label: displayName });
+await recentFilesMenu.refresh(menus, [firstWindow, secondWindow], openRecent);
+
+store.clear();
+await recentFilesMenu.refresh(menus, [firstWindow, secondWindow], openRecent);
+
+await recentFilesMenu.refresh(menus, [newWindow], openRecent);
+```
+
+Pass every open window whose menu contains this block. Include `undefined`
+only if a global fallback containing the same group is registered. For example,
+`[firstWindow, secondWindow, undefined]` updates two instances and that fallback.
+The global example above also places `FileMenu` at the root, so it has the same
+`menu.file.open.recent` group ID. Provide the store and menu blocks once through
+the menu controller's `provide` list, as in the window-menu example.
+
+`replaceSubmenuItems` replaces the **entire** children array, preserving the
+parent group. It returns `false` if the target menu is not registered yet or
+the parent ID is missing; it does not create the parent. Call it only after
+the window controller has opened and bound the window, or after the global
+menu has been registered. The active menu is reapplied immediately; an inactive
+window uses its updated tree when it is next focused.
+
+This example keeps recents in memory. Persist and restore the list using your
+application's store, then refresh the registered menus after restoration.
+Serialize store mutations and menu refreshes if several asynchronous operations
+can change the list concurrently. Runtime `click` callbacks are native main-process
+handlers, not decorated renderer actions: forward any required renderer update
+through your existing IPC service, and handle rejected open operations there.
+When invoked from the global menu without a window, the opening workflow must
+create a window or otherwise handle an absent target.
+
+Passing the controller into `refresh` avoids injecting it back into a menu
+block that the controller itself provides. The injected `RecentFilesMenu`
+instance is reused; updates target the trees composed by `@UseMenu` rather
+than rebuilding the DI assemblages.
 
 ## IPC Communication
 
@@ -504,7 +737,6 @@ class MainWindowService extends AbstractWindowService {
 
 ## Documentation
 
-- Electron docs (detailed): `docs/assemblerjs-electron`
 - Working example: `examples/seamless-electron`
 
 ## Requirements
