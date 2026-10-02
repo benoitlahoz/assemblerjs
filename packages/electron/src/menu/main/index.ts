@@ -2,6 +2,7 @@
 
 export * from './model';
 export * from './builders';
+export * from './menu-lifecycle';
 export * from './menu-definition/menu.decorator';
 export * from './menu-command/menu-command.decorator';
 export * from './menu-controller/menu-controller.decorator';

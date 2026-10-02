@@ -652,6 +652,48 @@ block that the controller itself provides. The injected `RecentFilesMenu`
 instance is reused; updates target the trees composed by `@UseMenu` rather
 than rebuilding the DI assemblages.
 
+### Menu Registration Lifecycle
+
+For initialization without coupling recent files to window-opening code, listen
+to `MenuLifecycleEvent.Registered` in the main process. It is emitted through
+Electron's `app` immediately after `registerMenu` or `registerGlobalMenu` stores
+the menu, so `replaceSubmenuItems` can already resolve it. The payload contains
+`menu`, `menuName`, `global`, and, for a window registration, `window` and
+`windowName`.
+
+```typescript
+import {
+  AppListener,
+  AppOn,
+  MenuLifecycleEvent,
+  type MenuRegisteredEvent,
+} from '@assemblerjs/electron';
+import { Assemblage } from 'assemblerjs';
+
+@AppListener()
+@Assemblage()
+class RecentMenuInitializer {
+  @AppOn(MenuLifecycleEvent.Registered)
+  onMenuRegistered(event: MenuRegisteredEvent): void {
+    if (!event.menu.itemById('menu.file.open.recent')) {
+      return;
+    }
+    console.log('Recent menu registered:', event.window?.id ?? 'global');
+  }
+}
+```
+
+Call your recent block's refresh method from this listener, targeting
+`event.window` (`undefined` for the global fallback). No native Electron event
+argument is prepended. Subscribe without `wait: true` to avoid missing early
+registrations. The event signals registration, not focus or renderer readiness;
+async listener promises are not awaited, so handle their rejections explicitly.
+It fires again when a menu is registered again, but not on ordinary focus changes.
+
+The complete example in `examples/seamless-electron/src/menus/file/recent-files.menu.ts`
+builds the list inside a returned `@MenuItem` block, tracks registered targets,
+and serializes refreshes without modifying window-opening code.
+
 ## IPC Communication
 
 ### Renderer to Main

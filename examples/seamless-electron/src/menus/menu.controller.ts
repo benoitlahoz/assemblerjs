@@ -6,9 +6,18 @@ import { DeveloperToolsMenu } from './developer';
 import { FileMenu } from './file';
 import { GlobalMenu } from './global.menu';
 import { WindowMenu } from './window';
+import { RecentFilesMenu } from './file/recent-files.menu';
 
 @MenuOrchestrator()
 @Assemblage({
-  provide: [[DeveloperToolsMenu], [AppMenu], [EditMenu], [FileMenu], [GlobalMenu], [WindowMenu]],
+  provide: [
+    [DeveloperToolsMenu],
+    [AppMenu],
+    [EditMenu],
+    [RecentFilesMenu],
+    [FileMenu],
+    [GlobalMenu],
+    [WindowMenu],
+  ],
 })
 export class MenuController extends BaseMenuController implements AbstractAssemblage {}

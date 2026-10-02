@@ -1,7 +1,11 @@
 import type { AbstractAssemblage, AssemblerContext } from 'assemblerjs';
-import { ipcMain, Menu } from 'electron';
+import { app, ipcMain, Menu } from 'electron';
 import { ElectronWindow } from '@/window/main/classes/electron-window';
 import { ElectronMenu, ElectronMenuItem } from '@/menu/main/model';
+import {
+  MenuLifecycleEvent,
+  type MenuRegisteredEvent,
+} from '../menu-lifecycle';
 import { registerCleanup } from '@/common/lifecycle';
 import { createChannelBuilder } from '@assemblerjs/common';
 import { MenuIpcChannel } from '@/common';
@@ -298,6 +302,14 @@ export class BaseMenuController implements AbstractAssemblage {
       window,
     });
 
+    app.emit(MenuLifecycleEvent.Registered, {
+      menu,
+      menuName,
+      window,
+      windowName: registeredWindowName,
+      global: false,
+    } satisfies MenuRegisteredEvent);
+
     return this;
   }
 
@@ -306,6 +318,11 @@ export class BaseMenuController implements AbstractAssemblage {
     menuName = 'globalMenu',
   ): Promise<this> {
     BaseMenuController.globalRegistration = { menuName, menu };
+    app.emit(MenuLifecycleEvent.Registered, {
+      menu,
+      menuName,
+      global: true,
+    } satisfies MenuRegisteredEvent);
     if (BaseMenuController.registrations.size === 0) {
       await this.focusGlobal();
     }
@@ -349,10 +366,13 @@ export class BaseMenuController implements AbstractAssemblage {
     if (window) {
       const focusedWindow =
         ElectronWindow.getFocusedWindow() as ElectronWindow | null;
-      if (focusedWindow?.id === window.id) {
+      if (focusedWindow?.id === window.id || registration.menu.isActive()) {
         await registration.menu.focus();
       }
-    } else if (BaseMenuController.registrations.size === 0) {
+    } else if (
+      BaseMenuController.registrations.size === 0 ||
+      registration.menu.isActive()
+    ) {
       await registration.menu.focus();
     }
 

@@ -93,6 +93,34 @@ Renderer side:
 
 Cross-window orchestration in renderer uses `AbstractWindowControllerService`.
 
+## Dynamic Recent Windows Menu
+
+`FileMenu.submenu()` returns the injected `RecentFilesMenu`, decorated with
+`@MenuItem('Open Recent')`. The returned block owns an in-memory window history,
+builds its runtime items, and listens to `MenuLifecycleEvent.Registered` with
+`@AppOn`. It initializes each registered window menu and the global fallback;
+the window-opening code contains no recent-menu initialization.
+
+To try it:
+
+1. The first window appears as **Window N** under **File > Open Recent**.
+2. Choose **File > New Window**: registering its menu adds the new window to
+   every recent list, newest first, limited to ten entries.
+3. Select an entry to restore and focus that window. No file is opened.
+4. Choose **Clear Recent Windows**: every registered menu displays
+   **No recent windows**, including the currently displayed menu.
+5. Create another window: the lists are populated again with that new entry.
+6. Close a window: its history entry remains visible but is disabled.
+
+This window history is demo data for exercising dynamic menus without accessing
+the file system. Entries are not persisted between app launches. Menu updates are serialized; window registrations are
+removed on close, and listeners are cleaned up on disposal.
+
+`MenuLifecycleEvent.Registered` is a main-process `app` event carrying one
+`MenuRegisteredEvent` payload, not a native Electron event argument followed by
+a window. Listen without `wait: true` so early menu registrations are not missed.
+Async listeners are not awaited by the emitter, so they must handle rejections.
+
 ## Development Workflow
 
 From the workspace root, you can also run:
