@@ -393,6 +393,11 @@ class MainMenuService extends AbstractMenuService {
     console.log('Menu action:', event.itemId);
   }
 
+  @MenuOn('file:close-tab')
+  onCloseTab(event: MenuItemClickedEvent): void {
+    console.log('Close tab in:', event.windowName);
+  }
+
   async setCopyAvailable(available: boolean): Promise<void> {
     await this.setItemEnabled('edit.copy', available);
   }
@@ -406,9 +411,61 @@ class MainMenuService extends AbstractMenuService {
 
 Provide this service in the renderer assemblage for the window. The `Menu`
 decorator here is the **renderer entry point's** decorator; it does not create
-a native menu. `setItemChecked(itemId, checked)` updates checkbox/radio state.
+a native menu. `@MenuOn('file:close-tab')` handles only clicks on the main-side
+item with that exact ID, forwarded to this window. It receives the same
+`MenuItemClickedEvent` payload as `@MenuOn('itemClicked')`; both handlers can
+coexist. The stream names `itemClicked`, `stateChanged`, and `templateChanged`
+remain reserved for generic subscriptions. All other names are interpreted as
+item IDs, not IPC channels; dotted IDs such as `window.bounds.refreshBounds`
+work without extending the preload whitelist. Custom decorated actions forward
+automatically unless configured for main-only handling; manually created items
+must use `.forwardClickToRenderer()`.
+
+`setItemChecked(itemId, checked)` updates checkbox/radio state.
 Use these state methods for existing items; structural changes such as a recent
 files list belong in the main process with `replaceSubmenuItems`.
+
+#### Listening to a Specific Menu Item
+
+Use the same ID in the main-side `@MenuItem` and renderer-side `@MenuOn`.
+For example, declare an action in a main-side menu assemblage:
+
+```typescript
+import { MenuItem } from '@assemblerjs/electron';
+
+@MenuItem({
+  id: 'file:close-tab',
+  path: 'File',
+  label: 'Close Tab',
+})
+public closeTab(): void {}
+```
+
+Then handle it in the renderer's menu service:
+
+```typescript
+@MenuOn('file:close-tab')
+public onCloseTab(event: MenuItemClickedEvent): void {
+  console.log('Close tab in:', event.windowName);
+}
+```
+
+No `switch` on `event.itemId` is needed. IDs containing dots work the same way:
+
+```typescript
+@MenuOn('window.bounds.refreshBounds')
+public onRefreshBoundsClicked(event: MenuItemClickedEvent): void {
+  console.log('Refresh Bounds clicked', event);
+}
+```
+
+These subscriptions use the existing window-scoped `itemClicked` stream and
+filter its payload by exact `itemId`. They do not subscribe to an IPC channel
+named after the item, so no item-specific preload whitelist entry is needed.
+The handler receives `itemId`, `windowName`, and `timestampMs`, plus optional
+`checked` and `accelerator` fields. If a generic `@MenuOn('itemClicked')` handler
+is also declared, both handlers run for a matching click; avoid performing the
+same action in both.
 
 ### Global Fallback and Focus
 
