@@ -37,7 +37,7 @@
     "@assemblerjs/core": "0.9.9"
   },
   "devDependencies": {
-    "assemblerjs": "1.2.1",
+    "assemblerjs": "1.2.2",
     "reflect-metadata": "^0.2.2"
   }
 }

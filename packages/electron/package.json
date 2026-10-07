@@ -46,7 +46,7 @@
   "dependencies": {
     "@assemblerjs/common": "1.0.2",
     "@assemblerjs/core": "0.9.9",
-    "assemblerjs": "1.2.1"
+    "assemblerjs": "1.2.2"
   },
   "devDependencies": {
     "electron": "^42.3.3",
