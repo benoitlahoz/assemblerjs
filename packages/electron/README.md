@@ -747,6 +747,12 @@ registrations. The event signals registration, not focus or renderer readiness;
 async listener promises are not awaited, so handle their rejections explicitly.
 It fires again when a menu is registered again, but not on ordinary focus changes.
 
+Main-process menu assemblages can combine `@AppListener()`, `@IpcListener()`,
+`@MenuItem(...)` (or `@Menu(...)` for a root menu), and `@Assemblage()`.
+Constructor parameter decorators such as `@Context()` remain available when
+these class decorators are stacked. Import both listeners from
+`@assemblerjs/electron`; `@AppListener()` is not available in the renderer.
+
 The complete example in `examples/seamless-electron/src/menus/file/recent-files.menu.ts`
 builds the list inside a returned `@MenuItem` block, tracks registered targets,
 and serializes refreshes without modifying window-opening code.
