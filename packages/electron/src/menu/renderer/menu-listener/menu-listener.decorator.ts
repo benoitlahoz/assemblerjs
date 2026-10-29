@@ -11,7 +11,22 @@ import { resolveMenuWindowName } from '../menu-definition/menu-definition';
 
 const buildMenuChannel = createChannelBuilder('menu');
 
+function isMenuStreamEvent(event: string): boolean {
+  return (
+    event === 'itemClicked' ||
+    event === 'stateChanged' ||
+    event === 'templateChanged'
+  );
+}
+
 function resolveMenuEventChannels(windowName: string, event: string): string[] {
+  if (!isMenuStreamEvent(event)) {
+    return [
+      buildMenuChannel(windowName, 'itemClicked'),
+      MenuIpcChannel.OnItemClicked,
+    ];
+  }
+
   const channels = new Set<string>();
   channels.add(buildMenuChannel(windowName, event));
 
@@ -140,8 +155,18 @@ export const MenuListener = createConstructorDecorator(function (this: any) {
         return;
       }
 
+      const isClickChannel =
+        channel === buildMenuChannel(windowName, 'itemClicked') ||
+        channel === MenuIpcChannel.OnItemClicked;
+      if (isClickChannel && !isMenuStreamEvent(event)) {
+        const payload = normalized[0] as MenuItemClickedEvent;
+        if (payload.itemId !== event) {
+          return;
+        }
+      }
+
       const eventKey = buildDedupKey(event, windowName, normalized);
-      if (!shouldHandleEvent(eventKey)) {
+      if (!shouldHandleEvent(`${method}:${eventKey}`)) {
         return;
       }
 

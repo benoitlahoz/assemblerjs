@@ -1,6 +1,7 @@
 import {
   defineCustomMetadata,
   getOwnCustomMetadata,
+  getParamTypes,
   ReflectParamTypes,
   ReflectValue,
 } from '@/shared/common';
@@ -97,8 +98,8 @@ export const ConstructorDecorator =
     // Change name to original class.
     Object.defineProperty(klass, 'name', { value: Base.name });
 
-    const paramTypes: any[] =
-      Reflect.getOwnMetadata(ReflectParamTypes, Base) || [];
+    const paramTypes: any[] = getParamTypes(Base);
+    Reflect.defineMetadata(ReflectParamTypes, [...paramTypes], klass);
     const existingParamsIndexes = getDecoratedParametersIndexes(Base);
     const params: any[] = [];
     const registeredDecorators = ParameterDecoratorFactory.getRegisteredDecorators();
@@ -121,8 +122,9 @@ export const ConstructorDecorator =
             handler(values[i], klass, i);
           } else {
             // Simple decorator without handler (like Context, Definition, etc.)
-            const paramIndexes: number[] =
-              getOwnCustomMetadata(getParamIndexKey(decoratorName), Base) || [];
+            const paramIndexes: number[] = [
+              ...(getOwnCustomMetadata(getParamIndexKey(decoratorName), Base) || []),
+            ];
             paramIndexes.push(i);
             defineCustomMetadata(getParamIndexKey(decoratorName), paramIndexes, klass);
           }

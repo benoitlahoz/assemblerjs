@@ -243,6 +243,23 @@ Activates renderer-side menu event subscriptions declared via decorators.
 
 Subscribes renderer methods to menu event streams (`itemClicked`, `stateChanged`, `templateChanged`, etc.).
 
+An exact menu item ID can also be used to subscribe only to that item's forwarded
+clicks in the bound window:
+
+```typescript
+@MenuOn('file:close-tab')
+onCloseTab(event: MenuItemClickedEvent): void {
+  // Close the current tab.
+}
+```
+
+Item-specific handlers receive the same `MenuItemClickedEvent` payload as the
+generic `@MenuOn('itemClicked')` handler, and both can coexist. Clicks must be
+forwarded from main to renderer. The names `itemClicked`, `stateChanged`, and
+`templateChanged` are reserved for generic event streams.
+All other names are item IDs, not IPC channels. Dotted IDs such as
+`window.bounds.refreshBounds` do not require additional preload whitelist rules.
+
 ## Typical Usage Matrix
 
 | Scenario                            | Process Side    | Decorators                                                    | Typical Usage                                    |
