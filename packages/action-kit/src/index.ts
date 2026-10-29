@@ -6,17 +6,30 @@ import { ClipboardRegistry } from './clipboard';
 import { ContextMenuBuilder } from './context-menu';
 
 export * from './clipboard';
+export * from './command';
+export * from './context-menu';
+export * from './history';
+export * from './shortcut';
 
 /** True while focus is in a text-editing widget — skip global undo/redo so native text undo isn't hijacked. */
 function isEditableTarget(): boolean {
   const target = document.activeElement;
   return (
-    target instanceof HTMLElement && Boolean(target.closest('input, textarea, [contenteditable="true"], .cm-editor'))
+    target instanceof HTMLElement &&
+    Boolean(
+      target.closest('input, textarea, [contenteditable="true"], .cm-editor'),
+    )
   );
 }
 
 @Assemblage({
-  provide: [[HistoryRegistry], [CommandRegistry], [ShortcutManager], [ClipboardRegistry], [ContextMenuBuilder]],
+  provide: [
+    [HistoryRegistry],
+    [CommandRegistry],
+    [ShortcutManager],
+    [ClipboardRegistry],
+    [ContextMenuBuilder],
+  ],
 })
 export class ActionKit implements AbstractAssemblage {
   constructor(
@@ -29,7 +42,9 @@ export class ActionKit implements AbstractAssemblage {
 
   public onInit(): void {
     this.shortcuts.attach();
-    this.shortcuts.onExecute((shortcut) => this.commands.execute(shortcut.command));
+    this.shortcuts.onExecute((shortcut) =>
+      this.commands.execute(shortcut.command),
+    );
 
     // Global Ctrl/Cmd+Z / +Shift+Z, routed through the active HistoryRegistry context — see
     // `HistoryRegistry`'s doc comment, which documents this as the intended usage but nothing
@@ -48,7 +63,11 @@ export class ActionKit implements AbstractAssemblage {
         if (!isEditableTarget()) this.history.redo();
       },
     });
-    this.shortcuts.register({ id: 'history.undo.shortcut', accelerator: 'CmdOrCtrl+Z', command: 'history.undo' });
+    this.shortcuts.register({
+      id: 'history.undo.shortcut',
+      accelerator: 'CmdOrCtrl+Z',
+      command: 'history.undo',
+    });
     this.shortcuts.register({
       id: 'history.redo.shortcut',
       accelerator: 'CmdOrCtrl+Shift+Z',
